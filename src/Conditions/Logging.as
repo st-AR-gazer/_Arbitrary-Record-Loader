@@ -1,13 +1,13 @@
 void NotifyWarn(const string &in msg) {
-    UI::ShowNotification("Plugin Name", msg, vec4(1, .5, .1, .5), 6000);
+    UI::ShowNotification("Arbetrary Ghost Loader", msg, vec4(1, .5, .1, .5), 6000);
 }
 
 void NotifyInfo(const string &in msg) {
-    UI::ShowNotification("Plugin Name", msg, vec4(.2, .8, .5, .3), 6000);
+    UI::ShowNotification("Arbetrary Ghost Loader", msg, vec4(.2, .8, .5, .3), 6000);
 }
 
 void NotifyError(const string &in msg) {
-    UI::ShowNotification("Plugin Name", msg, vec4(1, .2, .2, .3), 6000);
+    UI::ShowNotification("Arbetrary Ghost Loader", msg, vec4(1, .2, .2, .3), 6000);
 }
 
 enum LogLevel {
