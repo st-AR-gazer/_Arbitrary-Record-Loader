@@ -169,13 +169,13 @@ namespace colorize {
             } else if (mode == quadratic) {
                 p = Math::Pow(position, 0.5);
             } else if (mode == sine) {
-                p = Math::Sin(position * _Math::PI / 2);
+                p = Math::Sin(position * Math::PI / 2);
             } else if (mode == back) {
                 p = Math::Pow(position, 2) * ((1.70158 + 1) * position - 1.70158);
             } else if (mode == elastic) {
-                p = Math::Pow(2, 10 * (position - 1)) * Math::Sin((position - 1.075) * (2 * _Math::PI) / 0.3);
+                p = Math::Pow(2, 10 * (position - 1)) * Math::Sin((position - 1.075) * (2 * Math::PI) / 0.3);
             } else if (mode == bounce) {
-                p = 1 - Math::Abs(Math::Cos(position * _Math::PI * 4) * (1 - position));
+                p = 1 - Math::Abs(Math::Cos(position * Math::PI * 4) * (1 - position));
             } else if (mode == inverseQuadratic) {
                 p = 1 - Math::Pow(1 - position, 2);
             } else if (mode == smoothstep) {
