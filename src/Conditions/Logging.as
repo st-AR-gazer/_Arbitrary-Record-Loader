@@ -6,6 +6,10 @@ void NotifyInfo(const string &in msg) {
     UI::ShowNotification("Plugin Name", msg, vec4(.2, .8, .5, .3), 6000);
 }
 
+void NotifyError(const string &in msg) {
+    UI::ShowNotification("Plugin Name", msg, vec4(1, .2, .2, .3), 6000);
+}
+
 enum LogLevel {
     Info,
     InfoG,
