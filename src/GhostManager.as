@@ -30,7 +30,7 @@ void LoadReplayFromFile(const string &in filePath) {
     auto netClient = cast<CTrackManiaNetwork>(app.Network);
     if (netClient is null) return;
 
-    auto gamePlayground = cast<CSmArenaClient>(netClient.Playground);
+    auto gamePlayground = cast<CSmArenaClient>(netClient.ClientManiaAppPlayground.Playground);
     if (gamePlayground is null) return;
 
     CGameReplayScriptPlayer@ replayPlayer = cast<CGameReplayScriptPlayer>(netClient.ReplayPlayer);
