@@ -1,3 +1,5 @@
+// Fun Utils I use from time to time
+
 namespace _Text {
     int LastIndexOf(const string &in str, const string &in value) {
         int lastIndex = -1;
@@ -138,5 +140,15 @@ namespace _Json {
             }
             return indent;
         }
+    }
+}
+
+namespace _Game {
+    bool IsPlayingMap() {
+        CTrackMania@ app = cast<CTrackMania>(GetApp());
+        if (app is null) return false;
+
+        CSmArenaClient@ playground = cast<CSmArenaClient>(app.CurrentPlayground);
+        return !(playground is null || playground.Arena.Players.Length == 0);
     }
 }
