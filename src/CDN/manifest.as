@@ -2,7 +2,7 @@ string g_leaderboard = "Personal_Best";
 string g_MLHookCustomEvent = "TMGame_Record_ToggleGhost";
 string g_MLHookCustomSpecEvent = "TMGame_Record_SpectateGhost";
 
-string manifestUrl = "http://maniacdn.net/ar_/Load-Arbirary-Ghosts/manifest/manifest.json";
+string manifestUrl = "http://maniacdn.net/ar_/Arbitrary-Ghost-Loader/manifest/manifest.json";
 
 void FetchManifest() {
     Net::HttpRequest req;
