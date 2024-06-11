@@ -43,6 +43,31 @@ namespace _UI {
 }
 
 namespace _IO {
+    void RecursiveCreateFolder(const string &in path) {
+        if (IO::FolderExists(path)) return;
+
+        int index = _Text::LastIndexOf(path, "/");
+        if (index == -1) return;
+
+        RecursiveCreateFolder(path.SubStr(0, index));
+        IO::CreateFolder(path);
+    }
+    
+    void SafeCreateFolder(const string &in path, bool shouldUseRecursion = true) {
+        if (!IO::FolderExists(path)) {
+            if (shouldUseRecursion) { RecursiveCreateFolder(path); }
+        }
+    }
+
+    void SafeSaveToFile(const string &in path, const string &in content, bool shouldUseRecursion = true) {
+        SafeCreateFolder(path, shouldUseRecursion);
+
+        IO::File file;
+        file.Open(path, IO::FileMode::Write);
+        file.Write(content);
+        file.Close();
+    }
+    
     string ReadFileToEnd(const string &in path) {
         IO::File file(path, IO::FileMode::Read);
         string content = file.ReadToEnd();
@@ -87,13 +112,6 @@ namespace _IO {
         } else {
             print("Folder does not exist: " + path + " | LogLevel::Info | OpenFolder");
         }
-    }
-
-    void SaveToFile(const string &in path, const string &in content) {
-        IO::File file;
-        file.Open(path, IO::FileMode::Write);
-        file.Write(content);
-        file.Close();
     }
 }
 
@@ -150,5 +168,27 @@ namespace _Game {
 
         CSmArenaClient@ playground = cast<CSmArenaClient>(app.CurrentPlayground);
         return !(playground is null || playground.Arena.Players.Length == 0);
+    }
+
+    bool IsInEditor() {
+        CTrackMania@ app = cast<CTrackMania>(GetApp());
+        if (app is null) return false;
+
+        CSmArenaClient@ e = cast<CSmArenaClient>(app.Editor);
+        if (e !is null) return true;
+        return false;
+    }
+
+    bool IsPlayingInEditor() {
+        CTrackMania@ app = cast<CTrackMania>(GetApp());
+        if (app is null) return false;
+
+        CSmArenaClient@ e = cast<CSmArenaClient>(app.Editor);
+        if (e is null) return false;
+        
+        CSmArenaClient@ playground = cast<CSmArenaClient>(app.CurrentPlayground);
+        if (playground is null) return false;
+
+        return true;
     }
 }
