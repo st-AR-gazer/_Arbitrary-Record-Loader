@@ -45,9 +45,11 @@ namespace GhostLoader {
     }
 
     void CheckHotkey() {
-        if (UI::IsKeyPressed(g_toggleLoadGhostHotkey)) {
+        /*
+        if (UI::IsKeyPressed(g_toggleLoadGhostHotkey)) { /* complaints about no matching signature to UI::IsKeyPressed(VirtualHotkey&) * /
             LoadGhostFromDialog();
         }
+        */
     }
 
     void LoadGhostFromDialog() {
@@ -58,7 +60,7 @@ namespace GhostLoader {
     }
 
     string OpenGhostFileDialog() {
-        return _UI::OpenFileDialogWindow("Select a ghost or replay file", "", "Ghost/Replay files (*.gbx)\0*.gbx\0All files (*.*)\0*.*\0");
+        _UI::OpenFileDialogWindow(IO::FromAppFolder("UserData/Game/Ghosts/"));
     }
 
     void LoadGhost(const string &in filePath) {

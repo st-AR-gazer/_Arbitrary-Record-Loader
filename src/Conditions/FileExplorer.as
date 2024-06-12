@@ -5,7 +5,7 @@ namespace _UI {
     Sorting sorting = Sorting::Name;
     bool FilterFileType = false;
     string FileTypeFilter = "";
-    string currentDir = IO::FromStorageFolder("");
+    string currentDir = "";
     string currentSelectedFile = "";
 
     enum DirectoryOption { None, Storage, Data, App, UserGame }
@@ -18,7 +18,11 @@ namespace _UI {
     bool ShouldShow_Size = true;
     bool ShouldShow_CreationDate = true;
 
-    void OpenFileDialogWindow() {
+    void OpenFileDialogWindow(string defaultOpeningDirectory = IO::FromStorageFolder("")) {
+        if (currentDir == "") {
+            currentDir = defaultOpeningDirectory;
+        }
+
         if (UI::Begin("File Dialog")) {
             UI::Checkbox("Show Only Files", ShowOnlyFiles);
             UI::Checkbox("Show Only Folders", ShowOnlyFolders);
@@ -163,7 +167,6 @@ namespace _UI {
             return (info.name == currentSelectedFile) ? Icons::FolderOpenO : Icons::FolderO;
         }
 
-        // yes all of them are very nessesary :xdd:
         string ext = _IO::GetFileExtension(info.name).ToLower();
         if (ext == "txt" || ext == "rtf" || ext == "csv" || ext == "json") return Icons::FileTextO;
         return Icons::FileO;
@@ -181,7 +184,7 @@ namespace _UI {
                         swap = fileInfos[i].lastChangedDate > fileInfos[j].lastChangedDate;
                         break;
                     case Sorting::Type:
-                        swap = fileInfos[i].isFolder > fileInfos[j].isFolder;
+                        swap = fileInfos[i].isFolder && !fileInfos[j].isFolder;
                         break;
                     case Sorting::Size:
                         swap = fileInfos[i].size > fileInfos[j].size;
