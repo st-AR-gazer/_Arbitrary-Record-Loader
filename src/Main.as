@@ -1,9 +1,12 @@
 void Main() {
-    PermsCheck();
-    if (!permissionsOkay) return;
+    startnew(MainCoro);
+    startnew(GhostLoader::ClearTaskCoro);
+}
 
-    FetchManifest();
-
-    @api = NadeoApi();
-    MLHook::RequireVersionApi('0.3.1');
+void MainCoro() {
+    while (true) {
+        yield();
+        GhostLoader::CheckHotkey();
+        _UI::OpenFileDialogWindow();
+    }
 }
