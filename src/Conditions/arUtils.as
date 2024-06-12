@@ -44,9 +44,8 @@ namespace _UI {
 
 namespace _IO {
     bool IsDirectory(const string &in path) {
-        if (!IO::FolderExists(path)) { return false; }
-        if (IO::FileExists(path)) { return false; }
-        return true;
+        if (path.EndsWith("/")) return true;
+        return false;
     }
 
     void RecursiveCreateFolder(const string &in path) {
