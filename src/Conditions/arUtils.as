@@ -43,7 +43,7 @@ namespace _UI {
 }
 
 namespace _IO {
-    bool IsDirectory(const string& path) {
+    bool IsDirectory(const string &in path) {
         if (!IO::FolderExists(path)) { return false; }
         if (IO::FileExists(path)) { return false; }
         return true;
