@@ -5,12 +5,10 @@ void Render() {
 }
 
 namespace _IO {
-    // A bit more than what I'd call a utility function :xdd:, :Sirley: a good fit for arUtils :xdd:
     namespace FileExplorer {
         bool ShowOnlyFiles = false;
         bool ShowOnlyFolders = false;
         bool FilterFileType = false;
-
 
         string FileTypeFilter = "";
 
@@ -65,10 +63,10 @@ namespace _IO {
         void ShowFileDialog() {
             if (UI::Begin("File Dialog", showInterface, UI::WindowFlags::AlwaysAutoResize | UI::WindowFlags::NoCollapse)) {
                 if (UI::Button("Up One Level") && currentDir.Length > 0) {
-                    int pos = _Text::LastIndexOf(currentDir, "/");
-                    if (pos == -1) pos = _Text::LastIndexOf(currentDir, "\\");
+                    int pos = Math::Max(_Text::LastIndexOf(currentDir, "/"), _Text::LastIndexOf(currentDir, "\\"));
                     if (pos != -1) {
                         currentDir = currentDir.SubStr(0, pos);
+                        dirHistory.InsertLast(currentDir);
                     }
                     currentPage = 0;
                 }
@@ -86,9 +84,7 @@ namespace _IO {
                 if (UI::Button("Set Path to Current Directory")) {
                     if (IsDirectory(currentSelectedElement)) { currentDir = currentSelectedElement; }
                     else { NotifyWarn("Cannot set the current directory a file path, it has to be a folder"); }
-
                 }
-
 
                 if (UI::BeginCombo("Sorting", Hidden::GetSortingName(sorting), UI::ComboFlags::HeightRegular)) {
                     if (UI::Selectable("Name", sorting == Sorting::Name)) sorting = Sorting::Name;
@@ -135,15 +131,14 @@ namespace _IO {
                 UI::Text("Selected File: " + selectedElementPath);
 
                 UI::End();
+                
             }
         }
 
         void ShowFileTable() {
             double lastClickTime = 0;
             string lastClickedItem = "";
-            // double currentTime = Time::Now;
             double clickThreshold = 0.5;
-
 
             if (UI::BeginTable("FileTable", 6, UI::TableFlags::Resizable | UI::TableFlags::Reorderable | UI::TableFlags::Hideable | UI::TableFlags::Sortable)) {
                 UI::TableSetupColumn("ICO", UI::TableColumnFlags::WidthFixed, 40.0f);
@@ -154,28 +149,28 @@ namespace _IO {
                 UI::TableSetupColumn("Creation Date");
                 UI::TableHeadersRow();
 
-    array<string> elements = Hidden::GetFilesForCurrentPage();
-    if (elements.IsEmpty()) {
-        UI::Text("No elements in this directory.");
-    } else {
-        if (fileInfos.Length != elements.Length) {
-            fileInfos.Resize(elements.Length);
-        }
+                array<string> elements = Hidden::GetFilesForCurrentPage();
+                if (elements.IsEmpty()) {
+                    UI::Text("No elements in this directory.");
+                } else {
+                    if (fileInfos.Length != elements.Length) {
+                        fileInfos.Resize(elements.Length);
+                    }
 
-        for (uint i = 0; i < elements.Length; i++) {
-            string path = elements[i];
+                    for (uint i = 0; i < elements.Length; i++) {
+                        string path = elements[i];
 
-            bool isFolder = _IO::IsDirectory(path);
+                        bool isFolder = _IO::IsDirectory(path);
             
-            if (fileInfos[i].name != elements[i]) {
+            /*if (fileInfos[i].name != elements[i]) {
                 fileInfos[i].name = elements[i];
                 fileInfos[i].isFolder = isFolder;
                 fileInfos[i].lastChangedDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                 fileInfos[i].size = isFolder ? "-" : Hidden::FormatSize(IO::FileSize(path));
                 fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                 fileInfos[i].clickCount = 0;
-            }
-        }
+            }*/
+                    }
                     Hidden::SortFileInfos(fileInfos, sorting);
 
                     for (uint i = 0; i < fileInfos.Length; i++) {
@@ -187,21 +182,19 @@ namespace _IO {
                         if (UI::TableSetColumnIndex(0) && ShouldShow_ICON) {
                             UI::Text(Hidden::GetFileIcon(info));
                         }
-                        if (UI::TableSetColumnIndex(1) && ShouldShow_FileOrFolderName) {
-        if (UI::Selectable(info.name, currentSelectedElement == info.name)) {
-            info.clickCount++;
-            print(info.clickCount);
-            if (info.clickCount == 2 && info.isFolder) {
-                dirHistory.InsertLast(currentDir);
-                currentDir = elements[i];
-                currentPage = 0;
-                info.clickCount = 0;
-            }
-            currentSelectedElement = info.name;
-            selectedElementPath = elements[i];
+if (UI::TableSetColumnIndex(1) && ShouldShow_FileOrFolderName) {
+    if (UI::Selectable(info.name, currentSelectedElement == info.name)) {
+        info.clickCount++;
+        if (info.clickCount == 2 && info.isFolder) {
+            dirHistory.InsertLast(currentDir);
+            currentDir = elements[i];
+            currentPage = 0;
+            info.clickCount = 0;
         }
-
-                        }
+        currentSelectedElement = info.name;
+        selectedElementPath = elements[i];
+    }
+}
                         if (UI::TableSetColumnIndex(2) && ShouldShow_LastChangedDate) {
                             UI::Text(info.lastChangedDate);
                         }
@@ -240,8 +233,6 @@ namespace _IO {
             }
 
             void UpdateFileInfos() {
-                print("Updating fileInfos for directory: " + currentDir);
-
                 array<string> elements = Hidden::GetFilesForCurrentPage();
                 fileInfos.Resize(elements.Length);
 

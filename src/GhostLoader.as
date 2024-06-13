@@ -84,7 +84,7 @@ namespace GhostLoader {
         auto task = dfm.Ghost_Download(GetFileName(url), url);
         WaitAndClearTaskLater(task, dfm);
         if (task.HasFailed || !task.HasSucceeded) {
-            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription);
+            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription, LogLevel::Error);
             return;
         }
         auto instId = gm.Ghost_Add(task.Ghost, S_UseGhostLayer);
