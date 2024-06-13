@@ -162,14 +162,14 @@ namespace _IO {
 
                         bool isFolder = _IO::IsDirectory(path);
             
-            /*if (fileInfos[i].name != elements[i]) {
+            if (fileInfos[i].name != elements[i]) {
                 fileInfos[i].name = elements[i];
                 fileInfos[i].isFolder = isFolder;
                 fileInfos[i].lastChangedDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                 fileInfos[i].size = isFolder ? "-" : Hidden::FormatSize(IO::FileSize(path));
                 fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                 fileInfos[i].clickCount = 0;
-            }*/
+            }
                     }
                     Hidden::SortFileInfos(fileInfos, sorting);
 
