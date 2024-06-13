@@ -13,6 +13,7 @@ namespace _IO {
         string FileTypeFilter = "";
 
         string currentDir = "";
+        string lastIndexedDir = "";
         array<string> dirHistory;
 
         string currentSelectedElement = "";
@@ -38,16 +39,17 @@ namespace _IO {
         bool showInterface = false;
 
         array<FileInfo> fileInfos;
-        string lastCheckedDir = "";
-        
+
         namespace FileDialogWindow_FileName {
             string GetFileName() {
                 return currentSelectedElement;
             }
         }
+
         void OpenFileExplorerWindow(const string &in fileExplorerStartingDirectory = IO::FromAppFolder("")) {
             currentDir = fileExplorerStartingDirectory;
             showInterface = true;
+            IndexCurrentDirectory();
         }
 
         class FileInfo {
@@ -66,16 +68,16 @@ namespace _IO {
                     if (currentDir.EndsWith("/") || currentDir.EndsWith("\\")) {
                         currentDir = currentDir.SubStr(0, currentDir.Length - 1);
                     }
-                    
+
                     int posSlash = _Text::LastIndexOf(currentDir, "/");
                     int posBackslash = _Text::LastIndexOf(currentDir, "\\");
                     int pos = Math::Max(posSlash, posBackslash);
-                    
+
                     if (pos != -1) {
                         string newDir = currentDir.SubStr(0, pos);
-                        print("New Dir: " + currentDir + " -> " + newDir);
                         dirHistory.InsertLast(currentDir);
                         currentDir = newDir;
+                        IndexCurrentDirectory();
                     }
                     currentPage = 0;
                 }
@@ -84,6 +86,7 @@ namespace _IO {
                     currentDir = dirHistory[dirHistory.Length - 1];
                     dirHistory.RemoveLast();
                     currentPage = 0;
+                    IndexCurrentDirectory();
                 }
                 UI::SameLine();
                 ShowOnlyFiles = UI::Checkbox("Show Only Files", ShowOnlyFiles);
@@ -91,8 +94,12 @@ namespace _IO {
                 ShowOnlyFolders = UI::Checkbox("Show Only Folders", ShowOnlyFolders);
                 UI::SameLine();
                 if (UI::Button("Set Path to Current Directory")) {
-                    if (IsDirectory(currentSelectedElement)) { currentDir = currentSelectedElement; }
-                    else { NotifyWarn("Cannot set the current directory a file path, it has to be a folder"); }
+                    if (IsDirectory(currentSelectedElement)) { 
+                        currentDir = currentSelectedElement; 
+                        IndexCurrentDirectory();
+                    } else { 
+                        NotifyWarn("Cannot set the current directory to a file path, it has to be a folder"); 
+                    }
                 }
 
                 if (UI::BeginCombo("Sorting", Hidden::GetSortingName(sorting), UI::ComboFlags::HeightRegular)) {
@@ -124,7 +131,6 @@ namespace _IO {
 
                 if (UI::Button("Submit current selected path and close")) {
                     showInterface = false; // It's already submitted when the path is selected :xpp:
-                    // showAddedInterface = true; // Should show a new window that says: Added Ghost, this should show for 3 seconds
                 }
 
                 UI::Separator();
@@ -140,7 +146,13 @@ namespace _IO {
                 UI::Text("Selected File: " + selectedElementPath);
 
                 UI::End();
-                
+            }
+        }
+
+        void IndexCurrentDirectory() {
+            if (currentDir != lastIndexedDir) {
+                Hidden::UpdateFileInfos();
+                lastIndexedDir = currentDir;
             }
         }
 
@@ -158,52 +170,30 @@ namespace _IO {
                 UI::TableSetupColumn("Creation Date");
                 UI::TableHeadersRow();
 
-                array<string> elements = Hidden::GetFilesForCurrentPage();
-                if (elements.IsEmpty()) {
+                array<FileInfo> pageInfos = Hidden::GetFilesForCurrentPage();
+                if (pageInfos.IsEmpty()) {
                     UI::Text("No elements in this directory.");
                 } else {
-                    if (fileInfos.Length != elements.Length) {
-                        fileInfos.Resize(elements.Length);
-                    }
-
-                    for (uint i = 0; i < elements.Length; i++) {
-                        string path = elements[i];
-
-                        bool isFolder = _IO::IsDirectory(path);
-            
-            if (fileInfos[i].name != elements[i]) {
-                fileInfos[i].name = elements[i];
-                fileInfos[i].isFolder = isFolder;
-                fileInfos[i].lastChangedDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
-                fileInfos[i].size = isFolder ? "-" : Hidden::FormatSize(IO::FileSize(path));
-                fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
-                fileInfos[i].clickCount = 0;
-            }
-                    }
-                    Hidden::SortFileInfos(fileInfos, sorting);
-
-                    for (uint i = 0; i < fileInfos.Length; i++) {
-                        FileInfo info = fileInfos[i];
-                        string path = elements[i];
-
-
+                    for (uint i = 0; i < pageInfos.Length; i++) {
+                        FileInfo info = pageInfos[i];
                         UI::TableNextRow();
                         if (UI::TableSetColumnIndex(0) && ShouldShow_ICON) {
                             UI::Text(Hidden::GetFileIcon(info));
                         }
-if (UI::TableSetColumnIndex(1) && ShouldShow_FileOrFolderName) {
-    if (UI::Selectable(info.name, currentSelectedElement == info.name)) {
-        info.clickCount++;
-        if (info.clickCount == 2 && info.isFolder) {
-            dirHistory.InsertLast(currentDir);
-            currentDir = elements[i];
-            currentPage = 0;
-            info.clickCount = 0;
-        }
-        currentSelectedElement = info.name;
-        selectedElementPath = elements[i];
-    }
-}
+                        if (UI::TableSetColumnIndex(1) && ShouldShow_FileOrFolderName) {
+                            if (UI::Selectable(info.name, currentSelectedElement == info.name)) {
+                                info.clickCount++;
+                                if (info.clickCount == 2 && info.isFolder) {
+                                    dirHistory.InsertLast(currentDir);
+                                    currentDir = info.name;
+                                    currentPage = 0;
+                                    info.clickCount = 0;
+                                    IndexCurrentDirectory();
+                                }
+                                currentSelectedElement = info.name;
+                                selectedElementPath = info.name;
+                            }
+                        }
                         if (UI::TableSetColumnIndex(2) && ShouldShow_LastChangedDate) {
                             UI::Text(info.lastChangedDate);
                         }
@@ -223,26 +213,18 @@ if (UI::TableSetColumnIndex(1) && ShouldShow_FileOrFolderName) {
         }
 
         namespace Hidden {
-            array<string> GetFilesForCurrentPage() {
-                string sanetized_CurrentDir = currentDir;
-
-                if (currentDir.EndsWith("/") || currentDir.EndsWith("\\")) {
-                    sanetized_CurrentDir = currentDir.SubStr(0, currentDir.Length - 1);
-                }
-
-                array<string> allItems = IO::IndexFolder(sanetized_CurrentDir, false);
-                array<string> pageItems;
+            array<FileInfo> GetFilesForCurrentPage() {
                 uint start = currentPage * itemsPerPage;
-                uint end = start + itemsPerPage < allItems.Length ? start + itemsPerPage : allItems.Length;
-
+                uint end = Math::Min(start + itemsPerPage, fileInfos.Length);
+                array<FileInfo> pageItems;
                 for (uint i = start; i < end; i++) {
-                    pageItems.InsertLast(allItems[i]);
+                    pageItems.InsertLast(fileInfos[i]);
                 }
                 return pageItems;
             }
 
             void UpdateFileInfos() {
-                array<string> elements = Hidden::GetFilesForCurrentPage();
+                array<string> elements = IO::IndexFolder(currentDir, false);
                 fileInfos.Resize(elements.Length);
 
                 for (uint i = 0; i < elements.Length; i++) {
@@ -256,6 +238,7 @@ if (UI::TableSetColumnIndex(1) && ShouldShow_FileOrFolderName) {
                     fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                     fileInfos[i].clickCount = 0;
                 }
+                SortFileInfos();
             }
 
             string GetSortingName(Sorting sorting) {
@@ -298,6 +281,7 @@ if (UI::TableSetColumnIndex(1) && ShouldShow_FileOrFolderName) {
                     case DirectoryOption::None:
                         break;
                 }
+                IndexCurrentDirectory();
             }
 
             string GetFileIcon(FileInfo@ info) {
@@ -319,7 +303,7 @@ if (UI::TableSetColumnIndex(1) && ShouldShow_FileOrFolderName) {
                 if (ext == "epub") return Icons::FileEpub;
                 return (info.name == currentSelectedElement) ? "\\$bcd"+Icons::File+"\\$g" : "\\$bcd"+Icons::FileO+"\\$g";
             }
-            
+
             void SortFileInfos(array<FileInfo>@ fileInfos, Sorting sorting) {
                 for (uint i = 0; i < fileInfos.Length - 1; i++) {
                     for (uint j = i + 1; j < fileInfos.Length; j++) {
