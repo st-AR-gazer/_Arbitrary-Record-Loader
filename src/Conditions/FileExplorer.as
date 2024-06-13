@@ -119,7 +119,7 @@ namespace _IO {
 
                 if (UI::Button("Submit current selected path and close")) {
                     showInterface = false; // It's already submitted when the path is selected :xpp:
-                    showAddedInterface = true; // Should show a new window that says: Added Ghost, this should show for 3 seconds
+                    // showAddedInterface = true; // Should show a new window that says: Added Ghost, this should show for 3 seconds
                 }
 
                 UI::Separator();
@@ -179,7 +179,7 @@ namespace _IO {
                     Hidden::SortFileInfos(fileInfos, sorting);
 
                     for (uint i = 0; i < fileInfos.Length; i++) {
-                        FileInfo& info = fileInfos[i];
+                        FileInfo info = fileInfos[i];
                         string path = elements[i];
 
 
