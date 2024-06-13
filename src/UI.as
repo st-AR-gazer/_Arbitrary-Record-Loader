@@ -1,10 +1,9 @@
-namespace UI {
-    void Render() {
-        if (UI::Begin("Load Ghost Plugin")) {
-            if (UI::Button("Load Ghost from File")) {
-                GhostLoader::LoadGhostFromDialog();
-            }
-            UI::End();
+void RenderInterface() {
+    if (UI::Begin("Load Ghost Plugin")) {
+        if (UI::Button("Load Ghost from File")) {
+            // _UI::FileExplorer::OpenFileExplorerWindow();
+            GhostLoader::LoadGhostFromDialog();
         }
+        UI::End();
     }
 }
