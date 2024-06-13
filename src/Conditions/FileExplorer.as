@@ -40,6 +40,7 @@ namespace _IO {
         bool showInterface = false;
 
         array<FileInfo> fileInfos;
+        string lastCheckedDir = "";
         
         namespace FileDialogWindow_FileName {
             string GetFileName() {
@@ -116,6 +117,11 @@ namespace _IO {
 
                 currentDir = UI::InputText("Current Directory", currentDir);
 
+                if (UI::Button("Submit current selected path and close")) {
+                    showInterface = false; // It's already submitted when the path is selected :xpp:
+                    showAddedInterface = true; // Should show a new window that says: Added Ghost, this should show for 3 seconds
+                }
+
                 UI::Separator();
 
                 ShowFileTable();
@@ -173,7 +179,7 @@ namespace _IO {
                     Hidden::SortFileInfos(fileInfos, sorting);
 
                     for (uint i = 0; i < fileInfos.Length; i++) {
-                        FileInfo info = fileInfos[i];
+                        FileInfo& info = fileInfos[i];
                         string path = elements[i];
 
 
@@ -184,23 +190,15 @@ namespace _IO {
                         if (UI::TableSetColumnIndex(1) && ShouldShow_FileOrFolderName) {
         if (UI::Selectable(info.name, currentSelectedElement == info.name)) {
             info.clickCount++;
-
-            print(path);
             print(info.clickCount);
-            if (info.clickCount == 2) { 
-                if (info.isFolder) {
-                    dirHistory.InsertLast(currentDir);
-                    currentDir = path;
-                    currentPage = 0;
-                } else {
-                    info.clickCount = 0;
-                }
+            if (info.clickCount == 2 && info.isFolder) {
+                dirHistory.InsertLast(currentDir);
+                currentDir = elements[i];
+                currentPage = 0;
+                info.clickCount = 0;
             }
-            
             currentSelectedElement = info.name;
-            selectedElementPath = path;
-        } else {
-            info.clickCount = 0;
+            selectedElementPath = elements[i];
         }
 
                         }
@@ -239,6 +237,23 @@ namespace _IO {
                     pageItems.InsertLast(allItems[i]);
                 }
                 return pageItems;
+            }
+
+            void UpdateFileInfos() {
+                array<string> elements = Hidden::GetFilesForCurrentPage();
+                fileInfos.Resize(elements.Length);
+
+                for (uint i = 0; i < elements.Length; i++) {
+                    string path = elements[i];
+                    bool isFolder = _IO::IsDirectory(path);
+
+                    fileInfos[i].name = elements[i];
+                    fileInfos[i].isFolder = isFolder;
+                    fileInfos[i].lastChangedDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
+                    fileInfos[i].size = isFolder ? "-" : Hidden::FormatSize(IO::FileSize(path));
+                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
+                    fileInfos[i].clickCount = 0;
+                }
             }
 
             string GetSortingName(Sorting sorting) {
