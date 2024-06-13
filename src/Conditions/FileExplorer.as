@@ -68,7 +68,8 @@ namespace _IO {
                     int pos = Math::Max(posSlash, posBackslash);
                     if (pos != -1) {
                         string newDir = currentDir.SubStr(0, pos);
-                        if (currentDir != "") dirHistory.InsertLast(currentDir);
+                        print("New Dir: " + newDir);
+                        dirHistory.InsertLast(currentDir);
                         currentDir = newDir;
                     }
                     currentPage = 0;
