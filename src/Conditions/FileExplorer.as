@@ -63,9 +63,14 @@ namespace _IO {
         void ShowFileDialog() {
             if (UI::Begin("File Dialog", showInterface, UI::WindowFlags::AlwaysAutoResize | UI::WindowFlags::NoCollapse)) {
                 if (UI::Button("Up One Level") && currentDir.Length > 0) {
+                    if (currentDir.EndsWith("/") || currentDir.EndsWith("\\")) {
+                        currentDir = currentDir.SubStr(0, currentDir.Length - 1);
+                    }
+                    
                     int posSlash = _Text::LastIndexOf(currentDir, "/");
                     int posBackslash = _Text::LastIndexOf(currentDir, "\\");
                     int pos = Math::Max(posSlash, posBackslash);
+                    
                     if (pos != -1) {
                         string newDir = currentDir.SubStr(0, pos);
                         print("New Dir: " + currentDir + " -> " + newDir);
