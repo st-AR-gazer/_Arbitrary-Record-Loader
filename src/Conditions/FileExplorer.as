@@ -238,7 +238,7 @@ namespace _IO {
                     fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                     fileInfos[i].clickCount = 0;
                 }
-                Hidden::SortFileInfos();
+                SortFileInfos(fileInfos, sorting);
             }
 
             string GetSortingName(Sorting sorting) {
