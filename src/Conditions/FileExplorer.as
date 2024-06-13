@@ -65,8 +65,9 @@ namespace _IO {
                 if (UI::Button("Up One Level") && currentDir.Length > 0) {
                     int pos = Math::Max(_Text::LastIndexOf(currentDir, "/"), _Text::LastIndexOf(currentDir, "\\"));
                     if (pos != -1) {
-                        currentDir = currentDir.SubStr(0, pos);
+                        string newDir = currentDir.SubStr(0, pos);
                         dirHistory.InsertLast(currentDir);
+                        currentDir = newDir;
                     }
                     currentPage = 0;
                 }
