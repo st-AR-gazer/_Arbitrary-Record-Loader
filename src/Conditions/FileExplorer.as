@@ -305,6 +305,7 @@ namespace _IO {
             }
 
             void SortFileInfos(array<FileInfo>@ fileInfos, Sorting sorting) {
+                if (fileInfos.Length == 0) return;
                 for (uint i = 0; i < fileInfos.Length - 1; i++) {
                     for (uint j = i + 1; j < fileInfos.Length; j++) {
                         bool swap = false;
