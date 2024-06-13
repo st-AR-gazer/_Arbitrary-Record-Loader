@@ -14,6 +14,22 @@ namespace _Text {
         }
         return lastIndex;
     }
+
+    int NLastIndexOf(const string &in str, const string &in value, int n) {
+        int lastIndex = -1;
+        int index = str.IndexOf(value);
+        while (index != -1) {
+            lastIndex = index;
+            if (index + value.Length >= str.Length) break;
+            index = str.SubStr(index + value.Length).IndexOf(value);
+            if (index != -1) {
+                index += lastIndex + value.Length;
+            }
+            if (n == 0) break;
+            --n;
+        }
+        return lastIndex;
+    }
 }
 
 namespace _UI {
@@ -44,7 +60,7 @@ namespace _UI {
 
 namespace _IO {
     bool IsDirectory(const string &in path) {
-        if (path.EndsWith("/")) return true;
+        if (path.EndsWith("/") || path.EndsWith("\\")) return true;
         return false;
     }
 
