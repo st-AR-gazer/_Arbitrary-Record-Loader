@@ -139,8 +139,6 @@ namespace _IO {
         }
 
         void ShowFileTable() {
-            print("Showing file table. Number of files: " + fileInfos.Length);
-            
             double lastClickTime = 0;
             string lastClickedItem = "";
             // double currentTime = Time::Now;
