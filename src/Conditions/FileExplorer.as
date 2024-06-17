@@ -355,7 +355,6 @@ namespace _IO {
 }
 
 namespace _IO {
-    funcdef int64 GetFileCreationTimeFunc(const string &in filePath);
     int64 FileCreatedTime(const string &in filePath) {
         string dllPath = "/src/Conditions/CompanionDLLs/FileCreationTime.dll";
 
@@ -376,12 +375,9 @@ namespace _IO {
             return -1;
         }
 
-        GetFileCreationTimeFunc@ getFileCreationTime = cast<GetFileCreationTimeFunc@>(func);
-        if (getFileCreationTime is null) {
-            log("Failed to cast function from DLL: " + dllPath, LogLevel::Error);
-            return -1;
-        }
+        func.SetConvention(Import::CallConvention::cdecl);
 
-        return getFileCreationTime(filePath);
+        int64 result = func.CallInt64(filePath);
+        return result;
     }
 }
