@@ -235,7 +235,7 @@ namespace _IO {
                     fileInfos[i].isFolder = isFolder;
                     fileInfos[i].lastChangedDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                     fileInfos[i].size = isFolder ? "-" : Hidden::FormatSize(IO::FileSize(path));
-                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
+                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", _IO::(path));
                     fileInfos[i].clickCount = 0;
                 }
                 SortFileInfos(fileInfos, sorting);
@@ -351,5 +351,37 @@ namespace _IO {
                 IO::SetClipboard(text);
             }
         }
+    }
+}
+
+namespace _IO {
+    namespace Hidden { funcdef int64 GetFileCreationTimeFunc(const string &in filePath); }
+    int64 FileCreatedTime(const string &in filePath) {
+        string dllPath = "/src/Conditions/CompanionDLLs/FileCreationTime.dll";
+
+        if (!IO::FileExists(dllPath)) {
+            log("DLL does not exist: " + dllPath, LogLevel::Error);
+            return -1;
+        }
+
+        Import::Library@ lib = Import::GetLibrary(dllPath);
+        if (lib is null) {
+            log("Failed to load DLL: " + dllPath, LogLevel::Error);
+            return -1;
+        }
+
+        Import::Function@ func = lib.GetFunction("GetFileCreationTime");
+        if (func is null) {
+            log("Failed to get function from DLL: " + dllPath, LogLevel::Error);
+            return -1;
+        }
+
+        Hidden::GetFileCreationTimeFunc@ getFileCreationTime = cast<Hidden::GetFileCreationTimeFunc@>(func);
+        if (getFileCreationTime is null) {
+            log("Failed to cast function from DLL: " + dllPath, LogLevel::Error);
+            return -1;
+        }
+
+        return getFileCreationTime(filePath);
     }
 }
