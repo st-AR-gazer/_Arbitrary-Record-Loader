@@ -7,8 +7,8 @@ extern "C" __declspec(dllexport) int64_t GetFileCreationTime(const char* filenam
         return -1;
     }
 
-    FILETIME creationTime;
-    if (!GetFileTime(hFile, &creationTime, NULL, NULL)) {
+    FILETIME creationTime, accessTime, writeTime;
+    if (!GetFileTime(hFile, &creationTime, &accessTime, &writeTime)) {
         CloseHandle(hFile);
         return -1;
     }
