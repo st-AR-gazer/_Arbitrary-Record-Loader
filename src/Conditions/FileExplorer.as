@@ -355,7 +355,7 @@ namespace _IO {
 }
 
 namespace _IO {
-    namespace Hidden { funcdef int64 GetFileCreationTimeFunc(const string &in filePath); }
+    funcdef int64 GetFileCreationTimeFunc(const string &in filePath);
     int64 FileCreatedTime(const string &in filePath) {
         string dllPath = "/src/Conditions/CompanionDLLs/FileCreationTime.dll";
 
@@ -376,7 +376,7 @@ namespace _IO {
             return -1;
         }
 
-        Hidden::GetFileCreationTimeFunc@ getFileCreationTime = cast<Hidden::GetFileCreationTimeFunc@>(func);
+        GetFileCreationTimeFunc@ getFileCreationTime = cast<GetFileCreationTimeFunc@>(func);
         if (getFileCreationTime is null) {
             log("Failed to cast function from DLL: " + dllPath, LogLevel::Error);
             return -1;
