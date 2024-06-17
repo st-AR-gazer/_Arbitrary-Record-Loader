@@ -235,7 +235,7 @@ namespace _IO {
                     fileInfos[i].isFolder = isFolder;
                     fileInfos[i].lastChangedDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                     fileInfos[i].size = isFolder ? "-" : Hidden::FormatSize(IO::FileSize(path));
-                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", _IO::(path));
+                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", _IO::FileCreatedTime(path));
                     fileInfos[i].clickCount = 0;
                 }
                 SortFileInfos(fileInfos, sorting);
