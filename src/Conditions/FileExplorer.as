@@ -355,16 +355,29 @@ namespace _IO {
 }
 
 namespace _IO {
-    Import::Library@ libFileCreationTime = Import::GetLibrary("src/Conditions/CompanionDLLs/FileCreationTime.dll");
+    int64 FileCreatedTime(const string &in filePath) {
+        string dllPath = "/src/Conditions/CompanionDLLs/FileCreationTime.dll";
 
-    funcdef const string@ FileCreationTime_t(const string &in filePath);
-
-    FileCreationTime_t@ dllFileCreationTime = cast<FileCreationTime_t@>(libFileCreationTime.GetFunction("GetFileCreationTime"));
-
-    const string FileCreationTime(const string &in filePath) {
-        if (dllFileCreationTime !is null) {
-            return dllFileCreationTime(filePath);
+        if (!IO::FileExists(dllPath)) {
+            log("DLL does not exist: " + dllPath, LogLevel::Error);
+            return -1;
         }
-        return "";
+
+        Import::Library@ lib = Import::GetLibrary(dllPath);
+        if (lib is null) {
+            log("Failed to load DLL: " + dllPath, LogLevel::Error);
+            return -1;
+        }
+
+        Import::Function@ func = lib.GetFunction("GetFileCreationTime");
+        if (func is null) {
+            log("Failed to get function from DLL: " + dllPath, LogLevel::Error);
+            return -1;
+        }
+
+        func.SetConvention(Import::CallConvention::cdecl);
+
+        int64 result = func.CallInt64(filePath);
+        return result;
     }
 }
