@@ -32,9 +32,14 @@ namespace _IO {
         string currentSearchQuery = "";
         
         array<string> directoryHistory;
+        int currentHistoryPosition = 0;
 
         bool reloadDirectory = false;
         bool goToDefaultDirectory = false;
+
+        string currentSelectedElement = "";
+        string selectedElementPath = "";
+        string selectedFileName = "";
 
         // Tools
         bool copyFileNameToClipboard = false;
@@ -42,22 +47,16 @@ namespace _IO {
         bool deleteFile = false;
         // Sorting
         enum SortElementsBasedOnType { Name, Date, Type, Size };
-        SortElementsBasedOnType elementTypeSorting = SortElementsBasedOnType::Type;
-
-        // Main view
-        uint currentPage = 0;
-        uint itemsPerPage = 100;
+        SortElementsBasedOnType currentSortingOption = SortElementsBasedOnType::Type;
 
         // Filter
-        string currentSelectedElement = "";
-        string selectedElementPath = "";
-        string selectedFileName = "";
-
-        // General        
         bool shouldFilterFileType = false;
+        string currentFilter = "";
 
+        // General
+        bool mustReturnFilePath = false;
         enum DefaultDirectoryOrigin { None, Storage, Data, App, UserGame, Replays }
-        DefaultDirectoryOrigin currentDirectoryOption = DefaultDirectoryOrigin::None;
+        DefaultDirectoryOrigin currentDefaultDirectoryOrigin = DefaultDirectoryOrigin::Replays;
 
         // States
         // SS = Shold Show; SO = Show Only
@@ -71,12 +70,27 @@ namespace _IO {
         bool SS_Size = true;
         bool SS_CreationDate = true;
 
+        bool hidePathFromFilePath = false;
+
+        // Optimization
+        string lastIndexedDirectory = "";
+        uint currentPage = 0;
+        uint itemsPerPage = 30;
+
 
         array<FileInfo> fileInfos;
 
-        void OpenFileExplorer(bool mustReturnFilePath = false, const string &in _path, const string &in _searchQuery) {
+        namespace FileDialogWindow_FileName {
+            string GetFileName() {
+                return selectedFileName;
+            }
+        }
+
+        void OpenFileExplorer(bool _mustReturnFilePath = false, const string &in _path = "", const string &in _searchQuery = "") {
+            if (!_mustReturnFilePath) { mustReturnFilePath = true; } else { mustReturnFilePath = false; }
             showInterface = true;
             currentDirectory = _path;
+            if (_path == "" ) { currentDirectory = IO::FromUserGameFolder("Replays/"); }
             currentSearchQuery = _searchQuery;
             directoryHistory.Resize(0);
             reloadDirectory = false;
@@ -93,31 +107,40 @@ namespace _IO {
 
         void Render_Structure() {
             Render_NavBar();
+            // Render_SideBar();
             Render_MainView();
-            Render_SideBar();
         }
 
         void Render_NavBar() {
             Render_NavBar_Top();
             UI::Separator();
+            Render_NavBar_Middle();
+            UI::Separator();
             Render_NavBar_Bottom();
         }
 
         void Render_NavBar_Top() {
-            float totalWidth = UI::GetContentRegionAvail().x; // Get the total available width
-            float buttonWidth = 40.0f; // Smallest width for buttons
-            float searchWidth = totalWidth * 0.20f; // 20% width for search bar
-            float currentDirectoryWidth = totalWidth - (4 * buttonWidth) - searchWidth; // Rest of the width for file path
+            float totalWidth = UI::GetContentRegionAvail().x;
+            float buttonWidth = 30.0f;
+            float searchWidth = totalWidth * 0.20f;
+            float currentDirectoryWidth = totalWidth - (7 * buttonWidth) - searchWidth;
             
-            if (UI::Button("ARROW_LEFT", vec2(buttonWidth, 0))) { Hidden::FE_GoToPreviousDirectory(); }
-            UI::SameLine();
-            if (UI::Button("ARROW_RIGHT", vec2(buttonWidth, 0))) { Hidden::FE_GoToNextDirectory(); }
-            UI::SameLine();
-            if (UI::Button("ARROW_UP", vec2(buttonWidth, 0))) { Hidden::FE_GoToParentDirectory(); }
-            UI::SameLine();
-            if (UI::Button("ARROW_DOWN", vec2(buttonWidth, 0))) { Hidden::FE_GoToChildDirectory(); }
-
-            UI::SameLine();
+            if (directoryHistory.IsEmpty()) 
+                { _UI::DisabledButton(Icons::ArrowLeft, vec2(buttonWidth, 0)); } else {
+                if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) { Hidden::FE_GoToPreviousDirectory(); } }
+        UI::SameLine();
+            // if (UI::Button(Icons::ArrowRight, vec2(buttonWidth, 0))) { Hidden::FE_GoToNextDirectory(); }
+            // UI::SameLine();
+            if (currentDirectory.EndsWith(":") || currentDirectory == "~" || currentDirectory == "" || currentDirectory == "/") {
+                _UI::DisabledButton(Icons::ArrowUp, vec2(buttonWidth, 0)); } else {
+                if (UI::Button(Icons::ArrowUp, vec2(buttonWidth, 0))) { Hidden::FE_GoToParentDirectory(); } }
+        UI::SameLine();
+            if (!_IO::IsDirectory(currentSelectedElement)) {
+                _UI::DisabledButton(Icons::ArrowDown, vec2(buttonWidth, 0)); } else { 
+                if (UI::Button(Icons::ArrowDown, vec2(buttonWidth, 0))) { Hidden::FE_GoToChildDirectory(); } }
+        UI::SameLine();
+            if (UI::Button(Icons::Refresh, vec2(buttonWidth, 0))) { IndexCurrentDirectory(); }
+        UI::SameLine();
 
             UI::PushItemWidth(currentDirectoryWidth);
             currentDirectory = UI::InputText("##CurrentDirectory", currentDirectory);
@@ -130,23 +153,26 @@ namespace _IO {
             UI::PopItemWidth();
 
         }
+
         namespace Hidden {
             void FE_GoToPreviousDirectory() {
-                if (directoryHistory.Length > 0) {
-                    currentDirectory = directoryHistory[directoryHistory.Length - 1];
-                    directoryHistory.RemoveLast();
-                    currentPage = 0;
-                    reloadDirectory = true;
-                }
+                if (directoryHistory.Length == 0) return;
+                currentDirectory = directoryHistory[directoryHistory.Length - 1];
+                directoryHistory.RemoveLast();
+                currentPage = 0;
+                IndexCurrentDirectory();
             }
-            void FE_GoToNextDirectory() {
-                if (IsDirectory(currentSelectedElement)) { 
-                    currentDirectory = currentSelectedElement; 
-                    IndexCurrentDirectory();
-                } else {
-                    NotifyWarn("Cannot set the current directory to a file path, it has to be a folder"); 
-                }
-            }
+
+            // void FE_GoToNextDirectory() {
+                
+            //     if (currentHistoryPosition < directoryHistory.Length) {
+            //         currentHistoryPosition++;
+            //         currentDirectory = directoryHistory[currentHistoryPosition];
+            //         currentPage = 0;
+            //         IndexCurrentDirectory();
+            //     }
+            // }
+
             void FE_GoToParentDirectory() {
                 if (currentDirectory.Length <= 0) return;
 
@@ -163,98 +189,101 @@ namespace _IO {
                     directoryHistory.InsertLast(currentDirectory);
                     currentDirectory = newDir;
                     currentPage = 0;
-                    reloadDirectory = true;
+                    IndexCurrentDirectory();
                 }
             }
             void FE_GoToChildDirectory() {
-                if (currentSelectedElement.Length <= 0) return;
-                if (currentSelectedElement == "..") return;
+                string childFullPath = currentSelectedElement;
 
-                string newDir = currentDirectory + "/" + currentSelectedElement;
+                if (childFullPath.Length <= 0) return;
+
+                string newDir = childFullPath;
                 if (_IO::IsDirectory(newDir)) {
                     directoryHistory.InsertLast(currentDirectory);
                     currentDirectory = newDir;
                     currentPage = 0;
-                    reloadDirectory = true;
+                    IndexCurrentDirectory();
+                } else {
+                    NotifyWarn("Cannot move to a file. Please select a directory.");
                 }
             }
         }
 
-        void Render_NavBar_Bottom() {
+        void Render_NavBar_Middle() {
+            float buttonWidth = 30.0f;
+
+            if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) { currentPage++; IndexCurrentDirectory(); }
+        UI::SameLine();
+            if (UI::Button(Icons::ArrowRight, vec2(buttonWidth, 0))) { currentPage--; IndexCurrentDirectory(); }
+
+            UI::SameLine();
+            if (UI::Button("Hide Path")) { hidePathFromFilePath = false; }
+            UI::SameLine();
             if (UI::Button("Hide Folders")) { SO_Folders = false; }
             UI::SameLine();
             if (UI::Button("Hide Files")) { SO_Files = false; }
             UI::SameLine();
             if (UI::Button("Show Elements")) { SO_Folders = true; SO_Files = true; }
-            UI::SameLine();
             
-        }
+            UI::SameLine();
 
-
-        void renderplaceholderfornow() {
-
-
-                
-
-                if (UI::BeginCombo("Sorting", Hidden::GetSortingName(sorting), UI::ComboFlags::HeightRegular)) {
-                    if (UI::Selectable("Name", sorting == Sorting::Name)) sorting = Sorting::Name;
-                    if (UI::Selectable("Date", sorting == Sorting::Date)) sorting = Sorting::Date;
-                    if (UI::Selectable("Type", sorting == Sorting::Type)) sorting = Sorting::Type;
-                    if (UI::Selectable("Size", sorting == Sorting::Size)) sorting = Sorting::Size;
-                    UI::EndCombo();
-                }
-
-                UI::SameLine();
-
-                if (UI::BeginCombo("Directory", Hidden::GetDirectoryName(currentDirectoryOption), UI::ComboFlags::HeightRegular)) {
-                    if (UI::Selectable("PluginStorage", currentDirectoryOption == DirectoryOption::Storage)) Hidden::SetCurrentDirectory(DirectoryOption::Storage);
-                    if (UI::Selectable("OpenplanetNext", currentDirectoryOption == DirectoryOption::Data)) Hidden::SetCurrentDirectory(DirectoryOption::Data);
-                    if (UI::Selectable("\\games\\Trackmania", currentDirectoryOption == DirectoryOption::App)) Hidden::SetCurrentDirectory(DirectoryOption::App);
-                    if (UI::Selectable("\\Documents\\Trackmania", currentDirectoryOption == DirectoryOption::UserGame)) Hidden::SetCurrentDirectory(DirectoryOption::UserGame);
-                    UI::EndCombo();
-                }
-
-                UI::SameLine();
-
-                UI::Checkbox("Filter File Type", FilterFileType);
-                if (FilterFileType) {
-                    FileTypeFilter = UI::InputText("File Type Filter", FileTypeFilter);
-                }
-
-                currentDir = UI::InputText("Current Directory", currentDir);
-
-                if (UI::Button("Submit current selected path and close")) {
-                    showInterface = false; // It's already submitted when the path is selected :xpp:
-                }
-
-                UI::Separator();
-
-                ShowFileTable();
-
-                UI::Separator();
-
-                if (UI::Button("Copy Path to Clipboard")) {
-                    Hidden::CopyToClipboard(selectedElementPath);
-                }
-
-                UI::Text("Selected File: " + selectedElementPath);
-
-                UI::End();
+            if (UI::BeginCombo("Sorting", Hidden::GetSortingName(currentSortingOption), UI::ComboFlags::HeightRegular)) {
+                if (UI::Selectable("Name", currentSortingOption == SortElementsBasedOnType::Name)) currentSortingOption = SortElementsBasedOnType::Name;
+                if (UI::Selectable("Date", currentSortingOption == SortElementsBasedOnType::Date)) currentSortingOption = SortElementsBasedOnType::Date;
+                if (UI::Selectable("Type", currentSortingOption == SortElementsBasedOnType::Type)) currentSortingOption = SortElementsBasedOnType::Type;
+                if (UI::Selectable("Size", currentSortingOption == SortElementsBasedOnType::Size)) currentSortingOption = SortElementsBasedOnType::Size;
+                UI::EndCombo();
             }
-        }
+            
+            UI::SameLine();
 
-        void IndexCurrentDirectory() {
-            if (currentDir != lastIndexedDir) {
-                Hidden::UpdateFileInfos();
-                lastIndexedDir = currentDir;
+            if (UI::BeginCombo("Directory", Hidden::GetDirectoryName(currentDefaultDirectoryOrigin), UI::ComboFlags::HeightRegular)) {
+                if (UI::Selectable("Replays", currentDefaultDirectoryOrigin == DefaultDirectoryOrigin::Replays)) Hidden::SetCurrentDirectory(DefaultDirectoryOrigin::Replays);
+                if (UI::Selectable("PluginStorage", currentDefaultDirectoryOrigin == DefaultDirectoryOrigin::Storage)) Hidden::SetCurrentDirectory(DefaultDirectoryOrigin::Storage);
+                if (UI::Selectable("OpenplanetNext", currentDefaultDirectoryOrigin == DefaultDirectoryOrigin::Data)) Hidden::SetCurrentDirectory(DefaultDirectoryOrigin::Data);
+                if (UI::Selectable("\\games\\Trackmania", currentDefaultDirectoryOrigin == DefaultDirectoryOrigin::App)) Hidden::SetCurrentDirectory(DefaultDirectoryOrigin::App);
+                if (UI::Selectable("\\Documents\\Trackmania", currentDefaultDirectoryOrigin == DefaultDirectoryOrigin::UserGame)) Hidden::SetCurrentDirectory(DefaultDirectoryOrigin::UserGame);
+                UI::EndCombo();
             }
+
+            UI::SameLine();
+
+            shouldFilterFileType = UI::Checkbox("Filter File Type", shouldFilterFileType);
+            // UI::BeginCombo("File Type", currentFilter, UI::ComboFlags::HeightRegular) {
+            //     if (UI::Selectable("All", currentFilter == "")) currentFilter = "";
+            //     if (UI::Selectable("Text", currentFilter == "txt")) currentFilter = "txt";
+            //     if (UI::Selectable("PDF", currentFilter == "pdf")) currentFilter = "pdf";
+            //     if (UI::Selectable("Word", currentFilter == "doc")) currentFilter = "doc";
+            //     if (UI::Selectable("Excel", currentFilter == "xls")) currentFilter = "xls";
+            //     if (UI::Selectable("Powerpoint", currentFilter == "ppt")) currentFilter = "ppt";
+            //     if (UI::Selectable("Image", currentFilter == "jpg")) currentFilter = "jpg";
+            //     if (UI::Selectable("Archive", currentFilter == "rar")) currentFilter = "rar";
+            //     if (UI::Selectable("Audio", currentFilter == "ogg")) currentFilter = "ogg";
+            //     if (UI::Selectable("Video", currentFilter == "mp4")) currentFilter = "mp4";
+            //     if (UI::Selectable("Code", currentFilter == "cs")) currentFilter = "cs";
+            //     if (UI::Selectable("Epub", currentFilter == "epub")) currentFilter = "epub";
+            //     UI::EndCombo();
+            // }
+            
+            if (shouldFilterFileType) {
+                currentFilter = UI::InputText("File Type Filter", currentFilter);
+            }
+
         }
 
-        void ShowFileTable() {
-            double lastClickTime = 0;
-            string lastClickedItem = "";
-            double clickThreshold = 0.5;
+        void Render_NavBar_Bottom() {
+            if (UI::Button("Submit current selected path and close")) {
+                showInterface = false; // It's already submitted when the path is selected :xpp:
+            }
+            UI::SameLine();
+            if (UI::Button("Copy Path to Clipboard")) {
+                Hidden::CopyToClipboard(selectedElementPath);
+            }
+            UI::SameLine();
+            UI::Text("Selected File: " + selectedElementPath);
+        }
 
+        void Render_MainView() {
             if (UI::BeginTable("FileTable", 6, UI::TableFlags::Resizable | UI::TableFlags::Reorderable | UI::TableFlags::Hideable | UI::TableFlags::Sortable)) {
                 UI::TableSetupColumn("ICO", UI::TableColumnFlags::WidthFixed, 40.0f);
                 UI::TableSetupColumn("File / Folder Name");
@@ -278,8 +307,8 @@ namespace _IO {
                             if (UI::Selectable(info.name, currentSelectedElement == info.name)) {
                                 info.clickCount++;
                                 if (info.clickCount == 2 && info.isFolder) {
-                                    dirHistory.InsertLast(currentDir);
-                                    currentDir = info.name;
+                                    directoryHistory.InsertLast(currentDirectory);
+                                    currentDirectory = info.name;
                                     currentPage = 0;
                                     info.clickCount = 0;
                                     IndexCurrentDirectory();
@@ -304,6 +333,16 @@ namespace _IO {
                 }
                 UI::EndTable();
             }
+            
+        }
+        
+
+
+        void IndexCurrentDirectory() {
+            if (currentDirectory != lastIndexedDirectory) {
+                Hidden::UpdateFileInfos();
+                lastIndexedDirectory = currentDirectory;
+            }
         }
 
         namespace Hidden {
@@ -318,10 +357,14 @@ namespace _IO {
             }
 
             void UpdateFileInfos() {
-                array<string> elements = IO::IndexFolder(currentDir, false);
+                array<string> elements = IO::IndexFolder(currentDirectory, false);
                 fileInfos.Resize(elements.Length);
 
                 for (uint i = 0; i < elements.Length; i++) {
+                    if (elements[i].Contains("\\/")) {
+                        elements[i] = elements[i].Replace("\\/", "/");
+                    }
+
                     string path = elements[i];
                     bool isFolder = _IO::IsDirectory(path);
 
@@ -329,50 +372,55 @@ namespace _IO {
                     fileInfos[i].isFolder = isFolder;
                     fileInfos[i].lastChangedDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                     fileInfos[i].size = isFolder ? "-" : Hidden::FormatSize(IO::FileSize(path));
-                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", _IO::FileCreatedTime(path));
+                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", _IO::DLL::FileCreatedTime(path));
                     fileInfos[i].clickCount = 0;
                 }
-                SortFileInfos(fileInfos, sorting);
+
+                SortFileInfos(fileInfos, currentSortingOption);
             }
 
-            string GetSortingName(Sorting sorting) {
+            string GetSortingName(SortElementsBasedOnType sorting) {
                 switch (sorting) {
-                    case Sorting::Name: return "Name";
-                    case Sorting::Date: return "Date";
-                    case Sorting::Type: return "Type";
-                    case Sorting::Size: return "Size";
+                    case SortElementsBasedOnType::Name: return "Name";
+                    case SortElementsBasedOnType::Date: return "Date";
+                    case SortElementsBasedOnType::Type: return "Type";
+                    case SortElementsBasedOnType::Size: return "Size";
                 }
                 return "Unknown";
             }
 
-            string GetDirectoryName(DirectoryOption option) {
+            string GetDirectoryName(DefaultDirectoryOrigin option) {
                 switch (option) {
-                    case DirectoryOption::Storage: return "Storage";
-                    case DirectoryOption::Data: return "Data";
-                    case DirectoryOption::App: return "App";
-                    case DirectoryOption::UserGame: return "User Game";
-                    case DirectoryOption::None: return "";
+                    case DefaultDirectoryOrigin::Storage: return "Storage";
+                    case DefaultDirectoryOrigin::Data: return "Data";
+                    case DefaultDirectoryOrigin::App: return "App";
+                    case DefaultDirectoryOrigin::UserGame: return "User Game";
+                    case DefaultDirectoryOrigin::Replays: return "Replays";
+                    case DefaultDirectoryOrigin::None: return "";
                 }
                 return "";
             }
 
-            void SetCurrentDirectory(DirectoryOption option) {
-                currentDirectoryOption = option;
+            void SetCurrentDirectory(DefaultDirectoryOrigin option) {
+                currentDefaultDirectoryOrigin = option;
                 switch (option) {
-                    case DirectoryOption::Storage:
+                    case DefaultDirectoryOrigin::Replays:
+                        currentDirectory = IO::FromUserGameFolder("Replays/");
+                        break;
+                    case DefaultDirectoryOrigin::Storage:
                         if (!IO::FolderExists(IO::FromStorageFolder(""))) { IO::CreateFolder(IO::FromStorageFolder("")); }
-                        currentDir = IO::FromStorageFolder("");
+                        currentDirectory = IO::FromStorageFolder("");
                         break;
-                    case DirectoryOption::Data:
-                        currentDir = IO::FromDataFolder("");
+                    case DefaultDirectoryOrigin::Data:
+                        currentDirectory = IO::FromDataFolder("");
                         break;
-                    case DirectoryOption::App:
-                        currentDir = IO::FromAppFolder("");
+                    case DefaultDirectoryOrigin::App:
+                        currentDirectory = IO::FromAppFolder("");
                         break;
-                    case DirectoryOption::UserGame:
-                        currentDir = IO::FromUserGameFolder("");
+                    case DefaultDirectoryOrigin::UserGame:
+                        currentDirectory = IO::FromUserGameFolder("");
                         break;
-                    case DirectoryOption::None:
+                    case DefaultDirectoryOrigin::None:
                         break;
                 }
                 IndexCurrentDirectory();
@@ -398,25 +446,25 @@ namespace _IO {
                 return (info.name == currentSelectedElement) ? "\\$bcd"+Icons::File+"\\$g" : "\\$bcd"+Icons::FileO+"\\$g";
             }
 
-            void SortFileInfos(array<FileInfo>@ fileInfos, Sorting sorting) {
+            void SortFileInfos(array<FileInfo>@ fileInfos, SortElementsBasedOnType sorting) {
                 if (fileInfos.Length == 0) return;
                 for (uint i = 0; i < fileInfos.Length - 1; i++) {
                     for (uint j = i + 1; j < fileInfos.Length; j++) {
                         bool swap = false;
                         switch (sorting) {
-                            case Sorting::Name:
+                            case SortElementsBasedOnType::Name:
                                 swap = fileInfos[i].name.ToLower() > fileInfos[j].name.ToLower();
                                 break;
-                            case Sorting::Date:
+                            case SortElementsBasedOnType::Date:
                                 swap = fileInfos[i].lastChangedDate > fileInfos[j].lastChangedDate;
                                 break;
-                            case Sorting::Type:
+                            case SortElementsBasedOnType::Type:
                                 if (fileInfos[i].isFolder && !fileInfos[j].isFolder) {
                                 } else if (!fileInfos[i].isFolder && fileInfos[j].isFolder) {
                                     swap = true;
                                 }
                                 break;
-                            case Sorting::Size:
+                            case SortElementsBasedOnType::Size:
                                 if (!fileInfos[i].isFolder && !fileInfos[j].isFolder) {
                                     swap = fileInfos[i].size > fileInfos[j].size;
                                 }
@@ -449,29 +497,53 @@ namespace _IO {
 }
 
 namespace _IO {
+    void SafeMoveSourceFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
+        IO::FileSource originalFile(originalPath);
+        string fileContents = originalFile.ReadToEnd();
+        if (verbose) log("Moving the file content", LogLevel::Info, 24, "MoveFileToPluginStorage");
+
+        SafeCreateFolder(StripFileNameFromPath(storagePath), true);
+
+        IO::File targetFile;
+        targetFile.Open(storagePath, IO::FileMode::Write);
+        targetFile.Write(fileContents);
+        targetFile.Close();
+
+        if (verbose) log("Finished moving the file", LogLevel::Info, 33, "MoveFileToPluginStorage");
+    }
+
+    namespace DLL { // Had to do it like this because of the automatic garbage collection :xdd:
+        Import::Library@ g_lib;
+        Import::Function@ g_getFileCreationTimeFunc;
+
+        bool loadLibrary() {
+            if (g_lib is null) {
+                string dllPath = IO::FromStorageFolder("DLLs/FileCreationTime.dll");
+                @g_lib = Import::GetLibrary(dllPath);
+                if (g_lib is null) { log("Failed to load DLL: " + dllPath, LogLevel::Error); return false; }
+            }
+
+            if (g_getFileCreationTimeFunc is null) {
+                @g_getFileCreationTimeFunc = g_lib.GetFunction("GetFileCreationTime");
+                if (g_getFileCreationTimeFunc is null) { log("Failed to get function from DLL.", LogLevel::Error); return false; }
+                g_getFileCreationTimeFunc.SetConvention(Import::CallConvention::cdecl);
+            }
+            return true;
+        }
+
+        int64 FileCreatedTime(const string &in filePath) {
+            if (!loadLibrary()) { return -1; }
+            int64 result = g_getFileCreationTimeFunc.CallInt64(filePath);
+            return result;
+        }
+
+        void UnloadLibrary() {
+            @g_lib = null;
+            @g_getFileCreationTimeFunc = null;
+        }
+    }
+
     int64 FileCreatedTime(const string &in filePath) {
-        string dllPath = "/src/Conditions/CompanionDLLs/FileCreationTime.dll";
-
-        if (!IO::FileExists(dllPath)) {
-            log("DLL does not exist: " + dllPath, LogLevel::Error);
-            return -1;
-        }
-
-        Import::Library@ lib = Import::GetLibrary(dllPath);
-        if (lib is null) {
-            log("Failed to load DLL: " + dllPath, LogLevel::Error);
-            return -1;
-        }
-
-        Import::Function@ func = lib.GetFunction("GetFileCreationTime");
-        if (func is null) {
-            log("Failed to get function from DLL: " + dllPath, LogLevel::Error);
-            return -1;
-        }
-
-        func.SetConvention(Import::CallConvention::cdecl);
-
-        int64 result = func.CallInt64(filePath);
-        return result;
+        return DLL::FileCreatedTime(filePath);
     }
 }

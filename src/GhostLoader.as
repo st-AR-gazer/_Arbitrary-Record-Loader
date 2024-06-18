@@ -47,20 +47,20 @@ namespace GhostLoader {
     void CheckHotkey() {
         /*
         if (UI::IsKeyPressed(g_toggleLoadGhostHotkey)) { /* complaints about no matching signature to UI::IsKeyPressed(VirtualHotkey&) * /
-            LoadGhostFromDialog();
+            LoadGhostFromDialogWidow();
         }
         */
     }
 
-    void LoadGhostFromDialog() {
-        string filePath = OpenGhostFileDialog();
+    void LoadGhostFromDialogWindow() {
+        string filePath = OpenGhostFileDialogWindow();
         if (filePath != "") {
             LoadGhost(filePath);
         }
     }
 
-    string OpenGhostFileDialog() {
-        _IO::FileExplorer::OpenFileExplorerWindow(IO::FromAppFolder(""));
+    string OpenGhostFileDialogWindow() {
+        _IO::FileExplorer::OpenFileExplorer(true);
         return _IO::FileExplorer::FileDialogWindow_FileName::GetFileName();
     }
 
@@ -84,7 +84,7 @@ namespace GhostLoader {
         auto task = dfm.Ghost_Download(GetFileName(url), url);
         WaitAndClearTaskLater(task, dfm);
         if (task.HasFailed || !task.HasSucceeded) {
-            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription, LogLevel::Error);
+            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription, LogLevel::Error, 87, "LoadGhostFromUrl");
             return;
         }
         auto instId = gm.Ghost_Add(task.Ghost, S_UseGhostLayer);

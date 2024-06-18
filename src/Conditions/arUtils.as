@@ -64,6 +64,12 @@ namespace _IO {
         return false;
     }
 
+    string StripFileNameFromPath(const string &in path) {
+        int index = _Text::LastIndexOf(path, "/");
+        if (index == -1) return path;
+        return path.SubStr(0, index);
+    }
+
     void RecursiveCreateFolder(const string &in path) {
         if (IO::FolderExists(path)) return;
 
@@ -82,7 +88,13 @@ namespace _IO {
 
     void SafeSaveToFile(const string &in path, const string &in content, bool shouldUseRecursion = true, bool shouldLogFilePath = false) {
         if (shouldLogFilePath) { print("Saving to file: " + path + " | LogLevel::Info | SafeSaveToFile"); }
-        SafeCreateFolder(path, shouldUseRecursion);
+        
+        string noFilePath = path;
+
+        if (!_IO::IsDirectory(path)) {
+            noFilePath = StripFileNameFromPath(path);
+        }
+        SafeCreateFolder(noFilePath, shouldUseRecursion);
 
         IO::File file;
         file.Open(path, IO::FileMode::Write);
