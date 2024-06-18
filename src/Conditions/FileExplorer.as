@@ -1,106 +1,200 @@
 void Render() {
     if (_IO::FileExplorer::showInterface) {
-        _IO::FileExplorer::ShowFileDialog();
+        _IO::FileExplorer::RenderFileExplorer();
     }
+
+    //_IO::FileExplorer::OpenFileExplorer(bool mustReturnFilePath = true, string path, string searchQuery = "");
 }
 
 namespace _IO {
     namespace FileExplorer {
-        bool ShowOnlyFiles = false;
-        bool ShowOnlyFolders = false;
-        bool FilterFileType = false;
+        // Render 
+        bool showInterface = false;
 
-        string FileTypeFilter = "";
+        // Per element info structure
+        enum FileInfoIcon { Folder, File, Text, Pdf, Word, Excel, Powerpoint, Image, Archive, Audio, Video, Code, Epub };
+        class FileInfo {
+            bool isFolder;
+            int clickCount = 0;
 
-        string currentDir = "";
-        string lastIndexedDir = "";
-        array<string> dirHistory;
+            FileInfoIcon icon = FileInfoIcon::File;
 
+            string name;
+            string fileExtention; //
+            string lastChangedDate;
+            string size;
+            string creationDate;
+            string creator;
+        }
+
+        // Search and navigation
+        string currentDirectory = "~";
+        string currentSearchQuery = "";
+        
+        array<string> directoryHistory;
+
+        bool reloadDirectory = false;
+        bool goToDefaultDirectory = false;
+
+        // Tools
+        bool copyFileNameToClipboard = false;
+        bool copyFullFilePathToClipboard = false;
+        bool deleteFile = false;
+        // Sorting
+        enum SortElementsBasedOnType { Name, Date, Type, Size };
+        SortElementsBasedOnType elementTypeSorting = SortElementsBasedOnType::Type;
+
+        // Main view
+        uint currentPage = 0;
+        uint itemsPerPage = 100;
+
+        // Filter
         string currentSelectedElement = "";
         string selectedElementPath = "";
         string selectedFileName = "";
 
-        enum Sorting { Name, Date, Type, Size };
-        Sorting sorting = Sorting::Type;
+        // General        
+        bool shouldFilterFileType = false;
 
-        enum DirectoryOption { None, Storage, Data, App, UserGame }
-        DirectoryOption currentDirectoryOption = DirectoryOption::None;
+        enum DefaultDirectoryOrigin { None, Storage, Data, App, UserGame, Replays }
+        DefaultDirectoryOrigin currentDirectoryOption = DefaultDirectoryOrigin::None;
 
-        bool ShouldShow_ICON = true;
-        bool ShouldShow_FileOrFolderName = true;
-        bool ShouldShow_LastChangedDate = true;
-        bool ShouldShow_FileType = true;
-        bool ShouldShow_Size = true;
-        bool ShouldShow_CreationDate = true;
+        // States
+        // SS = Shold Show; SO = Show Only
+        bool SO_Files = false;
+        bool SO_Folders = false;
 
-        uint currentPage = 0;
-        uint itemsPerPage = 100;
+        bool SS_ICON = true;
+        bool SS_FileOrFolderName = true;
+        bool SS_LastChangedDate = true;
+        bool SS_FileType = true;
+        bool SS_Size = true;
+        bool SS_CreationDate = true;
 
-        bool showInterface = false;
 
         array<FileInfo> fileInfos;
 
-        namespace FileDialogWindow_FileName {
-            string GetFileName() {
-                return currentSelectedElement;
-            }
-        }
-
-        void OpenFileExplorerWindow(const string &in fileExplorerStartingDirectory = IO::FromAppFolder("")) {
-            currentDir = fileExplorerStartingDirectory;
+        void OpenFileExplorer(bool mustReturnFilePath = false, const string &in _path, const string &in _searchQuery) {
             showInterface = true;
+            currentDirectory = _path;
+            currentSearchQuery = _searchQuery;
+            directoryHistory.Resize(0);
+            reloadDirectory = false;
+            goToDefaultDirectory = true;
             IndexCurrentDirectory();
         }
 
-        class FileInfo {
-            string name;
-            bool isFolder;
-            string lastChangedDate;
-            string size;
-            string creationDate;
-
-            int clickCount = 0;
+        void RenderFileExplorer() {
+            if (UI::Begin("File Dialog", showInterface, UI::WindowFlags::AlwaysAutoResize | UI::WindowFlags::NoCollapse)) {
+                Render_Structure();
+                UI::End();
+            }
         }
 
-        void ShowFileDialog() {
-            if (UI::Begin("File Dialog", showInterface, UI::WindowFlags::AlwaysAutoResize | UI::WindowFlags::NoCollapse)) {
-                if (UI::Button("Up One Level") && currentDir.Length > 0) {
-                    if (currentDir.EndsWith("/") || currentDir.EndsWith("\\")) {
-                        currentDir = currentDir.SubStr(0, currentDir.Length - 1);
-                    }
+        void Render_Structure() {
+            Render_NavBar();
+            Render_MainView();
+            Render_SideBar();
+        }
 
-                    int posSlash = _Text::LastIndexOf(currentDir, "/");
-                    int posBackslash = _Text::LastIndexOf(currentDir, "\\");
-                    int pos = Math::Max(posSlash, posBackslash);
+        void Render_NavBar() {
+            Render_NavBar_Top();
+            UI::Separator();
+            Render_NavBar_Bottom();
+        }
 
-                    if (pos != -1) {
-                        string newDir = currentDir.SubStr(0, pos);
-                        dirHistory.InsertLast(currentDir);
-                        currentDir = newDir;
-                        IndexCurrentDirectory();
-                    }
+        void Render_NavBar_Top() {
+            float totalWidth = UI::GetContentRegionAvail().x; // Get the total available width
+            float buttonWidth = 40.0f; // Smallest width for buttons
+            float searchWidth = totalWidth * 0.20f; // 20% width for search bar
+            float currentDirectoryWidth = totalWidth - (4 * buttonWidth) - searchWidth; // Rest of the width for file path
+            
+            if (UI::Button("ARROW_LEFT", vec2(buttonWidth, 0))) { Hidden::FE_GoToPreviousDirectory(); }
+            UI::SameLine();
+            if (UI::Button("ARROW_RIGHT", vec2(buttonWidth, 0))) { Hidden::FE_GoToNextDirectory(); }
+            UI::SameLine();
+            if (UI::Button("ARROW_UP", vec2(buttonWidth, 0))) { Hidden::FE_GoToParentDirectory(); }
+            UI::SameLine();
+            if (UI::Button("ARROW_DOWN", vec2(buttonWidth, 0))) { Hidden::FE_GoToChildDirectory(); }
+
+            UI::SameLine();
+
+            UI::PushItemWidth(currentDirectoryWidth);
+            currentDirectory = UI::InputText("##CurrentDirectory", currentDirectory);
+            UI::PopItemWidth();
+
+            UI::SameLine();
+            
+            UI::PushItemWidth(searchWidth);
+            currentSearchQuery = UI::InputText("##Search", currentSearchQuery);
+            UI::PopItemWidth();
+
+        }
+        namespace Hidden {
+            void FE_GoToPreviousDirectory() {
+                if (directoryHistory.Length > 0) {
+                    currentDirectory = directoryHistory[directoryHistory.Length - 1];
+                    directoryHistory.RemoveLast();
                     currentPage = 0;
+                    reloadDirectory = true;
                 }
-                UI::SameLine();
-                if (UI::Button("Back to Previous Directory") && dirHistory.Length > 0) {
-                    currentDir = dirHistory[dirHistory.Length - 1];
-                    dirHistory.RemoveLast();
-                    currentPage = 0;
+            }
+            void FE_GoToNextDirectory() {
+                if (IsDirectory(currentSelectedElement)) { 
+                    currentDirectory = currentSelectedElement; 
                     IndexCurrentDirectory();
+                } else {
+                    NotifyWarn("Cannot set the current directory to a file path, it has to be a folder"); 
                 }
-                UI::SameLine();
-                ShowOnlyFiles = UI::Checkbox("Show Only Files", ShowOnlyFiles);
-                UI::SameLine();
-                ShowOnlyFolders = UI::Checkbox("Show Only Folders", ShowOnlyFolders);
-                UI::SameLine();
-                if (UI::Button("Set Path to Current Directory")) {
-                    if (IsDirectory(currentSelectedElement)) { 
-                        currentDir = currentSelectedElement; 
-                        IndexCurrentDirectory();
-                    } else { 
-                        NotifyWarn("Cannot set the current directory to a file path, it has to be a folder"); 
-                    }
+            }
+            void FE_GoToParentDirectory() {
+                if (currentDirectory.Length <= 0) return;
+
+                if (currentDirectory.EndsWith("/") || currentDirectory.EndsWith("\\")) {
+                    currentDirectory = currentDirectory.SubStr(0, currentDirectory.Length - 1);
                 }
+
+                int posSlash = _Text::LastIndexOf(currentDirectory, "/");
+                int posBackslash = _Text::LastIndexOf(currentDirectory, "\\");
+                int pos = Math::Max(posSlash, posBackslash);
+
+                if (pos != -1) {
+                    string newDir = currentDirectory.SubStr(0, pos);
+                    directoryHistory.InsertLast(currentDirectory);
+                    currentDirectory = newDir;
+                    currentPage = 0;
+                    reloadDirectory = true;
+                }
+            }
+            void FE_GoToChildDirectory() {
+                if (currentSelectedElement.Length <= 0) return;
+                if (currentSelectedElement == "..") return;
+
+                string newDir = currentDirectory + "/" + currentSelectedElement;
+                if (_IO::IsDirectory(newDir)) {
+                    directoryHistory.InsertLast(currentDirectory);
+                    currentDirectory = newDir;
+                    currentPage = 0;
+                    reloadDirectory = true;
+                }
+            }
+        }
+
+        void Render_NavBar_Bottom() {
+            if (UI::Button("Hide Folders")) { SO_Folders = false; }
+            UI::SameLine();
+            if (UI::Button("Hide Files")) { SO_Files = false; }
+            UI::SameLine();
+            if (UI::Button("Show Elements")) { SO_Folders = true; SO_Files = true; }
+            UI::SameLine();
+            
+        }
+
+
+        void renderplaceholderfornow() {
+
+
+                
 
                 if (UI::BeginCombo("Sorting", Hidden::GetSortingName(sorting), UI::ComboFlags::HeightRegular)) {
                     if (UI::Selectable("Name", sorting == Sorting::Name)) sorting = Sorting::Name;
@@ -177,10 +271,10 @@ namespace _IO {
                     for (uint i = 0; i < pageInfos.Length; i++) {
                         FileInfo info = pageInfos[i];
                         UI::TableNextRow();
-                        if (UI::TableSetColumnIndex(0) && ShouldShow_ICON) {
+                        if (UI::TableSetColumnIndex(0) && SS_ICON) {
                             UI::Text(Hidden::GetFileIcon(info));
                         }
-                        if (UI::TableSetColumnIndex(1) && ShouldShow_FileOrFolderName) {
+                        if (UI::TableSetColumnIndex(1) && SS_FileOrFolderName) {
                             if (UI::Selectable(info.name, currentSelectedElement == info.name)) {
                                 info.clickCount++;
                                 if (info.clickCount == 2 && info.isFolder) {
@@ -194,16 +288,16 @@ namespace _IO {
                                 selectedElementPath = info.name;
                             }
                         }
-                        if (UI::TableSetColumnIndex(2) && ShouldShow_LastChangedDate) {
+                        if (UI::TableSetColumnIndex(2) && SS_LastChangedDate) {
                             UI::Text(info.lastChangedDate);
                         }
-                        if (UI::TableSetColumnIndex(3) && ShouldShow_FileType) {
+                        if (UI::TableSetColumnIndex(3) && SS_FileType) {
                             UI::Text(info.isFolder ? "Folder" : "File");
                         }
-                        if (UI::TableSetColumnIndex(4) && ShouldShow_Size) {
+                        if (UI::TableSetColumnIndex(4) && SS_Size) {
                             UI::Text(info.size);
                         }
-                        if (UI::TableSetColumnIndex(5) && ShouldShow_CreationDate) {
+                        if (UI::TableSetColumnIndex(5) && SS_CreationDate) {
                             UI::Text(info.creationDate);
                         }
                     }
