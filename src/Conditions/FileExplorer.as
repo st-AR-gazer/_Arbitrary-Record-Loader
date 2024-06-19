@@ -224,25 +224,24 @@ namespace _IO {
         void Render_NavBar_Middle() {
             float buttonWidth = 30.0f;
 
-            UI::Text("Current Page: " + tostring(currentPage));
-
-            if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) {
+            if (UI::Button(Icons::ArrowLeft)) {
                 print("ArrowLeft button pressed");
-                currentPage++;
-                print("New currentPage: " + tostring(currentPage));
+                if (currentPage > 0) {
+                    currentPage--;
+                    IndexCurrentDirectory();
+                    print("New currentPage: " + tostring(currentPage));
+                }
             }
             UI::SameLine();
 
-            if (UI::Button(Icons::ArrowRight, vec2(buttonWidth, 0))) {
+            if (UI::Button(Icons::ArrowRight))) {
                 print("ArrowRight button pressed");
-                currentPage--;
-                print("New currentPage: " + tostring(currentPage));
-            }
-            UI::SameLine();
-
-            if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) {
-                currentPage = 0;
-                print("Debug Button pressed");
+                uint maxPage = Math::Ceil(float(fileInfos.Length) / float(itemsPerPage)) - 1;
+                if (currentPage < maxPage) {
+                    currentPage++;
+                    IndexCurrentDirectory();
+                    print("New currentPage: " + tostring(currentPage));
+                }
             }
 
             UI::SameLine();
