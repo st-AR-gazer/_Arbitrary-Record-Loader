@@ -227,12 +227,9 @@ namespace _IO {
             if (UI::Button(Icons::ArrowLeft + "")) {
                 print("ArrowLeft button pressed");
             }
-            if (UI::Button(Icons::ArrowLeft )) {
-                print("ArrowLeft button pressed (no '')");
-            }
             UI::SameLine();
 
-            if (UI::Button(Icons::ArrowRight + "")) {
+            if (UI::Button(Icons::ArrowRight)) {
                 print("ArrowRight button pressed");
             }
 
