@@ -16,19 +16,17 @@ namespace _Text {
     }
 
     int NLastIndexOf(const string &in str, const string &in value, int n) {
-        int lastIndex = -1;
-        int index = str.IndexOf(value);
-        while (index != -1) {
-            lastIndex = index;
-            if (index + value.Length >= str.Length) break;
-            index = str.SubStr(index + value.Length).IndexOf(value);
-            if (index != -1) {
-                index += lastIndex + value.Length;
+        int index = -1;
+        for (int i = str.Length - 1; i >= 0; --i) {
+            if (str.SubStr(i, value.Length) == value) {
+                if (n == 1) {
+                    index = i;
+                    break;
+                }
+                --n;
             }
-            if (n == 0) break;
-            --n;
         }
-        return lastIndex;
+        return index;
     }
 }
 
