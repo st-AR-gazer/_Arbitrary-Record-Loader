@@ -225,6 +225,7 @@ namespace _IO {
             float buttonWidth = 30.0f;
 
             if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) {
+                print(currentPage);
                 if (currentPage > 0) { currentPage--; IndexCurrentDirectory(); }
             }
             UI::SameLine();
@@ -355,7 +356,6 @@ namespace _IO {
                 UI::EndTable();
             }
         }
-        
 
 
         void IndexCurrentDirectory() {
