@@ -226,15 +226,11 @@ namespace _IO {
 
             if (UI::Button(Icons::ArrowLeft)) {
                 print("ArrowLeft button pressed");
-            } else {
-                print("ArrowLeft button not pressed");
             }
             UI::SameLine();
 
             if (UI::Button(Icons::ArrowRight + " bb ")) {
                 print("ArrowRight button pressed");
-            } else {
-                print("ArrowRight button not pressed");
             }
 
             UI::SameLine();
