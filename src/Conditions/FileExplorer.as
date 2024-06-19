@@ -94,7 +94,7 @@ namespace _IO {
                 return currentSelectedElementPath;
             }
 
-            void GetExportPath() {
+            string GetExportPath() {
                 return exportElementPath;
             }
         }
@@ -103,7 +103,6 @@ namespace _IO {
             if (!_mustReturnFilePath) { mustReturnFilePath = true; } else { mustReturnFilePath = false; }
             showInterface = true;
             currentDirectory = _path;
-            if (_path == "" ) { currentDirectory = IO::FromUserGameFolder("Replays/"); }
             currentSearchQuery = _searchQuery;
             directoryHistory.Resize(0);
             reloadDirectory = false;

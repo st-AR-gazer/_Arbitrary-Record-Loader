@@ -60,8 +60,8 @@ namespace GhostLoader {
     }
 
     string OpenGhostFileDialogWindow() {
-        _IO::FileExplorer::OpenFileExplorer(true);
-        return _IO::FileExplorer::FileDialogWindow_FileName::GetFileName();
+        _IO::FileExplorer::OpenFileExplorer(true, IO::FromUserGameFolder("Replays/"));
+        return _IO::FileExplorer::Exports::GetExportPath();
     }
 
     void LoadGhost(const string &in filePath) {
