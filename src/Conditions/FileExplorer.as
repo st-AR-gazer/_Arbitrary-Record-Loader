@@ -234,7 +234,7 @@ namespace _IO {
             }
             UI::SameLine();
 
-            if (UI::Button(Icons::ArrowRight))) {
+            if (UI::Button(Icons::ArrowRight)) {
                 print("ArrowRight button pressed");
                 uint maxPage = Math::Ceil(float(fileInfos.Length) / float(itemsPerPage)) - 1;
                 if (currentPage < maxPage) {
