@@ -224,14 +224,19 @@ namespace _IO {
         void Render_NavBar_Middle() {
             float buttonWidth = 30.0f;
 
+            UI::Text("Current Page: " + tostring(currentPage));
+
             if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) {
-                print(currentPage);
-                if (currentPage > 0) { currentPage--; IndexCurrentDirectory(); }
+                print("ArrowLeft button pressed");
+                currentPage--;
+                print("New currentPage: " + tostring(currentPage));
             }
             UI::SameLine();
+            
             if (UI::Button(Icons::ArrowRight, vec2(buttonWidth, 0))) {
-                uint maxPage = Math::Ceil(float(fileInfos.Length) / float(itemsPerPage)) - 1;
-                if (currentPage < maxPage) { currentPage++; IndexCurrentDirectory(); }
+                print("ArrowRight button pressed");
+                currentPage++;
+                print("New currentPage: " + tostring(currentPage));
             }
 
             UI::SameLine();
@@ -392,7 +397,7 @@ namespace _IO {
                     fileInfos[i].isFolder = isFolder;
                     fileInfos[i].lastChangedDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                     fileInfos[i].size = isFolder ? "-" : Hidden::FormatSize(IO::FileSize(path));
-                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", _IO::FileCreatedTime(path));
+                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", _IO::FileCreatedTime(path)); // the reason it is formatted with the current timestamp might be because of Time::FormatString, not sure though, will have to check at some point... Make a test plugin as they say :xdd:, or maybe -1 represents current time... idk xdd
                     fileInfos[i].clickCount = 0;
                 }
 
