@@ -566,6 +566,6 @@ namespace _IO {
 
     int64 FileCreatedTime(const string &in filePath) {
         // return /*DLL::FileCreatedTime*/(filePath);
-        return filePath;
+        return -1;
     }
 }
