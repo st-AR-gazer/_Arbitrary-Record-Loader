@@ -91,9 +91,8 @@ namespace _IO {
         
         string noFilePath = path;
 
-        if (!_IO::IsDirectory(path)) {
-            noFilePath = StripFileNameFromPath(path);
-        }
+        if (!_IO::IsDirectory(path)) { noFilePath = StripFileNameFromPath(path); }
+        
         SafeCreateFolder(noFilePath, shouldUseRecursion);
 
         IO::File file;
@@ -141,6 +140,8 @@ namespace _IO {
     }
 
     string GetFileExtension(const string &in path) {
+        if (_IO::IsDirectory(path)) { return ""; }
+
         int index = _Text::LastIndexOf(path, ".");
         if (index == -1) {
             return "";

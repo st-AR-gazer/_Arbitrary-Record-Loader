@@ -354,6 +354,10 @@ namespace _IO {
                             UI::Text(info.lastChangedDate);
                         }
                         if (UI::TableSetColumnIndex(3) && SS_FileType) {
+                            if (info.fileType.ToLower() == "gbx");
+                            
+
+                            // C:\Users\AR_\Documents\Trackmania2020\Replays/2024-03-06-15-58-44_SnowCar Photoshoot.Replay.Gbx
                             UI::Text(info.isFolder ? "Folder" : "File");
                         }
                         if (UI::TableSetColumnIndex(4) && SS_Size) {
@@ -400,6 +404,7 @@ namespace _IO {
 
                     fileInfos[i].name = elements[i];
                     fileInfos[i].isFolder = isFolder;
+                    fileInfos[i].fileExtention = _IO::GetFileExtension(path);
                     fileInfos[i].lastChangedDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                     fileInfos[i].size = isFolder ? "-" : Hidden::FormatSize(IO::FileSize(path));
                     fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", _IO::FileCreatedTime(path)); // the reason it is formatted with the current timestamp might be because of Time::FormatString, not sure though, will have to check at some point... Make a test plugin as they say :xdd:, or maybe -1 represents current time... idk xdd
