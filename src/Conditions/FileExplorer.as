@@ -226,22 +226,11 @@ namespace _IO {
 
             if (UI::Button(Icons::ArrowLeft)) {
                 print("ArrowLeft button pressed");
-                if (currentPage > 0) {
-                    currentPage--;
-                    IndexCurrentDirectory();
-                    print("New currentPage: " + tostring(currentPage));
-                }
             }
             UI::SameLine();
 
             if (UI::Button(Icons::ArrowRight)) {
                 print("ArrowRight button pressed");
-                uint maxPage = Math::Ceil(float(fileInfos.Length) / float(itemsPerPage)) - 1;
-                if (currentPage < maxPage) {
-                    currentPage++;
-                    IndexCurrentDirectory();
-                    print("New currentPage: " + tostring(currentPage));
-                }
             }
 
             UI::SameLine();
