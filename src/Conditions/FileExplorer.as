@@ -46,7 +46,7 @@ namespace _IO {
         bool copyFullFilePathToClipboard = false;
         bool deleteFile = false;
         // Sorting
-        enum SortElementsBasedOnType { Name, Date, Type, Size };
+        enum SortElementsBasedOnType { Alphabetical, Date, Type, Size };
         SortElementsBasedOnType currentSortingOption = SortElementsBasedOnType::Type;
 
         // Filter
@@ -240,7 +240,7 @@ namespace _IO {
             UI::SameLine();
 
             if (UI::BeginCombo("Sorting", Hidden::GetSortingName(currentSortingOption), UI::ComboFlags::HeightRegular)) {
-                if (UI::Selectable("Name", currentSortingOption == SortElementsBasedOnType::Name)) currentSortingOption = SortElementsBasedOnType::Name;
+                if (UI::Selectable("Alphabetical", currentSortingOption == SortElementsBasedOnType::Alphabetical)) currentSortingOption = SortElementsBasedOnType::Alphabetical;
                 if (UI::Selectable("Date", currentSortingOption == SortElementsBasedOnType::Date)) currentSortingOption = SortElementsBasedOnType::Date;
                 if (UI::Selectable("Type", currentSortingOption == SortElementsBasedOnType::Type)) currentSortingOption = SortElementsBasedOnType::Type;
                 if (UI::Selectable("Size", currentSortingOption == SortElementsBasedOnType::Size)) currentSortingOption = SortElementsBasedOnType::Size;
@@ -396,7 +396,7 @@ namespace _IO {
 
             string GetSortingName(SortElementsBasedOnType sorting) {
                 switch (sorting) {
-                    case SortElementsBasedOnType::Name: return "Name";
+                    case SortElementsBasedOnType::Alphabetical: return "Alphabetical";
                     case SortElementsBasedOnType::Date: return "Date";
                     case SortElementsBasedOnType::Type: return "Type";
                     case SortElementsBasedOnType::Size: return "Size";
@@ -467,19 +467,27 @@ namespace _IO {
                     for (uint j = i + 1; j < fileInfos.Length; j++) {
                         bool swap = false;
                         switch (sorting) {
-                            case SortElementsBasedOnType::Name:
+                            case SortElementsBasedOnType::Alphabetical:
                                 swap = fileInfos[i].name.ToLower() > fileInfos[j].name.ToLower();
                                 break;
                             case SortElementsBasedOnType::Date:
                                 swap = fileInfos[i].lastChangedDate > fileInfos[j].lastChangedDate;
                                 break;
                             case SortElementsBasedOnType::Type:
-                                swap = (fileInfos[i].isFolder && !fileInfos[j].isFolder) || (!fileInfos[i].isFolder && fileInfos[j].isFolder && fileInfos[i].name > fileInfos[j].name);
+                                if (fileInfos[i].isFolder != fileInfos[j].isFolder) {
+                                    swap = fileInfos[i].isFolder && !fileInfos[j].isFolder;
+                                } else {
+                                    swap = fileInfos[i].name.ToLower() > fileInfos[j].name.ToLower();
+                                }
                                 break;
                             case SortElementsBasedOnType::Size:
-                                swap = (fileInfos[i].isFolder && !fileInfos[j].isFolder) || 
-                                    (!fileInfos[i].isFolder && fileInfos[j].isFolder && fileInfos[i].name > fileInfos[j].name) ||
-                                    (fileInfos[i].isFolder == fileInfos[j].isFolder && fileInfos[i].size < fileInfos[j].size);
+                                if (fileInfos[i].isFolder != fileInfos[j].isFolder) {
+                                    swap = fileInfos[i].isFolder && !fileInfos[j].isFolder;
+                                } else if (fileInfos[i].size != fileInfos[j].size) {
+                                    swap = fileInfos[i].size < fileInfos[j].size;
+                                } else {
+                                    swap = fileInfos[i].name.ToLower() > fileInfos[j].name.ToLower();
+                                }
                                 break;
                         }
                         if (swap) {
