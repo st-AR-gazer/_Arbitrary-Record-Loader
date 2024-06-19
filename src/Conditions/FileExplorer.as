@@ -139,7 +139,7 @@ namespace _IO {
             
             if (directoryHistory.IsEmpty()) 
                 //{ _UI::DisabledButton(Icons::ArrowLeft, vec2(buttonWidth, 0)); } else {
-                //if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) { Hidden::FE_GoToPreviousDirectory(); } }
+                if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) { Hidden::FE_GoToPreviousDirectory(); } //}
         UI::SameLine();
             // if (UI::Button(Icons::ArrowRight, vec2(buttonWidth, 0))) { Hidden::FE_GoToNextDirectory(); }
             // UI::SameLine();
