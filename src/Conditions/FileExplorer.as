@@ -138,8 +138,8 @@ namespace _IO {
             float currentDirectoryWidth = totalWidth - (7 * buttonWidth) - searchWidth;
             
             if (directoryHistory.IsEmpty()) 
-                { _UI::DisabledButton(Icons::ArrowLeft, vec2(buttonWidth, 0)); } else {
-                if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) { Hidden::FE_GoToPreviousDirectory(); } }
+                //{ _UI::DisabledButton(Icons::ArrowLeft, vec2(buttonWidth, 0)); } else {
+                //if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) { Hidden::FE_GoToPreviousDirectory(); } }
         UI::SameLine();
             // if (UI::Button(Icons::ArrowRight, vec2(buttonWidth, 0))) { Hidden::FE_GoToNextDirectory(); }
             // UI::SameLine();
@@ -224,7 +224,7 @@ namespace _IO {
         void Render_NavBar_Middle() {
             float buttonWidth = 30.0f;
 
-            if (UI::Button(Icons::ArrowLeft + "​")) {
+            if (UI::Button(Icons::ArrowLeft)) {
                 print("ArrowLeft button pressed");
             }
             UI::SameLine();
