@@ -477,9 +477,9 @@ namespace _IO {
                                 swap = (fileInfos[i].isFolder && !fileInfos[j].isFolder) || (!fileInfos[i].isFolder && fileInfos[j].isFolder && fileInfos[i].name > fileInfos[j].name);
                                 break;
                             case SortElementsBasedOnType::Size:
-                                if (!fileInfos[i].isFolder && !fileInfos[j].isFolder) {
-                                    swap = fileInfos[i].size > fileInfos[j].size;
-                                }
+                                swap = (fileInfos[i].isFolder && !fileInfos[j].isFolder) || 
+                                    (!fileInfos[i].isFolder && fileInfos[j].isFolder && fileInfos[i].name > fileInfos[j].name) ||
+                                    (fileInfos[i].isFolder == fileInfos[j].isFolder && fileInfos[i].size < fileInfos[j].size);
                                 break;
                         }
                         if (swap) {
