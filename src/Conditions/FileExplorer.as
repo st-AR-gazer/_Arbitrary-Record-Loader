@@ -38,8 +38,8 @@ namespace _IO {
         bool goToDefaultDirectory = false;
 
         string currentSelectedElement = "";
-        string selectedElementPath = "";
-        string selectedFileName = "";
+        string currentSelectedElementPath = "";
+        string currentSelectedFileName = "";
 
         // Tools
         bool copyFileNameToClipboard = false;
@@ -77,12 +77,25 @@ namespace _IO {
         uint currentPage = 0;
         uint itemsPerPage = 30;
 
+        // Export
+        string exportElementPath = "";
+
 
         array<FileInfo> fileInfos;
 
-        namespace FileDialogWindow_FileName {
+        namespace Exports {
             string GetFileName() {
-                return selectedFileName;
+                currentSelectedFileName = _IO::GetFileExtension(currentSelectedElement);
+                return currentSelectedFileName;
+            }
+
+            string GetFilePath() {
+                currentSelectedElementPath = currentDirectory + GetFileName();
+                return currentSelectedElementPath;
+            }
+
+            void GetExportPath() {
+                return exportElementPath;
             }
         }
 
@@ -268,19 +281,28 @@ namespace _IO {
             if (shouldFilterFileType) {
                 currentFilter = UI::InputText("File Type Filter", currentFilter);
             }
-
         }
 
         void Render_NavBar_Bottom() {
-            if (UI::Button("Submit current selected path and close")) {
-                showInterface = false; // It's already submitted when the path is selected :xpp:
+            if (mustReturnFilePath) {
+                if (UI::Button("Cancel and close")) {
+                    showInterface = false;
+                }
+                if (UI::Button("Submit current selected path and close")) {
+                    exportElementPath = currentSelectedElementPath;
+                    showInterface = false;
+                }
+            } else {
+                if (UI::Button("Close")) {
+                    showInterface = false;
+                }
             }
             UI::SameLine();
             if (UI::Button("Copy Path to Clipboard")) {
-                Hidden::CopyToClipboard(selectedElementPath);
+                Hidden::CopyToClipboard(currentSelectedElementPath);
             }
             UI::SameLine();
-            UI::Text("Selected File: " + selectedElementPath);
+            UI::Text("Selected File: " + currentSelectedElementPath);
         }
 
         void Render_MainView() {
@@ -297,6 +319,8 @@ namespace _IO {
                 if (pageInfos.IsEmpty()) {
                     UI::Text("No elements in this directory.");
                 } else {
+                    Hidden::SortFileInfos(pageInfos, currentSortingOption);
+
                     for (uint i = 0; i < pageInfos.Length; i++) {
                         FileInfo info = pageInfos[i];
                         UI::TableNextRow();
@@ -305,16 +329,9 @@ namespace _IO {
                         }
                         if (UI::TableSetColumnIndex(1) && SS_FileOrFolderName) {
                             if (UI::Selectable(info.name, currentSelectedElement == info.name)) {
-                                info.clickCount++;
-                                if (info.clickCount == 2 && info.isFolder) {
-                                    directoryHistory.InsertLast(currentDirectory);
-                                    currentDirectory = info.name;
-                                    currentPage = 0;
-                                    info.clickCount = 0;
-                                    IndexCurrentDirectory();
-                                }
                                 currentSelectedElement = info.name;
-                                selectedElementPath = info.name;
+                                currentSelectedElementPath = info.name;
+                                IndexCurrentDirectory();
                             }
                         }
                         if (UI::TableSetColumnIndex(2) && SS_LastChangedDate) {
@@ -333,7 +350,6 @@ namespace _IO {
                 }
                 UI::EndTable();
             }
-            
         }
         
 
@@ -459,10 +475,7 @@ namespace _IO {
                                 swap = fileInfos[i].lastChangedDate > fileInfos[j].lastChangedDate;
                                 break;
                             case SortElementsBasedOnType::Type:
-                                if (fileInfos[i].isFolder && !fileInfos[j].isFolder) {
-                                } else if (!fileInfos[i].isFolder && fileInfos[j].isFolder) {
-                                    swap = true;
-                                }
+                                swap = (fileInfos[i].isFolder && !fileInfos[j].isFolder) || (!fileInfos[i].isFolder && fileInfos[j].isFolder && fileInfos[i].name > fileInfos[j].name);
                                 break;
                             case SortElementsBasedOnType::Size:
                                 if (!fileInfos[i].isFolder && !fileInfos[j].isFolder) {
@@ -498,17 +511,12 @@ namespace _IO {
 
 namespace _IO {
     void SafeMoveSourceFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
-        IO::FileSource originalFile(originalPath);
-        string fileContents = originalFile.ReadToEnd();
+        string fileContents = _IO::ReadSourceFileToEnd(originalPath);
         if (verbose) log("Moving the file content", LogLevel::Info, 24, "MoveFileToPluginStorage");
 
         SafeCreateFolder(StripFileNameFromPath(storagePath), true);
 
-        IO::File targetFile;
-        targetFile.Open(storagePath, IO::FileMode::Write);
-        targetFile.Write(fileContents);
-        targetFile.Close();
-
+        _IO::SafeSaveToFile(storagePath, fileContents, true);
         if (verbose) log("Finished moving the file", LogLevel::Info, 33, "MoveFileToPluginStorage");
     }
 
