@@ -392,7 +392,7 @@ namespace _IO {
                     fileInfos[i].isFolder = isFolder;
                     fileInfos[i].lastChangedDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                     fileInfos[i].size = isFolder ? "-" : Hidden::FormatSize(IO::FileSize(path));
-                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", _IO::DLL::FileCreatedTime(path));
+                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", _IO::FileCreatedTime(path));
                     fileInfos[i].clickCount = 0;
                 }
 
@@ -565,6 +565,7 @@ namespace _IO {
     }
 
     int64 FileCreatedTime(const string &in filePath) {
-        return /*DLL::FileCreatedTime*/(filePath);
+        // return /*DLL::FileCreatedTime*/(filePath);
+        return filePath;
     }
 }
