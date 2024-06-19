@@ -138,8 +138,8 @@ namespace _IO {
             float currentDirectoryWidth = totalWidth - (7 * buttonWidth) - searchWidth;
             
             if (directoryHistory.IsEmpty()) 
-                //{ _UI::DisabledButton(Icons::ArrowLeft, vec2(buttonWidth, 0)); } else {
-                if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) { Hidden::FE_GoToPreviousDirectory(); } //}
+                { _UI::DisabledButton(Icons::ArrowLeft, vec2(buttonWidth, 0)); } else {
+                if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) { Hidden::FE_GoToPreviousDirectory(); } }
         UI::SameLine();
             // if (UI::Button(Icons::ArrowRight, vec2(buttonWidth, 0))) { Hidden::FE_GoToNextDirectory(); }
             // UI::SameLine();
@@ -223,14 +223,14 @@ namespace _IO {
 
         void Render_NavBar_Middle() {
             float buttonWidth = 30.0f;
-
-            if (UI::Button(Icons::ArrowLeft)) {
-                print("ArrowLeft button pressed");
-            }
+            if (UI::Button(Icons::ChevronLeft, vec2(buttonWidth, 0))) {    // the icon here CANNOT be Icons::ArrowLeft, it has to be something else since the history arrow is blocking it (they cannot have the same
+                if (currentPage > 0) { currentPage--; IndexCurrentDirectory(); } // label). I could just add an invisible space, but having different icons is probably better anyways :COPIUM:
+            }                                                                    // NOTE TO SELF: I should make an issue about this.
             UI::SameLine();
 
-            if (UI::Button(Icons::ArrowRight)) {
-                print("ArrowRight button pressed");
+            if (UI::Button(Icons::ChevronRight, vec2(buttonWidth, 0))) {
+                uint maxPage = Math::Ceil(float(fileInfos.Length) / float(itemsPerPage)) - 1;
+                if (currentPage < maxPage) { currentPage++; IndexCurrentDirectory(); }
             }
 
             UI::SameLine();
@@ -327,12 +327,24 @@ namespace _IO {
 
                     for (uint i = 0; i < pageInfos.Length; i++) {
                         FileInfo info = pageInfos[i];
+                        string displayName = info.name;
+
+                        if (hidePathFromFilePath) {
+                            int posSlash = _Text::LastIndexOf(displayName, "/");
+                            int posBackslash = _Text::LastIndexOf(displayName, "\\");
+                            int pos = Math::Max(posSlash, posBackslash);
+
+                            if (pos != -1) {
+                                displayName = displayName.SubStr(pos + 1);
+                            }
+                        }
+
                         UI::TableNextRow();
                         if (UI::TableSetColumnIndex(0) && SS_ICON) {
                             UI::Text(Hidden::GetFileIcon(info));
                         }
                         if (UI::TableSetColumnIndex(1) && SS_FileOrFolderName) {
-                            if (UI::Selectable(info.name, currentSelectedElement == info.name)) {
+                            if (UI::Selectable(displayName, currentSelectedElement == info.name)) {
                                 currentSelectedElement = info.name;
                                 currentSelectedElementPath = info.name;
                                 IndexCurrentDirectory();
@@ -355,7 +367,6 @@ namespace _IO {
                 UI::EndTable();
             }
         }
-
 
         void IndexCurrentDirectory() {
             if (currentDirectory != lastIndexedDirectory) {
