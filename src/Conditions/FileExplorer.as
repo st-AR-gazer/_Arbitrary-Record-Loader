@@ -226,17 +226,22 @@ namespace _IO {
 
             UI::Text("Current Page: " + tostring(currentPage));
 
+            if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) {
+                print("ArrowLeft button pressed");
+                currentPage--;
+                print("New currentPage: " + tostring(currentPage));
+            }
+            UI::SameLine();
+
             if (UI::Button(Icons::ArrowRight, vec2(buttonWidth, 0))) {
                 print("ArrowRight button pressed");
                 currentPage++;
                 print("New currentPage: " + tostring(currentPage));
             }
             UI::SameLine();
-            
-            if (UI::Button(Icons::ArrowRight, vec2(buttonWidth, 0))) {
-                print("ArrowRight button pressed");
-                currentPage++;
-                print("New currentPage: " + tostring(currentPage));
+
+            if (UI::Button("Debug Button", vec2(buttonWidth, 0))) {
+                print("Debug Button pressed");
             }
 
             UI::SameLine();
