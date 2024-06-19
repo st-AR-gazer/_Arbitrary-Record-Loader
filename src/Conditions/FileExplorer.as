@@ -240,7 +240,8 @@ namespace _IO {
             }
             UI::SameLine();
 
-            if (UI::Button("Debug Button", vec2(buttonWidth, 0))) {
+            if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) {
+                currentPage--;
                 print("Debug Button pressed");
             }
 
