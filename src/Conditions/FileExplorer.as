@@ -226,9 +226,9 @@ namespace _IO {
 
             UI::Text("Current Page: " + tostring(currentPage));
 
-            if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) {
-                print("ArrowLeft button pressed");
-                currentPage--;
+            if (UI::Button(Icons::ArrowRight, vec2(buttonWidth, 0))) {
+                print("ArrowRight button pressed");
+                currentPage++;
                 print("New currentPage: " + tostring(currentPage));
             }
             UI::SameLine();
