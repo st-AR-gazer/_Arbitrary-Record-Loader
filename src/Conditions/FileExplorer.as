@@ -533,6 +533,7 @@ namespace _IO {
     }
 
     namespace DLL { // Had to do it like this because of the automatic garbage collection :xdd:
+    /*
         Import::Library@ g_lib;
         Import::Function@ g_getFileCreationTimeFunc;
 
@@ -560,10 +561,10 @@ namespace _IO {
         void UnloadLibrary() {
             @g_lib = null;
             @g_getFileCreationTimeFunc = null;
-        }
+        }*/
     }
 
     int64 FileCreatedTime(const string &in filePath) {
-        return DLL::FileCreatedTime(filePath);
+        return /*DLL::FileCreatedTime*/(filePath);
     }
 }
