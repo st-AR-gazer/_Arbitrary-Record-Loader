@@ -20,11 +20,13 @@ namespace _IO {
             FileInfoIcon icon = FileInfoIcon::File;
 
             string name;
-            string fileExtention; //
+            string fileExtension; //
             string lastChangedDate;
             string size;
             string creationDate;
             string creator;
+
+            string fileType;
         }
 
         // Search and navigation
@@ -66,6 +68,7 @@ namespace _IO {
         bool SS_ICON = true;
         bool SS_FileOrFolderName = true;
         bool SS_LastChangedDate = true;
+        bool SS_fileExtension = true;
         bool SS_FileType = true;
         bool SS_Size = true;
         bool SS_CreationDate = true;
@@ -234,7 +237,13 @@ namespace _IO {
             }
 
             UI::SameLine();
-            if (UI::Button("Hide Path")) { hidePathFromFilePath = false; }
+
+            if (UI::Button(Icons::Folder, vec2(buttonWidth, 0))) {
+                _IO::OpenFolder(currentDirectory);
+            }
+
+            UI::SameLine();
+            if (UI::Button(!hidePathFromFilePath ? "Hide Path" : "Show Path")) { hidePathFromFilePath = !hidePathFromFilePath; }
             UI::SameLine();
             if (UI::Button("Hide Folders")) { SO_Folders = false; }
             UI::SameLine();
@@ -266,21 +275,6 @@ namespace _IO {
             UI::SameLine();
 
             shouldFilterFileType = UI::Checkbox("Filter File Type", shouldFilterFileType);
-            // UI::BeginCombo("File Type", currentFilter, UI::ComboFlags::HeightRegular) {
-            //     if (UI::Selectable("All", currentFilter == "")) currentFilter = "";
-            //     if (UI::Selectable("Text", currentFilter == "txt")) currentFilter = "txt";
-            //     if (UI::Selectable("PDF", currentFilter == "pdf")) currentFilter = "pdf";
-            //     if (UI::Selectable("Word", currentFilter == "doc")) currentFilter = "doc";
-            //     if (UI::Selectable("Excel", currentFilter == "xls")) currentFilter = "xls";
-            //     if (UI::Selectable("Powerpoint", currentFilter == "ppt")) currentFilter = "ppt";
-            //     if (UI::Selectable("Image", currentFilter == "jpg")) currentFilter = "jpg";
-            //     if (UI::Selectable("Archive", currentFilter == "rar")) currentFilter = "rar";
-            //     if (UI::Selectable("Audio", currentFilter == "ogg")) currentFilter = "ogg";
-            //     if (UI::Selectable("Video", currentFilter == "mp4")) currentFilter = "mp4";
-            //     if (UI::Selectable("Code", currentFilter == "cs")) currentFilter = "cs";
-            //     if (UI::Selectable("Epub", currentFilter == "epub")) currentFilter = "epub";
-            //     UI::EndCombo();
-            // }
             
             if (shouldFilterFileType) {
                 currentFilter = UI::InputText("File Type Filter", currentFilter);
@@ -310,10 +304,11 @@ namespace _IO {
         }
 
         void Render_MainView() {
-            if (UI::BeginTable("FileTable", 6, UI::TableFlags::Resizable | UI::TableFlags::Reorderable | UI::TableFlags::Hideable | UI::TableFlags::Sortable)) {
-                UI::TableSetupColumn("ICO", UI::TableColumnFlags::WidthFixed, 40.0f);
+            if (UI::BeginTable("FileTable", 7, UI::TableFlags::Resizable | UI::TableFlags::Reorderable | UI::TableFlags::Hideable | UI::TableFlags::Sortable)) {
+                UI::TableSetupColumn("ICO", UI::TableColumnFlags::WidthFixed, 30.0f);
                 UI::TableSetupColumn("File / Folder Name");
                 UI::TableSetupColumn("Last Change Date");
+                UI::TableSetupColumn("Ext");
                 UI::TableSetupColumn("Type");
                 UI::TableSetupColumn("Size");
                 UI::TableSetupColumn("Creation Date");
@@ -325,17 +320,31 @@ namespace _IO {
                 } else {
                     Hidden::SortFileInfos(pageInfos, currentSortingOption);
 
+                    array<string> filters = currentFilter.Split('|');
                     for (uint i = 0; i < pageInfos.Length; i++) {
                         FileInfo info = pageInfos[i];
                         string displayName = info.name;
 
-                        if (hidePathFromFilePath) {
-                            int posSlash = _Text::LastIndexOf(displayName, "/");
-                            int posBackslash = _Text::LastIndexOf(displayName, "\\");
-                            int pos = Math::Max(posSlash, posBackslash);
+                        bool isVisible = info.isFolder;
+                        if (!info.isFolder && shouldFilterFileType) {
+                            string fileExtLower = info.fileExtension.ToLower();
+                            isVisible = false;
+                            for (uint j = 0; j < filters.Length; j++) {
+                                string trimmedFilter = filters[j].Trim();
+                                if (fileExtLower == trimmedFilter.ToLower()) {
+                                    isVisible = true;
+                                    break;
+                                }
+                            }
+                        }
 
-                            if (pos != -1) {
-                                displayName = displayName.SubStr(pos + 1);
+                        if (currentFilter == "") isVisible = true;
+                        if (!isVisible) continue;
+
+                        if (hidePathFromFilePath) {
+                            int x = currentDirectory.Length;
+                            if (displayName.SubStr(0, x) == currentDirectory) {
+                                displayName = displayName.SubStr(x);
                             }
                         }
 
@@ -353,17 +362,16 @@ namespace _IO {
                         if (UI::TableSetColumnIndex(2) && SS_LastChangedDate) {
                             UI::Text(info.lastChangedDate);
                         }
-                        if (UI::TableSetColumnIndex(3) && SS_FileType) {
-                            if (info.fileType.ToLower() == "gbx");
-                            
-
-                            // C:\Users\AR_\Documents\Trackmania2020\Replays/2024-03-06-15-58-44_SnowCar Photoshoot.Replay.Gbx
+                        if (UI::TableSetColumnIndex(3) && SS_fileExtension) {
+                            UI::Text(info.fileExtension);
+                        }
+                        if (UI::TableSetColumnIndex(4) && SS_FileType) {
                             UI::Text(info.isFolder ? "Folder" : "File");
                         }
-                        if (UI::TableSetColumnIndex(4) && SS_Size) {
+                        if (UI::TableSetColumnIndex(5) && SS_Size) {
                             UI::Text(info.size);
                         }
-                        if (UI::TableSetColumnIndex(5) && SS_CreationDate) {
+                        if (UI::TableSetColumnIndex(6) && SS_CreationDate) {
                             UI::Text(info.creationDate);
                         }
                     }
@@ -404,11 +412,20 @@ namespace _IO {
 
                     fileInfos[i].name = elements[i];
                     fileInfos[i].isFolder = isFolder;
-                    fileInfos[i].fileExtention = _IO::GetFileExtension(path);
                     fileInfos[i].lastChangedDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                     fileInfos[i].size = isFolder ? "-" : Hidden::FormatSize(IO::FileSize(path));
                     fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", _IO::FileCreatedTime(path)); // the reason it is formatted with the current timestamp might be because of Time::FormatString, not sure though, will have to check at some point... Make a test plugin as they say :xdd:, or maybe -1 represents current time... idk xdd
                     fileInfos[i].clickCount = 0;
+
+                    string fullFileExtension = _IO::GetFileExtension(path).ToLower();
+                    if (fullFileExtension == "gbx") {
+                        int secondLastDotIndex = _Text::NLastIndexOf(path, ".", 2);
+                        int lastDotIndex = _Text::LastIndexOf(path, ".");
+                        if (secondLastDotIndex != -1 && lastDotIndex > secondLastDotIndex) {
+                            fullFileExtension = path.SubStr(secondLastDotIndex + 1, lastDotIndex - secondLastDotIndex - 1);
+                        }
+                    }
+                    fileInfos[i].fileExtension = fullFileExtension;
                 }
 
                 SortFileInfos(fileInfos, currentSortingOption);
@@ -538,17 +555,21 @@ namespace _IO {
 
 namespace _IO {
     void SafeMoveSourceFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
-        string fileContents = _IO::ReadSourceFileToEnd(originalPath);
+        IO::FileSource originalFile(originalPath);
+        string fileContents = originalFile.ReadToEnd();
         if (verbose) log("Moving the file content", LogLevel::Info, 24, "MoveFileToPluginStorage");
 
         SafeCreateFolder(StripFileNameFromPath(storagePath), true);
 
-        _IO::SafeSaveToFile(storagePath, fileContents, true);
+        IO::File targetFile;
+        targetFile.Open(storagePath, IO::FileMode::Write);
+        targetFile.Write(fileContents);
+        targetFile.Close();
+
         if (verbose) log("Finished moving the file", LogLevel::Info, 33, "MoveFileToPluginStorage");
     }
 
-    namespace DLL { // Had to do it like this because of the automatic garbage collection :xdd:
-    /*
+    namespace DLL {
         Import::Library@ g_lib;
         Import::Function@ g_getFileCreationTimeFunc;
 
@@ -556,19 +577,25 @@ namespace _IO {
             if (g_lib is null) {
                 string dllPath = IO::FromStorageFolder("DLLs/FileCreationTime.dll");
                 @g_lib = Import::GetLibrary(dllPath);
-                if (g_lib is null) { log("Failed to load DLL: " + dllPath, LogLevel::Error); return false; }
+                if (g_lib is null) {
+                    log("Failed to load DLL: " + dllPath, LogLevel::Error, 573, "loadLibrary");
+                    return false;
+                }
             }
 
             if (g_getFileCreationTimeFunc is null) {
                 @g_getFileCreationTimeFunc = g_lib.GetFunction("GetFileCreationTime");
-                if (g_getFileCreationTimeFunc is null) { log("Failed to get function from DLL.", LogLevel::Error); return false; }
+                if (g_getFileCreationTimeFunc is null) {
+                    log("Failed to get function from DLL.", LogLevel::Error, 578, "loadLibrary");
+                    return false;
+                }
                 g_getFileCreationTimeFunc.SetConvention(Import::CallConvention::cdecl);
             }
             return true;
         }
 
         int64 FileCreatedTime(const string &in filePath) {
-            if (!loadLibrary()) { return -1; }
+            if (!loadLibrary()) { return -301; }
             int64 result = g_getFileCreationTimeFunc.CallInt64(filePath);
             return result;
         }
@@ -576,11 +603,23 @@ namespace _IO {
         void UnloadLibrary() {
             @g_lib = null;
             @g_getFileCreationTimeFunc = null;
-        }*/
+        }
     }
 
     int64 FileCreatedTime(const string &in filePath) {
-        // return /*DLL::FileCreatedTime*/(filePath);
-        return -1;
+        log("Attempting to retrieve file creation time for: " + filePath);
+
+        if (!DLL::loadLibrary()) {
+            log("Failed to load library for file creation time retrieval.", LogLevel::Error);
+            return -300;
+        }
+
+        int64 result = DLL::FileCreatedTime(filePath);
+        if (result < 0) {
+            log("Error retrieving file creation time. Code: " + result, LogLevel::Warn);
+        } else {
+            log("File creation time retrieved successfully: " + result, LogLevel::Info);
+        }
+        return result;
     }
 }

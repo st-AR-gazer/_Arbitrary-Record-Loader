@@ -84,24 +84,23 @@ namespace _IO {
         }
     }
 
-    void SafeSaveToFile(const string &in path, const string &in content, bool shouldUseRecursion = true, bool shouldLogFilePath = false) {
-        if (shouldLogFilePath) { print("Saving to file: " + path + " | LogLevel::Info | SafeSaveToFile"); }
-        
+    void SafeSaveToFile(const string &in path, const string &in content, bool shouldUseRecursion = true, bool shouldLogFilePath = false, bool verbose = false) {
+        if (shouldLogFilePath) { print(path); }
+
         string noFilePath = path;
 
         if (!_IO::IsDirectory(path)) { noFilePath = StripFileNameFromPath(path); }
+        if (shouldUseRecursion) SafeCreateFolder(noFilePath, shouldUseRecursion);
         
-        SafeCreateFolder(noFilePath, shouldUseRecursion);
-
         IO::File file;
         file.Open(path, IO::FileMode::Write);
         file.Write(content);
         file.Close();
     }
     
-    string ReadFileToEnd(const string &in path) {
+    string ReadFileToEnd(const string &in path, bool verbose = false) {
         if (!IO::FileExists(path)) {
-            print("File does not exist: " + path + " | LogLevel::Error | ReadFileToEnd");
+            log("File does not exist: " + path, LogLevel::Error, 105, "ReadFileToEnd");
             return "";
         }
         IO::File file(path, IO::FileMode::Read);
@@ -110,11 +109,12 @@ namespace _IO {
         return content;
     }
 
-    string ReadSourceFileToEnd(const string &in path) {
+    string ReadSourceFileToEnd(const string &in path, bool verbose = false) {
         if (!IO::FileExists(path)) {
-            print("File does not exist: " + path + " | LogLevel::Error | ReadSourceFileToEnd");
+            log("File does not exist: " + path, LogLevel::Error, 116, "ReadSourceFileToEnd");
             return "";
         }
+
         IO::FileSource f(path);
         string content = f.ReadToEnd();
         return content;
@@ -147,11 +147,11 @@ namespace _IO {
         return path.SubStr(index + 1);
     }
 
-    void OpenFolder(const string &in path) {
+    void OpenFolder(const string &in path, bool verbose = false) {
         if (IO::FolderExists(path)) {
             OpenExplorerPath(path);
         } else {
-            print("Folder does not exist: " + path + " | LogLevel::Info | OpenFolder");
+            if (verbose) log("Folder does not exist: " + path + " | LogLevel::Info | OpenFolder");
         }
     }
 }

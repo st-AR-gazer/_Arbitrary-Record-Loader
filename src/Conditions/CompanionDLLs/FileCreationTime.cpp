@@ -1,21 +1,50 @@
 #include "pch.h"
 #include <windows.h>
-#include <iostream>
+#include <string>
+#include <algorithm>
+
+enum class ErrorCodes {
+    FILE_NOT_FOUND = -1001,
+    ACCESS_DENIED = -1003,
+    INVALID_FILE_NAME = -1005,
+    GENERIC_FILE_ACCESS = -1006,
+    PATH_DETECTION_FAILURE = -2001,
+    PATH_NORMALIZATION_FAILED = -2002
+};
+
+std::wstring normalizePath(const std::wstring& inputPath) {
+    std::wstring path = inputPath;
+    std::wstring result;
+
+    for (const wchar_t& ch : path) {
+        if (ch == L'\\' || ch == L'/') {
+            result.append(L"\\\\");
+        }
+        else {
+            result.push_back(ch);
+        }
+    }
+    return result;
+}
 
 extern "C" __declspec(dllexport) int64_t GetFileCreationTime(const wchar_t* filePath) {
-    HANDLE hFile = CreateFileW(filePath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    std::wstring path = normalizePath(filePath);
+    if (path.empty()) {
+        return static_cast<int>(ErrorCodes::PATH_NORMALIZATION_FAILED);
+    }
+
+    HANDLE hFile = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
-        return -1; // Cannot open file
+        return static_cast<int>(ErrorCodes::FILE_NOT_FOUND) - GetLastError();
     }
 
     FILETIME ftCreate;
     if (!GetFileTime(hFile, &ftCreate, NULL, NULL)) {
         CloseHandle(hFile);
-        return -2; // Cannot get file time
+        return static_cast<int>(ErrorCodes::GENERIC_FILE_ACCESS);
     }
 
     CloseHandle(hFile);
-
     ULARGE_INTEGER uli;
     uli.LowPart = ftCreate.dwLowDateTime;
     uli.HighPart = ftCreate.dwHighDateTime;
