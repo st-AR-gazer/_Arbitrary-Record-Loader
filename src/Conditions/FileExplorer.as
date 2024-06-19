@@ -224,12 +224,12 @@ namespace _IO {
         void Render_NavBar_Middle() {
             float buttonWidth = 30.0f;
 
-            if (UI::Button(Icons::ArrowLeft + "")) {
+            if (UI::Button(Icons::ArrowLeft + " aa ")) {
                 print("ArrowLeft button pressed");
             }
             UI::SameLine();
 
-            if (UI::Button(Icons::ArrowRight)) {
+            if (UI::Button(Icons::ArrowRight + " bb ")) {
                 print("ArrowRight button pressed");
             }
 
