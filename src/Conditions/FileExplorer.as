@@ -475,14 +475,14 @@ namespace _IO {
                                 break;
                             case SortElementsBasedOnType::Type:
                                 if (fileInfos[i].isFolder != fileInfos[j].isFolder) {
-                                    swap = fileInfos[i].isFolder && !fileInfos[j].isFolder;
+                                    swap = !fileInfos[i].isFolder && fileInfos[j].isFolder;
                                 } else {
                                     swap = fileInfos[i].name.ToLower() > fileInfos[j].name.ToLower();
                                 }
                                 break;
                             case SortElementsBasedOnType::Size:
                                 if (fileInfos[i].isFolder != fileInfos[j].isFolder) {
-                                    swap = fileInfos[i].isFolder && !fileInfos[j].isFolder;
+                                    swap = !fileInfos[i].isFolder && fileInfos[j].isFolder;
                                 } else if (fileInfos[i].size != fileInfos[j].size) {
                                     swap = fileInfos[i].size < fileInfos[j].size;
                                 } else {
