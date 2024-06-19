@@ -232,7 +232,7 @@ namespace _IO {
             }
             UI::SameLine();
 
-            if (UI::Button(Icons::ArrowRight)) {
+            if (UI::Button(Icons::ArrowRight + "")) {
                 print("ArrowRight button pressed");
             }
 
