@@ -1,7 +1,4 @@
 namespace GhostLoader {
-    [Setting category="General" name="Toggle Load Ghost Hotkey"]
-    VirtualKey g_toggleLoadGhostHotkey = VirtualKey::F9;
-
     [Setting hidden]
     bool S_UseGhostLayer = true;
 
@@ -41,12 +38,6 @@ namespace GhostLoader {
                 tasksToClear[i].Release();
             }
             tasksToClear.RemoveRange(0, tasksToClear.Length);
-        }
-    }
-
-    void CheckHotkey() {
-        if (UI::IsKeyPressed(g_toggleLoadGhostHotkey)) {
-            OpenGhostFileDialogWindow();
         }
     }
 

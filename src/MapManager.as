@@ -21,9 +21,9 @@ void MapCoro() {
 
 string get_CurrentMap() {
     if (_Game::IsMapLoaded()) {
-        CTrackMania app = cast<CTrackMania>(GetApp());
+        CTrackMania@ app = cast<CTrackMania>(GetApp());
         if (app is null) return "";
-        CGameCtnChallenge map = app.RootMap;
+        CGameCtnChallenge@ map = app.RootMap;
         if (map is null) return "";
         return map.MapInfo.MapUid;
     }

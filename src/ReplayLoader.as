@@ -20,7 +20,7 @@ namespace ReplayLoader {
         log(task.ErrorCode);
         log(task.ErrorDescription);
         log(task.ErrorType);
-        log(task.Ghosts.Length);
+        log(tostring(task.Ghosts.Length));
 
         auto ghostMgr = cast<CSmArenaRulesMode@>(GetApp().PlaygroundScript).GhostMgr;
         for (uint i = 0; i < task.Ghosts.Length; i++) {
