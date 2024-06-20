@@ -10,7 +10,7 @@ namespace GhostLoader {
         if (filePath.ToLower().EndsWith(".gbx")) {
             string fileName = GetFileName(filePath);
             string destinationPath = Server::serverDirectory + fileName;
-            log("Moving file from " + filePath + " to " + destinationPath);
+            log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, 13, "LoadGhost");
             _IO::SafeMoveFileToNonSource(filePath, destinationPath);
             Server::LogServerFiles();
             LoadGhostFromUrl(Server::serverUrl + fileName);
@@ -25,7 +25,6 @@ namespace GhostLoader {
     }
 
     void LoadGhostFromUrl(const string &in url) {
-        log("Loading ghost from URL: " + url);
         startnew(LoadGhostFromUrlAsync, url);
     }
 
@@ -35,33 +34,17 @@ namespace GhostLoader {
         auto gm = ps.GhostMgr;
         auto task = dfm.Ghost_Download(GetFileName(url), url);
 
-        while (task.IsProcessing) {
-            yield();
-        }
-
-        auto req = Net::HttpGet(url);
-        while (!req.Finished()) {
-            yield();
-        }
-        print("\\$ff3HTTP GET to URL: " + url + " / Status: " + req.ResponseCode());
-
-        if (req.ResponseCode() != 200) {
-            log('Ghost_Download failed: HTTP GET failed with status ' + req.ResponseCode() + ", Url used: " + url, LogLevel::Error, 87, "LoadGhostFromUrlAsync");
-            return;
-        }
-
+        WaitAndClearTaskLater(task, dfm);
         if (task.HasFailed || !task.HasSucceeded) {
             log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription + " Url used: " + url, LogLevel::Error, 87, "LoadGhostFromUrlAsync");
             return;
         }
 
         auto instId = gm.Ghost_Add(task.Ghost, S_UseGhostLayer);
-        print('Instance ID: ' + instId.GetName() + " / " + Text::Format("%08x", instId.Value));
-
-        dfm.TaskResult_Release(task.Id);
     }
 
-    void NotifyError(const string &in message) {
-        UI::ShowNotification("Error", message, vec4(1, 0, 0, 1), 5000);
+    void WaitAndClearTaskLater(CWebServicesTaskResult@ task, CMwNod@ owner) {
+        while (task.IsProcessing) yield();
+        tasksToClear.InsertLast(ClearTask(task, owner));
     }
 }

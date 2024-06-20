@@ -9,8 +9,6 @@ namespace Server {
             return;
         }
 
-        log("Server started on port 29918");
-
         while (true) {
             auto clientSocket = serverSocket.Accept();
             if (clientSocket !is null) {
@@ -25,6 +23,7 @@ namespace Server {
 
         string request;
         if (!clientSocket.ReadLine(request)) {
+            log("Failed to read request from client.");
             clientSocket.Close();
             return;
         }
@@ -39,12 +38,14 @@ namespace Server {
                 string response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\n\r\n";
                 clientSocket.Write(response);
                 clientSocket.Write(_IO::ReadFileToEnd(filePath));
+                log("File served: " + filePath);
             } else {
                 log("File not found: " + filePath);
                 string response = "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nFile not found";
                 clientSocket.Write(response);
             }
         } else {
+            log("Invalid request: " + request);
             string response = "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\n\r\nNot found";
             clientSocket.Write(response);
         }
@@ -52,10 +53,10 @@ namespace Server {
     }
 
     void LogServerFiles() {
-        log("Listing all files in server directory: " + serverDirectory);
+        log("Listing all files in server directory: " + serverDirectory, LogLevel::Info, 58);
         array<string> files = IO::IndexFolder(serverDirectory, false);
         for (uint i = 0; i < files.Length; i++) {
-            log("File: " + files[i]);
+            log("File: " + files[i], LogLevel::Info, 61);
         }
     }
 }
