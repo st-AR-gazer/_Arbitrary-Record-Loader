@@ -100,7 +100,7 @@ namespace _IO {
     
     string ReadFileToEnd(const string &in path, bool verbose = false) {
         if (!IO::FileExists(path)) {
-            log("File does not exist: " + path, LogLevel::Error, 105, "ReadFileToEnd");
+            log("File does not exist: " + path, LogLevel::Error, 103, "ReadFileToEnd");
             return "";
         }
         IO::File file(path, IO::FileMode::Read);
@@ -111,7 +111,7 @@ namespace _IO {
 
     string ReadSourceFileToEnd(const string &in path, bool verbose = false) {
         if (!IO::FileExists(path)) {
-            log("File does not exist: " + path, LogLevel::Error, 116, "ReadSourceFileToEnd");
+            log("File does not exist: " + path, LogLevel::Error, 114, "ReadSourceFileToEnd");
             return "";
         }
 
@@ -151,7 +151,7 @@ namespace _IO {
         if (IO::FolderExists(path)) {
             OpenExplorerPath(path);
         } else {
-            if (verbose) log("Folder does not exist: " + path + " | LogLevel::Info | OpenFolder");
+            if (verbose) log("Folder does not exist: " + path + " | LogLevel::Info | OpenFolder", LogLevel::Info, 154, "OpenFolder");
         }
     }
 }

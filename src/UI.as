@@ -2,7 +2,7 @@
 bool S_windowOpen = false;
 
 void RenderMenu() {
-    if (UI::MenuItem(Icons::SnapchatGhost + Icons::Magic + Icons::Spinner + Icons::FileO + "Arbitrary Ghost/Replay Loader", "", S_windowOpen)) {
+    if (UI::MenuItem(Colorize(Icons::SnapchatGhost + Icons::Magic + Icons::FileO, {"#aaceac", "#c5d0a8", "#6ec9a8"}) + "\\$g" + "Arbitrary Ghost/Replay Loader", "", S_windowOpen)) {
         S_windowOpen = !S_windowOpen;
     }
 }
@@ -11,8 +11,8 @@ void RenderMenu() {
 
 void RenderInterface() {
     UI::SetNextWindowSize(700, 400, UI::Cond::FirstUseEver);
-    if (UI::Begin(Colorize(Icons::SnapchatGhost + Icons::Magic + Icons::Spinner + Icons::FileO + " " + "Aebitrary Ghost/Replay Loader"), UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
-        UI::BeginTabBar("MainTabBar", S_windowOpen, UI::TabBarFlags::Reorderable); //
+    if (UI::Begin(Colorize(Icons::SnapchatGhost + Icons::Magic + Icons::Spinner + Icons::FileO + " " + "Aebitrary Ghost/Replay Loader", {"#aaceac", "#c5d0a8", "#6ec9a8"}), S_windowOpen, UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
+        UI::BeginTabBar("MainTabBar", UI::TabBarFlags::Reorderable); //
         if (UI::BeginTabItem("Local Files")) {
             RenderLocalFilesTab();
             UI::EndTabItem();
@@ -34,9 +34,9 @@ void RenderLocalFilesTab() {
     if (UI::Button("Open File Explorer")) {
         OpenFileExplorerWindow();
     }
-
-    string filePath = "";
-    filePath = UI::InputText("File Path", filePath);
+    
+    string filePath = _IO::FileExplorer::Exports::GetExportPath();
+    _IO::FileExplorer::exportElementPath = UI::InputText("File Path", filePath);
 
     if (UI::Button("Load Ghost or Replay")) {
         ProcessSelectedFile(filePath);

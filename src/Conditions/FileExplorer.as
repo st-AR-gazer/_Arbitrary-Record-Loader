@@ -311,6 +311,7 @@ namespace _IO {
                 if (UI::Button("Cancel and close")) {
                     showInterface = false;
                 }
+                UI::SameLine();
                 if (UI::Button("Submit current selected path and close")) {
                     exportElementPath = currentSelectedElementPath;
                     showInterface = false;
@@ -582,7 +583,7 @@ namespace _IO {
     void SafeMoveSourceFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
         IO::FileSource originalFile(originalPath);
         string fileContents = originalFile.ReadToEnd();
-        if (verbose) log("Moving the file content", LogLevel::Info, 24, "MoveFileToPluginStorage");
+        if (verbose) log("Moving the file content", LogLevel::Info, 586, "SafeMoveSourceFileToNonSource");
 
         SafeCreateFolder(StripFileNameFromPath(storagePath), true);
 
@@ -591,7 +592,25 @@ namespace _IO {
         targetFile.Write(fileContents);
         targetFile.Close();
 
-        if (verbose) log("Finished moving the file", LogLevel::Info, 33, "MoveFileToPluginStorage");
+        if (verbose) log("Finished moving the file", LogLevel::Info, 595, "SafeMoveSourceFileToNonSource");
+    }
+
+    void SafeMoveFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
+        IO::File originalFile;
+        originalFile.Open(originalPath, IO::FileMode::Read);
+        string fileContents = originalFile.ReadToEnd();
+        originalFile.Close();
+
+        if (verbose) log("Moving the file content", LogLevel::Info, 604, "SafeMoveFileToNonSource");
+
+        SafeCreateFolder(StripFileNameFromPath(storagePath), true);
+
+        IO::File targetFile;
+        targetFile.Open(storagePath, IO::FileMode::Write);
+        targetFile.Write(fileContents);
+        targetFile.Close();
+
+        if (verbose) log("Finished moving the file", LogLevel::Info, 613, "SafeMoveFileToNonSource");
     }
 
     namespace DLL {
@@ -603,7 +622,7 @@ namespace _IO {
                 string dllPath = IO::FromStorageFolder("DLLs/FileCreationTime.dll");
                 @g_lib = Import::GetLibrary(dllPath);
                 if (g_lib is null) {
-                    log("Failed to load DLL: " + dllPath, LogLevel::Error, 573, "loadLibrary");
+                    log("Failed to load DLL: " + dllPath, LogLevel::Error, 625, "loadLibrary");
                     return false;
                 }
             }
@@ -611,7 +630,7 @@ namespace _IO {
             if (g_getFileCreationTimeFunc is null) {
                 @g_getFileCreationTimeFunc = g_lib.GetFunction("GetFileCreationTime");
                 if (g_getFileCreationTimeFunc is null) {
-                    log("Failed to get function from DLL.", LogLevel::Error, 578, "loadLibrary");
+                    log("Failed to get function from DLL.", LogLevel::Error, 633, "loadLibrary");
                     return false;
                 }
                 g_getFileCreationTimeFunc.SetConvention(Import::CallConvention::cdecl);
@@ -632,18 +651,18 @@ namespace _IO {
     }
 
     int64 FileCreatedTime(const string &in filePath) {
-        log("Attempting to retrieve file creation time for: " + filePath);
+        // log("Attempting to retrieve file creation time for: " + filePath, LogLevel::Info, 654, "FileCreatedTime");
 
         if (!DLL::loadLibrary()) {
-            log("Failed to load library for file creation time retrieval.", LogLevel::Error);
+            log("Failed to load library for file creation time retrieval.", LogLevel::Error, 657, "FileCreatedTime");
             return -300;
         }
 
         int64 result = DLL::FileCreatedTime(filePath);
         if (result < 0) {
-            log("Error retrieving file creation time. Code: " + result, LogLevel::Warn);
+            log("Error retrieving file creation time. Code: " + result, LogLevel::Warn, 663, "FileCreatedTime");
         } else {
-            log("File creation time retrieved successfully: " + result, LogLevel::Info);
+            // log("File creation time retrieved successfully: " + result, LogLevel::Info, 665, "FileCreatedTime");
         }
         return result;
     }
