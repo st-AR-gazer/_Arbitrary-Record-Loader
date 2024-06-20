@@ -100,16 +100,41 @@ namespace _IO {
             string GetExportPath() {
                 return exportElementPath;
             }
+
+            string GetExportPathFileExt() {
+                string properFileExtension = _IO::GetFileExtension(GetExportPath()).ToLower();
+                if (properFileExtension == "gbx") {
+                    int secondLastDotIndex = _Text::NLastIndexOf(GetExportPath(), ".", 2);
+                    int lastDotIndex = _Text::LastIndexOf(GetExportPath(), ".");
+                    if (secondLastDotIndex != -1 && lastDotIndex > secondLastDotIndex) {
+                        properFileExtension = GetExportPath().SubStr(secondLastDotIndex + 1, lastDotIndex - secondLastDotIndex - 1);
+                    }
+                }
+                return properFileExtension;
+            }
+
+            void ClearExportPath() {
+                exportElementPath = "";
+            }
         }
 
-        void OpenFileExplorer(bool _mustReturnFilePath = false, const string &in _path = "", const string &in _searchQuery = "") {
-            if (!_mustReturnFilePath) { mustReturnFilePath = true; } else { mustReturnFilePath = false; }
+        void OpenFileExplorer(bool _mustReturnFilePath = false, const string &in _path = "", const string &in _searchQuery = "", array<string> _filters = {}) {
+            mustReturnFilePath = _mustReturnFilePath;
             showInterface = true;
             currentDirectory = _path;
             currentSearchQuery = _searchQuery;
             directoryHistory.Resize(0);
             reloadDirectory = false;
             goToDefaultDirectory = true;
+
+            if (_filters.Length == 1) {
+                shouldFilterFileType = true;
+                currentFilter = _filters[0];
+            } else if (_filters.Length > 1) {
+                shouldFilterFileType = true;
+                currentFilter = string::Join(_filters, "|");
+            }
+
             IndexCurrentDirectory();
         }
 

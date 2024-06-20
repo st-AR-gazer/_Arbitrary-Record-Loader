@@ -45,23 +45,13 @@ namespace GhostLoader {
     }
 
     void CheckHotkey() {
-        /*
-        if (UI::IsKeyPressed(g_toggleLoadGhostHotkey)) { /* complaints about no matching signature to UI::IsKeyPressed(VirtualHotkey&) * /
-            LoadGhostFromDialogWidow();
-        }
-        */
-    }
-
-    void LoadGhostFromDialogWindow() {
-        string filePath = OpenGhostFileDialogWindow();
-        if (filePath != "") {
-            LoadGhost(filePath);
+        if (UI::IsKeyPressed(g_toggleLoadGhostHotkey)) {
+            OpenGhostFileDialogWindow();
         }
     }
 
-    string OpenGhostFileDialogWindow() {
+    void OpenGhostFileDialogWindow() {
         _IO::FileExplorer::OpenFileExplorer(true, IO::FromUserGameFolder("Replays/"));
-        return _IO::FileExplorer::Exports::GetExportPath();
     }
 
     void LoadGhost(const string &in filePath) {
@@ -89,5 +79,9 @@ namespace GhostLoader {
         }
         auto instId = gm.Ghost_Add(task.Ghost, S_UseGhostLayer);
         print('Instance ID: ' + instId.GetName() + " / " + Text::Format("%08x", instId.Value));
+    }
+
+    void NotifyError(const string &in message) {
+        UI::ShowNotification("Error", message, vec4(1, 0, 0, 1), 5000);
     }
 }
