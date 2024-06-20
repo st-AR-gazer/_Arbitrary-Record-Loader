@@ -203,6 +203,12 @@ namespace _Json {
 }
 
 namespace _Game {
+    bool IsMapLoaded() {
+        CTrackMania@ app = cast<CTrackMania>(GetApp());
+        if (app.RootMap is null) return false;
+        return true;
+    }
+
     bool IsPlayingMap() {
         CTrackMania@ app = cast<CTrackMania>(GetApp());
         if (app is null) return false;
