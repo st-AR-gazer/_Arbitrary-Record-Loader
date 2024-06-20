@@ -1,23 +1,22 @@
 void RenderInterface() {
     UI::SetNextWindowSize(700, 400, UI::Cond::FirstUseEver);
     if (UI::Begin("Aebitrary Ghost/Replay Loader", UI::WindowFlags::NoCollapse | UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
-        UI::BeginTabBar("MainTabBar", UI::TabBarFlags::Reorderable) {
-            if (UI::BeginTabItem("Local Files")) {
-                RenderLocalFilesTab();
-                UI::EndTabItem();
-            }
-            if (UI::BeginTabItem("Load record from JSON")) {
-                RenderJsonTab();
-                UI::EndTabItem();
-            }
-            if (UI::BeginTabItem("Official Maps")) {
-                RenderOfficialMapsTab();
-                UI::EndTabItem();
-            }
-            UI::EndTabBar();
+        UI::BeginTabBar("MainTabBar", UI::TabBarFlags::Reorderable); //
+        if (UI::BeginTabItem("Local Files")) {
+            RenderLocalFilesTab();
+            UI::EndTabItem();
         }
-        UI::End();
+        if (UI::BeginTabItem("Load record from JSON")) {
+            RenderJsonTab();
+            UI::EndTabItem();
+        }
+        if (UI::BeginTabItem("Official Maps")) {
+            RenderOfficialMapsTab();
+            UI::EndTabItem();
+        }
+        UI::EndTabBar(); //
     }
+    UI::End();
 }
 
 void RenderLocalFilesTab() {
