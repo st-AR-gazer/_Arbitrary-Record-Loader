@@ -1,7 +1,18 @@
+[Setting category="General" name="Window Open"]
+bool S_windowOpen = false;
+
+void RenderMenu() {
+    if (UI::MenuItem(Icons::SnapchatGhost + Icons::Magic + Icons::Spinner + Icons::FileO + "Arbitrary Ghost/Replay Loader", "", S_windowOpen)) {
+        S_windowOpen = !S_windowOpen;
+    }
+}
+
+// Icons:: | Magic + Exchange + Spinner + ()
+
 void RenderInterface() {
     UI::SetNextWindowSize(700, 400, UI::Cond::FirstUseEver);
-    if (UI::Begin("Aebitrary Ghost/Replay Loader", UI::WindowFlags::NoCollapse | UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
-        UI::BeginTabBar("MainTabBar", UI::TabBarFlags::Reorderable); //
+    if (UI::Begin(Colorize(Icons::SnapchatGhost + Icons::Magic + Icons::Spinner + Icons::FileO + " " + "Aebitrary Ghost/Replay Loader"), UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
+        UI::BeginTabBar("MainTabBar", S_windowOpen, UI::TabBarFlags::Reorderable); //
         if (UI::BeginTabItem("Local Files")) {
             RenderLocalFilesTab();
             UI::EndTabItem();
