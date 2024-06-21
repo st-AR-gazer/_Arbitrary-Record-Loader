@@ -10,10 +10,9 @@ namespace GhostLoader {
         if (filePath.ToLower().EndsWith(".gbx")) {
             string fileName = GetFileName(filePath);
             string destinationPath = Server::serverDirectory + fileName;
-            log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, 13, "LoadGhost");
+            log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, __LINE__, __FUNCTION__);
             _IO::SafeMoveFileToNonSource(filePath, destinationPath);
-            Server::LogServerFiles();
-            LoadGhostFromUrl(Server::serverUrl + fileName);
+            LoadGhostFromUrl(Server::HTTP_BASE_URL + "get_ghost/" + fileName);
         } else {
             NotifyError("Unsupported file type.");
         }
@@ -25,6 +24,7 @@ namespace GhostLoader {
     }
 
     void LoadGhostFromUrl(const string &in url) {
+        log("Loading ghost from URL: " + url, LogLevel::Info, __LINE__, __FUNCTION__);
         startnew(LoadGhostFromUrlAsync, url);
     }
 
@@ -34,17 +34,22 @@ namespace GhostLoader {
         auto gm = ps.GhostMgr;
         auto task = dfm.Ghost_Download(GetFileName(url), url);
 
-        WaitAndClearTaskLater(task, dfm);
+        while (task.IsProcessing) {
+            yield();
+        }
+
         if (task.HasFailed || !task.HasSucceeded) {
-            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription + " Url used: " + url, LogLevel::Error, 87, "LoadGhostFromUrlAsync");
+            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription + " Url used: " + url, LogLevel::Error, __LINE__, __FUNCTION__);
             return;
         }
 
         auto instId = gm.Ghost_Add(task.Ghost, S_UseGhostLayer);
+        log('Instance ID: ' + instId.GetName() + " / " + Text::Format("%08x", instId.Value), LogLevel::Info, __LINE__, __FUNCTION__);
+
+        dfm.TaskResult_Release(task.Id);
     }
 
-    void WaitAndClearTaskLater(CWebServicesTaskResult@ task, CMwNod@ owner) {
-        while (task.IsProcessing) yield();
-        tasksToClear.InsertLast(ClearTask(task, owner));
+    void NotifyError(const string &in message) {
+        UI::ShowNotification("Error", message, vec4(1, 0, 0, 1), 5000);
     }
 }
