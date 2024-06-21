@@ -69,10 +69,10 @@ def clean_and_update_params(params, index, lines):
 
 def modify_log_statements(file_path, verbose):
     modified = False
-    with open(file_path, 'r') as file:
+    with open(file_path, 'r', encoding='utf-8') as file:
         lines = file.readlines()
 
-    with open(file_path, 'w') as file:
+    with open(file_path, 'w', encoding='utf-8') as file:
         for index, line in enumerate(lines):
             if 'log(' in line:
                 try:
@@ -98,12 +98,21 @@ def modify_log_statements(file_path, verbose):
     return modified
 
 def process_directory(directory, verbose):
+    include_extensions = {'.as'}
+    exclude_extensions = {'.dll', '.exe', '.bin'}
+
     for root, dirs, files in os.walk(directory):
         for file in files:
-            file_path = os.path.join(root, file)
-            if modify_log_statements(file_path, verbose):
+            ext = os.path.splitext(file)[1]
+            if ext in include_extensions and ext not in exclude_extensions:
+                file_path = os.path.join(root, file)
+                if modify_log_statements(file_path, verbose):
+                    if verbose:
+                        print(f"Found and updated instances in: {file_path}")
+            else:
                 if verbose:
-                    print(f"Found and updated instances in: {file_path}")
+                    print(f"Skipping file: {os.path.join(root, file)}")
+
 
 if __name__ == '__main__':
     process_directory('./src', args.verbose)
