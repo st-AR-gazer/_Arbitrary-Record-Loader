@@ -5,6 +5,4 @@ void Main() {
     _IO::SafeCreateFolder(Server::serverDirectory);
 
     startnew(Server::StartHttpServer);
-
-    startnew(ClearTaskCoro);
 }

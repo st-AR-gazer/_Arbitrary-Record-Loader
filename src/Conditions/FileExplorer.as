@@ -1,9 +1,7 @@
-void Render() {
+void FILE_EXPLORER_BASE_RENDERER() { // MUST BE CALLED IN THE MAIN RENDER LOOP OF YOUR PLUGIN
     if (_IO::FileExplorer::showInterface) {
         _IO::FileExplorer::RenderFileExplorer();
     }
-
-    //_IO::FileExplorer::OpenFileExplorer(bool mustReturnFilePath = true, string path, string searchQuery = "");
 }
 
 namespace _IO {
@@ -62,8 +60,8 @@ namespace _IO {
 
         // States
         // SS = Shold Show; SO = Show Only
-        bool SO_Files = false;
-        bool SO_Folders = false;
+        bool SO_Files = true;
+        bool SO_Folders = true;
 
         bool SS_ICON = true;
         bool SS_FileOrFolderName = true;
@@ -76,9 +74,12 @@ namespace _IO {
         bool hidePathFromFilePath = false;
 
         // Optimization
+        const uint MAX_ELEMENTS_PER_PAGE = 30;
+
         string lastIndexedDirectory = "";
         uint currentPage = 0;
-        uint itemsPerPage = 30;
+        uint itemsPerPage = MAX_ELEMENTS_PER_PAGE;
+        bool usePaigination = true;
 
         // Export
         string exportElementPath = "";
@@ -139,7 +140,7 @@ namespace _IO {
         }
 
         void RenderFileExplorer() {
-            if (UI::Begin("File Dialog", showInterface, UI::WindowFlags::AlwaysAutoResize | UI::WindowFlags::NoCollapse)) {
+            if (UI::Begin("File Explorer", showInterface, UI::WindowFlags::AlwaysAutoResize | UI::WindowFlags::NoCollapse)) {
                 Render_Structure();
                 UI::End();
             }
@@ -189,6 +190,8 @@ namespace _IO {
             UI::SameLine();
             
             UI::PushItemWidth(searchWidth);
+            UI::Text(Icons::Search);
+            UI::SameLine();
             currentSearchQuery = UI::InputText("##Search", currentSearchQuery);
             UI::PopItemWidth();
 
@@ -270,13 +273,13 @@ namespace _IO {
             UI::SameLine();
             if (UI::Button(!hidePathFromFilePath ? "Hide Path" : "Show Path")) { hidePathFromFilePath = !hidePathFromFilePath; }
             UI::SameLine();
-            if (UI::Button("Hide Folders")) { SO_Folders = false; }
+            if (UI::Button(SO_Folders ? "Hide Folders" : "Show Folders")) { SO_Folders = !SO_Folders; }
             UI::SameLine();
-            if (UI::Button("Hide Files")) { SO_Files = false; }
+            if (UI::Button(SO_Files ? "Hide Files" : "Show Files")) { SO_Files = !SO_Files; }
             UI::SameLine();
-            if (UI::Button("Show Elements")) { SO_Folders = true; SO_Files = true; }
-            
-            UI::SameLine();
+            if (UI::Button(usePaigination ? "Disable Pagination" : "Enable Pagination")) { usePaigination = !usePaigination; }
+            if (!usePaigination) { itemsPerPage = fileInfos.Length; }
+            if (usePaigination) { itemsPerPage = MAX_ELEMENTS_PER_PAGE; }
 
             if (UI::BeginCombo("Sorting", Hidden::GetSortingName(currentSortingOption), UI::ComboFlags::HeightRegular)) {
                 if (UI::Selectable("Alphabetical", currentSortingOption == SortElementsBasedOnType::Alphabetical)) currentSortingOption = SortElementsBasedOnType::Alphabetical;
@@ -299,11 +302,8 @@ namespace _IO {
 
             UI::SameLine();
 
-            shouldFilterFileType = UI::Checkbox("Filter File Type", shouldFilterFileType);
-            
-            if (shouldFilterFileType) {
-                currentFilter = UI::InputText("File Type Filter", currentFilter);
-            }
+            shouldFilterFileType = UI::Checkbox("Filter File Extention", shouldFilterFileType);
+            if (shouldFilterFileType) { UI::SameLine(); currentFilter = UI::InputText("File Extention Filter", currentFilter); }
         }
 
         void Render_NavBar_Bottom() {
@@ -326,7 +326,8 @@ namespace _IO {
                 Hidden::CopyToClipboard(currentSelectedElementPath);
             }
             UI::SameLine();
-            UI::Text("Selected File: " + currentSelectedElementPath);
+            UI::Text("Selected File: ");
+            if (currentSelectedElementPath != "") { UI::Text(currentSelectedElementPath); }
         }
 
         void Render_MainView() {
@@ -374,12 +375,15 @@ namespace _IO {
                             }
                         }
 
+                        if (info.isFolder && !SO_Folders) continue;
+                        if (!info.isFolder && !SO_Files) continue;
+
                         UI::TableNextRow();
                         if (UI::TableSetColumnIndex(0) && SS_ICON) {
                             UI::Text(Hidden::GetFileIcon(info));
                         }
                         if (UI::TableSetColumnIndex(1) && SS_FileOrFolderName) {
-                            if (UI::Selectable(displayName, currentSelectedElement == info.name)) {
+                            if (UI::Selectable(displayName, currentSelectedElement == Text::StripFormatCodes(info.name))) {
                                 currentSelectedElement = info.name;
                                 currentSelectedElementPath = info.name;
                                 IndexCurrentDirectory();
@@ -403,7 +407,9 @@ namespace _IO {
                     }
                 }
                 UI::EndTable();
+                
             }
+            if (usePaigination) UI::Text("Current Page: " + currentPage);
         }
 
         void IndexCurrentDirectory() {

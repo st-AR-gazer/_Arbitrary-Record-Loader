@@ -10,9 +10,9 @@ namespace GhostLoader {
         if (filePath.ToLower().EndsWith(".gbx")) {
             string fileName = GetFileName(filePath);
             string destinationPath = Server::serverDirectory + fileName;
-            log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, __LINE__, __FUNCTION__);
+            log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, 13, "LoadGhost");
             _IO::SafeMoveFileToNonSource(filePath, destinationPath);
-            LoadGhostFromUrl(Server::HTTP_BASE_URL + "get_ghost/" + fileName);
+            LoadGhostFromUrl(Server::HTTP_BASE_URL + "get_ghost/" + Net::UrlEncode(fileName));
         } else {
             NotifyError("Unsupported file type.");
         }
@@ -24,12 +24,17 @@ namespace GhostLoader {
     }
 
     void LoadGhostFromUrl(const string &in url) {
-        log("Loading ghost from URL: " + url, LogLevel::Info, __LINE__, __FUNCTION__);
+        log("Loading ghost from URL: " + url, LogLevel::Info, 27, "LoadGhostFromUrl");
         startnew(LoadGhostFromUrlAsync, url);
     }
 
     void LoadGhostFromUrlAsync(const string &in url) {
         auto ps = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript);
+        if (ps is null) {
+            log("PlaygroundScript is null", LogLevel::Error, 34, "LoadGhostFromUrlAsync");
+            NotifyWarn("You are currently not in a map, ghosts can therefore not be loaded...");
+            return;
+        }
         auto dfm = ps.DataFileMgr;
         auto gm = ps.GhostMgr;
         auto task = dfm.Ghost_Download(GetFileName(url), url);
@@ -39,14 +44,20 @@ namespace GhostLoader {
         }
 
         if (task.HasFailed || !task.HasSucceeded) {
-            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription + " Url used: " + url, LogLevel::Error, __LINE__, __FUNCTION__);
+            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription + " Url used: " + url, LogLevel::Error, 42, "LoadGhostFromUrlAsync");
             return;
         }
 
         auto instId = gm.Ghost_Add(task.Ghost, S_UseGhostLayer);
-        log('Instance ID: ' + instId.GetName() + " / " + Text::Format("%08x", instId.Value), LogLevel::Info, __LINE__, __FUNCTION__);
+        log('Instance ID: ' + instId.GetName() + " / " + Text::Format("%08x", instId.Value), LogLevel::Info, 47, "LoadGhostFromUrlAsync");
 
         dfm.TaskResult_Release(task.Id);
+    }
+
+    void RemoveAllGhosts() {
+        auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
+        gm.Ghost_RemoveAll();
+        log("All ghosts removed.", LogLevel::Info, 55, "RemoveAllGhosts");
     }
 
     void NotifyError(const string &in message) {

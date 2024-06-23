@@ -2,7 +2,7 @@
 bool S_windowOpen = false;
 
 void RenderMenu() {
-    if (UI::MenuItem(Colorize(Icons::SnapchatGhost + Icons::Magic + Icons::FileO, {"#aaceac", "#c5d0a8", "#6ec9a8"}) + "\\$g" + "Arbitrary Ghost/Replay Loader", "", S_windowOpen)) {
+    if (UI::MenuItem(Colorize(Icons::SnapchatGhost + Icons::Magic + Icons::FileO, {"#aaceac", "#c5d0a8", "#6ec9a8"}) + "\\$g" + " Arbitrary Ghost/Replay Loader", "", S_windowOpen)) {
         S_windowOpen = !S_windowOpen;
     }
 }
@@ -10,14 +10,16 @@ void RenderMenu() {
 // Icons:: | Magic + Exchange + Spinner + ()
 
 void RenderInterface() {
-    UI::SetNextWindowSize(700, 400, UI::Cond::FirstUseEver);
-    if (UI::Begin(Colorize(Icons::SnapchatGhost + Icons::Magic + Icons::Spinner + Icons::FileO + " " + "Aebitrary Ghost/Replay Loader", {"#aaceac", "#c5d0a8", "#6ec9a8"}), S_windowOpen, UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
-        UI::BeginTabBar("MainTabBar", UI::TabBarFlags::Reorderable); //
+    FILE_EXPLORER_BASE_RENDERER();
+
+    UI::SetNextWindowSize(1300, 800, UI::Cond::FirstUseEver);
+    if (UI::Begin(Colorize(Icons::SnapchatGhost + Icons::Magic + Icons::Spinner + Icons::FileO + " " + "Arbitrary Ghost/Replay Loader", {"#aaceac", "#c5d0a8", "#6ec9a8"}), S_windowOpen, UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
+        UI::BeginTabBar("Tabs");
         if (UI::BeginTabItem("Local Files")) {
             RenderLocalFilesTab();
             UI::EndTabItem();
         }
-        if (UI::BeginTabItem("Load record from JSON")) {
+        if (UI::BeginTabItem("Specific UIDs")) {
             RenderJsonTab();
             UI::EndTabItem();
         }
@@ -25,21 +27,27 @@ void RenderInterface() {
             RenderOfficialMapsTab();
             UI::EndTabItem();
         }
-        UI::EndTabBar(); //
+        UI::EndTabBar();
     }
     UI::End();
 }
 
 void RenderLocalFilesTab() {
     if (UI::Button("Open File Explorer")) {
-        OpenFileExplorerWindow();
+        GhostLoader::OpenGhostFileDialogWindow();
     }
-    
+
     string filePath = _IO::FileExplorer::Exports::GetExportPath();
+    UI::Text("Selected File: " + filePath);
     _IO::FileExplorer::exportElementPath = UI::InputText("File Path", filePath);
+
 
     if (UI::Button("Load Ghost or Replay")) {
         ProcessSelectedFile(filePath);
+    }
+
+    if (UI::Button("Remove All Ghosts")) {
+        GhostLoader::RemoveAllGhosts();
     }
 }
 
@@ -68,10 +76,10 @@ void CheckFileExplorerSelection() {
 }
 
 void ProcessSelectedFile(const string &in filePath) {
-    string fileExt = _IO::FileExplorer::Exports::GetExportPathFileExt();
-    if (fileExt.ToLower() == "replay") {
+    string fileExt = _IO::FileExplorer::Exports::GetExportPathFileExt().ToLower();
+    if (fileExt == "replay") {
         ReplayLoader::LoadReplay(filePath);
-    } else if (fileExt.ToLower() == "ghost") {
+    } else if (fileExt == "ghost") {
         GhostLoader::LoadGhost(filePath);
     } else {
         NotifyWarn("Error | Unsupported file type.");
