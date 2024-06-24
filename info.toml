@@ -3,3 +3,6 @@ name = "Arbitrary Ghsot Loader"
 author = "ar....."
 version = "0.1.0"
 category = ""
+
+[script]
+dependencies = ["MLHook", "NadeoServices"]

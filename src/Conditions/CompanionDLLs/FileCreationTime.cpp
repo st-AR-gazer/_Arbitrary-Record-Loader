@@ -4,6 +4,7 @@
 #include <algorithm>
 
 enum class ErrorCodes {
+    FILENAME_MATCHES_SPECIFIED_STRING = -50,
     FILE_NOT_FOUND = -1001,
     ACCESS_DENIED = -1003,
     INVALID_FILE_NAME = -1005,
@@ -31,6 +32,12 @@ extern "C" __declspec(dllexport) int64_t GetFileCreationTime(const wchar_t* file
     std::wstring path = normalizePath(filePath);
     if (path.empty()) {
         return static_cast<int>(ErrorCodes::PATH_NORMALIZATION_FAILED);
+    }
+    if (path == L"") {
+        return static_cast<int>(ErrorCodes::INVALID_FILE_NAME);
+    }
+    if (path == L"") { // Add proper file name check here... (Find out _why_ it works for the harcoded path, but not the inserted path...)
+        return static_cast<int>(ErrorCodes::FILENAME_MATCHES_SPECIFIED_STRING);
     }
 
     HANDLE hFile = CreateFileW(path.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);

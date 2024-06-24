@@ -15,7 +15,7 @@ namespace _Text {
         return lastIndex;
     }
 
-    int NLastIndexOf(const string &in str, const string &in value, int n) {
+    int NthLastIndexOf(const string &in str, const string &in value, int n) {
         int index = -1;
         for (int i = str.Length - 1; i >= 0; --i) {
             if (str.SubStr(i, value.Length) == value) {
@@ -57,101 +57,156 @@ namespace _UI {
 }
 
 namespace _IO {
-    bool IsDirectory(const string &in path) {
-        if (path.EndsWith("/") || path.EndsWith("\\")) return true;
-        return false;
-    }
-
-    string StripFileNameFromPath(const string &in path) {
-        int index = _Text::LastIndexOf(path, "/");
-        if (index == -1) return path;
-        return path.SubStr(0, index);
-    }
-
-    void RecursiveCreateFolder(const string &in path) {
-        if (IO::FolderExists(path)) return;
-
-        int index = _Text::LastIndexOf(path, "/");
-        if (index == -1) return;
-
-        RecursiveCreateFolder(path.SubStr(0, index));
-        IO::CreateFolder(path);
-    }
-    
-    void SafeCreateFolder(const string &in path, bool shouldUseRecursion = true) {
-        if (!IO::FolderExists(path)) {
-            if (shouldUseRecursion) { RecursiveCreateFolder(path); }
+    namespace Folder {
+        bool IsDirectory(const string &in path) {
+            if (path.EndsWith("/") || path.EndsWith("\\")) return true;
+            return false;
         }
-    }
 
-    void SafeSaveToFile(const string &in path, const string &in content, bool shouldUseRecursion = true, bool shouldLogFilePath = false, bool verbose = false) {
-        if (shouldLogFilePath) { print(path); }
+        void RecursiveCreateFolder(const string &in path) {
+            if (IO::FolderExists(path)) return;
 
-        string noFilePath = path;
+            int index = _Text::LastIndexOf(path, "/");
+            if (index == -1) return;
 
-        if (!_IO::IsDirectory(path)) { noFilePath = StripFileNameFromPath(path); }
-        if (shouldUseRecursion) SafeCreateFolder(noFilePath, shouldUseRecursion);
+            RecursiveCreateFolder(path.SubStr(0, index));
+            IO::CreateFolder(path);
+        }
         
-        IO::File file;
-        file.Open(path, IO::FileMode::Write);
-        file.Write(content);
-        file.Close();
-    }
-    
-    string ReadFileToEnd(const string &in path, bool verbose = false) {
-        if (!IO::FileExists(path)) {
-            log("File does not exist: " + path, LogLevel::Error, 103, "ReadFileToEnd");
-            return "";
+        void SafeCreateFolder(const string &in path, bool shouldUseRecursion = true) {
+            if (!IO::FolderExists(path)) {
+                if (shouldUseRecursion) {
+                    RecursiveCreateFolder(path);
+                } else {
+                    IO::CreateFolder(path);
+                }
+            }
         }
-        IO::File file(path, IO::FileMode::Read);
-        string content = file.ReadToEnd();
-        file.Close();
-        return content;
     }
 
-    string ReadSourceFileToEnd(const string &in path, bool verbose = false) {
-        if (!IO::FileExists(path)) {
-            log("File does not exist: " + path, LogLevel::Error, 114, "ReadSourceFileToEnd");
-            return "";
+    namespace File {
+        bool IsFile(const string &in path) {
+            if (IO::FileExists(path)) return true;
+            return false;
         }
 
-        IO::FileSource f(path);
-        string content = f.ReadToEnd();
-        return content;
-    }
-
-    string GetFileName(const string &in path) {
-        int index = _Text::LastIndexOf(path, "/");
-        if (index == -1) {
-            return path;
+        string GetFileName(const string &in path) {
+            int index = _Text::LastIndexOf(path, "/");
+            if (index == -1) {
+                return path;
+            }
+            return path.SubStr(index + 1);
         }
-        return path.SubStr(index + 1);
-    }
-
-    string GetFileNameWithoutExtension(const string &in path) {
-        string fileName = GetFileName(path);
-        int index = _Text::LastIndexOf(fileName, ".");
-        if (index == -1) {
-            return fileName;
+        
+        string GetFileNameWithoutExtension(const string &in path) {
+            string fileName = _IO::File::GetFileName(path);
+            int index = _Text::LastIndexOf(fileName, ".");
+            if (index == -1) {
+                return fileName;
+            }
+            return fileName.SubStr(0, index);
         }
-        return fileName.SubStr(0, index);
-    }
 
-    string GetFileExtension(const string &in path) {
-        if (_IO::IsDirectory(path)) { return ""; }
+        string GetFileExtension(const string &in path) {
+            if (_IO::Folder::IsDirectory(path)) { return ""; }
 
-        int index = _Text::LastIndexOf(path, ".");
-        if (index == -1) {
-            return "";
+            int index = _Text::LastIndexOf(path, ".");
+            if (index == -1) {
+                return "";
+            }
+            return path.SubStr(index + 1);
         }
-        return path.SubStr(index + 1);
+        
+        string StripFileNameFromFilePath(const string &in path) {
+            int index = _Text::LastIndexOf(path, "/");
+            int index2 = _Text::LastIndexOf(path, "\\");
+            index = Math::Max(index, index2);
+            if (index == -1) return path;
+            return path.SubStr(0, index);
+        }
+
+        // Write to file
+        void WriteToFile(const string &in path, const string &in content) {
+            IO::File file;
+            file.Open(path, IO::FileMode::Write);
+            file.Write(content);
+            file.Close();
+        }
+
+        void SafeWriteToFile(const string &in path, const string &in content, bool shouldUseRecursion = true, bool shouldLogFilePath = false, bool verbose = false) {
+            if (shouldLogFilePath) { print(path); }
+
+            string noFilePath = _IO::File::StripFileNameFromFilePath(path);
+            if (!_IO::Folder::IsDirectory(path)) { path = noFilePath; }
+            if (shouldUseRecursion) _IO::Folder::SafeCreateFolder(path, shouldUseRecursion);
+            
+            IO::File file;
+            file.Open(path, IO::FileMode::Write);
+            file.Write(content);
+            file.Close();
+        }
+
+        void WriteJsonToFile(const string &in path, const Json::Value &in value) {
+            string content = Json::Write(value);
+            WriteToFile(path, content);
+        }
+
+        // Read from file
+        string ReadFileToEnd(const string &in path, bool verbose = false) {
+            if (!IO::FileExists(path)) {
+                log("File does not exist: " + path, LogLevel::Error, 103, "ReadFileToEnd");
+                return "";
+            }
+            IO::File file(path, IO::FileMode::Read);
+            string content = file.ReadToEnd();
+            file.Close();
+            return content;
+        }
+        
+        string ReadSourceFileToEnd(const string &in path, bool verbose = false) {
+            if (!IO::FileExists(path)) {
+                log("File does not exist: " + path, LogLevel::Error, 114, "ReadSourceFileToEnd");
+                return "";
+            }
+
+            IO::FileSource f(path);
+            string content = f.ReadToEnd();
+            return content;
+        }
+
+        // Move file
+        void MoveFile(const string &in source, const string &in destination, bool shouldUseSafeMode = false, bool verbose = false) {
+            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 128, "MoveFile"); return; }
+            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 133, "MoveFile"); return; }
+
+            IO::File file;
+            file.Open(source, IO::FileMode::Read);
+            string content = file.ReadToEnd();
+            file.Close();
+
+            SafeWriteToFile(destination, content, shouldUseSafeMode, false, verbose);
+            IO::Delete(source);
+        }
+
+        // Copy file
+        void CopyMoveFile(const string &in source, const string &in destination, bool verbose = false) {
+            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 128, "CopyFile"); return; }
+            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 133, "CopyFile"); return; }
+
+            IO::File file;
+            file.Open(source, IO::FileMode::Read);
+            string content = file.ReadToEnd();
+            file.Close();
+
+            SafeWriteToFile(destination, content, true, false, verbose);
+        }
     }
 
     void OpenFolder(const string &in path, bool verbose = false) {
         if (IO::FolderExists(path)) {
             OpenExplorerPath(path);
         } else {
-            if (verbose) log("Folder does not exist: " + path + " | LogLevel::Info | OpenFolder", LogLevel::Info, 154, "OpenFolder");
+            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 154, "OpenFolder");
         }
     }
 }
