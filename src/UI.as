@@ -11,38 +11,38 @@ void RenderInterface() {
     FILE_EXPLORER_BASE_RENDERER(); // Required for the file explorer to work.
 
     if (S_windowOpen) {
+        UI::SetNextWindowSize(600, 300, UI::Cond::FirstUseEver);
         if (UI::Begin("Load arbitrary Ghost or Replay", S_windowOpen)) {
-            if (UI::BeginTabBar("Tabs")) {
-                if (UI::BeginTabItem("Local Files")) {
-                    RenderTab_LocalFiles();
-                    UI::EndTabItem();
-                }
-                if (UI::BeginTabItem("Saved Ghosts and Replays")) {
-                    RenderTab_SavedGhostsAndReplays();
-                    UI::EndTabItem();
-                }
-                if (UI::BeginTabItem("Load Ghost from Map")) {
-                    RenderTab_LoadGhostFromMap();
-                    UI::EndTabItem();
-                }
-                if (UI::BeginTabItem("Other Specific UIDs")) {
-                    RenderTab_OtherSpecificUIDs();
-                    UI::EndTabItem();
-                }
-                if (UI::BeginTabItem("Official Maps")) {
-                    RenderTab_OfficialMaps();
-                    UI::EndTabItem();
-                }
-                UI::EndTabBar();
+            UI::BeginTabBar("Tabs");
+            if (UI::BeginTabItem("Local Files")) {
+                RenderTab_LocalFiles();
+                UI::EndTabItem();
             }
-            UI::End();
+            if (UI::BeginTabItem("Saved Ghosts and Replays")) {
+                RenderTab_SavedGhostsAndReplays();
+                UI::EndTabItem();
+            }
+            if (UI::BeginTabItem("Load Ghost from Map")) {
+                RenderTab_LoadGhostFromMap();
+                UI::EndTabItem();
+            }
+            if (UI::BeginTabItem("Other Specific UIDs")) {
+                RenderTab_OtherSpecificUIDs();
+                UI::EndTabItem();
+            }
+            if (UI::BeginTabItem("Official Maps")) {
+                RenderTab_OfficialMaps();
+                UI::EndTabItem();
+            }
+            UI::EndTabBar();
         }
+        UI::End();
     }
 }
 
 void RenderTab_LocalFiles() {
     if (UI::Button("Open File Explorer")) {
-        GhostLoader::OpenGhostFileDialogWindow();
+        _IO::FileExplorer::OpenFileExplorer(true, IO::FromUserGameFolder("Replays/"), "", { "replay", "ghost" });
     }
 
     string filePath = _IO::FileExplorer::Exports::GetExportPath();
@@ -76,6 +76,9 @@ void RenderTab_SavedGhostsAndReplays() {
         }
     }
 
+    UI::Text("Current selected file: " );
+    UI::InputText("File Path", _IO::FileExplorer::Exports::GetExportPath());
+
     if (UI::Button("Pin Run")) {
         // Placeholder for pin functionality here
     }
@@ -92,14 +95,13 @@ void RenderTab_LoadGhostFromMap() {
     UI::Text("Build a request: ");
     UI::Separator();
 
-    string mapUID = "";
     string ghostPosition = "";
 
     mapUID = UI::InputText("Map UID", mapUID);
     ghostPosition = UI::InputText("Ghost Position", ghostPosition);
 
     if (UI::Button("Fetch Ghost")) {
-        startnew(CoroutineFunc(FetchGhostFromMap), array<string> = {mapUID, ghostPosition});
+        // FetchGhostFromMap(mapUID, ghostPosition);
     }
 
     UI::Separator();
@@ -109,10 +111,6 @@ void RenderTab_OfficialMaps() {
     UI::Text("This is a placeholder for loading official maps.");
 }
 
-void OpenFileExplorerWindow() {
-    _IO::FileExplorer::OpenFileExplorer(true, IO::FromUserGameFolder("Replays/"), "", { "replay", "ghost" });
-    startnew(CheckFileExplorerSelection);
-}
 
 void CheckFileExplorerSelection() {
     while (true) {
@@ -129,35 +127,9 @@ void ProcessSelectedFile(const string &in filePath) {
     string fileExt = _IO::FileExplorer::Exports::GetExportPathFileExt().ToLower();
     if (fileExt == "replay") {
         ReplayLoader::LoadReplay(filePath);
-    } else if (fileExt == "gbx") {
+    } else if (fileExt == "ghost") {
         GhostLoader::LoadGhost(filePath);
     } else {
         NotifyWarn("Error | Unsupported file type.");
     }
-}
-
-void FetchGhostFromMap(ref@ data) {
-    array<string>@ params = cast<array<string>>(data);
-    string mapUID = params[0];
-    string ghostPosition = params[1];
-
-    if (mapUID.Length == 0 || ghostPosition.Length == 0) {
-        log("Map UID and Ghost Position are required.", LogLevel::Warn, 145, "FetchGhostFromMap");
-        return;
-    }
-
-    // NadeoApi::Init();
-    // auto result = NadeoApi::("", mapUID);
-
-    // if (result.GetType() == Json::Type::Array) {
-    //     uint pos = Text::ParseInt(ghostPosition);
-    //     if (pos < result.Length) {
-    //         string url = string(result[pos]["url"]);
-    //         GhostLoader::LoadGhostFromUrl(url);
-    //     } else {
-    //         log("Invalid ghost position.", LogLevel::Warn, 158, "FetchGhostFromMap");
-    //     }
-    // } else {
-    //     log("Failed to fetch map records.", LogLevel::Error, 161, "FetchGhostFromMap");
-    // }
 }

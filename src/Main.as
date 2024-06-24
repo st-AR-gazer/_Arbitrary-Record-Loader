@@ -5,4 +5,5 @@ void Main() {
     _IO::Folder::SafeCreateFolder(Server::serverDirectory);
 
     startnew(Server::StartHttpServer);
+    startnew(MapCoro);
 }

@@ -12,10 +12,7 @@ namespace ReplayLoader {
     }
 
     void LoadReplay(const string &in path) {
-        if (!_Game::IsPlayingMap()) {
-            NotifyWarn("You are currently not playing a map! Please load a map in a playing state first!");
-            return;
-        }
+        if (!_Game::IsPlayingMap()) { NotifyWarn("You are currently not playing a map! Please load a map in a playing state first!"); return; }
 
         auto task = GetApp().Network.ClientManiaAppPlayground.DataFileMgr.Replay_Load(path);
         

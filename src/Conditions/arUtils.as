@@ -133,7 +133,7 @@ namespace _IO {
             file.Close();
         }
 
-        void SafeWriteToFile(const string &in path, const string &in content, bool shouldUseRecursion = true, bool shouldLogFilePath = false, bool verbose = false) {
+        void SafeWriteToFile(string path, const string &in content, bool shouldUseRecursion = true, bool shouldLogFilePath = false, bool verbose = false) {
             if (shouldLogFilePath) { print(path); }
 
             string noFilePath = _IO::File::StripFileNameFromFilePath(path);
@@ -164,10 +164,8 @@ namespace _IO {
         }
         
         string ReadSourceFileToEnd(const string &in path, bool verbose = false) {
-            if (!IO::FileExists(path)) {
-                log("File does not exist: " + path, LogLevel::Error, 168, "ReadSourceFileToEnd");
-                return "";
-            }
+            // if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 168, "ReadSourceFileToEnd"); return ""; }
+            // FileSource assumes the top dir is _PLUGINNAME_.op, not C:\ so this has to be assumed to be an existing path...
 
             IO::FileSource f(path);
             string content = f.ReadToEnd();

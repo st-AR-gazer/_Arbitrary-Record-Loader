@@ -1,13 +1,10 @@
+NadeoApi@ api;
+
 class NadeoApi {
     string liveSvcUrl;
 
     NadeoApi() {
         NadeoServices::AddAudience("NadeoLiveServices");
-        liveSvcUrl = NadeoServices::BaseURLLive();
-    }
-
-    void Init() {
-        NadeoServices::AddAudience(audience);
         liveSvcUrl = NadeoServices::BaseURLLive();
     }
 
@@ -17,28 +14,20 @@ class NadeoApi {
         }
     }
 
-    const string LengthAndOffset(uint length, uint offset) {
-        return "length=" + length + "&offset=" + offset;
-    }
-
     Json::Value CallLiveApiPath(const string &in path) {
         AssertGoodPath(path);
         return FetchLiveEndpoint(liveSvcUrl + path);
     }
 
-    Json::Value GetMapRecords(const string &in accountIdList, const string &in mapIdList, const string &in seasonId = "") {
-        string url = "/mapRecords/?accountIdList=" + accountIdList + "&mapIdList=" + mapIdList;
-        if (seasonId != "") url += "&seasonId=" + seasonId;
-        return CallLiveApiPath(url);
-    }
-
-    Json::Value GetMapRecordById(const string &in mapRecordId) {
-        return CallLiveApiPath("/mapRecords/" + mapRecordId);
+    Json::Value GetMapRecords(const string &in seasonUid, const string &in mapUid, bool onlyWorld = true, uint length = 1, uint offset = 0) {
+        string qParams = onlyWorld ? "?onlyWorld=true" : "";
+        if (onlyWorld) qParams += "&" + "length=" + length + "&offset=" + offset;
+        return CallLiveApiPath("/api/token/leaderboard/group/" + seasonUid + "/map/" + mapUid + "/top" + qParams);
     }
 }
 
 Json::Value FetchLiveEndpoint(const string &in route) {
-    //log("[FetchLiveEndpoint] Requesting: " + route, LogLevel::Info, 41, "LengthAndOffset");
+    log("[FetchLiveEndpoint] Requesting: " + route, LogLevel::Info, 34, "LengthAndOffset");
     while (!NadeoServices::IsAuthenticated("NadeoLiveServices")) { yield(); }
     auto req = NadeoServices::Get("NadeoLiveServices", route);
     req.Start();

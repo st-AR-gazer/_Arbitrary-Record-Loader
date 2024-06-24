@@ -1,6 +1,8 @@
 string s_currMap = "";
 bool mapRecordsLoaded = false;
 
+string mapUID = "";
+
 [Setting category="General" name="Enable Ghosts" hidden]
 bool g_enableGhosts = true;
 
@@ -12,8 +14,12 @@ void MapCoro() {
             s_currMap = CurrentMap;
             mapRecordsLoaded = false;
             if (!mapRecordsLoaded) {
+
                 ReplayLoader::CheckReplayLoad();
                 mapRecordsLoaded = true;
+
+                mapUID = s_currMap;
+
             }
         }
     }
