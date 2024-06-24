@@ -5,4 +5,4 @@ version = "0.1.0"
 category = ""
 
 [script]
-dependencies = ["MLHook", "NadeoServices"]
+dependencies = [ "NadeoServices", "MLHook" ]

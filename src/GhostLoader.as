@@ -10,7 +10,7 @@ namespace GhostLoader {
         if (filePath.ToLower().EndsWith(".gbx")) {
             string fileName = GetFileName(filePath);
             string destinationPath = Server::serverDirectory + fileName;
-            log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, 1, "2");
+            log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, 13, "LoadGhost");
             _IO::SafeMoveFileToNonSource(filePath, destinationPath);
             LoadGhostFromUrl(Server::HTTP_BASE_URL + "get_ghost/" + Net::UrlEncode(fileName));
         } else {
@@ -25,7 +25,7 @@ namespace GhostLoader {
             return;
         }
 
-        log("Saving ghost to URL: " + filePath, LogLevel::Info, 1, "2");
+        log("Saving ghost to URL: " + filePath, LogLevel::Info, 28, "SaveGhost");
 
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         string ID = gm.IdName;
@@ -59,7 +59,7 @@ namespace GhostLoader {
     }
 
     void LoadGhostFromUrl(const string &in url) {
-        log("Loading ghost from URL: " + url, LogLevel::Info, 1, "2");
+        log("Loading ghost from URL: " + url, LogLevel::Info, 62, "LoadGhostFromUrl");
         startnew(LoadGhostFromUrlAsync, url);
     }
 
@@ -74,12 +74,12 @@ namespace GhostLoader {
         }
 
         if (task.HasFailed || !task.HasSucceeded) {
-            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription + " Url used: " + url, LogLevel::Error, 1, "2");
+            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription + " Url used: " + url, LogLevel::Error, 77, "LoadGhostFromUrlAsync");
             return;
         }
 
         auto instId = gm.Ghost_Add(task.Ghost, S_UseGhostLayer);
-        log('Instance ID: ' + instId.GetName() + " / " + Text::Format("%08x", instId.Value), LogLevel::Info, 1, "2");
+        log('Instance ID: ' + instId.GetName() + " / " + Text::Format("%08x", instId.Value), LogLevel::Info, 82, "LoadGhostFromUrlAsync");
 
         dfm.TaskResult_Release(task.Id);
     }
@@ -87,6 +87,6 @@ namespace GhostLoader {
     void RemoveAllGhosts() {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_RemoveAll();
-        log("All ghosts removed.", LogLevel::Info, 55, "RemoveAllGhosts");
+        log("All ghosts removed.", LogLevel::Info, 90, "RemoveAllGhosts");
     }
 }

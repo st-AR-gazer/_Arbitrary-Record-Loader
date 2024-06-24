@@ -1,6 +1,10 @@
-namespace NadeoApi {
-    NadeoServices::Audience audience = NadeoServices::Audience::NadeoLiveServices;
+class NadeoApi {
     string liveSvcUrl;
+
+    NadeoApi() {
+        NadeoServices::AddAudience("NadeoLiveServices");
+        liveSvcUrl = NadeoServices::BaseURLLive();
+    }
 
     void Init() {
         NadeoServices::AddAudience(audience);
@@ -31,12 +35,13 @@ namespace NadeoApi {
     Json::Value GetMapRecordById(const string &in mapRecordId) {
         return CallLiveApiPath("/mapRecords/" + mapRecordId);
     }
+}
 
-    Json::Value FetchLiveEndpoint(const string &in route) {
-        while (!NadeoServices::IsAuthenticated(audience)) { yield(); }
-        auto req = NadeoServices::Get(audience, route);
-        req.Start();
-        while(!req.Finished()) { yield(); }
-        return Json::Parse(req.String());
-    }
+Json::Value FetchLiveEndpoint(const string &in route) {
+    //log("[FetchLiveEndpoint] Requesting: " + route, LogLevel::Info, 41, "LengthAndOffset");
+    while (!NadeoServices::IsAuthenticated("NadeoLiveServices")) { yield(); }
+    auto req = NadeoServices::Get("NadeoLiveServices", route);
+    req.Start();
+    while(!req.Finished()) { yield(); }
+    return Json::Parse(req.String());
 }

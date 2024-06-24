@@ -142,22 +142,22 @@ void FetchGhostFromMap(ref@ data) {
     string ghostPosition = params[1];
 
     if (mapUID.Length == 0 || ghostPosition.Length == 0) {
-        log("Map UID and Ghost Position are required.", LogLevel::Warn, __LINE__, __FUNCTION__);
+        log("Map UID and Ghost Position are required.", LogLevel::Warn, 145, "FetchGhostFromMap");
         return;
     }
 
-    NadeoApi::Init();
-    auto result = NadeoApi::GetMapRecords("", mapUID);
+    // NadeoApi::Init();
+    // auto result = NadeoApi::("", mapUID);
 
-    if (result.GetType() == Json::Type::Array) {
-        uint pos = Text::ParseInt(ghostPosition);
-        if (pos < result.Length) {
-            string url = string(result[pos]["url"]);
-            GhostLoader::LoadGhostFromUrl(url);
-        } else {
-            log("Invalid ghost position.", LogLevel::Warn, __LINE__, __FUNCTION__);
-        }
-    } else {
-        log("Failed to fetch map records.", LogLevel::Error, __LINE__, __FUNCTION__);
-    }
+    // if (result.GetType() == Json::Type::Array) {
+    //     uint pos = Text::ParseInt(ghostPosition);
+    //     if (pos < result.Length) {
+    //         string url = string(result[pos]["url"]);
+    //         GhostLoader::LoadGhostFromUrl(url);
+    //     } else {
+    //         log("Invalid ghost position.", LogLevel::Warn, 158, "FetchGhostFromMap");
+    //     }
+    // } else {
+    //     log("Failed to fetch map records.", LogLevel::Error, 161, "FetchGhostFromMap");
+    // }
 }
