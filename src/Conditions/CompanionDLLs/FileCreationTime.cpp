@@ -19,7 +19,7 @@ std::wstring normalizePath(const std::wstring& inputPath) {
 
     for (const wchar_t& ch : path) {
         if (ch == L'\\' || ch == L'/') {
-            result.append(L"\\\\");
+            result.append(L"\\\\"); // Change this to be one \\ ?
         }
         else {
             result.push_back(ch);
@@ -37,6 +37,8 @@ extern "C" __declspec(dllexport) int64_t GetFileCreationTime(const wchar_t* file
         return static_cast<int>(ErrorCodes::INVALID_FILE_NAME);
     }
     if (path == L"") { // Add proper file name check here... (Find out _why_ it works for the harcoded path, but not the inserted path...)
+                       // it seems most likely that the path is not the same as the hardcoded path, but I'm not sure why that would be the case...
+                       // Since the one I'm passing should be the same... Well I guess we'll see...
         return static_cast<int>(ErrorCodes::FILENAME_MATCHES_SPECIFIED_STRING);
     }
 

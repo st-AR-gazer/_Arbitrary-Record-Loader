@@ -54,7 +54,7 @@ void RenderTab_LocalFiles() {
     }
 
     if (UI::Button("Save Ghost/Replay")) {
-        GhostLoader::SaveGhost();
+        SaveRecordPath();
     }
 
     if (UI::Button("Remove All Ghosts")) {
