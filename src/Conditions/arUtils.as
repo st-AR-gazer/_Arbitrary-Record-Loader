@@ -164,7 +164,7 @@ namespace _IO {
         }
         
         string ReadSourceFileToEnd(const string &in path, bool verbose = false) {
-            // if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 168, "ReadSourceFileToEnd"); return ""; }
+            // if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 167, "ReadSourceFileToEnd"); return ""; }
             // FileSource assumes the top dir is _PLUGINNAME_.op, not C:\ so this has to be assumed to be an existing path...
 
             IO::FileSource f(path);
@@ -174,8 +174,8 @@ namespace _IO {
 
         // Move file
         void MoveFile(const string &in source, const string &in destination, bool shouldUseSafeMode = false, bool verbose = false) {
-            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 179, "MoveFile"); return; }
-            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 180, "MoveFile"); return; }
+            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 177, "MoveFile"); return; }
+            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 178, "MoveFile"); return; }
 
             IO::File file;
             file.Open(source, IO::FileMode::Read);
@@ -188,8 +188,8 @@ namespace _IO {
 
         // Copy file
         void CopyMoveFile(const string &in source, const string &in destination, bool verbose = false) {
-            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 193, "CopyMoveFile"); return; }
-            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 194, "CopyMoveFile"); return; }
+            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 191, "CopyMoveFile"); return; }
+            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 192, "CopyMoveFile"); return; }
 
             IO::File file;
             file.Open(source, IO::FileMode::Read);
@@ -204,7 +204,7 @@ namespace _IO {
         if (IO::FolderExists(path)) {
             OpenExplorerPath(path);
         } else {
-            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 209, "OpenFolder");
+            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 207, "OpenFolder");
         }
     }
 }

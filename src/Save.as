@@ -5,7 +5,7 @@ void SaveRecordPath() {
         return;
     }
 
-    log("Saving ghost to URL: " + filePath, LogLevel::Info, 28, "SaveGhost");
+    log("Saving ghost to URL: " + filePath, LogLevel::Info, 8, "SaveRecordPath");
 
     auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
     string ID = gm.IdName;

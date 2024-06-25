@@ -21,16 +21,16 @@ namespace ReplayLoader {
             yield();
         }
 
-        log(task.ErrorCode, LogLevel::Info, 27, "LoadReplay");
-        log(task.ErrorDescription, LogLevel::Info, 28, "LoadReplay");
-        log(task.ErrorType, LogLevel::Info, 29, "LoadReplay");
-        log(tostring(task.Ghosts.Length), LogLevel::Info, 30, "LoadReplay");
+        log(task.ErrorCode, LogLevel::Info, 24, "LoadReplay");
+        log(task.ErrorDescription, LogLevel::Info, 25, "LoadReplay");
+        log(task.ErrorType, LogLevel::Info, 26, "LoadReplay");
+        log(tostring(task.Ghosts.Length), LogLevel::Info, 27, "LoadReplay");
 
         auto ghostMgr = cast<CSmArenaRulesMode@>(GetApp().PlaygroundScript).GhostMgr;
         for (uint i = 0; i < task.Ghosts.Length; i++) {
             ghostMgr.Ghost_Add(task.Ghosts[i]);
         }
 
-        log("Replay loaded successfully with " + task.Ghosts.Length + " ghosts!", LogLevel::Info, 37, "LoadReplay");
+        log("Replay loaded successfully with " + task.Ghosts.Length + " ghosts!", LogLevel::Info, 34, "LoadReplay");
     }
 }
