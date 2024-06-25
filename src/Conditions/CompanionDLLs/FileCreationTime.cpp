@@ -19,7 +19,7 @@ std::wstring normalizePath(const std::wstring& inputPath) {
 
     for (const wchar_t& ch : path) {
         if (ch == L'\\' || ch == L'/') {
-            result.append(L"\\\\"); // Change this to be one \\ ?
+            result.append(L"\\"); // Change this to be one \\ ?
         }
         else {
             result.push_back(ch);

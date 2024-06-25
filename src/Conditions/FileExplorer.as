@@ -84,6 +84,9 @@ namespace _IO {
         // Export
         string exportElementPath = "";
 
+        // Rename
+        string newFileName = "";
+
 
         array<FileInfo> fileInfos;
 
@@ -280,6 +283,17 @@ namespace _IO {
             if (UI::Button(usePaigination ? "Disable Pagination" : "Enable Pagination")) { usePaigination = !usePaigination; }
             if (!usePaigination) { itemsPerPage = fileInfos.Length; }
             if (usePaigination) { itemsPerPage = MAX_ELEMENTS_PER_PAGE; }
+
+
+            newFileName = UI::InputText("+ ." + _IO::File::GetFileExtension(currentSelectedElementPath) +  " | New File Name", newFileName);
+            UI::SameLine();
+            if (!_IO::File::IsFile(currentSelectedElementPath)) 
+              { _UI::DisabledButton("Rename file"); } else {
+                if (UI::Button("Rename file")) { 
+                    _IO::File::RenameFile(currentSelectedElementPath, newFileName); 
+                    IndexCurrentDirectory();
+              } }
+            
 
             if (UI::BeginCombo("Sorting", Hidden::GetSortingName(currentSortingOption), UI::ComboFlags::HeightRegular)) {
                 if (UI::Selectable("Alphabetical", currentSortingOption == SortElementsBasedOnType::Alphabetical)) currentSortingOption = SortElementsBasedOnType::Alphabetical;

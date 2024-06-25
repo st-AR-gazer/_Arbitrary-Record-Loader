@@ -7,8 +7,7 @@ void SaveRecordPath() {
 
     log("Saving ghost to URL: " + filePath, LogLevel::Info, 8, "SaveRecordPath");
 
-    auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
-    string ID = gm.IdName;
+    int ID = Math::Rand(0, 999999999);
 
     bool fromLocalFile;
 
@@ -18,7 +17,8 @@ void SaveRecordPath() {
         fromLocalFile = true;
     }
 
-    Json::Value json;
+    Json::Value json = Json::Object();
+    
     json["content"] = Json::Object();
     json["content"]["ID"] = ID;
     json["content"]["FromLocalFile"] = fromLocalFile;

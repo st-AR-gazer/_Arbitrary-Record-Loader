@@ -135,11 +135,14 @@ namespace _IO {
 
         void SafeWriteToFile(string path, const string &in content, bool shouldUseRecursion = true, bool shouldLogFilePath = false, bool verbose = false) {
             if (shouldLogFilePath) { print(path); }
+            print(path);
 
             string noFilePath = _IO::File::StripFileNameFromFilePath(path);
             if (!_IO::Folder::IsDirectory(path)) { path = noFilePath; }
             if (shouldUseRecursion) _IO::Folder::SafeCreateFolder(path, shouldUseRecursion);
             
+            print(path);
+
             IO::File file;
             file.Open(path, IO::FileMode::Write);
             file.Write(content);
@@ -148,7 +151,7 @@ namespace _IO {
 
         void WriteJsonToFile(const string &in path, const Json::Value &in value) {
             string content = Json::Write(value);
-            WriteToFile(path, content);
+            SafeWriteToFile(path, content);
         }
 
         // Read from file
@@ -198,6 +201,39 @@ namespace _IO {
 
             SafeWriteToFile(destination, content, true, false, verbose);
         }
+
+        // Rename file
+        void RenameFile(const string &in filePath, string newFileName, bool verbose = false) {
+            if (verbose) log("Attempting to rename file: " + filePath, LogLevel::Info);
+
+            if (IO::FileExists(filePath)) {
+                string dirPath = _IO::File::StripFileNameFromFilePath(filePath);
+                string extension = _IO::File::GetFileExtension(filePath);
+                string newFilePath = dirPath + "/" + newFileName + (extension.Length==0 ? "" : "." + extension);
+
+                verbose = true;
+                if (verbose) {
+                    log("Old File Path: " + filePath, LogLevel::Info);
+                    log("New File Path: " + newFilePath, LogLevel::Info);
+                }
+
+                IO::File fileOld;
+                fileOld.Open(filePath, IO::FileMode::Read);
+                string fileContent = fileOld.ReadToEnd();
+                fileOld.Close();
+
+                IO::File fileNew;
+                fileNew.Open(newFilePath, IO::FileMode::Write);
+                fileNew.Write(fileContent);
+                fileNew.Close();
+
+                IO::Delete(filePath);
+                if (verbose) log("File renamed successfully.", LogLevel::Info);
+            } else {
+                if (verbose) log("File does not exist: " + filePath, LogLevel::Info);
+            }
+        }
+
     }
 
     void OpenFolder(const string &in path, bool verbose = false) {

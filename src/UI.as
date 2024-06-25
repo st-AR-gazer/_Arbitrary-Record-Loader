@@ -11,7 +11,7 @@ void RenderInterface() {
     FILE_EXPLORER_BASE_RENDERER(); // Required for the file explorer to work.
 
     if (S_windowOpen) {
-        UI::SetNextWindowSize(600, 300, UI::Cond::FirstUseEver);
+        UI::SetNextWindowSize(670, 300, UI::Cond::FirstUseEver);
         if (UI::Begin("Load arbitrary Ghost or Replay", S_windowOpen)) {
             UI::BeginTabBar("Tabs");
             if (UI::BeginTabItem("Local Files")) {
