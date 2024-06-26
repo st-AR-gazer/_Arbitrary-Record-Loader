@@ -8,7 +8,7 @@ void SaveRecordPath(const string &in overwriteFilePath = "") {
         filePath = overwriteFilePath;
     }
 
-    log("Saving ghost to URL: " + filePath, LogLevel::Info, 8, "SaveRecordPath");
+    log("Saving ghost to URL: " + filePath, LogLevel::Info, 11, "SaveRecordPath");
 
     int ID = Math::Rand(0, 999999999);
 

@@ -1,14 +1,14 @@
 // Fun Utils I use from time to time
 
 namespace _Text {
-    int NthIndexOf(const string &in str, const string &in value, int n) {
-        int index = -1;
-        for (int i = 0; i < n; ++i) {
-            index = str.IndexOf(value, index + 1);
-            if (index == -1) break;
-        }
-        return index;
-    }
+    // int NthIndexOf(const string &in str, const string &in value, int n) {
+    //     int index = -1;
+    //     for (int i = 0; i < n; ++i) {
+    //         index = str.IndexOf(value, index + 1);
+    //         if (index == -1) break;
+    //     }
+    //     return index;
+    // }
 
     int LastIndexOf(const string &in str, const string &in value) {
         int lastIndex = -1;
@@ -142,18 +142,15 @@ namespace _IO {
             file.Close();
         }
 
-        void SafeWriteToFile(string path, const string &in content, bool shouldUseRecursion = true, bool shouldLogFilePath = false, bool verbose = false) {
-            if (shouldLogFilePath) { print(path); }
-            print(path);
+        void SafeWriteToFile(string _path, const string &in content, bool shouldUseRecursion = true, bool shouldLogFilePath = false, bool verbose = false) {
+            if (shouldLogFilePath) { print(_path); }
 
-            string noFilePath = _IO::File::StripFileNameFromFilePath(path);
-            if (!_IO::Folder::IsDirectory(path)) { path = noFilePath; }
-            if (shouldUseRecursion) _IO::Folder::SafeCreateFolder(path, shouldUseRecursion);
+            string noFilePath = _IO::File::StripFileNameFromFilePath(_path);
+            if (!_IO::Folder::IsDirectory(_path)) { _path = noFilePath; }
+            if (shouldUseRecursion) _IO::Folder::SafeCreateFolder(_path, shouldUseRecursion);
             
-            print(path);
-
             IO::File file;
-            file.Open(path, IO::FileMode::Write);
+            file.Open(_path, IO::FileMode::Write);
             file.Write(content);
             file.Close();
         }
@@ -166,7 +163,7 @@ namespace _IO {
         // Read from file
         string ReadFileToEnd(const string &in path, bool verbose = false) {
             if (!IO::FileExists(path)) {
-                log("File does not exist: " + path, LogLevel::Error, 160, "ReadFileToEnd");
+                log("File does not exist: " + path, LogLevel::Error, 166, "ReadFileToEnd");
                 return "";
             }
             IO::File file(path, IO::FileMode::Read);
@@ -176,7 +173,7 @@ namespace _IO {
         }
         
         string ReadSourceFileToEnd(const string &in path, bool verbose = false) {
-            // if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 170, "ReadSourceFileToEnd"); return ""; }
+            // if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 176, "ReadSourceFileToEnd"); return ""; }
             // FileSource assumes the top dir is _PLUGINNAME_.op, not C:\ so this has to be assumed to be an existing path...
 
             IO::FileSource f(path);
@@ -186,8 +183,8 @@ namespace _IO {
 
         // Move file
         void MoveFile(const string &in source, const string &in destination, bool shouldUseSafeMode = false, bool verbose = false) {
-            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 180, "MoveFile"); return; }
-            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 181, "MoveFile"); return; }
+            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 186, "MoveFile"); return; }
+            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 187, "MoveFile"); return; }
 
             IO::File file;
             file.Open(source, IO::FileMode::Read);
@@ -200,8 +197,8 @@ namespace _IO {
 
         // Copy file
         void CopyMoveFile(const string &in source, const string &in destination, bool verbose = false) {
-            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 194, "CopyMoveFile"); return; }
-            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 195, "CopyMoveFile"); return; }
+            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 200, "CopyMoveFile"); return; }
+            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 201, "CopyMoveFile"); return; }
 
             IO::File file;
             file.Open(source, IO::FileMode::Read);
@@ -212,18 +209,18 @@ namespace _IO {
         }
 
         // Rename file
-        void RenameFile(const string &in filePath, string newFileName, bool verbose = false) {
-            if (verbose) log("Attempting to rename file: " + filePath, LogLevel::Info, 207, "RenameFile");
+        void RenameFile(const string &in filePath, string _newFileName, bool verbose = false) {
+            if (verbose) log("Attempting to rename file: " + filePath, LogLevel::Info, 213, "RenameFile");
 
             if (IO::FileExists(filePath)) {
                 string dirPath = _IO::File::StripFileNameFromFilePath(filePath);
                 string extension = _IO::File::GetFileExtension(filePath);
-                string newFilePath = dirPath + "/" + newFileName + (extension.Length==0 ? "" : "." + extension);
+                string newFilePath = dirPath + "/" + _newFileName + (extension.Length==0 ? "" : "." + extension);
 
                 verbose = true;
                 if (verbose) {
-                    log("Old File Path: " + filePath, LogLevel::Info, 216, "RenameFile");
-                    log("New File Path: " + newFilePath, LogLevel::Info, 217, "RenameFile");
+                    log("Old File Path: " + filePath, LogLevel::Info, 222, "RenameFile");
+                    log("New File Path: " + newFilePath, LogLevel::Info, 223, "RenameFile");
                 }
 
                 IO::File fileOld;
@@ -237,40 +234,40 @@ namespace _IO {
                 fileNew.Close();
 
                 IO::Delete(filePath);
-                if (verbose) log("File renamed successfully.", LogLevel::Info, 231, "RenameFile");
+                if (verbose) log("File renamed successfully.", LogLevel::Info, 237, "RenameFile");
             } else {
-                if (verbose) log("File does not exist: " + filePath, LogLevel::Info, 233, "RenameFile");
+                if (verbose) log("File does not exist: " + filePath, LogLevel::Info, 239, "RenameFile");
             }
         }
 
-        // Normal(safe) From[nn]File
-        void SafeFromAppFolder(const string &in path) {
-            // Path is expected to IO::FromAppFolder("[n]")
-            _IO::Folder::SafeCreateFolder(path, true);
-            IO::FromAppFolder(path);
-        }
-        void SafeFromDataFolder(const string &in path) {
-            // Path is expected to IO::FromDataFolder("[n]")
-            _IO::Folder::SafeCreateFolder(path, true);
-            IO::FromDataFolder(path);
-        }
-        void SafeFromStorageFolder(const string &in path) {
-            // Path is expected to IO::FromStorageFolder("[n]")
-            _IO::Folder::SafeCreateFolder(path, true);
-            IO::FromStorageFolder(path);
-        }
-        void SafeFromUserGameFolder(const string &in path) {
-            // Path is expected to IO::FromUserGameFolder("[n]")
-            _IO::Folder::SafeCreateFolder(path, true);
-            IO::FromUserGameFolder(path);
-        }
+        // // Normal(safe) From[nn]File
+        // void SafeFromAppFolder(const string &in path) {
+        //     // Path is expected to IO::FromAppFolder("[n]")
+        //     _IO::Folder::SafeCreateFolder(path, true);
+        //     IO::FromAppFolder(path);
+        // }
+        // void SafeFromDataFolder(const string &in path) {
+        //     // Path is expected to IO::FromDataFolder("[n]")
+        //     _IO::Folder::SafeCreateFolder(path, true);
+        //     IO::FromDataFolder(path);
+        // }
+        // void SafeFromStorageFolder(const string &in path) {
+        //     // Path is expected to IO::FromStorageFolder("[n]")
+        //     _IO::Folder::SafeCreateFolder(path, true);
+        //     IO::FromStorageFolder(path);
+        // }
+        // void SafeFromUserGameFolder(const string &in path) {
+        //     // Path is expected to IO::FromUserGameFolder("[n]")
+        //     _IO::Folder::SafeCreateFolder(path, true);
+        //     IO::FromUserGameFolder(path);
+        // }
     }
 
     void OpenFolder(const string &in path, bool verbose = false) {
         if (IO::FolderExists(path)) {
             OpenExplorerPath(path);
         } else {
-            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 243, "OpenFolder");
+            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 270, "OpenFolder");
         }
     }
 }
@@ -360,46 +357,55 @@ namespace _Game {
 }
 
 namespace _Net {
-    string DownloadFile(const string &in url) {
-        string content = startnew(Hidden::CoroDownloadFile(url));
-        return content;
-    }
+    // void DownloadFile(const string &in url, string content) {
+    //     startnew(Hidden::CoroDownloadFile, url, content);
+    // }
 
     void DownloadFileToDestination(const string &in url, const string &in destination) {
-        startnew(Hidden::CoroDownloadFileToDestination(url, destination));
+        string userdata = url + "|" + destination;
+        startnew(Hidden::CoroDownloadFileToDestination, userdata);
     }
 
     namespace Hidden {
-        string CoroDownloadFile(const string &in url) {
+        // void CoroDownloadFile(const string &in url, string content) {
+        //     Net::HttpRequest@ request = Net::HttpRequest();
+        //     request.Url = url;
+        //     request.Method = Net::HttpMethod::Get;
+        //     request.Start();
+            
+        //     while (!request.Finished()) {
+        //         yield();
+        //     }
+
+        //     if (request.ResponseCode() == 200) {
+        //         content = request.Body;
+        //         NotifyInfo("File downloaded successfully, returning the content");
+        //     } else {
+        //         NotifyWarn("Failed to download file. Response code: " + request.ResponseCode());
+        //         content = "";
+        //     }
+        // }
+
+        void CoroDownloadFileToDestination(const string &in userdata) {
+            array<string> parts = userdata.Split("|");
+            if (parts.Length != 2) {
+                NotifyWarn("Invalid userdata format.");
+                return;
+            }
+            string url = parts[0];
+            string destination = parts[1];
+
             Net::HttpRequest@ request = Net::HttpRequest();
             request.Url = url;
             request.Method = Net::HttpMethod::Get;
             request.Start();
-            
+
             while (!request.Finished()) {
                 yield();
             }
 
             if (request.ResponseCode() == 200) {
-                return request.Response();
-                NotifyInfo("File downloaded successfully, returning the content");
-            } else {
-                NotifyWarn("Failed to download file. Response code: " + request.ResponseCode());
-            }
-        }
-
-        void CoroDownloadFileToDestination(const string &in url, const string &in destination) {
-            Net::HttpRequest@ request = Net::HttpRequest();
-            request.Url = url;
-            request.Method = Net::HttpMethod::Get;
-            request.Start();
-            
-            while (!request.Finished()) {
-                yield();
-            }
-
-            if (request.ResponseCode() == 200) {
-                _IO::File::SafeWriteToFile(destination, request.Response());
+                _IO::File::SafeWriteToFile(destination, request.Body);
                 NotifyInfo("File downloaded successfully and saved to: " + destination);
             } else {
                 NotifyWarn("Failed to download file. Response code: " + request.ResponseCode());

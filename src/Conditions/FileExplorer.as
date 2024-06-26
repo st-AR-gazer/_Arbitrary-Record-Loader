@@ -267,8 +267,8 @@ namespace _IO {
             UI::SameLine();
 
             if (UI::Button(Icons::ChevronRight, vec2(buttonWidth, 0))) {
-                uint maxPage = Math::Ceil(float(fileInfos.Length) / float(itemsPerPage)) - 1;
-                if (currentPage < maxPage) { currentPage++; IndexCurrentDirectory(); }
+                float maxPage = Math::Ceil(float(fileInfos.Length) / float(itemsPerPage)) - 1;
+                if (int(currentPage) < int(maxPage)) { currentPage++; IndexCurrentDirectory(); }
             }
 
             UI::SameLine();
@@ -653,7 +653,7 @@ namespace _IO {
     }
 
     void SafeMoveFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
-        _IO::ReadFileToEnd(originalPath);
+        _IO::File::ReadFileToEnd(originalPath);
         
         IO::File originalFile;
         originalFile.Open(originalPath, IO::FileMode::Read);

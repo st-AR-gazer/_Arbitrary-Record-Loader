@@ -97,31 +97,31 @@ void RenderTab_SavedGhostsAndReplays() {
     UI::Text("Current selected file: ");
     UI::InputText("File Path", _IO::FileExplorer::Exports::GetExportPath());
 
-    const string savedJsonDirectory = _IO::File::SafeFromStorageFolder("Server/Saved/JsonData/");
-
-    array<string> files = IO::IndexFolder(savedJsonDirectory);
+    array<string> files = /*IO::IndexFolder(Server::savedJsonDirectory)*/ { "test.json" };
     UI::Text("Saved Runs:");
 
     for (uint i = 0; i < files.Length; i++) {
         string fileName = files[i];
-        string jsonContent = _IO::File::ReadFileToEnd(savedJsonDirectory + fileName);
+        string jsonContent = _IO::File::ReadFileToEnd(Server::savedJsonDirectory + fileName);
         Json::Value json = Json::Parse(jsonContent);
-        
-        if (json.GetType() == Json::Type::Object && json.HasKey("content")) {
-            UI::Text("FileName: " + json["content"]["FileName"]);
-            UI::Text("FromLocalFile: " + tostring(json["content"]["FromLocalFile"]));
-            UI::Text("FilePath: " + json["content"]["FilePath"]);
 
-            if (UI::Button("Load " + fileName)) {
-                if (json["content"]["FromLocalFile"]) {
-                    ProcessSelectedFile(json["content"]["FilePath"]);
-                } else {
-                    NotifyWarn("Func not implemented yet..."); // TODO: Implement this :xdd:
-                }
-            }
-        } else {
-            UI::Text("Error reading " + fileName);
-        }
+        print(json);
+        
+        // if (json.GetType() == Json::Type::Object && json.HasKey("content")) {
+        //     UI::Text("FileName: " + json["content"]["FileName"]);
+        //     UI::Text("FromLocalFile: " + tostring(json["content"]["FromLocalFile"]));
+        //     UI::Text("FilePath: " + json["content"]["FilePath"]);
+
+        //     if (UI::Button("Load " + fileName)) {
+        //         if (json["content"]["FromLocalFile"]) {
+        //             ProcessSelectedFile(json["content"]["FilePath"]);
+        //         } else {
+        //             NotifyWarn("Func not implemented yet..."); // TODO: Implement this :xdd:
+        //         }
+        //     }
+        // } else {
+        //     UI::Text("Error reading " + fileName);
+        // }
     }
 }
 
@@ -129,87 +129,92 @@ void RenderTab_SavedGhostsAndReplays() {
 
 void RenderTab_OtherSpecificUIDs() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
-    UI::Separator();
+    // UI::Separator();
 
-    string downloadPath;
-    string selectedJsonFile;
-    string downloadedContent;
-    array<string> jsonFiles = GetAvailableJsonFiles();
-    int selectedIndex = 0;
+    // string downloadPath;
+    // string selectedJsonFile;
+    // string downloadedContent;
+    // array<string> jsonFiles = GetAvailableJsonFiles();
+    // int selectedIndex = 0;
 
-    UI::InputText("Download Provided from external", downloadPath);
+    // UI::InputText("Download Provided from external", downloadPath);
     
-    if (UI::Button("Download Provided")) {
-        if (_IO::File::GetFileExtension(downloadPath).ToLower() != "json" && _IO::File::GetFileExtension(downloadPath).ToLower() != ".json") {
-            NotifyWarn("Error | Invalid file extension.");
-        } else if (downloadPath != "") {
-            string destinationPath = Server::specificDownloadedJsonFilesDirectory + _IO::File::GetFileName(downloadPath);
-            _Net::DownloadFileToDestination(downloadPath, destinationPath);
-            jsonFiles = GetAvailableJsonFiles();
-        } else {
-            NotifyWarn("Error | No Json Download provided.");
-        }
-    }
+    // if (UI::Button("Download Provided")) {
+    //     if (_IO::File::GetFileExtension(downloadPath).ToLower() != "json" && _IO::File::GetFileExtension(downloadPath).ToLower() != ".json") {
+    //         NotifyWarn("Error | Invalid file extension.");
+    //     } else if (downloadPath != "") {
+    //         string destinationPath = Server::specificDownloadedJsonFilesDirectory + _IO::File::GetFileName(downloadPath);
+    //         _Net::DownloadFileToDestination(downloadPath, destinationPath);
+    //         jsonFiles = GetAvailableJsonFiles();
+    //     } else {
+    //         NotifyWarn("Error | No Json Download provided.");
+    //     }
+    // }
 
-    UI::Separator();
-    if (UI::BeginCombo("Select JSON File", selectedJsonFile)) {
-        for (uint i = 0; i < jsonFiles.Length; i++) {
-            bool isSelected = (selectedIndex == int(i));
-            if (UI::Selectable(jsonFiles[i], isSelected)) {
-                selectedIndex = i;
-                selectedJsonFile = jsonFiles[i];
-                downloadedContent = LoadJsonContent(selectedJsonFile);
-            }
-            if (isSelected) {
-                UI::SetItemDefaultFocus();
-            }
-        }
-        UI::EndCombo();
-    }
+    // UI::Separator();
+    // if (UI::BeginCombo("Select JSON File", selectedJsonFile)) {
+    //     for (uint i = 0; i < jsonFiles.Length; i++) {
+    //         bool isSelected = (selectedIndex == int(i));
+    //         if (UI::Selectable(jsonFiles[i], isSelected)) {
+    //             selectedIndex = i;
+    //             selectedJsonFile = jsonFiles[i];
+    //             downloadedContent = LoadJsonContent(selectedJsonFile);
+    //         }
+    //         if (isSelected) {
+    //             UI::SetItemDefaultFocus();
+    //         }
+    //     }
+    //     UI::EndCombo();
+    // }
 
-    if (downloadedContent != "") {
-        Json::Value json = Json::Parse(downloadedContent);
-        if (json.GetType() == Json::Type::Object && json.HasKey("maps")) {
-            Json::Value maps = json["maps"];
-            for (uint i = 0; i < maps.Length; i++) {
-                Json::Value map = maps[i];
-                if (map.HasKey("files")) {
-                    UI::Text("Title: " + map["title"]);
-                    UI::Text("Description: " + map["description"]);
-                    UI::Separator();
+    // if (downloadedContent != "") {
+    //     Json::Value json = Json::Parse(downloadedContent);
+    //     if (json.GetType() == Json::Type::Object && json.HasKey("maps")) {
+    //         Json::Value maps = json["maps"];
+    //         for (uint i = 0; i < maps.Length; i++) {
+    //             Json::Value map = maps[i];
+    //             if (map.HasKey("files")) {
+    //                 UI::Text("Title: " + map["title"]);
+    //                 UI::Text("Description: " + map["description"]);
+    //                 UI::Separator();
 
-                    Json::Value files = map["files"];
-                    for (uint j = 0; j < files.Length; j++) {
-                        Json::Value file = files[j];
-                        string fileName = file["fileName"];
-                        string filePath = file["filePath"];
+    //                 Json::Value files = map["files"];
+    //                 for (uint j = 0; j < files.Length; j++) {
+    //                     Json::Value file = files[j];
+    //                     string fileName = file["fileName"];
+    //                     string filePath = file["filePath"];
 
-                        UI::Text("File Name: " + fileName);
-                        if (UI::Button("Load " + fileName)) {
-                            ProcessSelectedFile(filePath);
-                        }
-                        UI::Text("File Path: " + filePath);
-                        UI::Separator();
-                    }
-                }
-            }
-        } else {
-            UI::Text("Failed to parse downloaded JSON content.");
-        }
-    }
+    //                     UI::Text("File Name: " + fileName);
+    //                     if (UI::Button("Load " + fileName)) {
+    //                         ProcessSelectedFile(filePath);
+    //                     }
+    //                     UI::Text("File Path: " + filePath);
+    //                     UI::Separator();
+    //                 }
+    //             }
+    //         }
+    //     } else {
+    //         UI::Text("Failed to parse downloaded JSON content.");
+    //     }
+    // }
 }
 
 array<string> GetAvailableJsonFiles() {
-    array<string> jsonFiles;
-    array<string> files = IO::IndexFolder(Server::specificDownloadedJsonFilesDirectory);
-    for (uint i = 0; i < files.Length; i++) {
-        jsonFiles.InsertLast(_IO::File::GetFileName(files[i]));
-    }
-    return jsonFiles;
+    // array<string> jsonFiles;
+    // if (IO::FolderExists(Server::specificDownloadedJsonFilesDirectory) == false) {
+    //     _IO::Folder::RecursiveCreateFolder(Server::specificDownloadedJsonFilesDirectory);
+    // }
+    // array<string> files = IO::IndexFolder(Server::specificDownloadedJsonFilesDirectory);
+    // for (uint i = 0; i < files.Length; i++) {
+    //     jsonFiles.InsertLast(_IO::File::GetFileName(files[i]));
+    // }
+    // return jsonFiles;
+    return { "test.json" };
 }
 string LoadJsonContent(const string &in fileName) {
-    string filePath = Server::specificDownloadedJsonFilesDirectory + fileName;
-    return _IO::File::ReadFileToEnd(filePath);
+    // string filePath = Server::specificDownloadedJsonFilesDirectory + fileName;
+    // return _IO::File::ReadFileToEnd(filePath);
+    return fileName;
 }
 
 //////////////////// Render Load Ghost from Map Tab /////////////////////
@@ -238,46 +243,54 @@ void RenderTab_LoadGhostFromMap() {
 
 //////////////////// Render Official Maps Tab /////////////////////
 
-enum Season { Winter, Spring, Summer, Fall }
-enum Year { 2020, 2021, 2022, 2023, 2024 }
-enum MapNumber { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
-
 void RenderTab_OfficialMaps() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     UI::Text("Fetch and store official campaigns:");
-    int length = 1;
-    int offset = 0;
-
-    length = UI::InputInt("Length", length);
-    offset = UI::InputInt("Offset", offset);
+    OfficialManager::Record::offset = UI::InputInt("Offset", OfficialManager::Record::offset);
 
     if (UI::Button("Fetch Campaigns")) {
-        startnew(FetchAndStoreCampaigns, length, offset);
+        OfficialManager::FetchAndStoreCampaigns(1, OfficialManager::Record::offset);  // Length fixed as per your note to ignore it
     }
     
     UI::Separator();
 
-    int selectedSeason = 0;
-    int selectedYear = 0;
-    int selectedMapNumber = 0;
+    auto selectedSeason = OfficialManager::Season::Winter;
+    auto selectedYear = OfficialManager::Year::y2020;
+    auto selectedMapNumber = OfficialManager::MapNumber::mn1;
 
-    string[] seasons = { "Winter", "Spring", "Summer", "Autumn" };
-    string[] years = { "2020", "2021", "2022", "2023" };
-    string[] mapNumbers = { "Map1", "Map2", "Map3", "Map4", "Map5" };
+    // Dropdown for Season
+    if (UI::BeginCombo("Season", tostring(selectedSeason))) {
+        for (int i = 0; i < 4; i++) {
+            if (UI::Selectable(tostring(OfficialManager::Season(i)), selectedSeason == OfficialManager::Season(i))) {
+                selectedSeason = OfficialManager::Season(i);
+            }
+        }
+        UI::EndCombo();
+    }
 
-    UI::BeginCombo("Select Map", "Select Map");
-    selectedSeason = UI::Combo("Season", selectedSeason, seasons);
-    selectedYear = UI::Combo("Year", selectedYear, years);
-    selectedMapNumber = UI::Combo("Map Number", selectedMapNumber, mapNumbers);
-    UI::EndCombo();
+    // Dropdown for Year
+    if (UI::BeginCombo("Year", tostring(selectedYear))) {
+        for (int i = 0; i < 5; i++) {
+            if (UI::Selectable(tostring(OfficialManager::Year(i)), selectedYear == OfficialManager::Year(i))) {
+                selectedYear = OfficialManager::Year(i);
+            }
+        }
+        UI::EndCombo();
+    }
 
-    string season = seasons[selectedSeason];
-    string year = years[selectedYear];
-    string mapNumber = mapNumbers[selectedMapNumber];
+    // Dropdown for Map Number
+    if (UI::BeginCombo("Map Number", tostring(selectedMapNumber))) {
+        for (int i = 0; i < 25; i++) {
+            if (UI::Selectable(tostring(OfficialManager::MapNumber(i)), selectedMapNumber == OfficialManager::MapNumber(i))) {
+                selectedMapNumber = OfficialManager::MapNumber(i);
+            }
+        }
+        UI::EndCombo();
+    }
 
-    string mapUID = GetMapUID(season, year, mapNumber);
+    string mapUID = OfficialManager::GetMapUID(selectedSeason, selectedYear, selectedMapNumber);
 
     if (mapUID != "") {
         UI::Text("Selected Map UID: " + mapUID);
@@ -323,7 +336,7 @@ void CheckFileExplorerSelection() {
 
 void ProcessSelectedFile(const string &in filePath) {
     if (filePath.StartsWith("https://") || filePath.StartsWith("http://")) {
-        _Net::DownloadFileToDestination(filePath, Server::downloadedFilesDirectory + _IO::File::GetFileName(filePath));
+        _Net::DownloadFileToDestination(filePath, Server::specificDownloadedFilesDirectory + _IO::File::GetFileName(filePath));
         return;
     }
 
