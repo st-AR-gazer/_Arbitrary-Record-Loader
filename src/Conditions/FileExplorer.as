@@ -640,7 +640,7 @@ namespace _IO {
         // string fileContents = originalFile.ReadToEnd();
         
         string fileContents = _IO::File::ReadSourceFileToEnd(originalPath);
-        if (verbose) log("Moving the file content", LogLevel::Info, 594, "SafeMoveSourceFileToNonSource");
+        if (verbose) log("Moving the file content", LogLevel::Info, 643, "SafeMoveSourceFileToNonSource");
 
         _IO::Folder::SafeCreateFolder(_IO::File::StripFileNameFromFilePath(storagePath), true);
 
@@ -649,16 +649,18 @@ namespace _IO {
         targetFile.Write(fileContents);
         targetFile.Close();
 
-        if (verbose) log("Finished moving the file", LogLevel::Info, 603, "SafeMoveSourceFileToNonSource");
+        if (verbose) log("Finished moving the file", LogLevel::Info, 652, "SafeMoveSourceFileToNonSource");
     }
 
     void SafeMoveFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
+        _IO::ReadFileToEnd(originalPath);
+        
         IO::File originalFile;
         originalFile.Open(originalPath, IO::FileMode::Read);
         string fileContents = originalFile.ReadToEnd();
         originalFile.Close();
 
-        if (verbose) log("Moving the file content", LogLevel::Info, 612, "SafeMoveFileToNonSource");
+        if (verbose) log("Moving the file content", LogLevel::Info, 663, "SafeMoveFileToNonSource");
 
         _IO::Folder::SafeCreateFolder(_IO::File::StripFileNameFromFilePath(storagePath), true);
 
@@ -667,7 +669,7 @@ namespace _IO {
         targetFile.Write(fileContents);
         targetFile.Close();
 
-        if (verbose) log("Finished moving the file", LogLevel::Info, 621, "SafeMoveFileToNonSource");
+        if (verbose) log("Finished moving the file", LogLevel::Info, 672, "SafeMoveFileToNonSource");
     }
 
     namespace DLL {
@@ -679,7 +681,7 @@ namespace _IO {
                 string dllPath = IO::FromStorageFolder("DLLs/FileCreationTime.dll");
                 @g_lib = Import::GetLibrary(dllPath);
                 if (g_lib is null) {
-                    log("Failed to load DLL: " + dllPath, LogLevel::Error, 633, "loadLibrary");
+                    log("Failed to load DLL: " + dllPath, LogLevel::Error, 684, "loadLibrary");
                     return false;
                 }
             }
@@ -687,7 +689,7 @@ namespace _IO {
             if (g_getFileCreationTimeFunc is null) {
                 @g_getFileCreationTimeFunc = g_lib.GetFunction("GetFileCreationTime");
                 if (g_getFileCreationTimeFunc is null) {
-                    log("Failed to get function from DLL.", LogLevel::Error, 641, "loadLibrary");
+                    log("Failed to get function from DLL.", LogLevel::Error, 692, "loadLibrary");
                     return false;
                 }
                 g_getFileCreationTimeFunc.SetConvention(Import::CallConvention::cdecl);
@@ -708,18 +710,18 @@ namespace _IO {
     }
 
     int64 FileCreatedTime(const string &in filePath) {
-        // log("Attempting to retrieve file creation time for: " + filePath, LogLevel::Info, 662, "FileCreatedTime");
+        log("Attempting to retrieve file creation time for: " + filePath, LogLevel::Info, 713, "FileCreatedTime");
 
         if (!DLL::loadLibrary()) {
-            log("Failed to load library for file creation time retrieval.", LogLevel::Error, 665, "FileCreatedTime");
+            log("Failed to load library for file creation time retrieval.", LogLevel::Error, 716, "FileCreatedTime");
             return -300;
         }
 
         int64 result = DLL::FileCreatedTime(filePath);
         if (result < 0) {
-            log("Error retrieving file creation time. Code: " + result, LogLevel::Warn, 671, "FileCreatedTime");
+            log("Error retrieving file creation time. Code: " + result, LogLevel::Warn, 722, "FileCreatedTime");
         } else {
-            // log("File creation time retrieved successfully: " + result, LogLevel::Info, 673, "FileCreatedTime");
+            log("File creation time retrieved successfully: " + result, LogLevel::Info, 724, "FileCreatedTime");
         }
         return result;
     }

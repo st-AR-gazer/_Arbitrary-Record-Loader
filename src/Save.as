@@ -1,8 +1,11 @@
-void SaveRecordPath() {
+void SaveRecordPath(const string &in overwriteFilePath = "") {
     string filePath = _IO::FileExplorer::Exports::GetExportPath();
     if (filePath.Length == 0) {
         NotifyError("Invalid file path.");
         return;
+    }
+    if (overwriteFilePath.Length > 0) {
+        filePath = overwriteFilePath;
     }
 
     log("Saving ghost to URL: " + filePath, LogLevel::Info, 8, "SaveRecordPath");
@@ -21,6 +24,7 @@ void SaveRecordPath() {
     
     json["content"] = Json::Object();
     json["content"]["ID"] = ID;
+    json["content"]["FileName"] = _IO::File::GetFileNameWithoutExtension(filePath);
     json["content"]["FromLocalFile"] = fromLocalFile;
     json["content"]["FilePath"] = filePath;
 

@@ -3,9 +3,11 @@ namespace Server {
     const string HOSTNAME = "127.0.0.1";
 
     const string HTTP_BASE_URL = "http://" + HOSTNAME + ":" + PORT + "/";
-    const string serverDirectory = IO::FromStorageFolder("Server/AutoMove/");
-    const string savedFilesDirectory = IO::FromStorageFolder("Server/Saved/Files/");
-    const string savedJsonDirectory = IO::FromStorageFolder("Server/Saved/JsonData/");
+    const string serverDirectory = _IO::File::SafeFromStorageFolder("Server/");
+    const string serverDirectoryAutoMove = _IO::File::SafeFromStorageFolder("Server/AutoMove/");
+    const string savedFilesDirectory = _IO::File::SafeFromStorageFolder("Server/Saved/Files/");
+    const string savedJsonDirectory = _IO::File::SafeFromStorageFolder("Server/Saved/JsonData/");
+    const string validationDirectory = _IO::File::SafeFromStorageFolder("Server/Validation/");
 
     HttpServer@ server = null;
 
@@ -37,7 +39,7 @@ namespace Server {
         try {
             auto key = Net::UrlDecode(route.Replace("/get_ghost/", ""));
             log('loading ghost: ' + key, LogLevel::Info, 39, "StartHttpServer");
-            string filePath = serverDirectory + key;
+            string filePath = serverDirectoryAutoMove + key;
             if (!IO::FileExists(filePath)) return _404_Response;
             auto buf = _IO::File::ReadFileToEnd(filePath);
             log('got buf: ' + buf.Length, LogLevel::Info, 43, "StartHttpServer");

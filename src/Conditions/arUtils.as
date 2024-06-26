@@ -1,6 +1,15 @@
 // Fun Utils I use from time to time
 
 namespace _Text {
+    int NthIndexOf(const string &in str, const string &in value, int n) {
+        int index = -1;
+        for (int i = 0; i < n; ++i) {
+            index = str.IndexOf(value, index + 1);
+            if (index == -1) break;
+        }
+        return index;
+    }
+
     int LastIndexOf(const string &in str, const string &in value) {
         int lastIndex = -1;
         int index = str.IndexOf(value);
@@ -157,7 +166,7 @@ namespace _IO {
         // Read from file
         string ReadFileToEnd(const string &in path, bool verbose = false) {
             if (!IO::FileExists(path)) {
-                log("File does not exist: " + path, LogLevel::Error, 157, "ReadFileToEnd");
+                log("File does not exist: " + path, LogLevel::Error, 160, "ReadFileToEnd");
                 return "";
             }
             IO::File file(path, IO::FileMode::Read);
@@ -167,7 +176,7 @@ namespace _IO {
         }
         
         string ReadSourceFileToEnd(const string &in path, bool verbose = false) {
-            // if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 167, "ReadSourceFileToEnd"); return ""; }
+            // if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 170, "ReadSourceFileToEnd"); return ""; }
             // FileSource assumes the top dir is _PLUGINNAME_.op, not C:\ so this has to be assumed to be an existing path...
 
             IO::FileSource f(path);
@@ -177,8 +186,8 @@ namespace _IO {
 
         // Move file
         void MoveFile(const string &in source, const string &in destination, bool shouldUseSafeMode = false, bool verbose = false) {
-            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 177, "MoveFile"); return; }
-            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 178, "MoveFile"); return; }
+            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 180, "MoveFile"); return; }
+            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 181, "MoveFile"); return; }
 
             IO::File file;
             file.Open(source, IO::FileMode::Read);
@@ -191,8 +200,8 @@ namespace _IO {
 
         // Copy file
         void CopyMoveFile(const string &in source, const string &in destination, bool verbose = false) {
-            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 191, "CopyMoveFile"); return; }
-            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 192, "CopyMoveFile"); return; }
+            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 194, "CopyMoveFile"); return; }
+            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 195, "CopyMoveFile"); return; }
 
             IO::File file;
             file.Open(source, IO::FileMode::Read);
@@ -204,7 +213,7 @@ namespace _IO {
 
         // Rename file
         void RenameFile(const string &in filePath, string newFileName, bool verbose = false) {
-            if (verbose) log("Attempting to rename file: " + filePath, LogLevel::Info);
+            if (verbose) log("Attempting to rename file: " + filePath, LogLevel::Info, 207, "RenameFile");
 
             if (IO::FileExists(filePath)) {
                 string dirPath = _IO::File::StripFileNameFromFilePath(filePath);
@@ -213,8 +222,8 @@ namespace _IO {
 
                 verbose = true;
                 if (verbose) {
-                    log("Old File Path: " + filePath, LogLevel::Info);
-                    log("New File Path: " + newFilePath, LogLevel::Info);
+                    log("Old File Path: " + filePath, LogLevel::Info, 216, "RenameFile");
+                    log("New File Path: " + newFilePath, LogLevel::Info, 217, "RenameFile");
                 }
 
                 IO::File fileOld;
@@ -228,19 +237,40 @@ namespace _IO {
                 fileNew.Close();
 
                 IO::Delete(filePath);
-                if (verbose) log("File renamed successfully.", LogLevel::Info);
+                if (verbose) log("File renamed successfully.", LogLevel::Info, 231, "RenameFile");
             } else {
-                if (verbose) log("File does not exist: " + filePath, LogLevel::Info);
+                if (verbose) log("File does not exist: " + filePath, LogLevel::Info, 233, "RenameFile");
             }
         }
 
+        // Normal(safe) From[nn]File
+        void SafeFromAppFolder(const string &in path) {
+            // Path is expected to IO::FromAppFolder("[n]")
+            _IO::Folder::SafeCreateFolder(path, true);
+            IO::FromAppFolder(path);
+        }
+        void SafeFromDataFolder(const string &in path) {
+            // Path is expected to IO::FromDataFolder("[n]")
+            _IO::Folder::SafeCreateFolder(path, true);
+            IO::FromDataFolder(path);
+        }
+        void SafeFromStorageFolder(const string &in path) {
+            // Path is expected to IO::FromStorageFolder("[n]")
+            _IO::Folder::SafeCreateFolder(path, true);
+            IO::FromStorageFolder(path);
+        }
+        void SafeFromUserGameFolder(const string &in path) {
+            // Path is expected to IO::FromUserGameFolder("[n]")
+            _IO::Folder::SafeCreateFolder(path, true);
+            IO::FromUserGameFolder(path);
+        }
     }
 
     void OpenFolder(const string &in path, bool verbose = false) {
         if (IO::FolderExists(path)) {
             OpenExplorerPath(path);
         } else {
-            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 207, "OpenFolder");
+            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 243, "OpenFolder");
         }
     }
 }
