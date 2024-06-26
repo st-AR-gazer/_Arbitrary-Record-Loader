@@ -207,7 +207,6 @@ array<string> GetAvailableJsonFiles() {
     }
     return jsonFiles;
 }
-
 string LoadJsonContent(const string &in fileName) {
     string filePath = Server::specificDownloadedJsonFilesDirectory + fileName;
     return _IO::File::ReadFileToEnd(filePath);
@@ -239,12 +238,59 @@ void RenderTab_LoadGhostFromMap() {
 
 //////////////////// Render Official Maps Tab /////////////////////
 
+enum Season { Winter, Spring, Summer, Fall }
+enum Year { 2020, 2021, 2022, 2023, 2024 }
+enum MapNumber { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 }
+
 void RenderTab_OfficialMaps() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
+
+    UI::Text("Fetch and store official campaigns:");
+    int length = 1;
+    int offset = 0;
+
+    length = UI::InputInt("Length", length);
+    offset = UI::InputInt("Offset", offset);
+
+    if (UI::Button("Fetch Campaigns")) {
+        startnew(FetchAndStoreCampaigns, length, offset);
+    }
     
-    UI::Text("This is a placeholder for loading official maps.");
+    UI::Separator();
+
+    int selectedSeason = 0;
+    int selectedYear = 0;
+    int selectedMapNumber = 0;
+
+    string[] seasons = { "Winter", "Spring", "Summer", "Autumn" };
+    string[] years = { "2020", "2021", "2022", "2023" };
+    string[] mapNumbers = { "Map1", "Map2", "Map3", "Map4", "Map5" };
+
+    UI::BeginCombo("Select Map", "Select Map");
+    selectedSeason = UI::Combo("Season", selectedSeason, seasons);
+    selectedYear = UI::Combo("Year", selectedYear, years);
+    selectedMapNumber = UI::Combo("Map Number", selectedMapNumber, mapNumbers);
+    UI::EndCombo();
+
+    string season = seasons[selectedSeason];
+    string year = years[selectedYear];
+    string mapNumber = mapNumbers[selectedMapNumber];
+
+    string mapUID = GetMapUID(season, year, mapNumber);
+
+    if (mapUID != "") {
+        UI::Text("Selected Map UID: " + mapUID);
+        if (UI::Button("Load Map")) {
+            ProcessSelectedFile(mapUID);
+        }
+    } else {
+        UI::Text("Invalid selection, no Map UID found.");
+    }
+
+    UI::Separator();
 }
+
 
 //////////////////// Render Current Map Ghost Tab /////////////////////
 

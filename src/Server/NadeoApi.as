@@ -34,3 +34,24 @@ Json::Value FetchLiveEndpoint(const string &in route) {
     while(!req.Finished()) { yield(); }
     return Json::Parse(req.String());
 }
+
+void FetchAndStoreCampaigns(int length, int offset) {
+    string url = "https://live-services.trackmania.nadeo.live/api/token/campaign/official?length=" + length + "&offset=" + offset;
+    Net::HttpRequest@ request = Net::HttpRequest();
+    request.Url = url;
+    request.Method = Net::HttpMethod::Get;
+    request.Start();
+    
+    while (!request.Finished()) {
+        yield();
+    }
+
+    if (request.ResponseCode() == 200) {
+        string response = request.String();
+        string filePath = _IO::File::SafeFromStorageFolder("Server/Official/") + "campaigns_" + length + "_" + offset + ".json";
+        _IO::File::WriteToFile(filePath, response);
+        NotifyInfo("Campaigns fetched and stored successfully.");
+    } else {
+        NotifyWarn("Failed to fetch campaigns. Response code: " + request.ResponseCode());
+    }
+}
