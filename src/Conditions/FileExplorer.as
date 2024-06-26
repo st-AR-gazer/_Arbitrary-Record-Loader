@@ -84,9 +84,13 @@ namespace _IO {
         // Export
         string exportElementPath = "";
 
-        // Rename
+        // File/folder dings
+        bool showRenameOption = false;
         string newFileName = "";
-
+        bool showDeleteFile = false;
+        bool showMakeFolder = false;
+        string newFolderName = "";
+        bool showDeleteDir = false;
 
         array<FileInfo> fileInfos;
 
@@ -283,17 +287,48 @@ namespace _IO {
             if (UI::Button(usePaigination ? "Disable Pagination" : "Enable Pagination")) { usePaigination = !usePaigination; }
             if (!usePaigination) { itemsPerPage = fileInfos.Length; }
             if (usePaigination) { itemsPerPage = MAX_ELEMENTS_PER_PAGE; }
-
-
-            newFileName = UI::InputText("+ ." + _IO::File::GetFileExtension(currentSelectedElementPath) +  " | New File Name", newFileName);
             UI::SameLine();
-            if (!_IO::File::IsFile(currentSelectedElementPath)) 
-              { _UI::DisabledButton("Rename file"); } else {
-                if (UI::Button("Rename file")) { 
-                    _IO::File::RenameFile(currentSelectedElementPath, newFileName); 
-                    IndexCurrentDirectory();
-              } }
+            if (UI::Button(showRenameOption ? "Rename File" : "Rename File")) { showRenameOption = !showRenameOption; }
+            UI::SameLine();
+            if (UI::Button("Delete File")) { showDeleteFile = !showDeleteFile; }
+            UI::SameLine();
+            if (UI::Button("Make Directory")) { showMakeFolder = !showMakeFolder; }
+            UI::SameLine();
+            if (UI::Button("Delete Directory")) { showDeleteDir = !showDeleteDir; }
             
+            if (showDeleteDir) {
+                if (UI::Button("Confirm Deletion")) {
+                    IO::DeleteFolder(currentSelectedElementPath);
+                    IndexCurrentDirectory();
+                }
+            }
+
+            if (showMakeFolder) {
+                newFolderName = UI::InputText("New Folder Name", newFolderName);
+                UI::SameLine();
+                if (UI::Button("Create Folder")) {
+                    IO::CreateFolder(currentDirectory + newFolderName);
+                    IndexCurrentDirectory();
+                }
+            }
+
+            if (showDeleteFile) {
+                if (UI::Button("Confirm Deletion")) {
+                    IO::Delete(currentSelectedElementPath);
+                    IndexCurrentDirectory();
+                }
+            }
+
+            if (showRenameOption) {
+                newFileName = UI::InputText("+ ." + _IO::File::GetFileExtension(currentSelectedElementPath) +  " | New File Name", newFileName);
+                UI::SameLine();
+                if (!_IO::File::IsFile(currentSelectedElementPath)) 
+                { _UI::DisabledButton("Complete the renaming"); } else {
+                    if (UI::Button("Complete the renaming")) { 
+                        _IO::File::RenameFile(currentSelectedElementPath, newFileName); 
+                        IndexCurrentDirectory();
+                } }
+            }
 
             if (UI::BeginCombo("Sorting", Hidden::GetSortingName(currentSortingOption), UI::ComboFlags::HeightRegular)) {
                 if (UI::Selectable("Alphabetical", currentSortingOption == SortElementsBasedOnType::Alphabetical)) currentSortingOption = SortElementsBasedOnType::Alphabetical;
