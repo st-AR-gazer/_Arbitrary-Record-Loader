@@ -7,7 +7,9 @@ namespace Server {
     const string serverDirectoryAutoMove = _IO::File::SafeFromStorageFolder("Server/AutoMove/");
     const string savedFilesDirectory = _IO::File::SafeFromStorageFolder("Server/Saved/Files/");
     const string savedJsonDirectory = _IO::File::SafeFromStorageFolder("Server/Saved/JsonData/");
-    const string validationDirectory = _IO::File::SafeFromStorageFolder("Server/Validation/");
+    const string validationFilesDirectory = _IO::File::SafeFromStorageFolder("Server/Validation/");
+    const string specificDownloadedFilesDirectory = _IO::File::SafeFromStorageFolder("Server/Downloaded/Files");
+    const string specificDownloadedJsonFilesDirectory = _IO::File::SafeFromStorageFolder("Server/Downloaded/JsonData");
 
     HttpServer@ server = null;
 

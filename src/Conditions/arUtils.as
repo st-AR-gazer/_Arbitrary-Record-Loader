@@ -358,3 +358,52 @@ namespace _Game {
         return true;
     }
 }
+
+namespace _Net {
+    string DownloadFile(const string &in url) {
+        string content = startnew(Hidden::CoroDownloadFile(url));
+        return content;
+    }
+
+    void DownloadFileToDestination(const string &in url, const string &in destination) {
+        startnew(Hidden::CoroDownloadFileToDestination(url, destination));
+    }
+
+    namespace Hidden {
+        string CoroDownloadFile(const string &in url) {
+            Net::HttpRequest@ request = Net::HttpRequest();
+            request.Url = url;
+            request.Method = Net::HttpMethod::Get;
+            request.Start();
+            
+            while (!request.Finished()) {
+                yield();
+            }
+
+            if (request.ResponseCode() == 200) {
+                return request.Response();
+                NotifyInfo("File downloaded successfully, returning the content");
+            } else {
+                NotifyWarn("Failed to download file. Response code: " + request.ResponseCode());
+            }
+        }
+
+        void CoroDownloadFileToDestination(const string &in url, const string &in destination) {
+            Net::HttpRequest@ request = Net::HttpRequest();
+            request.Url = url;
+            request.Method = Net::HttpMethod::Get;
+            request.Start();
+            
+            while (!request.Finished()) {
+                yield();
+            }
+
+            if (request.ResponseCode() == 200) {
+                _IO::File::SafeWriteToFile(destination, request.Response());
+                NotifyInfo("File downloaded successfully and saved to: " + destination);
+            } else {
+                NotifyWarn("Failed to download file. Response code: " + request.ResponseCode());
+            }
+        }
+    }
+}

@@ -1,6 +1,6 @@
 namespace ValidationReplay {
     string GetValidationReplayFilePath() {
-        return Server::validationDirectory + StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
+        return Server::validationFilesDirectory + StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
     }
 
     bool ValidationReplayExists() {
@@ -14,7 +14,7 @@ namespace ValidationReplay {
     void ExtractReplay() {
         try {
             CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
-            string outputFileName = Server::validationDirectory + StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
+            string outputFileName = Server::validationFilesDirectory + StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
             CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
             if (authorGhost is null) { log("Author ghost is empty", LogLevel::Warn, 9, "ExtractReplay"); }
 

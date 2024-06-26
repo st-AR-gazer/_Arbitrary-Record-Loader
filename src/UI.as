@@ -51,7 +51,7 @@ void RenderInterface() {
 //////////////////// Render Loacal Files Tab /////////////////////
 
 void RenderTab_LocalFiles() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR OR MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     if (UI::Button("Open File Explorer")) {
@@ -78,7 +78,7 @@ void RenderTab_LocalFiles() {
 //////////////////// Render Saved Ghosts and Replays Tab /////////////////////
 
 void RenderTab_SavedGhostsAndReplays() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR OR MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     if (UI::Button("Open Saved Folder")) {
@@ -128,25 +128,95 @@ void RenderTab_SavedGhostsAndReplays() {
 //////////////////// Render Other Specific UIDs Tab /////////////////////
 
 void RenderTab_OtherSpecificUIDs() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR OR MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     string downloadPath;
+    string selectedJsonFile;
+    string downloadedContent;
+    array<string> jsonFiles = GetAvailableJsonFiles();
+    int selectedIndex = 0;
+
     UI::InputText("Download Provided from external", downloadPath);
     
     if (UI::Button("Download Provided")) {
-        if (downloadPath != "") {
-            
+        if (_IO::File::GetFileExtension(downloadPath).ToLower() != "json" && _IO::File::GetFileExtension(downloadPath).ToLower() != ".json") {
+            NotifyWarn("Error | Invalid file extension.");
+        } else if (downloadPath != "") {
+            string destinationPath = Server::specificDownloadedJsonFilesDirectory + _IO::File::GetFileName(downloadPath);
+            _Net::DownloadFileToDestination(downloadPath, destinationPath);
+            jsonFiles = GetAvailableJsonFiles();
         } else {
             NotifyWarn("Error | No Json Download provided.");
         }
     }
+
+    UI::Separator();
+    if (UI::BeginCombo("Select JSON File", selectedJsonFile)) {
+        for (uint i = 0; i < jsonFiles.Length; i++) {
+            bool isSelected = (selectedIndex == int(i));
+            if (UI::Selectable(jsonFiles[i], isSelected)) {
+                selectedIndex = i;
+                selectedJsonFile = jsonFiles[i];
+                downloadedContent = LoadJsonContent(selectedJsonFile);
+            }
+            if (isSelected) {
+                UI::SetItemDefaultFocus();
+            }
+        }
+        UI::EndCombo();
+    }
+
+    if (downloadedContent != "") {
+        Json::Value json = Json::Parse(downloadedContent);
+        if (json.GetType() == Json::Type::Object && json.HasKey("maps")) {
+            Json::Value maps = json["maps"];
+            for (uint i = 0; i < maps.Length; i++) {
+                Json::Value map = maps[i];
+                if (map.HasKey("files")) {
+                    UI::Text("Title: " + map["title"]);
+                    UI::Text("Description: " + map["description"]);
+                    UI::Separator();
+
+                    Json::Value files = map["files"];
+                    for (uint j = 0; j < files.Length; j++) {
+                        Json::Value file = files[j];
+                        string fileName = file["fileName"];
+                        string filePath = file["filePath"];
+
+                        UI::Text("File Name: " + fileName);
+                        if (UI::Button("Load " + fileName)) {
+                            ProcessSelectedFile(filePath);
+                        }
+                        UI::Text("File Path: " + filePath);
+                        UI::Separator();
+                    }
+                }
+            }
+        } else {
+            UI::Text("Failed to parse downloaded JSON content.");
+        }
+    }
+}
+
+array<string> GetAvailableJsonFiles() {
+    array<string> jsonFiles;
+    array<string> files = IO::IndexFolder(Server::specificDownloadedJsonFilesDirectory);
+    for (uint i = 0; i < files.Length; i++) {
+        jsonFiles.InsertLast(_IO::File::GetFileName(files[i]));
+    }
+    return jsonFiles;
+}
+
+string LoadJsonContent(const string &in fileName) {
+    string filePath = Server::specificDownloadedJsonFilesDirectory + fileName;
+    return _IO::File::ReadFileToEnd(filePath);
 }
 
 //////////////////// Render Load Ghost from Map Tab /////////////////////
 
 void RenderTab_LoadGhostFromMap() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR OR MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     UI::Text("Build a request: ");
@@ -170,7 +240,7 @@ void RenderTab_LoadGhostFromMap() {
 //////////////////// Render Official Maps Tab /////////////////////
 
 void RenderTab_OfficialMaps() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR OR MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
     
     UI::Text("This is a placeholder for loading official maps.");
@@ -179,7 +249,7 @@ void RenderTab_OfficialMaps() {
 //////////////////// Render Current Map Ghost Tab /////////////////////
 
 void RenderTab_CurrentMapGhost() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR OR MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
     
     UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles at some point, this will not be possible for maps older than _NN_");
@@ -206,7 +276,12 @@ void CheckFileExplorerSelection() {
 }
 
 void ProcessSelectedFile(const string &in filePath) {
-    string fileExt = _IO::FileExplorer::Exports::GetExportPathFileExt().ToLower();
+    if (filePath.StartsWith("https://") || filePath.StartsWith("http://")) {
+        _Net::DownloadFileToDestination(filePath, Server::downloadedFilesDirectory + _IO::File::GetFileName(filePath));
+        return;
+    }
+
+    string fileExt = _IO::File::GetFileExtension(filePath).ToLower();
     if (fileExt == "replay") {
         ReplayLoader::LoadReplay(filePath);
     } else if (fileExt == "ghost") {
