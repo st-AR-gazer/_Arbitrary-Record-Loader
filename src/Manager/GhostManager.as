@@ -7,7 +7,7 @@ namespace GhostLoader {
             string fileName = _IO::File::GetFileName(filePath);
             string destinationPath = Server::serverDirectory + fileName;
             log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, 9, "LoadGhost");
-            _IO::SafeMoveFileToNonSource(filePath, destinationPath);
+            _IO::File::SafeMoveFileToNonSource(filePath, destinationPath);
             LoadGhostFromUrl(Server::HTTP_BASE_URL + "get_ghost/" + Net::UrlEncode(fileName));
         } else {
             NotifyError("Unsupported file type.");

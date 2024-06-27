@@ -195,10 +195,30 @@ namespace _IO {
             IO::Delete(source);
         }
 
+        void SafeMoveSourceFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
+            if (verbose) log("Moving the file content", LogLevel::Info, 199, "SafeMoveSourceFileToNonSource");
+            
+            string fileContents = _IO::File::ReadSourceFileToEnd(originalPath);
+            _IO::Folder::SafeCreateFolder(_IO::File::StripFileNameFromFilePath(storagePath), true);
+            _IO::File::WriteToFile(storagePath, fileContents);
+
+            if (verbose) log("Finished moving the file", LogLevel::Info, 205, "SafeMoveSourceFileToNonSource");
+        }
+
+        void SafeMoveFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
+            if (verbose) log("Moving the file content", LogLevel::Info, 209, "SafeMoveFileToNonSource");
+            
+            string fileContents = _IO::File::ReadFileToEnd(originalPath);
+            _IO::Folder::SafeCreateFolder(_IO::File::StripFileNameFromFilePath(storagePath), true);
+            _IO::File::WriteToFile(storagePath, fileContents);
+
+            if (verbose) log("Finished moving the file", LogLevel::Info, 215, "SafeMoveFileToNonSource");
+        }
+
         // Copy file
         void CopyMoveFile(const string &in source, const string &in destination, bool verbose = false) {
-            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 200, "CopyMoveFile"); return; }
-            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 201, "CopyMoveFile"); return; }
+            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 220, "CopyMoveFile"); return; }
+            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 221, "CopyMoveFile"); return; }
 
             IO::File file;
             file.Open(source, IO::FileMode::Read);
@@ -210,7 +230,7 @@ namespace _IO {
 
         // Rename file
         void RenameFile(const string &in filePath, string _newFileName, bool verbose = false) {
-            if (verbose) log("Attempting to rename file: " + filePath, LogLevel::Info, 213, "RenameFile");
+            if (verbose) log("Attempting to rename file: " + filePath, LogLevel::Info, 233, "RenameFile");
 
             if (IO::FileExists(filePath)) {
                 string dirPath = _IO::File::StripFileNameFromFilePath(filePath);
@@ -219,8 +239,8 @@ namespace _IO {
 
                 verbose = true;
                 if (verbose) {
-                    log("Old File Path: " + filePath, LogLevel::Info, 222, "RenameFile");
-                    log("New File Path: " + newFilePath, LogLevel::Info, 223, "RenameFile");
+                    log("Old File Path: " + filePath, LogLevel::Info, 242, "RenameFile");
+                    log("New File Path: " + newFilePath, LogLevel::Info, 243, "RenameFile");
                 }
 
                 IO::File fileOld;
@@ -234,9 +254,9 @@ namespace _IO {
                 fileNew.Close();
 
                 IO::Delete(filePath);
-                if (verbose) log("File renamed successfully.", LogLevel::Info, 237, "RenameFile");
+                if (verbose) log("File renamed successfully.", LogLevel::Info, 257, "RenameFile");
             } else {
-                if (verbose) log("File does not exist: " + filePath, LogLevel::Info, 239, "RenameFile");
+                if (verbose) log("File does not exist: " + filePath, LogLevel::Info, 259, "RenameFile");
             }
         }
 
@@ -267,7 +287,7 @@ namespace _IO {
         if (IO::FolderExists(path)) {
             OpenExplorerPath(path);
         } else {
-            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 270, "OpenFolder");
+            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 290, "OpenFolder");
         }
     }
 }

@@ -7,7 +7,7 @@ namespace ValidationReplay {
     }
     
     string GetValidationReplayFilePath() {
-        return Server::validationFilesDirectory + StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
+        return Server::validationFilesDirectory + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
     }
 
     bool ValidationReplayExists() {
@@ -18,10 +18,10 @@ namespace ValidationReplay {
         if (playground is null) return false;
 
         CGameDataFileManagerScript@ dataFileMgr = playground.DataFileMgr;
-        if (dataFileMgr is null) { log("DataFileMgr is null", LogLevel::Error, 21, "ValidationReplayExists"); return false; }
+        if (dataFileMgr is null) { /*log("DataFileMgr is null", LogLevel::Error, 21, "ValidationReplayExists");*/ return false; }
 
         CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
-        if (authorGhost is null) { log("Author ghost is empty", LogLevel::Warn, 24, "ValidationReplayExists"); return false; }
+        if (authorGhost is null) { /*log("Author ghost is empty", LogLevel::Warn, 24, "ValidationReplayExists");*/ return false; }
 
         return true;
     }
@@ -30,7 +30,7 @@ namespace ValidationReplay {
         try {
             CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
             if (dataFileMgr is null) { log("DataFileMgr is null", LogLevel::Error, 32, "ExtractReplay"); }
-            string outputFileName = Server::validationFilesDirectory + StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
+            string outputFileName = Server::validationFilesDirectory + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
 
             CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
             if (authorGhost is null) { log("Author ghost is empty", LogLevel::Warn, 36, "ExtractReplay"); }

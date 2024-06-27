@@ -101,11 +101,11 @@ void RenderTab_SavedGhostsAndReplays() {
     UI::Text("Saved Runs:");
 
     for (uint i = 0; i < files.Length; i++) {
-        string fileName = files[i];
-        string jsonContent = _IO::File::ReadFileToEnd(Server::savedJsonDirectory + fileName);
-        Json::Value json = Json::Parse(jsonContent);
+        // string fileName = files[i];
+        // string jsonContent = _IO::File::ReadFileToEnd(Server::savedJsonDirectory + fileName);
+        // Json::Value json = Json::Parse(jsonContent);
 
-        print(json);
+        // print(json);
         
         // if (json.GetType() == Json::Type::Object && json.HasKey("content")) {
         //     UI::Text("FileName: " + json["content"]["FileName"]);
@@ -309,7 +309,7 @@ void RenderTab_OfficialMaps() {
 
     Official_MapUID = OfficialManager::HandlingUserInput::FetchMapUID();
 
-    Official_MapUID = UI::Text(OfficialManager::HandlingUserInput::FetchMapUID(), Official_MapUID);
+    /*Official_MapUID = */UI::/*Input*/Text(OfficialManager::HandlingUserInput::FetchMapUID()/*, Official_MapUID*/);
 
     // Load Button
     if (UI::Button("Load Record")) {

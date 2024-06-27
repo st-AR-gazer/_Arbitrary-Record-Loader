@@ -29,7 +29,7 @@ void SaveRecordPath(const string &in overwriteFilePath = "") {
     json["content"]["FilePath"] = filePath;
 
     string destinationPath = Server::savedFilesDirectory + _IO::File::GetFileName(filePath);
-    _IO::SafeMoveFileToNonSource(filePath, destinationPath);
+    _IO::File::SafeMoveFileToNonSource(filePath, destinationPath);
 
     string jsonPath = Server::savedJsonDirectory + _IO::File::GetFileNameWithoutExtension(filePath) + ".json";
     _IO::File::WriteJsonToFile(jsonPath, json);

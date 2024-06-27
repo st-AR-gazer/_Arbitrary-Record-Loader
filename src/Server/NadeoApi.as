@@ -8,9 +8,13 @@ class NadeoApi {
         liveSvcUrl = NadeoServices::BaseURLLive();
     }
 
+    Json::Value GetOfficialCampaign(uint offset) {
+        return CallLiveApiPath("/api/token/campaign/official?offset=" + offset + "&length=1");
+    }
+
     void AssertGoodPath(const string &in path) {
         if (path.Length <= 0 || !path.StartsWith("/")) {
-            log("API Paths should start with '/'!", LogLevel::Error, 13, "AssertGoodPath");
+            log("API Paths should start with '/'!", LogLevel::Error, 17, "AssertGoodPath");
         }
     }
 
@@ -27,7 +31,7 @@ class NadeoApi {
 }
 
 Json::Value FetchLiveEndpoint(const string &in route) {
-    log("[FetchLiveEndpoint] Requesting: " + route, LogLevel::Info, 30, "AssertGoodPath");
+    log("[FetchLiveEndpoint] Requesting: " + route, LogLevel::Info, 34, "AssertGoodPath");
     while (!NadeoServices::IsAuthenticated("NadeoLiveServices")) { yield(); }
     auto req = NadeoServices::Get("NadeoLiveServices", route);
     req.Start();

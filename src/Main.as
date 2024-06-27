@@ -1,6 +1,8 @@
 void Main() {
+    InitApi();
+
     string dllPath = IO::FromStorageFolder("DLLs/FileCreationTime.dll");
-    _IO::SafeMoveSourceFileToNonSource("src/Conditions/CompanionDLLs/FileCreationTime.dll", dllPath, true);
+    _IO::File::SafeMoveSourceFileToNonSource("src/Conditions/CompanionDLLs/FileCreationTime.dll", dllPath);
 
     _IO::Folder::SafeCreateFolder(Server::serverDirectory);
     _IO::Folder::SafeCreateFolder(Server::serverDirectoryAutoMove);
@@ -12,8 +14,13 @@ void Main() {
     _IO::Folder::SafeCreateFolder(Server::officialFilesDirectory);
     _IO::Folder::SafeCreateFolder(Server::officialJsonFilesDirectory);
 
-    OfficialManager::Init();
+    OfficialManager::DownloadingFiles::Init();
+    OfficialManager::UI::Init();
 
     startnew(Server::StartHttpServer);
     startnew(MapCoro);
+}
+
+void InitApi() {
+    @api = NadeoApi();
 }
