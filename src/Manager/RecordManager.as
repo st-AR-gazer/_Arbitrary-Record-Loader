@@ -6,6 +6,6 @@ namespace RecordManager {
     void RemoveAllRecords() {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_RemoveAll();
-        log("All ghosts removed.", LogLevel::Info, 55, "RemoveAllGhosts");
+        log("All ghosts removed.", LogLevel::Info, 9, "RemoveAllRecords");
     }
 }

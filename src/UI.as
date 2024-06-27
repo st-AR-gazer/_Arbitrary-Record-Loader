@@ -243,65 +243,78 @@ void RenderTab_LoadGhostFromMap() {
 
 //////////////////// Render Official Maps Tab /////////////////////
 
+int selectedYear = -1;
+int selectedSeason = -1;
+int selectedMap = -1;
+string selectedOffset = "";
+
+string Official_MapUID;
+
+array<int> years;
+array<string> seasons;
+array<string> maps;
+
 void RenderTab_OfficialMaps() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH \nTHE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
-    UI::Text("Fetch and store official campaigns:");
-    OfficialManager::Record::offset = UI::InputInt("Offset", OfficialManager::Record::offset);
-
-    if (UI::Button("Fetch Campaigns")) {
-        OfficialManager::FetchAndStoreCampaigns(1, OfficialManager::Record::offset);  // Length fixed as per your note to ignore it
+    // Year Dropdown
+    if (UI::BeginCombo("Year", selectedYear == -1 ? "Select Year" : tostring(years[selectedYear]))) {
+        for (uint i = 0; i < years.Length; i++) {
+            bool isSelected = (selectedYear == int(i));
+            if (UI::Selectable(tostring(years[i]), isSelected)) {
+                selectedYear = i;
+                OfficialManager::UI::UpdateSeasons();
+            }
+            if (isSelected) {
+                UI::SetItemDefaultFocus();
+            }
+        }
+        UI::EndCombo();
     }
-    
+    UI::SameLine();
+    // Season Dropdown
+    if (UI::BeginCombo("Season", selectedSeason == -1 ? "Select Season" : seasons[selectedSeason])) {
+        for (uint i = 0; i < seasons.Length; i++) {
+            bool isSelected = (selectedSeason == int(i));
+            if (UI::Selectable(seasons[i], isSelected)) {
+                selectedSeason = i;
+                OfficialManager::UI::UpdateMaps();
+            }
+            if (isSelected) {
+                UI::SetItemDefaultFocus();
+            }
+        }
+        UI::EndCombo();
+    }
+    UI::SameLine();
+    // Map Dropdown
+    if (UI::BeginCombo("Map", selectedMap == -1 ? "Select Map" : maps[selectedMap])) {
+        for (uint i = 0; i < maps.Length; i++) {
+            bool isSelected = (selectedMap == int(i));
+            if (UI::Selectable(maps[i], isSelected)) {
+                selectedMap = i;
+            }
+            if (isSelected) {
+                UI::SetItemDefaultFocus();
+            }
+        }
+        UI::EndCombo();
+    }
+
+    // Offset Input
+    selectedOffset = UI::InputText("Offset", selectedOffset);
+
     UI::Separator();
 
-    auto selectedSeason = OfficialManager::Season::Winter;
-    auto selectedYear = OfficialManager::Year::y2020;
-    auto selectedMapNumber = OfficialManager::MapNumber::mn1;
+    Official_MapUID = OfficialManager::HandlingUserInput::FetchMapUID();
 
-    // Dropdown for Season
-    if (UI::BeginCombo("Season", tostring(selectedSeason))) {
-        for (int i = 0; i < 4; i++) {
-            if (UI::Selectable(tostring(OfficialManager::Season(i)), selectedSeason == OfficialManager::Season(i))) {
-                selectedSeason = OfficialManager::Season(i);
-            }
-        }
-        UI::EndCombo();
+    Official_MapUID = UI::Text(OfficialManager::HandlingUserInput::FetchMapUID(), Official_MapUID);
+
+    // Load Button
+    if (UI::Button("Load Record")) {
+        OfficialManager::HandlingUserInput::LoadSelectedRecord();
     }
-
-    // Dropdown for Year
-    if (UI::BeginCombo("Year", tostring(selectedYear))) {
-        for (int i = 0; i < 5; i++) {
-            if (UI::Selectable(tostring(OfficialManager::Year(i)), selectedYear == OfficialManager::Year(i))) {
-                selectedYear = OfficialManager::Year(i);
-            }
-        }
-        UI::EndCombo();
-    }
-
-    // Dropdown for Map Number
-    if (UI::BeginCombo("Map Number", tostring(selectedMapNumber))) {
-        for (int i = 0; i < 25; i++) {
-            if (UI::Selectable(tostring(OfficialManager::MapNumber(i)), selectedMapNumber == OfficialManager::MapNumber(i))) {
-                selectedMapNumber = OfficialManager::MapNumber(i);
-            }
-        }
-        UI::EndCombo();
-    }
-
-    string mapUID = OfficialManager::GetMapUID(selectedSeason, selectedYear, selectedMapNumber);
-
-    if (mapUID != "") {
-        UI::Text("Selected Map UID: " + mapUID);
-        if (UI::Button("Load Map")) {
-            ProcessSelectedFile(mapUID);
-        }
-    } else {
-        UI::Text("Invalid selection, no Map UID found.");
-    }
-
-    UI::Separator();
 }
 
 
@@ -342,7 +355,7 @@ void ProcessSelectedFile(const string &in filePath) {
 
     string fileExt = _IO::File::GetFileExtension(filePath).ToLower();
     if (fileExt == "replay") {
-        ReplayLoader::LoadReplay(filePath);
+        ReplayLoader::LoadReplayFromPath(filePath);
     } else if (fileExt == "ghost") {
         GhostLoader::LoadGhost(filePath);
     } else {

@@ -12,6 +12,8 @@ void Main() {
     _IO::Folder::SafeCreateFolder(Server::officialFilesDirectory);
     _IO::Folder::SafeCreateFolder(Server::officialJsonFilesDirectory);
 
+    OfficialManager::Init();
+
     startnew(Server::StartHttpServer);
     startnew(MapCoro);
 }

@@ -636,38 +636,40 @@ namespace _IO {
 
 namespace _IO {
     void SafeMoveSourceFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
+        if (verbose) log("Moving the file content", LogLevel::Info, 643, "SafeMoveSourceFileToNonSource");
         // IO::FileSource originalFile(originalPath);
         // string fileContents = originalFile.ReadToEnd();
         
         string fileContents = _IO::File::ReadSourceFileToEnd(originalPath);
-        if (verbose) log("Moving the file content", LogLevel::Info, 643, "SafeMoveSourceFileToNonSource");
-
+        
         _IO::Folder::SafeCreateFolder(_IO::File::StripFileNameFromFilePath(storagePath), true);
 
-        IO::File targetFile;
+        _IO::File::WriteToFile(storagePath, fileContents);
+        /*IO::File targetFile;
         targetFile.Open(storagePath, IO::FileMode::Write);
         targetFile.Write(fileContents);
-        targetFile.Close();
+        targetFile.Close();*/
 
         if (verbose) log("Finished moving the file", LogLevel::Info, 652, "SafeMoveSourceFileToNonSource");
     }
 
     void SafeMoveFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
-        _IO::File::ReadFileToEnd(originalPath);
+        if (verbose) log("Moving the file content", LogLevel::Info, 663, "SafeMoveFileToNonSource");
         
-        IO::File originalFile;
+        /*IO::File originalFile;
         originalFile.Open(originalPath, IO::FileMode::Read);
         string fileContents = originalFile.ReadToEnd();
-        originalFile.Close();
+        originalFile.Close();*/
 
-        if (verbose) log("Moving the file content", LogLevel::Info, 663, "SafeMoveFileToNonSource");
+        string fileContents = _IO::File::ReadFileToEnd(originalPath);
 
         _IO::Folder::SafeCreateFolder(_IO::File::StripFileNameFromFilePath(storagePath), true);
 
-        IO::File targetFile;
+        _IO::File::WriteToFile(storagePath, fileContents);
+        /*IO::File targetFile;
         targetFile.Open(storagePath, IO::FileMode::Write);
         targetFile.Write(fileContents);
-        targetFile.Close();
+        targetFile.Close();*/
 
         if (verbose) log("Finished moving the file", LogLevel::Info, 672, "SafeMoveFileToNonSource");
     }
