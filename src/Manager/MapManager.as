@@ -1,6 +1,5 @@
 string s_currMap = "";
 bool mapRecordsLoaded = false;
-
 string mapUID = "";
 
 [Setting category="General" name="Enable Ghosts" hidden]
@@ -13,13 +12,11 @@ void MapCoro() {
         if (s_currMap != CurrentMap) {
             s_currMap = CurrentMap;
             mapRecordsLoaded = false;
+            ValidationReplay::validationReplayCanBeLoaded = ValidationReplay::ValidationReplayCanBeLoadedForCurrentMap();
             if (!mapRecordsLoaded) {
-
-                ReplayLoader::CheckReplayLoad();
+                ReplayLoader::LoadReplayAfterFileExplorer();
                 mapRecordsLoaded = true;
-
                 mapUID = s_currMap;
-
             }
         }
     }

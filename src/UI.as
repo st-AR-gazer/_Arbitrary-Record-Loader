@@ -11,8 +11,8 @@ void RenderInterface() {
     FILE_EXPLORER_BASE_RENDERER(); // Required for the file explorer to work.
 
     if (S_windowOpen) {
-        UI::SetNextWindowSize(670, 300, UI::Cond::FirstUseEver);
-        if (UI::Begin("Load arbitrary Records", S_windowOpen)) {
+        // UI::SetNextWindowSize(670, 300, UI::Cond::FirstUseEver);
+        if (UI::Begin("Load arbitrary Records", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
             UI::BeginTabBar("Tabs");
             if (UI::BeginTabItem("Local Files")) {
                 RenderTab_LocalFiles();
@@ -51,7 +51,7 @@ void RenderInterface() {
 //////////////////// Render Loacal Files Tab /////////////////////
 
 void RenderTab_LocalFiles() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH \nTHE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     if (UI::Button("Open File Explorer")) {
@@ -71,7 +71,7 @@ void RenderTab_LocalFiles() {
     }
 
     if (UI::Button("Remove All Ghosts")) {
-        GhostLoader::RemoveAllGhosts();
+        RecordManager::RemoveAllRecords();
     }
 }
 
@@ -128,7 +128,7 @@ void RenderTab_SavedGhostsAndReplays() {
 //////////////////// Render Other Specific UIDs Tab /////////////////////
 
 void RenderTab_OtherSpecificUIDs() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH \nTHE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     // UI::Separator();
 
     // string downloadPath;
@@ -220,7 +220,7 @@ string LoadJsonContent(const string &in fileName) {
 //////////////////// Render Load Ghost from Map Tab /////////////////////
 
 void RenderTab_LoadGhostFromMap() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH \nTHE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     UI::Text("Build a request: ");
@@ -244,7 +244,7 @@ void RenderTab_LoadGhostFromMap() {
 //////////////////// Render Official Maps Tab /////////////////////
 
 void RenderTab_OfficialMaps() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH \nTHE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     UI::Text("Fetch and store official campaigns:");
@@ -308,10 +308,10 @@ void RenderTab_OfficialMaps() {
 //////////////////// Render Current Map Ghost Tab /////////////////////
 
 void RenderTab_CurrentMapGhost() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH \nTHE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
     
-    UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles at some point, this will not be possible for maps older than _NN_");
+    UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts \nwere removed from map files at some point, this will not be possible for maps older than _NN_");
     if (UI::Button("Add validation replay to current run")) {
         ValidationReplay::AddValidationReplay();
     }

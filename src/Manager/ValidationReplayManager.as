@@ -1,20 +1,37 @@
 namespace ValidationReplay {
+    bool validationReplayCanBeLoaded = false;
+
+    bool ValidationReplayCanBeLoadedForCurrentMap() {
+        if (ValidationReplayExists()) { ExtractReplay(); }
+        return true;
+    }
+    
     string GetValidationReplayFilePath() {
         return Server::validationFilesDirectory + StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
     }
 
     bool ValidationReplayExists() {
-        CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
+        CTrackMania@ app = cast<CTrackMania>(GetApp());
+        if (app is null) return false;
+
+        CGamePlaygroundScript@ playground = cast<CGamePlaygroundScript>(app.PlaygroundScript);
+        if (playground is null) return false;
+
+        CGameDataFileManagerScript@ dataFileMgr = playground.DataFileMgr;
         if (dataFileMgr is null) { log("DataFileMgr is null", LogLevel::Error, 8, "ValidationReplayExists"); return false; }
+
         CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
         if (authorGhost is null) { log("Author ghost is empty", LogLevel::Warn, 10, "ValidationReplayExists"); return false; }
+
         return true;
     }
 
     void ExtractReplay() {
         try {
             CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
+            if (dataFileMgr is null) { log("DataFileMgr is null", LogLevel::Error, 17, "ExtractReplay"); }
             string outputFileName = Server::validationFilesDirectory + StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
+
             CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
             if (authorGhost is null) { log("Author ghost is empty", LogLevel::Warn, 19, "ExtractReplay"); }
 
@@ -31,9 +48,7 @@ namespace ValidationReplay {
     }
 
     void AddValidationReplay() {
-        if (!ValidationReplayExists()) {
-            ExtractReplay();
-        }
-        ReplayLoader::LoadReplay(GetValidationReplayFilePath());
+        if (validationReplayCanBeLoaded) { ExtractReplay(); }
+        ReplayLoader::LoadReplayFromPath(GetValidationReplayFilePath());
     }
 }
