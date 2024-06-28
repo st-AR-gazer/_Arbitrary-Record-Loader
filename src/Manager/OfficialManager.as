@@ -68,9 +68,9 @@ namespace OfficialManager {
             startnew(CheckForNewCampaignCoroutine);
             
             if (timeSinceLastCheck >= eightyEightDaysInSeconds || timeSinceLastCheck >= threeDaysInSeconds) {
-                log("Time since last check is greater than interval, starting new campaign check", LogLevel::Info, 70, "CheckForNewCampaignIfNeeded");
+                log("Time since last check is greater than interval, starting new campaign check", LogLevel::Info, 71, "CheckForNewCampaignIfNeeded");
             } else {
-                log("Time since last check is less than interval, no need to check for new campaign", LogLevel::Info, 72, "CheckForNewCampaignIfNeeded");
+                log("Time since last check is less than interval, no need to check for new campaign", LogLevel::Info, 73, "CheckForNewCampaignIfNeeded");
             }
         }
 
@@ -106,14 +106,14 @@ namespace OfficialManager {
                         campaignName = campaignName.Replace(" ", "_");
 
                         if (localCampaigns.Find(campaignName) == -1) {
-                            log("Downloading missing campaign: " + campaignName, LogLevel::Info, 95, "CheckForNewCampaign");
+                            log("Downloading missing campaign: " + campaignName, LogLevel::Info, 109, "CheckForNewCampaign");
                             SaveCampaignData(campaign);
                             continueChecking = true;
                         }
                     }
                     offset++;
                 } else {
-                    log("No more campaigns found at offset: " + tostring(offset), LogLevel::Info, 99, "CheckForNewCampaign");
+                    log("No more campaigns found at offset: " + tostring(offset), LogLevel::Info, 116, "CheckForNewCampaign");
                     continueChecking = false;
                 }
             }
@@ -124,7 +124,7 @@ namespace OfficialManager {
                 string newestCampaignName = newestCampaign["name"];
                 newestCampaignName = newestCampaignName.Replace(" ", "_");
                 if (localCampaigns.Find(newestCampaignName) == -1) {
-                    log("Downloading the latest campaign: " + newestCampaignName, LogLevel::Info, 103, "CheckForNewCampaign");
+                    log("Downloading the latest campaign: " + newestCampaignName, LogLevel::Info, 127, "CheckForNewCampaign");
                     SaveCampaignData(newestCampaign);
                 }
             }
@@ -132,7 +132,7 @@ namespace OfficialManager {
 
         void SaveCampaignData(const Json::Value &in campaign) {
             string campaignName = campaign["name"];
-            log("Saving campaign data: " + campaignName, LogLevel::Info, 109, "SaveCampaignData");
+            log("Saving campaign data: " + campaignName, LogLevel::Info, 135, "SaveCampaignData");
 
             string specificSeason = campaign["name"];
             specificSeason = specificSeason.Replace(" ", "_");
@@ -141,13 +141,13 @@ namespace OfficialManager {
             IO::File file(fileName, IO::FileMode::Write);
             file.Write(Json::Write(campaign));
             file.Close();
-            log("Campaign data saved to: " + fileName, LogLevel::Info, 118, "SaveCampaignData");
+            log("Campaign data saved to: " + fileName, LogLevel::Info, 144, "SaveCampaignData");
         }
     }
 
     namespace UI {
         void Init() {
-            log("Initializing OfficialManager::UI", LogLevel::InfoG, 124, "Init");
+            log("Initializing OfficialManager::UI", LogLevel::InfoG, 150, "Init");
             UpdateSeasons();
             UpdateMaps();
             PopulateYears();
@@ -160,7 +160,7 @@ namespace OfficialManager {
             maps.RemoveRange(0, maps.Length);
 
             seasons = {"Spring", "Summer", "Fall", "Winter"};
-            log("Seasons updated.", LogLevel::Info, 136, "UpdateSeasons");
+            log("Seasons updated.", LogLevel::Info, 163, "UpdateSeasons");
         }
 
         void UpdateMaps() {
@@ -170,7 +170,7 @@ namespace OfficialManager {
             for (int i = 1; i <= 25; i++) {
                 maps.InsertLast("Map " + tostring(i));
             }
-            log("Maps updated.", LogLevel::Info, 146, "UpdateMaps");
+            log("Maps updated.", LogLevel::Info, 173, "UpdateMaps");
         }
 
         void PopulateYears() {
@@ -187,7 +187,7 @@ namespace OfficialManager {
             for (int y = 2020; y <= currentYear; y++) {
                 years.InsertLast(y);
             }
-            log("Years populated.", LogLevel::Info, 164, "PopulateYears");
+            log("Years populated.", LogLevel::Info, 190, "PopulateYears");
         }
     }
 
@@ -199,25 +199,25 @@ namespace OfficialManager {
         void CoroutineLoadSelectedGhost() {
             string mapUid = FetchMapUID();
             if (mapUid.Length==0) {
-                log("Map UID not found.", LogLevel::Error, 173, "CoroutineLoadSelectedGhost");
+                log("Map UID not found.", LogLevel::Error, 202, "CoroutineLoadSelectedGhost");
                 return;
             }
 
             string offset = selectedOffset;
             if (offset.Length==0) {
-                log("Offset not provided.", LogLevel::Error, 179, "CoroutineLoadSelectedGhost");
+                log("Offset not provided.", LogLevel::Error, 208, "CoroutineLoadSelectedGhost");
                 return;
             }
 
             string accountId = FetchAccountId(mapUid, Text::ParseUInt(offset));
             if (accountId.Length==0) {
-                log("Account ID not found.", LogLevel::Error, 185, "CoroutineLoadSelectedGhost");
+                log("Account ID not found.", LogLevel::Error, 214, "CoroutineLoadSelectedGhost");
                 return;
             }
 
             string mapId = FetchMapId(mapUid);
             if (mapId.Length==0) {
-                log("Map ID not found.", LogLevel::Error, 191, "CoroutineLoadSelectedGhost");
+                log("Map ID not found.", LogLevel::Error, 220, "CoroutineLoadSelectedGhost");
                 return;
             }
 
@@ -226,7 +226,7 @@ namespace OfficialManager {
 
         string FetchMapUID() {
             if (selectedYear == -1 || selectedSeason == -1 || selectedMap == -1) {
-                // log("Year, season, or map not selected.", LogLevel::Warn, 200, "FetchMapUID");
+                // log("Year, season, or map not selected.", LogLevel::Warn, 229, "FetchMapUID");
                 return "";
             }
 
@@ -236,19 +236,19 @@ namespace OfficialManager {
 
             string filePath = Server::officialJsonFilesDirectory + "/" + season + "_" + tostring(year) + ".json";
             if (!IO::FileExists(filePath)) {
-                log("File not found: " + filePath, LogLevel::Error, 210, "FetchMapUID");
+                log("File not found: " + filePath, LogLevel::Error, 239, "FetchMapUID");
                 return "";
             }
 
             Json::Value root = Json::Parse(_IO::File::ReadFileToEnd(filePath));
             if (root.GetType() == Json::Type::Null) {
-                log("Failed to parse JSON file: " + filePath, LogLevel::Error, 216, "FetchMapUID");
+                log("Failed to parse JSON file: " + filePath, LogLevel::Error, 245, "FetchMapUID");
                 return "";
             }
 
             auto campaignList = root["campaignList"];
             if (campaignList.GetType() != Json::Type::Array) {
-                log("Invalid campaign list in JSON file: " + filePath, LogLevel::Error, 222, "FetchMapUID");
+                log("Invalid campaign list in JSON file: " + filePath, LogLevel::Error, 251, "FetchMapUID");
                 return "";
             }
 
@@ -263,13 +263,13 @@ namespace OfficialManager {
                     auto map = playlist[j];
                     if (map["position"] == mapPosition) {
                         string mapUid = map["mapUid"];
-                        log("Found map UID: " + mapUid, LogLevel::Info, 237, "FetchMapUID");
+                        log("Found map UID: " + mapUid, LogLevel::Info, 266, "FetchMapUID");
                         return mapUid;
                     }
                 }
             }
 
-            log("Map UID not found for position: " + tostring(mapPosition), LogLevel::Error, 243, "FetchMapUID");
+            log("Map UID not found for position: " + tostring(mapPosition), LogLevel::Error, 272, "FetchMapUID");
             return "";
         }
 
@@ -278,30 +278,30 @@ namespace OfficialManager {
             auto req = Net::HttpGet(url);
 
             if (req.ResponseCode() != 200) {
-                log("Failed to fetch account ID, response code: " + req.ResponseCode(), LogLevel::Error, 252, "FetchAccountId");
+                log("Failed to fetch account ID, response code: " + req.ResponseCode(), LogLevel::Error, 281, "FetchAccountId");
                 return "";
             }
 
             Json::Value data = Json::Parse(tostring(req));
             if (data.GetType() == Json::Type::Null) {
-                log("Failed to parse response for account ID.", LogLevel::Error, 258, "FetchAccountId");
+                log("Failed to parse response for account ID.", LogLevel::Error, 287, "FetchAccountId");
                 return "";
             }
 
             auto tops = data["tops"];
             if (tops.GetType() != Json::Type::Array || tops.Length == 0) {
-                log("Invalid tops data in response.", LogLevel::Error, 264, "FetchAccountId");
+                log("Invalid tops data in response.", LogLevel::Error, 293, "FetchAccountId");
                 return "";
             }
 
             auto top = tops[0]["top"];
             if (top.GetType() != Json::Type::Array || top.Length == 0) {
-                log("Invalid top data in response.", LogLevel::Error, 270, "FetchAccountId");
+                log("Invalid top data in response.", LogLevel::Error, 299, "FetchAccountId");
                 return "";
             }
 
             string accountId = top[0]["accountId"];
-            log("Found account ID: " + accountId, LogLevel::Info, 275, "FetchAccountId");
+            log("Found account ID: " + accountId, LogLevel::Info, 304, "FetchAccountId");
             return accountId;
         }
 
@@ -310,23 +310,23 @@ namespace OfficialManager {
             auto req = Net::HttpGet(url);
 
             if (req.ResponseCode() != 200) {
-                log("Failed to fetch map ID, response code: " + req.ResponseCode(), LogLevel::Error, 284, "FetchMapId");
+                log("Failed to fetch map ID, response code: " + req.ResponseCode(), LogLevel::Error, 313, "FetchMapId");
                 return "";
             }
 
             Json::Value data = Json::Parse(req.String());
             if (data.GetType() == Json::Type::Null) {
-                log("Failed to parse response for map ID.", LogLevel::Error, 290, "FetchMapId");
+                log("Failed to parse response for map ID.", LogLevel::Error, 319, "FetchMapId");
                 return "";
             }
 
             if (data.GetType() != Json::Type::Array || data.Length == 0) {
-                log("Invalid map data in response.", LogLevel::Error, 295, "FetchMapId");
+                log("Invalid map data in response.", LogLevel::Error, 324, "FetchMapId");
                 return "";
             }
 
             string mapId = data[0]["mapId"];
-            log("Found map ID: " + mapId, LogLevel::Info, 300, "FetchMapId");
+            log("Found map ID: " + mapId, LogLevel::Info, 329, "FetchMapId");
             return mapId;
         }
 
@@ -335,18 +335,18 @@ namespace OfficialManager {
             auto req = Net::HttpGet(url);
 
             if (req.ResponseCode() != 200) {
-                log("Failed to fetch replay record, response code: " + req.ResponseCode(), LogLevel::Error, 309, "FetchAndSaveReplay");
+                log("Failed to fetch replay record, response code: " + req.ResponseCode(), LogLevel::Error, 338, "FetchAndSaveReplay");
                 return;
             }
 
             Json::Value data = Json::Parse(req.String());
             if (data.GetType() == Json::Type::Null) {
-                log("Failed to parse response for replay record.", LogLevel::Error, 315, "FetchAndSaveReplay");
+                log("Failed to parse response for replay record.", LogLevel::Error, 344, "FetchAndSaveReplay");
                 return;
             }
 
             if (data.GetType() != Json::Type::Array || data.Length == 0) {
-                log("Invalid replay data in response.", LogLevel::Error, 320, "FetchAndSaveReplay");
+                log("Invalid replay data in response.", LogLevel::Error, 349, "FetchAndSaveReplay");
                 return;
             }
 
@@ -357,7 +357,7 @@ namespace OfficialManager {
 
             auto fileReq = Net::HttpGet(fileUrl);
             if (fileReq.ResponseCode() != 200) {
-                log("Failed to download replay file, response code: " + fileReq.ResponseCode(), LogLevel::Error, 331, "FetchAndSaveReplay");
+                log("Failed to download replay file, response code: " + fileReq.ResponseCode(), LogLevel::Error, 360, "FetchAndSaveReplay");
                 return;
             }
 
@@ -365,7 +365,7 @@ namespace OfficialManager {
 
             ProcessSelectedFile(savePath);
 
-            log("Replay file saved to: " + savePath, LogLevel::Info, 339, "FetchAndSaveReplay");
+            log("Replay file saved to: " + savePath, LogLevel::Info, 368, "FetchAndSaveReplay");
         }
     }
 }
