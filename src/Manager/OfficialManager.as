@@ -160,6 +160,7 @@ namespace OfficialManager {
             maps.RemoveRange(0, maps.Length);
 
             seasons = {"Spring", "Summer", "Fall", "Winter"};
+            log("Seasons updated.", LogLevel::Info, 136, "UpdateSeasons");
         }
 
         void UpdateMaps() {
@@ -169,6 +170,7 @@ namespace OfficialManager {
             for (int i = 1; i <= 25; i++) {
                 maps.InsertLast("Map " + tostring(i));
             }
+            log("Maps updated.", LogLevel::Info, 146, "UpdateMaps");
         }
 
         void PopulateYears() {
@@ -185,6 +187,7 @@ namespace OfficialManager {
             for (int y = 2020; y <= currentYear; y++) {
                 years.InsertLast(y);
             }
+            log("Years populated.", LogLevel::Info, 164, "PopulateYears");
         }
     }
 

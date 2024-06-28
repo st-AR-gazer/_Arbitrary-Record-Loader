@@ -265,12 +265,12 @@ void RenderTab_OfficialMaps() {
             if (UI::Selectable(tostring(years[i]), isSelected)) {
                 selectedYear = i;
                 OfficialManager::UI::UpdateSeasons();
-                print("ding ding ding");
             }
             if (isSelected) {
                 UI::SetItemDefaultFocus();
             }
         }
+        print("ding ding ding");
         UI::EndCombo();
     }
     UI::SameLine();
@@ -281,12 +281,12 @@ void RenderTab_OfficialMaps() {
             if (UI::Selectable(seasons[i], isSelected)) {
                 selectedSeason = i;
                 OfficialManager::UI::UpdateMaps();
-                print("dong dong dong");
             }
             if (isSelected) {
                 UI::SetItemDefaultFocus();
             }
         }
+        print("dong dong dong");
         UI::EndCombo();
     }
     UI::SameLine();
@@ -296,12 +296,12 @@ void RenderTab_OfficialMaps() {
             bool isSelected = (selectedMap == int(i));
             if (UI::Selectable(maps[i], isSelected)) {
                 selectedMap = i;
-                print("pong pong pon");
             }
             if (isSelected) {
                 UI::SetItemDefaultFocus();
             }
         }
+        print("pong pong pon");
         UI::EndCombo();
     }
 
