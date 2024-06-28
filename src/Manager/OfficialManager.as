@@ -147,7 +147,7 @@ namespace OfficialManager {
 
     namespace UI {
         void Init() {
-            log("Initializing OfficialManager::UI", LogLevel::Info, 124, "Init");
+            log("Initializing OfficialManager::UI", LogLevel::InfoG, 124, "Init");
             UpdateSeasons();
             UpdateMaps();
             PopulateYears();
