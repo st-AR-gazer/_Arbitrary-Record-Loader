@@ -41,7 +41,7 @@ void ProcessSelectedFile(const string &in filePath) {
     } else if (fileExt == "ghost") {
         GhostLoader::LoadGhost(filePath);
     } else {
-        log("Unsupported file type: " + fileExt + " " + "Full path: " + filePath, LogLevel::Error, 392, "ProcessSelectedFile");
+        log("Unsupported file type: " + fileExt + " " + "Full path: " + filePath, LogLevel::Error, 44, "ProcessSelectedFile");
         NotifyWarn("Error | Unsupported file type.");
     }
 }

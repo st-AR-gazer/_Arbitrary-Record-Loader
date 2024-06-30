@@ -1,85 +1,59 @@
 namespace OfficialManager {
     namespace DownloadingFiles {
-        uint lastCheckedOffset = 0;
-        uint checkIntervalDays = 3;
-        uint longIntervalDays = 88;
-        int64 lastCheckedTimestamp = 0;
+        int64 endTimestamp = 0;
 
         void Init() {
             log("Initializing OfficialManager::DownloadingFiles", LogLevel::Info, 9, "Init");
-            LoadLastCheckedData();
+            LoadEndTimestamp();
             CheckForNewCampaignIfNeeded();
         }
 
-        void LoadLastCheckedData() {
-            log("Loading last checked data", LogLevel::Info, 15, "LoadLastCheckedData");
+        void LoadEndTimestamp() {
+            log("Loading end timestamp", LogLevel::Info, 15, "LoadEndTimestamp");
 
-            string offsetFilePath = Server::officialJsonFilesDirectory + "/last_checked_offset.txt";
-            if (IO::FileExists(offsetFilePath)) {
-                IO::File file(offsetFilePath, IO::FileMode::Read);
-                lastCheckedOffset = Text::ParseUInt(file.ReadToEnd());
+            string endTimestampFilePath = Server::officialInfoFilesDirectory + "/end_timestamp.txt";
+            if (IO::FileExists(endTimestampFilePath)) {
+                IO::File file(endTimestampFilePath, IO::FileMode::Read);
+                endTimestamp = Text::ParseInt64(file.ReadToEnd());
                 file.Close();
-                log("Loaded lastCheckedOffset: " + lastCheckedOffset, LogLevel::Info, 22, "LoadLastCheckedData");
+                log("Loaded endTimestamp: " + endTimestamp, LogLevel::Info, 43, "LoadEndTimestamp");
             } else {
-                lastCheckedOffset = 0;
-                log("Offset file not found, setting lastCheckedOffset to 0", LogLevel::Warn, 25, "LoadLastCheckedData");
-            }
-
-            string timestampFilePath = Server::officialJsonFilesDirectory + "/last_checked_timestamp.txt";
-            if (IO::FileExists(timestampFilePath)) {
-                IO::File file(timestampFilePath, IO::FileMode::Read);
-                lastCheckedTimestamp = Text::ParseInt64(file.ReadToEnd());
-                file.Close();
-                log("Loaded lastCheckedTimestamp: " + lastCheckedTimestamp, LogLevel::Info, 33, "LoadLastCheckedData");
-            } else {
-                lastCheckedTimestamp = Time::Stamp - 3600 * 24 * checkIntervalDays;
-                log("Timestamp file not found, setting lastCheckedTimestamp to current time minus interval", LogLevel::Warn, 36, "LoadLastCheckedData");
+                endTimestamp = 0;
+                log("End timestamp file not found, setting endTimestamp to 0", LogLevel::Warn, 46, "LoadEndTimestamp");
             }
         }
 
-        void SaveLastCheckedData() {
-            log("Saving last checked data", LogLevel::Info, 41, "SaveLastCheckedData");
+        void SaveEndTimestamp() {
+            log("Saving end timestamp", LogLevel::Info, 41, "SaveEndTimestamp");
 
-            string offsetFilePath = Server::officialJsonFilesDirectory + "/last_checked_offset.txt";
-            string timestampFilePath = Server::officialJsonFilesDirectory + "/last_checked_timestamp.txt";
+            string endTimestampFilePath = Server::officialInfoFilesDirectory + "/end_timestamp.txt";
+            string endTimestampContent = ("" + endTimestamp);
 
-            string offsetContent = ("" + lastCheckedOffset);
-            string timestampContent = ("" + lastCheckedTimestamp);
-
-            IO::File offsetFile(offsetFilePath, IO::FileMode::Write);
-            offsetFile.Write(offsetContent);
-            offsetFile.Close();
-            log("Saved lastCheckedOffset: " + lastCheckedOffset, LogLevel::Info, 52, "SaveLastCheckedData");
-
-            IO::File timestampFile(timestampFilePath, IO::FileMode::Write);
-            timestampFile.Write(timestampContent);
-            timestampFile.Close();
-            log("Saved lastCheckedTimestamp: " + lastCheckedTimestamp, LogLevel::Info, 57, "SaveLastCheckedData");
+            IO::File endTimestampFile(endTimestampFilePath, IO::FileMode::Write);
+            endTimestampFile.Write(endTimestampContent);
+            endTimestampFile.Close();
+            log("Saved endTimestamp: " + endTimestamp, LogLevel::Info, 62, "SaveEndTimestamp");
         }
 
         void CheckForNewCampaignIfNeeded() {
             log("Checking if we need to check for new campaign", LogLevel::Info, 61, "CheckForNewCampaignIfNeeded");
 
             int64 currentTime = Time::Stamp;
-            int64 timeSinceLastCheck = currentTime - lastCheckedTimestamp;
-            int64 threeDaysInSeconds = 3600 * 24 * 3;
-            int64 eightyEightDaysInSeconds = 3600 * 24 * 88;
 
-            
-            startnew(Coro_CheckForNewCampaign); // IMPORTANT: Temporarily moved outside of the check for testing, move back on release
-            if (timeSinceLastCheck >= eightyEightDaysInSeconds || timeSinceLastCheck >= threeDaysInSeconds) {
-                log("Time since last check is greater than interval, starting new campaign check", LogLevel::Info, 71, "CheckForNewCampaignIfNeeded");
+            if (currentTime >= endTimestamp) {
+                log("Current time is greater than end timestamp, starting new campaign check", LogLevel::Info, 71, "CheckForNewCampaignIfNeeded");
+                startnew(Coro_CheckForNewCampaign);
             } else {
-                log("Time since last check is less than interval, no need to check for new campaign", LogLevel::Info, 73, "CheckForNewCampaignIfNeeded");
+                log("Current time is less than end timestamp, no need to check for new campaign", LogLevel::Info, 73, "CheckForNewCampaignIfNeeded");
             }
         }
 
         void Coro_CheckForNewCampaign() {
             CheckForNewCampaign();
-            lastCheckedTimestamp = Time::Stamp;
         }
 
         array<string> localCampaigns;
+
         void IndexLocalFiles() {
             localCampaigns.Resize(0);
             bool recursive = false;
@@ -99,7 +73,6 @@ namespace OfficialManager {
             while (continueChecking) {
                 Json::Value data = api.GetOfficialCampaign(offset);
                 if (data.HasKey("campaignList") && data["campaignList"].Length > 0) {
-                    continueChecking = false;
                     for (uint j = 0; j < data["campaignList"].Length; j++) {
                         Json::Value campaign = data["campaignList"][j];
                         string campaignName = campaign["name"];
@@ -108,7 +81,11 @@ namespace OfficialManager {
                         if (localCampaigns.Find(campaignName) == -1) {
                             log("Downloading missing campaign: " + campaignName, LogLevel::Info, 109, "CheckForNewCampaign");
                             SaveCampaignData(campaign);
-                            continueChecking = true;
+                        }
+
+                        int64 newEndTimestamp = campaign["endTimestamp"];
+                        if (newEndTimestamp > endTimestamp) {
+                            endTimestamp = newEndTimestamp;
                         }
                     }
                     offset++;
@@ -118,16 +95,7 @@ namespace OfficialManager {
                 }
             }
 
-            Json::Value latestCampaignData = api.GetOfficialCampaign(0);
-            if (latestCampaignData.HasKey("campaignList") && latestCampaignData["campaignList"].Length > 0) {
-                Json::Value newestCampaign = latestCampaignData["campaignList"][0];
-                string newestCampaignName = newestCampaign["name"];
-                newestCampaignName = newestCampaignName.Replace(" ", "_");
-                if (localCampaigns.Find(newestCampaignName) == -1) {
-                    log("Downloading the latest campaign: " + newestCampaignName, LogLevel::Info, 127, "CheckForNewCampaign");
-                    SaveCampaignData(newestCampaign);
-                }
-            }
+            SaveEndTimestamp();
         }
 
         void SaveCampaignData(const Json::Value &in campaign) {
@@ -206,10 +174,7 @@ namespace OfficialManager {
 
         void Coro_LoadSelectedGhost() {
             offset = selectedOffset;
-            if (offset.Length == 0) {
-                log("Offset not provided.", LogLevel::Error, 211, "Coro_LoadSelectedGhost");
-                return;
-            }
+            if (offset.Length == 0) { log("Offset not provided.", LogLevel::Error, 211, "Coro_LoadSelectedGhost"); return; }
 
             mapUid = FetchMapUID();
             
@@ -218,18 +183,9 @@ namespace OfficialManager {
 
             while (!(accountIdFetched && mapIdFetched)) { yield(); }
 
-            if (mapUid.Length == 0) {
-                log("Map UID not found.", LogLevel::Error, 227, "Coro_LoadSelectedGhost");
-                return;
-            }
-            if (accountId.Length == 0) {
-                log("Account ID not found.", LogLevel::Error, 231, "Coro_LoadSelectedGhost");
-                return;
-            }
-            if (mapId.Length == 0) {
-                log("Map ID not found.", LogLevel::Error, 235, "Coro_LoadSelectedGhost");
-                return;
-            }
+            if (mapUid.Length == 0) { log("Map UID not found.", LogLevel::Error, 227, "Coro_LoadSelectedGhost"); return; }
+            if (accountId.Length == 0) { log("Account ID not found.", LogLevel::Error, 231, "Coro_LoadSelectedGhost"); return; }
+            if (mapId.Length == 0) { log("Map ID not found.", LogLevel::Error, 235, "Coro_LoadSelectedGhost"); return; }
 
             SaveReplay(mapId, accountId, offset);
         }
