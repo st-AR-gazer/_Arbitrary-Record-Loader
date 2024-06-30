@@ -43,7 +43,7 @@ namespace Server {
         try {
             auto key = Net::UrlDecode(route.Replace("/get_ghost/", ""));
             log('loading ghost: ' + key, LogLevel::Info, 45, "StartHttpServer");
-            string filePath = serverDirectoryAutoMove + key;
+            string filePath = serverDirectory + key;
             if (!IO::FileExists(filePath)) return _404_Response;
             auto buf = _IO::File::ReadFileToEnd(filePath);
             log('got buf: ' + buf.Length, LogLevel::Info, 49, "StartHttpServer");
@@ -220,7 +220,7 @@ namespace Server {
             fullResponse += "\r\n\r\n" + resp.body;
             auto respBuf = MemoryBuffer();
             respBuf.Write(fullResponse);
-            log("Response: " + fullResponse, LogLevel::Info, 223, "RunRequest");
+            log("Response: " + "\n" + fullResponse, LogLevel::Info, 223, "RunRequest");
             if (resp._buf !is null) {
                 resp._buf.Seek(0);
                 respBuf.WriteFromBuffer(resp._buf, resp._buf.GetSize());

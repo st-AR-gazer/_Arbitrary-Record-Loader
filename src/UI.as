@@ -18,6 +18,10 @@ void RenderInterface() {
                 RenderTab_LocalFiles();
                 UI::EndTabItem();
             }
+            if (UI::BeginTabItem("Current Loaded Records")) {
+                RenderTab_CurrentLoadedRecords();
+                UI::EndTabItem();
+            }
             if (UI::BeginTabItem("Saved Records")) {
                 RenderTab_SavedGhostsAndReplays();
                 UI::EndTabItem();
@@ -34,6 +38,7 @@ void RenderInterface() {
                 RenderTab_OfficialMaps();
                 UI::EndTabItem();
             }
+            
             if (ValidationReplay::ValidationReplayExists()) {
                 if (UI::BeginTabItem("Current Map Ghost")) {
                     RenderTab_CurrentMapGhost();
@@ -75,6 +80,27 @@ void RenderTab_LocalFiles() {
     }
 }
 
+//////////////////// Render Current Loaded Records Tab /////////////////////
+
+MwId recordID;
+
+void RenderTab_CurrentLoadedRecords() {
+    // UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
+    // UI::Separator();
+
+    // recordID = UI::InputText("RecordID", recordID);
+    // UI::SameLine();
+    if (UI::Button("Remove Specific Record")) {        // TODO: Crate a loop that loops through all the current records and make a dropdown weather you can select the record you
+        RecordManager::RemoveInstanceRecord(recordID); // want to remove based on it's MwId and also display the record's name (maybe just dossard will do?). Should probably be done in RecordManager::
+    }
+
+    if (UI::Button("Remove All Records")) {
+        RecordManager::RemoveAllRecords();
+    }
+
+}
+
+
 //////////////////// Render Saved Ghosts and Replays Tab /////////////////////
 
 void RenderTab_SavedGhostsAndReplays() {
@@ -105,7 +131,6 @@ void RenderTab_SavedGhostsAndReplays() {
         // string jsonContent = _IO::File::ReadFileToEnd(Server::savedJsonDirectory + fileName);
         // Json::Value json = Json::Parse(jsonContent);
 
-        // print(json);
         
         // if (json.GetType() == Json::Type::Object && json.HasKey("content")) {
         //     UI::Text("FileName: " + json["content"]["FileName"]);
@@ -258,14 +283,18 @@ void RenderTab_OfficialMaps() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
+    if (UI::Button("Reset Selections")) {
+        OfficialManager::UI::UpdateYears();
+        OfficialManager::UI::UpdateSeasons();
+        OfficialManager::UI::UpdateMaps();
+    }
+
     // Year Dropdown
     if (UI::BeginCombo("Year", selectedYear == -1 ? "Select Year" : tostring(years[selectedYear]))) {
         for (uint i = 0; i < years.Length; i++) {
             bool isSelected = (selectedYear == int(i));
             if (UI::Selectable(tostring(years[i]), isSelected)) {
                 selectedYear = i;
-                OfficialManager::UI::UpdateSeasons();
-        print("ding ding ding");
             }
             if (isSelected) {
                 UI::SetItemDefaultFocus();
@@ -280,9 +309,7 @@ void RenderTab_OfficialMaps() {
             bool isSelected = (selectedSeason == int(i));
             if (UI::Selectable(seasons[i], isSelected)) {
                 selectedSeason = i;
-                OfficialManager::UI::UpdateMaps();
             }
-        print("dong dong dong");
             if (isSelected) {
                 UI::SetItemDefaultFocus();
             }
@@ -297,7 +324,6 @@ void RenderTab_OfficialMaps() {
             if (UI::Selectable(maps[i], isSelected)) {
                 selectedMap = i;
             }
-        print("pong pong pon");
             if (isSelected) {
                 UI::SetItemDefaultFocus();
             }
@@ -347,21 +373,5 @@ void CheckFileExplorerSelection() {
             filePath = filePath;
             break;
         }
-    }
-}
-
-void ProcessSelectedFile(const string &in filePath) {
-    if (filePath.StartsWith("https://") || filePath.StartsWith("http://")) {
-        _Net::DownloadFileToDestination(filePath, Server::specificDownloadedFilesDirectory + _IO::File::GetFileName(filePath));
-        return;
-    }
-
-    string fileExt = _IO::File::GetFileExtension(filePath).ToLower();
-    if (fileExt == "replay") {
-        ReplayLoader::LoadReplayFromPath(filePath);
-    } else if (fileExt == "ghost") {
-        GhostLoader::LoadGhost(filePath);
-    } else {
-        NotifyWarn("Error | Unsupported file type.");
     }
 }

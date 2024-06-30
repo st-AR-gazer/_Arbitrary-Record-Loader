@@ -65,8 +65,8 @@ namespace OfficialManager {
             int64 threeDaysInSeconds = 3600 * 24 * 3;
             int64 eightyEightDaysInSeconds = 3600 * 24 * 88;
 
-            startnew(CheckForNewCampaignCoroutine);
             
+            startnew(Coro_CheckForNewCampaign); // IMPORTANT: Temporarily moved outside of the check for testing, move back on release
             if (timeSinceLastCheck >= eightyEightDaysInSeconds || timeSinceLastCheck >= threeDaysInSeconds) {
                 log("Time since last check is greater than interval, starting new campaign check", LogLevel::Info, 71, "CheckForNewCampaignIfNeeded");
             } else {
@@ -74,7 +74,7 @@ namespace OfficialManager {
             }
         }
 
-        void CheckForNewCampaignCoroutine() {
+        void Coro_CheckForNewCampaign() {
             CheckForNewCampaign();
             lastCheckedTimestamp = Time::Stamp;
         }
@@ -147,10 +147,10 @@ namespace OfficialManager {
 
     namespace UI {
         void Init() {
-            log("Initializing OfficialManager::UI", LogLevel::InfoG, 150, "Init");
+            log("Initializing OfficialManager::UI", LogLevel::Info, 150, "Init");
+            UpdateYears();
             UpdateSeasons();
             UpdateMaps();
-            PopulateYears();
         }
 
         void UpdateSeasons() {
@@ -160,7 +160,7 @@ namespace OfficialManager {
             maps.RemoveRange(0, maps.Length);
 
             seasons = {"Spring", "Summer", "Fall", "Winter"};
-            log("Seasons updated.", LogLevel::Info, 163, "UpdateSeasons");
+            log("Seasons updated: " + seasons.Length + " seasons", LogLevel::Info, 163, "UpdateSeasons");
         }
 
         void UpdateMaps() {
@@ -170,10 +170,10 @@ namespace OfficialManager {
             for (int i = 1; i <= 25; i++) {
                 maps.InsertLast("Map " + tostring(i));
             }
-            log("Maps updated.", LogLevel::Info, 173, "UpdateMaps");
+            log("Maps updated: " + maps.Length + " maps", LogLevel::Info, 173, "UpdateMaps");
         }
 
-        void PopulateYears() {
+        void UpdateYears() {
             years.RemoveRange(0, years.Length);
             selectedYear = -1;
             selectedSeason = -1;
@@ -181,52 +181,62 @@ namespace OfficialManager {
             maps.RemoveRange(0, maps.Length);
             seasons.RemoveRange(0, seasons.Length);
 
-            Time::Info info;
+            Time::Info info = Time::Parse();
             int currentYear = info.Year;
 
             for (int y = 2020; y <= currentYear; y++) {
                 years.InsertLast(y);
             }
-            log("Years populated.", LogLevel::Info, 190, "PopulateYears");
+            log("Years populated: " + years.Length + " years", LogLevel::Info, 190, "UpdateYears");
         }
     }
-
+ 
     namespace HandlingUserInput {
+        string mapUid;
+        string accountId;
+        string mapId;
+        string offset;
+
+        bool mapIdFetched = false;
+        bool accountIdFetched = false;
+
         void LoadSelectedRecord() {
-            startnew(CoroutineLoadSelectedGhost);
+            startnew(Coro_LoadSelectedGhost);
         }
 
-        void CoroutineLoadSelectedGhost() {
-            string mapUid = FetchMapUID();
-            if (mapUid.Length==0) {
-                log("Map UID not found.", LogLevel::Error, 202, "CoroutineLoadSelectedGhost");
+        void Coro_LoadSelectedGhost() {
+            offset = selectedOffset;
+            if (offset.Length == 0) {
+                log("Offset not provided.", LogLevel::Error, 211, "Coro_LoadSelectedGhost");
                 return;
             }
 
-            string offset = selectedOffset;
-            if (offset.Length==0) {
-                log("Offset not provided.", LogLevel::Error, 208, "CoroutineLoadSelectedGhost");
+            mapUid = FetchMapUID();
+            
+            startnew(Async_FetchAccountId);
+            startnew(Async_FetchMapId);
+
+            while (!(accountIdFetched && mapIdFetched)) { yield(); }
+
+            if (mapUid.Length == 0) {
+                log("Map UID not found.", LogLevel::Error, 227, "Coro_LoadSelectedGhost");
+                return;
+            }
+            if (accountId.Length == 0) {
+                log("Account ID not found.", LogLevel::Error, 231, "Coro_LoadSelectedGhost");
+                return;
+            }
+            if (mapId.Length == 0) {
+                log("Map ID not found.", LogLevel::Error, 235, "Coro_LoadSelectedGhost");
                 return;
             }
 
-            string accountId = FetchAccountId(mapUid, Text::ParseUInt(offset));
-            if (accountId.Length==0) {
-                log("Account ID not found.", LogLevel::Error, 214, "CoroutineLoadSelectedGhost");
-                return;
-            }
-
-            string mapId = FetchMapId(mapUid);
-            if (mapId.Length==0) {
-                log("Map ID not found.", LogLevel::Error, 220, "CoroutineLoadSelectedGhost");
-                return;
-            }
-
-            FetchAndSaveReplay(mapId, accountId, offset);
+            SaveReplay(mapId, accountId, offset);
         }
 
         string FetchMapUID() {
             if (selectedYear == -1 || selectedSeason == -1 || selectedMap == -1) {
-                // log("Year, season, or map not selected.", LogLevel::Warn, 229, "FetchMapUID");
+                // log("Year, season, or map not selected.", LogLevel::Warn, 244, "FetchMapUID");
                 return "";
             }
 
@@ -235,26 +245,14 @@ namespace OfficialManager {
             int mapPosition = selectedMap;
 
             string filePath = Server::officialJsonFilesDirectory + "/" + season + "_" + tostring(year) + ".json";
-            if (!IO::FileExists(filePath)) {
-                log("File not found: " + filePath, LogLevel::Error, 239, "FetchMapUID");
-                return "";
-            }
+            if (!IO::FileExists(filePath)) { log("File not found: " + filePath, LogLevel::Error, 253, "FetchMapUID"); return ""; }
 
             Json::Value root = Json::Parse(_IO::File::ReadFileToEnd(filePath));
-            if (root.GetType() == Json::Type::Null) {
-                log("Failed to parse JSON file: " + filePath, LogLevel::Error, 245, "FetchMapUID");
-                return "";
-            }
+            if (root.GetType() == Json::Type::Null) { log("Failed to parse JSON file: " + filePath, LogLevel::Error, 256, "FetchMapUID"); return ""; }
 
-            auto campaignList = root["campaignList"];
-            if (campaignList.GetType() != Json::Type::Array) {
-                log("Invalid campaign list in JSON file: " + filePath, LogLevel::Error, 251, "FetchMapUID");
-                return "";
-            }
 
-            for (uint i = 0; i < campaignList.Length; i++) {
-                auto campaign = campaignList[i];
-                auto playlist = campaign["playlist"];
+            for (uint i = 0; i < root.Length; i++) {
+                auto playlist = root["playlist"];
                 if (playlist.GetType() != Json::Type::Array) {
                     continue;
                 }
@@ -263,109 +261,184 @@ namespace OfficialManager {
                     auto map = playlist[j];
                     if (map["position"] == mapPosition) {
                         string mapUid = map["mapUid"];
-                        log("Found map UID: " + mapUid, LogLevel::Info, 266, "FetchMapUID");
+                        // log("Found map UID: " + mapUid, LogLevel::Info, 269, "FetchMapUID");
                         return mapUid;
                     }
                 }
             }
 
-            log("Map UID not found for position: " + tostring(mapPosition), LogLevel::Error, 272, "FetchMapUID");
+            log("Map UID not found for position: " + tostring(mapPosition), LogLevel::Error, 275, "FetchMapUID");
             return "";
+        }
+
+        void Async_FetchAccountId() {
+            accountIdFetched = false;
+            startnew(Coro_FetchAccountId);
+        }
+
+        void Coro_FetchAccountId() {
+            mapUID = FetchMapUID();
+
+            string url = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/" + mapUid + "/top?onlyWorld=true&length=1&offset=" + offset;
+            auto req = NadeoServices::Get("NadeoLiveServices", url);
+
+            req.Start();
+
+            while (!req.Finished()) { yield(); }
+
+            if (req.ResponseCode() != 200) {
+                log("Failed to fetch account ID, response code: " + req.ResponseCode(), LogLevel::Error, 297, "Coro_FetchAccountId");
+                accountId = "";
+            } else {
+                string jsonStr = Json::Write(req.Json());
+
+                Json::Value data = Json::Parse(jsonStr);
+                if (data.GetType() == Json::Type::Null) {
+                    log("Failed to parse response for account ID.", LogLevel::Error, 304, "Coro_FetchAccountId");
+                    accountId = "";
+                } else {
+                    auto tops = data["tops"];
+                    if (tops.GetType() != Json::Type::Array || tops.Length == 0) {
+                        log("Invalid tops data in response.", LogLevel::Error, 309, "Coro_FetchAccountId");
+                        accountId = "";
+                    } else {
+                        auto top = tops[0]["top"];
+                        if (top.GetType() != Json::Type::Array || top.Length == 0) {
+                            log("Invalid top data in response.", LogLevel::Error, 314, "Coro_FetchAccountId");
+                            accountId = "";
+                        } else {
+                            accountId = top[0]["accountId"];
+                            log("Found account ID: " + accountId, LogLevel::Info, 318, "Coro_FetchAccountId");
+                        }
+                    }
+                }
+            }
+            accountIdFetched = true;
+        }
+
+        void Async_FetchMapId() {
+            mapIdFetched = false;
+            startnew(Coro_FetchMapId);
+        }
+
+        void Coro_FetchMapId() {
+            string url = "https://prod.trackmania.core.nadeo.online/maps/?mapUidList=" + mapUid;
+            auto req = NadeoServices::Get("NadeoServices", url);
+
+            req.Start();
+
+            while (!req.Finished()) { yield(); }
+
+            if (req.ResponseCode() != 200) {
+                log("Failed to fetch map ID, response code: " + req.ResponseCode(), LogLevel::Error, 342, "Coro_FetchMapId");
+                mapId = "";
+            } else {
+                Json::Value data = Json::Parse(req.String());
+                if (data.GetType() == Json::Type::Null) {
+                    log("Failed to parse response for map ID.", LogLevel::Error, 347, "Coro_FetchMapId");
+                    mapId = "";
+                } else {
+                    if (data.GetType() != Json::Type::Array || data.Length == 0) {
+                        log("Invalid map data in response.", LogLevel::Error, 351, "Coro_FetchMapId");
+                        mapId = "";
+                    } else {
+                        mapId = data[0]["mapId"];
+                        log("Found map ID: " + mapId, LogLevel::Info, 355, "Coro_FetchMapId");
+                    }
+                }
+            }
+            mapIdFetched = true;
         }
 
         string FetchAccountId(const string &in mapUid, uint offset) {
             string url = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/" + mapUid + "/top?onlyWorld=true&length=1&offset=" + tostring(offset);
-            auto req = Net::HttpGet(url);
+            auto req = NadeoServices::Get("NadeoLiveServices", url);
 
-            if (req.ResponseCode() != 200) {
-                log("Failed to fetch account ID, response code: " + req.ResponseCode(), LogLevel::Error, 281, "FetchAccountId");
-                return "";
-            }
+            req.Start();
+
+            while (!req.Finished()) { yield(); }
+
+            if (req.ResponseCode() != 200) { log("Failed to fetch account ID, response code: " + req.ResponseCode(), LogLevel::Error, 373, "FetchAccountId"); return ""; }
 
             Json::Value data = Json::Parse(tostring(req));
-            if (data.GetType() == Json::Type::Null) {
-                log("Failed to parse response for account ID.", LogLevel::Error, 287, "FetchAccountId");
-                return "";
-            }
-
+            if (data.GetType() == Json::Type::Null) { log("Failed to parse response for account ID.", LogLevel::Error, 379, "FetchAccountId"); return ""; }
+            
             auto tops = data["tops"];
-            if (tops.GetType() != Json::Type::Array || tops.Length == 0) {
-                log("Invalid tops data in response.", LogLevel::Error, 293, "FetchAccountId");
-                return "";
-            }
-
+            if (tops.GetType() != Json::Type::Array || tops.Length == 0) { log("Invalid tops data in response.", LogLevel::Error, 385, "FetchAccountId"); return ""; }
+            
             auto top = tops[0]["top"];
-            if (top.GetType() != Json::Type::Array || top.Length == 0) {
-                log("Invalid top data in response.", LogLevel::Error, 299, "FetchAccountId");
-                return "";
-            }
+            if (top.GetType() != Json::Type::Array || top.Length == 0) { log("Invalid top data in response.", LogLevel::Error, 391, "FetchAccountId"); return ""; }
 
             string accountId = top[0]["accountId"];
-            log("Found account ID: " + accountId, LogLevel::Info, 304, "FetchAccountId");
+            log("Found account ID: " + accountId, LogLevel::Info, 396, "FetchAccountId");
             return accountId;
         }
 
         string FetchMapId(const string &in mapUid) {
             string url = "https://prod.trackmania.core.nadeo.online/maps/?mapUidList=" + mapUid;
-            auto req = Net::HttpGet(url);
+            auto req = NadeoServices::Get("NadeoLiveServices", url);
 
-            if (req.ResponseCode() != 200) {
-                log("Failed to fetch map ID, response code: " + req.ResponseCode(), LogLevel::Error, 313, "FetchMapId");
-                return "";
-            }
+            req.Start();
+            
+            while (!req.Finished()) { yield(); }
+
+            if (req.ResponseCode() != 200) { log("Failed to fetch map ID, response code: " + req.ResponseCode(), LogLevel::Error, 411, "FetchMapId"); return ""; }
 
             Json::Value data = Json::Parse(req.String());
-            if (data.GetType() == Json::Type::Null) {
-                log("Failed to parse response for map ID.", LogLevel::Error, 319, "FetchMapId");
-                return "";
-            }
+            if (data.GetType() == Json::Type::Null) { log("Failed to parse response for map ID.", LogLevel::Error, 417, "FetchMapId"); return ""; }
 
-            if (data.GetType() != Json::Type::Array || data.Length == 0) {
-                log("Invalid map data in response.", LogLevel::Error, 324, "FetchMapId");
-                return "";
-            }
+            if (data.GetType() != Json::Type::Array || data.Length == 0) { log("Invalid map data in response.", LogLevel::Error, 422, "FetchMapId"); return ""; }
 
             string mapId = data[0]["mapId"];
-            log("Found map ID: " + mapId, LogLevel::Info, 329, "FetchMapId");
+            log("Found map ID: " + mapId, LogLevel::Info, 427, "FetchMapId");
             return mapId;
         }
 
-        void FetchAndSaveReplay(const string &in mapId, const string &in accountId, const string &in offset) {
+        void SaveReplay(const string &in mapId, const string &in accountId, const string &in offset) {
             string url = "https://prod.trackmania.core.nadeo.online/mapRecords/?accountIdList=" + accountId + "&mapIdList=" + mapId;
-            auto req = Net::HttpGet(url);
+            auto req = NadeoServices::Get("NadeoServices", url);
 
-            if (req.ResponseCode() != 200) {
-                log("Failed to fetch replay record, response code: " + req.ResponseCode(), LogLevel::Error, 338, "FetchAndSaveReplay");
-                return;
-            }
+            req.Start();
+            
+            while (!req.Finished()) { yield(); }
+
+            if (req.ResponseCode() != 200) { log("Failed to fetch replay record, response code: " + req.ResponseCode(), LogLevel::Error, 442, "SaveReplay"); return; }
 
             Json::Value data = Json::Parse(req.String());
             if (data.GetType() == Json::Type::Null) {
-                log("Failed to parse response for replay record.", LogLevel::Error, 344, "FetchAndSaveReplay");
+                log("Failed to parse response for replay record.", LogLevel::Error, 450, "SaveReplay");
                 return;
             }
 
             if (data.GetType() != Json::Type::Array || data.Length == 0) {
-                log("Invalid replay data in response.", LogLevel::Error, 349, "FetchAndSaveReplay");
+                log("Invalid replay data in response.", LogLevel::Error, 455, "SaveReplay");
                 return;
             }
 
             string fileUrl = data[0]["url"];
-            string mapNameNoneSplit = data[0]["filename"];
-            string mapName = mapNameNoneSplit.Split("\\")[1].Split("_")[0];
-            string savePath = Server::officialJsonFilesDirectory + "/" + mapName + "_" + accountId + "_Position-" + offset + "_" + tostring(Time::Stamp) + ".Ghost.Gbx";
+            string mapName = years[selectedYear] + "-" + seasons[selectedSeason] + "-" + maps[selectedMap].Replace(" ", "");
+            string savePath = Server::officialFilesDirectory + "/" + "Official_" + mapName + "_Position" + offset + "_" + accountId + "_" + tostring(Time::Stamp) + ".Ghost.Gbx";
 
-            auto fileReq = Net::HttpGet(fileUrl);
+            auto fileReq = NadeoServices::Get("NadeoServices", fileUrl);
+
+            fileReq.Start();
+            
+            while (!fileReq.Finished()) { yield(); }
+
+            
             if (fileReq.ResponseCode() != 200) {
-                log("Failed to download replay file, response code: " + fileReq.ResponseCode(), LogLevel::Error, 360, "FetchAndSaveReplay");
+                log("Failed to download replay file, response code: " + fileReq.ResponseCode(), LogLevel::Error, 475, "SaveReplay");
                 return;
             }
 
-            _IO::File::WriteToFile(savePath, tostring(fileReq.Body));
+            fileReq.SaveToFile(savePath);
 
             ProcessSelectedFile(savePath);
 
-            log("Replay file saved to: " + savePath, LogLevel::Info, 368, "FetchAndSaveReplay");
+            log("Replay file saved to: " + savePath, LogLevel::Info, 483, "SaveReplay");
         }
+
     }
 }
+
+// xdd, saving a set of maps that is automagically updated by the API whilst still fetching records etc proved to be a bit more challenging than I thought it would be :D

@@ -2,10 +2,10 @@ namespace GhostLoader {
     [Setting hidden]
     bool S_UseGhostLayer = true;
 
-    void LoadGhost(const string &in filePath) {
+    void LoadGhost(const string &in filePath, const string &in _destonationPath = Server::serverDirectoryAutoMove) {
         if (filePath.ToLower().EndsWith(".gbx")) {
             string fileName = _IO::File::GetFileName(filePath);
-            string destinationPath = Server::serverDirectory + fileName;
+            string destinationPath = _destonationPath + fileName;
             log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, 9, "LoadGhost");
             _IO::File::SafeMoveFileToNonSource(filePath, destinationPath);
             LoadGhostFromUrl(Server::HTTP_BASE_URL + "get_ghost/" + Net::UrlEncode(fileName));
