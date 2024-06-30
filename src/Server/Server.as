@@ -44,7 +44,7 @@ namespace Server {
         try {
             auto key = Net::UrlDecode(route.Replace("/get_ghost/", ""));
             log('loading ghost: ' + key, LogLevel::Info, 46, "StartHttpServer");
-            string filePath = serverDirectory + key;
+            string filePath = serverDirectoryAutoMove + key;
             if (!IO::FileExists(filePath)) return _404_Response;
             auto buf = _IO::File::ReadFileToEnd(filePath);
             log('got buf: ' + buf.Length, LogLevel::Info, 50, "StartHttpServer");

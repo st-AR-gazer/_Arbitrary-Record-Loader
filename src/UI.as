@@ -26,12 +26,12 @@ void RenderInterface() {
                 RenderTab_SavedGhostsAndReplays();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem("Load record from any Map")) {
-                RenderTab_LoadGhostFromMap();
-                UI::EndTabItem();
-            }
             if (UI::BeginTabItem("Load record from other")) {
                 RenderTab_OtherSpecificUIDs();
+                UI::EndTabItem();
+            }
+            if (UI::BeginTabItem("Load record from any Map")) {
+                RenderTab_LoadGhostFromMap();
                 UI::EndTabItem();
             }
             if (UI::BeginTabItem("Official Maps")) {
@@ -244,6 +244,8 @@ string LoadJsonContent(const string &in fileName) {
 
 //////////////////// Render Load Ghost from Map Tab /////////////////////
 
+string ghostPosition;
+
 void RenderTab_LoadGhostFromMap() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
@@ -251,7 +253,6 @@ void RenderTab_LoadGhostFromMap() {
     UI::Text("Build a request: ");
     UI::Separator();
 
-    string ghostPosition;
     if (UI::Button("Set MapUID to current map")) {
         mapUID = get_CurrentMap();
     }
@@ -260,6 +261,7 @@ void RenderTab_LoadGhostFromMap() {
     ghostPosition = UI::InputText("Ghost Position", ghostPosition);
 
     if (UI::Button("Fetch Ghost")) {
+
         api.GetMapRecords(mapUID, ghostPosition);
     }
 
@@ -271,7 +273,7 @@ void RenderTab_LoadGhostFromMap() {
 int selectedYear = -1;
 int selectedSeason = -1;
 int selectedMap = -1;
-string selectedOffset = "";
+int selectedOffset = 0;
 
 string Official_MapUID;
 
@@ -336,18 +338,58 @@ void RenderTab_OfficialMaps() {
     }
 
     // Offset Input
-    selectedOffset = UI::InputText("Offset", selectedOffset);
+    selectedOffset = UI::InputInt("Offset", selectedOffset);
 
     UI::Separator();
 
-    Official_MapUID = OfficialManager::HandlingUserInput::FetchMapUID();
+    Official_MapUID = FetchOfficialMapUID();
 
-    /*Official_MapUID = */UI::/*Input*/Text(OfficialManager::HandlingUserInput::FetchMapUID()/*, Official_MapUID*/);
+    UI::Text(Official_MapUID);
 
     // Load Button
     if (UI::Button("Load Record")) {
-        OfficialManager::HandlingUserInput::LoadSelectedRecord();
+        LoadRecordFromArbitraryMap::LoadSelectedRecord(Official_MapUID, tostring(selectedOffset));
     }
+}
+
+string FetchOfficialMapUID() {
+    if (selectedYear == -1 || selectedSeason == -1 || selectedMap == -1) {
+        return "";
+    }
+
+    string season = seasons[selectedSeason];
+    int year = years[selectedYear];
+    int mapPosition = selectedMap;
+
+    string filePath = Server::officialJsonFilesDirectory + "/" + season + "_" + tostring(year) + ".json";
+    if (!IO::FileExists(filePath)) {
+        log("File not found: " + filePath, LogLevel::Error, 238, "FetchMapUID");
+        return "";
+    }
+
+    Json::Value root = Json::Parse(_IO::File::ReadFileToEnd(filePath));
+    if (root.GetType() == Json::Type::Null) {
+        log("Failed to parse JSON file: " + filePath, LogLevel::Error, 241, "FetchMapUID");
+        return "";
+    }
+
+    for (uint i = 0; i < root.Length; i++) {
+        auto playlist = root["playlist"];
+        if (playlist.GetType() != Json::Type::Array) {
+            continue;
+        }
+
+        for (uint j = 0; j < playlist.Length; j++) {
+            auto map = playlist[j];
+            if (map["position"] == mapPosition) {
+                string mapUid = map["mapUid"];
+                return mapUid;
+            }
+        }
+    }
+
+    log("Map UID not found for position: " + tostring(mapPosition), LogLevel::Error, 267, "FetchMapUID");
+    return "";
 }
 
 
