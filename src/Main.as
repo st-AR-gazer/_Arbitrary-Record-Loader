@@ -12,6 +12,7 @@ void Main() {
     _IO::Folder::SafeCreateFolder(Server::specificDownloadedFilesDirectory);
     _IO::Folder::SafeCreateFolder(Server::specificDownloadedJsonFilesDirectory);
     _IO::Folder::SafeCreateFolder(Server::officialFilesDirectory);
+    _IO::Folder::SafeCreateFolder(Server::officialInfoFilesDirectory);
     _IO::Folder::SafeCreateFolder(Server::officialJsonFilesDirectory);
 
     OfficialManager::DownloadingFiles::Init();

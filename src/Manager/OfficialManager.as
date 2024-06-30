@@ -13,9 +13,8 @@ namespace OfficialManager {
 
             string endTimestampFilePath = Server::officialInfoFilesDirectory + "/end_timestamp.txt";
             if (IO::FileExists(endTimestampFilePath)) {
-                IO::File file(endTimestampFilePath, IO::FileMode::Read);
-                endTimestamp = Text::ParseInt64(file.ReadToEnd());
-                file.Close();
+                endTimestamp = Text::ParseInt64(_IO::File::ReadFileToEnd(endTimestampFilePath));
+
                 log("Loaded endTimestamp: " + endTimestamp, LogLevel::Info, 43, "LoadEndTimestamp");
             } else {
                 endTimestamp = 0;
@@ -35,11 +34,12 @@ namespace OfficialManager {
             log("Saved endTimestamp: " + endTimestamp, LogLevel::Info, 62, "SaveEndTimestamp");
         }
 
-        void CheckForNewCampaignIfNeeded() {
+        void CheckForNewCampaignIfNeeded(bool bypassCheck = false) {
             log("Checking if we need to check for new campaign", LogLevel::Info, 61, "CheckForNewCampaignIfNeeded");
 
             int64 currentTime = Time::Stamp;
 
+            if (bypassCheck) { endTimestamp = 0; }
             if (currentTime >= endTimestamp) {
                 log("Current time is greater than end timestamp, starting new campaign check", LogLevel::Info, 71, "CheckForNewCampaignIfNeeded");
                 startnew(Coro_CheckForNewCampaign);
@@ -104,12 +104,10 @@ namespace OfficialManager {
 
             string specificSeason = campaign["name"];
             specificSeason = specificSeason.Replace(" ", "_");
-            string fileName = Server::officialJsonFilesDirectory + "/" + specificSeason + ".json";
+            string fullFileName = Server::officialJsonFilesDirectory + "/" + specificSeason + ".json";
 
-            IO::File file(fileName, IO::FileMode::Write);
-            file.Write(Json::Write(campaign));
-            file.Close();
-            log("Campaign data saved to: " + fileName, LogLevel::Info, 144, "SaveCampaignData");
+            _IO::File::WriteToFile(fullFileName, Json::Write(campaign));
+            log("Campaign data saved to: " + fullFileName, LogLevel::Info, 144, "SaveCampaignData");
         }
     }
 
@@ -201,7 +199,7 @@ namespace OfficialManager {
             int mapPosition = selectedMap;
 
             string filePath = Server::officialJsonFilesDirectory + "/" + season + "_" + tostring(year) + ".json";
-            if (!IO::FileExists(filePath)) { log("File not found: " + filePath, LogLevel::Error, 253, "FetchMapUID"); return ""; }
+            if (!IO::FileExists(filePath)) { NotifyWarn("File not found: " + filePath, 300); /*log("File not found: " + filePath, LogLevel::Error, 253, "FetchMapUID");*/ return ""; }
 
             Json::Value root = Json::Parse(_IO::File::ReadFileToEnd(filePath));
             if (root.GetType() == Json::Type::Null) { log("Failed to parse JSON file: " + filePath, LogLevel::Error, 256, "FetchMapUID"); return ""; }

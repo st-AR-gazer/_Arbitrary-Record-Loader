@@ -1,5 +1,5 @@
-void NotifyWarn(const string &in msg) {
-    UI::ShowNotification("Arbetrary Ghost Loader", msg, vec4(1, .5, .1, .5), 6000);
+void NotifyWarn(const string &in msg, int duration = 6000) {
+    UI::ShowNotification("Arbetrary Ghost Loader", msg, vec4(1, .5, .1, .5), duration);
 }
 
 void NotifyInfo(const string &in msg) {

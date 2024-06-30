@@ -288,6 +288,10 @@ void RenderTab_OfficialMaps() {
         OfficialManager::UI::UpdateSeasons();
         OfficialManager::UI::UpdateMaps();
     }
+    UI::SameLine();
+    if (UI::Button("Run check for New Campaigns again")) {
+        OfficialManager::DownloadingFiles::CheckForNewCampaignIfNeeded();
+    }
 
     // Year Dropdown
     if (UI::BeginCombo("Year", selectedYear == -1 ? "Select Year" : tostring(years[selectedYear]))) {
