@@ -262,7 +262,7 @@ void RenderTab_LoadGhostFromMap() {
 
     if (UI::Button("Fetch Ghost")) {
 
-        api.GetMapRecords(mapUID, ghostPosition);
+        LoadRecordFromArbitraryMap::LoadSelectedRecord(mapUID, ghostPosition);
     }
 
     UI::Separator();
