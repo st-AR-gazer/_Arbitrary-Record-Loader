@@ -7,7 +7,9 @@ namespace Server {
     const string serverDirectoryAutoMove = IO::FromStorageFolder("Server/AutoMove/");
     const string savedFilesDirectory = IO::FromStorageFolder("Server/Saved/Files/");
     const string savedJsonDirectory = IO::FromStorageFolder("Server/Saved/JsonData/");
-    const string validationFilesDirectory = IO::FromStorageFolder("Server/Validation/");
+    const string currentMapRecords = IO::FromStorageFolder("Server/CurrentMapRecords/");
+    const string currentMapRecordsValidationReplay = IO::FromStorageFolder("Server/CurrentMapRecords/ValidationReplay/");
+    const string currentMapRecordsGPS = IO::FromStorageFolder("Server/CurrentMapRecords/GPS/");
     const string specificDownloadedFilesDirectory = IO::FromStorageFolder("Server/Downloaded/Files");
     const string specificDownloadedJsonFilesDirectory = IO::FromStorageFolder("Server/Downloaded/JsonData");
     const string officialFilesDirectory = IO::FromStorageFolder("Server/Official/Files");

@@ -38,12 +38,9 @@ void RenderInterface() {
                 RenderTab_OfficialMaps();
                 UI::EndTabItem();
             }
-            
-            if (ValidationReplay::ValidationReplayExists()) {
-                if (UI::BeginTabItem("Current Map Ghost")) {
-                    RenderTab_CurrentMapGhost();
-                    UI::EndTabItem();
-                }
+            if (UI::BeginTabItem("Current Map Ghost")) {
+                RenderTab_CurrentMapGhost();
+                UI::EndTabItem();
             }
             UI::EndTabBar();
         }
@@ -400,12 +397,32 @@ void RenderTab_CurrentMapGhost() {
     UI::Separator();
     
     UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles at some point, this will not be possible for maps older than _NN_");
-    if (UI::Button("Add validation replay to current run")) {
-        ValidationReplay::AddValidationReplay();
+
+    if (!CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
+        UI::Text("\\$f00" + "WARNING" + "\\$g " + "No validation replay found for current map.");
+    } else {
+        UI::Text("\\$0f0" + "Validation Replay found for current map.");
+    }
+    if (!CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
+        if (_UI::DisabledButton("Add validation replay to current run")) {
+            CurrentMapRecords::ValidationReplay::AddValidationReplay();
+        }
+        if (_UI::DisabledButton("Save validation replay")) {
+            SaveRecordPath(CurrentMapRecords::ValidationReplay::GetValidationReplayFilePath());
+        }
+    } else {
+        if (UI::Button("Add validation replay to current run")) {
+            CurrentMapRecords::ValidationReplay::AddValidationReplay();
+        }
+        if (UI::Button("Save validation replay")) {
+            SaveRecordPath(CurrentMapRecords::ValidationReplay::GetValidationReplayFilePath());
+        }
     }
 
-    if (UI::Button("Save validation replay")) {
-        SaveRecordPath(ValidationReplay::GetValidationReplayFilePath());
+    UI::Separator();
+
+    if (!CurrentMapRecords::GPS::GPSExists) {
+        
     }
 }
 
