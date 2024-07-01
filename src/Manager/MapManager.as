@@ -12,7 +12,9 @@ void MapCoro() {
         if (s_currMap != CurrentMap) {
             s_currMap = CurrentMap;
             mapRecordsLoaded = false;
-            ValidationReplay::validationReplayCanBeLoaded = ValidationReplay::ValidationReplayCanBeLoadedForCurrentMap();
+            CurrentMapRecords::ValidationReplay::validationReplayCanBeLoaded = CurrentMapRecords::ValidationReplay::ValidationReplayCanBeLoadedForCurrentMap();
+            CurrentMapRecords::GPS::gpsCanBeLoaded = CurrentMapRecords::GPS::GPSReplayCanLoadForCurrentMap();
+
             if (!mapRecordsLoaded) {
                 ReplayLoader::LoadReplayAfterFileExplorer();
                 mapRecordsLoaded = true;
