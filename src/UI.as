@@ -360,13 +360,13 @@ string FetchOfficialMapUID() {
 
     string filePath = Server::officialJsonFilesDirectory + "/" + season + "_" + tostring(year) + ".json";
     if (!IO::FileExists(filePath)) {
-        log("File not found: " + filePath, LogLevel::Error, 238, "FetchMapUID");
+        log("File not found: " + filePath, LogLevel::Error, 363, "FetchOfficialMapUID");
         return "";
     }
 
     Json::Value root = Json::Parse(_IO::File::ReadFileToEnd(filePath));
     if (root.GetType() == Json::Type::Null) {
-        log("Failed to parse JSON file: " + filePath, LogLevel::Error, 241, "FetchMapUID");
+        log("Failed to parse JSON file: " + filePath, LogLevel::Error, 369, "FetchOfficialMapUID");
         return "";
     }
 
@@ -385,7 +385,7 @@ string FetchOfficialMapUID() {
         }
     }
 
-    log("Map UID not found for position: " + tostring(mapPosition), LogLevel::Error, 267, "FetchMapUID");
+    log("Map UID not found for position: " + tostring(mapPosition), LogLevel::Error, 388, "FetchOfficialMapUID");
     return "";
 }
 

@@ -19,10 +19,10 @@ namespace CurrentMapRecords {
             if (playground is null) return false;
 
             CGameDataFileManagerScript@ dataFileMgr = playground.DataFileMgr;
-            if (dataFileMgr is null) { /*log("DataFileMgr is null", LogLevel::Error, 21, "ValidationReplayExists");*/ return false; }
+            if (dataFileMgr is null) { /*log("DataFileMgr is null", LogLevel::Error, 22, "ValidationReplayExists");*/ return false; }
 
             CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
-            if (authorGhost is null) { /*log("Author ghost is empty", LogLevel::Warn, 24, "ValidationReplayExists");*/ return false; }
+            if (authorGhost is null) { /*log("Author ghost is empty", LogLevel::Warn, 25, "ValidationReplayExists");*/ return false; }
 
             return true;
         }
@@ -30,21 +30,21 @@ namespace CurrentMapRecords {
         void ExtractReplay() {
             try {
                 CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
-                if (dataFileMgr is null) { log("DataFileMgr is null", LogLevel::Error, 32, "ExtractReplay"); }
+                if (dataFileMgr is null) { log("DataFileMgr is null", LogLevel::Error, 33, "ExtractReplay"); }
                 string outputFileName = Server::currentMapRecordsValidationReplay + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
 
                 CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
-                if (authorGhost is null) { log("Author ghost is empty", LogLevel::Warn, 36, "ExtractReplay"); }
+                if (authorGhost is null) { log("Author ghost is empty", LogLevel::Warn, 37, "ExtractReplay"); }
 
                 CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(outputFileName, GetApp().RootMap, authorGhost);
-                if (taskResult is null) { log("Replay task returned null", LogLevel::Error, 39, "ExtractReplay"); }
+                if (taskResult is null) { log("Replay task returned null", LogLevel::Error, 40, "ExtractReplay"); }
 
                 while (taskResult.IsProcessing) { yield(); }
-                if (!taskResult.HasSucceeded) { log("Error while saving replay " + taskResult.ErrorDescription, LogLevel::Error, 42, "ExtractReplay"); }
+                if (!taskResult.HasSucceeded) { log("Error while saving replay " + taskResult.ErrorDescription, LogLevel::Error, 43, "ExtractReplay"); }
 
-                log("Replay extracted to: " + outputFileName, LogLevel::Info, 44, "ExtractReplay");
+                log("Replay extracted to: " + outputFileName, LogLevel::Info, 45, "ExtractReplay");
             } catch {
-                log("Error occurred when trying to extract replay: " + getExceptionInfo(), LogLevel::Info, 46, "ExtractReplay");
+                log("Error occurred when trying to extract replay: " + getExceptionInfo(), LogLevel::Info, 47, "ExtractReplay");
             }
         }
 
@@ -83,9 +83,9 @@ namespace CurrentMapRecords {
             try {
                 
 
-                log("Replay extracted to: " + outputFileName, LogLevel::Info, 44, "ExtractGPS");
+                log("Replay extracted to: " + outputFileName, LogLevel::Info, 86, "ExtractGPS");
             } catch {
-                log("Error occurred when trying to extract replay: " + getExceptionInfo(), LogLevel::Info, 46, "ExtractGPS");
+                log("Error occurred when trying to extract replay: " + getExceptionInfo(), LogLevel::Info, 88, "ExtractGPS");
             }
         }
     }

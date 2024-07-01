@@ -3,27 +3,27 @@ namespace OfficialManager {
         int64 endTimestamp = 0;
 
         void Init() {
-            log("Initializing OfficialManager::DownloadingFiles", LogLevel::Info, 9, "Init");
+            log("Initializing OfficialManager::DownloadingFiles", LogLevel::Info, 6, "Init");
             LoadEndTimestamp();
             CheckForNewCampaignIfNeeded();
         }
 
         void LoadEndTimestamp() {
-            log("Loading end timestamp", LogLevel::Info, 15, "LoadEndTimestamp");
+            log("Loading end timestamp", LogLevel::Info, 12, "LoadEndTimestamp");
 
             string endTimestampFilePath = Server::officialInfoFilesDirectory + "/end_timestamp.txt";
             if (IO::FileExists(endTimestampFilePath)) {
                 endTimestamp = Text::ParseInt64(_IO::File::ReadFileToEnd(endTimestampFilePath));
 
-                log("Loaded endTimestamp: " + endTimestamp, LogLevel::Info, 43, "LoadEndTimestamp");
+                log("Loaded endTimestamp: " + endTimestamp, LogLevel::Info, 18, "LoadEndTimestamp");
             } else {
                 endTimestamp = 0;
-                log("End timestamp file not found, setting endTimestamp to 0", LogLevel::Warn, 46, "LoadEndTimestamp");
+                log("End timestamp file not found, setting endTimestamp to 0", LogLevel::Warn, 21, "LoadEndTimestamp");
             }
         }
 
         void SaveEndTimestamp() {
-            log("Saving end timestamp", LogLevel::Info, 41, "SaveEndTimestamp");
+            log("Saving end timestamp", LogLevel::Info, 26, "SaveEndTimestamp");
 
             string endTimestampFilePath = Server::officialInfoFilesDirectory + "/end_timestamp.txt";
             string endTimestampContent = ("" + endTimestamp);
@@ -31,20 +31,20 @@ namespace OfficialManager {
             IO::File endTimestampFile(endTimestampFilePath, IO::FileMode::Write);
             endTimestampFile.Write(endTimestampContent);
             endTimestampFile.Close();
-            log("Saved endTimestamp: " + endTimestamp, LogLevel::Info, 62, "SaveEndTimestamp");
+            log("Saved endTimestamp: " + endTimestamp, LogLevel::Info, 34, "SaveEndTimestamp");
         }
 
         void CheckForNewCampaignIfNeeded(bool bypassCheck = false) {
-            log("Checking if we need to check for new campaign", LogLevel::Info, 61, "CheckForNewCampaignIfNeeded");
+            log("Checking if we need to check for new campaign", LogLevel::Info, 38, "CheckForNewCampaignIfNeeded");
 
             int64 currentTime = Time::Stamp;
 
             if (bypassCheck) { endTimestamp = 0; }
             if (currentTime >= endTimestamp) {
-                log("Current time is greater than end timestamp, starting new campaign check", LogLevel::Info, 71, "CheckForNewCampaignIfNeeded");
+                log("Current time is greater than end timestamp, starting new campaign check", LogLevel::Info, 44, "CheckForNewCampaignIfNeeded");
                 startnew(Coro_CheckForNewCampaign);
             } else {
-                log("Current time is less than end timestamp, no need to check for new campaign", LogLevel::Info, 73, "CheckForNewCampaignIfNeeded");
+                log("Current time is less than end timestamp, no need to check for new campaign", LogLevel::Info, 47, "CheckForNewCampaignIfNeeded");
             }
         }
 
@@ -79,7 +79,7 @@ namespace OfficialManager {
                         campaignName = campaignName.Replace(" ", "_");
 
                         if (localCampaigns.Find(campaignName) == -1) {
-                            log("Downloading missing campaign: " + campaignName, LogLevel::Info, 109, "CheckForNewCampaign");
+                            log("Downloading missing campaign: " + campaignName, LogLevel::Info, 82, "CheckForNewCampaign");
                             SaveCampaignData(campaign);
                         }
 
@@ -90,7 +90,7 @@ namespace OfficialManager {
                     }
                     offset++;
                 } else {
-                    log("No more campaigns found at offset: " + tostring(offset), LogLevel::Info, 116, "CheckForNewCampaign");
+                    log("No more campaigns found at offset: " + tostring(offset), LogLevel::Info, 93, "CheckForNewCampaign");
                     continueChecking = false;
                 }
             }
@@ -100,20 +100,20 @@ namespace OfficialManager {
 
         void SaveCampaignData(const Json::Value &in campaign) {
             string campaignName = campaign["name"];
-            log("Saving campaign data: " + campaignName, LogLevel::Info, 135, "SaveCampaignData");
+            log("Saving campaign data: " + campaignName, LogLevel::Info, 103, "SaveCampaignData");
 
             string specificSeason = campaign["name"];
             specificSeason = specificSeason.Replace(" ", "_");
             string fullFileName = Server::officialJsonFilesDirectory + "/" + specificSeason + ".json";
 
             _IO::File::WriteToFile(fullFileName, Json::Write(campaign));
-            log("Campaign data saved to: " + fullFileName, LogLevel::Info, 144, "SaveCampaignData");
+            log("Campaign data saved to: " + fullFileName, LogLevel::Info, 110, "SaveCampaignData");
         }
     }
 
     namespace UI {
         void Init() {
-            log("Initializing OfficialManager::UI", LogLevel::Info, 150, "Init");
+            log("Initializing OfficialManager::UI", LogLevel::Info, 116, "Init");
             UpdateYears();
             UpdateSeasons();
             UpdateMaps();
@@ -126,7 +126,7 @@ namespace OfficialManager {
             maps.RemoveRange(0, maps.Length);
 
             seasons = {"Spring", "Summer", "Fall", "Winter"};
-            log("Seasons updated: " + seasons.Length + " seasons", LogLevel::Info, 163, "UpdateSeasons");
+            log("Seasons updated: " + seasons.Length + " seasons", LogLevel::Info, 129, "UpdateSeasons");
         }
 
         void UpdateMaps() {
@@ -136,7 +136,7 @@ namespace OfficialManager {
             for (int i = 1; i <= 25; i++) {
                 maps.InsertLast("Map " + tostring(i));
             }
-            log("Maps updated: " + maps.Length + " maps", LogLevel::Info, 173, "UpdateMaps");
+            log("Maps updated: " + maps.Length + " maps", LogLevel::Info, 139, "UpdateMaps");
         }
 
         void UpdateYears() {
@@ -153,7 +153,7 @@ namespace OfficialManager {
             for (int y = 2020; y <= currentYear; y++) {
                 years.InsertLast(y);
             }
-            log("Years populated: " + years.Length + " years", LogLevel::Info, 190, "UpdateYears");
+            log("Years populated: " + years.Length + " years", LogLevel::Info, 156, "UpdateYears");
         }
     }
 }
