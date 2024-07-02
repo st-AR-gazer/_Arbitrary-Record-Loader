@@ -395,7 +395,7 @@ string FetchOfficialMapUID() {
 void RenderTab_CurrentMapGhost() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
-    
+
     UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles at some point, this will not be possible for maps older than _NN_");
 
     if (!CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
@@ -418,8 +418,12 @@ void RenderTab_CurrentMapGhost() {
     UI::Separator();
 
     if (!CurrentMapRecords::GPS::GPSReplayExists()) {
-        _UI::DisabledButton("Load GPS Replay");
+        _UI::DisabledButton("Extract GPS Replay");
     } else {
+        if (UI::Button("Extract GPS Replay")) {
+            CurrentMapRecords::GPS::ExtractGPSReplay();
+            UI::Text("GPS Replay extracted successfully.");
+        }
         if (CurrentMapRecords::GPS::recordNames.Length > 1) {
             UI::Text("Select a GPS Replay:");
             if (UI::BeginCombo("GPS Replays", CurrentMapRecords::GPS::recordNames[CurrentMapRecords::GPS::selectedGhostIndex])) {
@@ -441,12 +445,11 @@ void RenderTab_CurrentMapGhost() {
 
         if (UI::Button("Load GPS Replay")) {
             string outputFileName = CurrentMapRecords::GPS::GetGPSReplayFilePath();
-            CMwNod@ ghostNod = Dev::GetOffsetNod(CurrentMapRecords::GPS::ghostAddresses[CurrentMapRecords::GPS::selectedGhostIndex], 0x00);
-            CurrentMapRecords::GPS::SaveGhostToFile(ghostNod, outputFileName);
             ReplayLoader::LoadReplayFromPath(outputFileName);
         }
     }
 }
+
 
 
 

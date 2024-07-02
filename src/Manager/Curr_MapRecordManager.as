@@ -8,7 +8,7 @@ namespace CurrentMapRecords {
         }
         
         string GetValidationReplayFilePath() {
-            return Server::currentMapRecordsValidationReplay + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
+            return Server::currentMapRecordsValidationReplay + "Validation_" + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
         }
 
         bool ValidationReplayExists() {
@@ -79,162 +79,124 @@ namespace CurrentMapRecords {
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
     namespace GPS {
-        bool gpsCanBeLoaded = false;
+        bool gpsReplayCanBeLoaded = false;
+        array<string> recordNames;
+        array<CMwNod@> ghostAddresses;
         int selectedGhostIndex = 0;
 
-        enum RecordType {
-            None,
-            Ghost
-        }
-
-        array<string> recordNames;
-        array<RecordType> recordTypes;
-        array<uint64> ghostAddresses;
-
-        bool GPSReplayCanLoadForCurrentMap() {
-            if (GPSReplayExists()) {
-                ExtractGPS();
-            }
+        bool GPSReplayCanBeLoadedForCurrentMap() {
+            if (GPSReplayExists()) { ExtractGPSReplay(); }
             return true;
         }
 
         string GetGPSReplayFilePath() {
-            return Server::currentMapRecordsGPS + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
+            return Server::currentMapRecordsValidationReplay + "GPS_" + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
         }
 
         bool GPSReplayExists() {
             CTrackMania@ app = cast<CTrackMania>(GetApp());
             if (app is null) return false;
 
-            auto map = cast<CGameCtnChallenge>(app.RootMap);
+            CGamePlaygroundScript@ playground = cast<CGamePlaygroundScript>(app.PlaygroundScript);
+            if (playground is null) return false;
+
+            CGameCtnChallenge@ map = GetApp().RootMap;
             if (map is null) return false;
 
-            auto InGame = cast<CGameCtnMediaClipGroup>(map.ClipGroupInGame);
-            if (InGame is null) return false;
+            CGameCtnMediaClipGroup@ clipGroupInGame = map.ClipGroupInGame;
+            if (clipGroupInGame is null) return false;
 
-            for (uint i = 0; i < InGame.Clips.Length; i++) {
-                auto clip = cast<CGameCtnMediaTrack>(InGame.Clips[i]);
-                if (clip is null) continue;
-
-                RecordType recordType = IdentifyRecordType(clip);
-                if (recordType == RecordType::Ghost) {
-                    recordNames.InsertLast(clip.Name);
-                    recordTypes.InsertLast(recordType);
-                    ghostAddresses.InsertLast(Dev::GetOffsetUint64(clip, 0x58));
-                }
-
-                auto typeInfo = Reflection::TypeOf(clip);
-                if (typeInfo !is null) {
-                    ExploreProperties(typeInfo);
-                }
-            }
-
-            return ghostAddresses.Length > 0;
+            return true;
         }
 
-        RecordType IdentifyRecordType(CGameCtnMediaTrack@ track) {
-            if (track.Name.Contains("Ghost")) {
-                return RecordType::Ghost;
-            }
-            return RecordType::None;
-        }
-
-        void ExploreProperties(const Reflection::MwClassInfo@ classInfo, int depth = 0) {
-            if (depth > 3) return;
-
-            for (uint i = 0; i < classInfo.Members.Length; i++) {
-                auto member = classInfo.Members[i];
-                print("Member: " + member.Name + ", Offset: " + member.Offset);
-            }
-        }
-
-        uint GetClassSize(const string &in className) {
-            auto classInfo = Reflection::GetType(className);
-            if (classInfo is null) return 0;
-
-            uint maxOffset = 0;
-            for (uint i = 0; i < classInfo.Members.Length; i++) {
-                auto member = classInfo.Members[i];
-                uint memberSize = GetMemberSize(member.Name);
-                uint memberEnd = member.Offset + memberSize;
-                if (memberEnd > maxOffset) {
-                    maxOffset = memberEnd;
-                }
-            }
-
-            return maxOffset + 16;
-        }
-
-        uint GetMemberSize(const string &in memberName) {
-            if (memberName.Contains("string") || memberName.Contains("wstring")) {
-                return 8;
-            }
-            return 4;
-        }
-
-        void ExtractGPS() {
+        void ExtractGPSReplay() {
             try {
-                string outputFileName = GetGPSReplayFilePath();
-
                 CTrackMania@ app = cast<CTrackMania>(GetApp());
-                auto map = cast<CGameCtnChallenge>(app.RootMap);
-                auto InGame = cast<CGameCtnMediaClipGroup>(map.ClipGroupInGame);
+                if (app is null) return;
 
-                for (uint i = 0; i < ghostAddresses.Length; i++) {
-                    uint64 clipAddress = ghostAddresses[i];
-                    auto blockEntity = cast<CGameCtnMediaBlockEntity>(Dev::GetOffsetNod(clipAddress, 0x2E0));
-                    if (blockEntity is null) continue;
+                CGameCtnChallenge@ map = GetApp().RootMap;
+                if (map is null) return;
 
-                    // Access CPlugEntRecordData pointer at +0x2E0
-                    uint64 recordDataPtr = Dev::GetOffsetUint64(blockEntity, 0x2E0);
+                CGameCtnMediaClipGroup@ clipGroupInGame = map.ClipGroupInGame;
+                if (clipGroupInGame is null) return;
 
-                    // Determine the size of the CGameCtnGhost class
-                    uint ghostSize = GetClassSize("CGameCtnGhost");
-                    if (ghostSize == 0) {
-                        log("Failed to determine the size of CGameCtnGhost", LogLevel::Error, 89, "ExtractGPS");
-                        return;
-                    }
+                string outputFileName = Server::currentMapRecordsValidationReplay + Text::StripFormatCodes(GetApp().RootMap.MapName) + "_GPS.Replay.Gbx";
+                array<CGameCtnGhost@> gpsGhosts = GetGPSGhosts();
+                if (gpsGhosts.Length == 0) { log("No GPS ghosts found", LogLevel::Warn, 15, "ExtractGPSReplay"); return; }
 
-                    uint64 ghostAddress = Dev::Allocate(ghostSize);
+                CGameDataFileManagerScript@ dataFileMgr = cast<CGameDataFileManagerScript>(app.PlaygroundScript.DataFileMgr);
+                if (dataFileMgr is null) { log("DataFileMgr is null", LogLevel::Error, 20, "ExtractGPSReplay"); return; }
 
-                    Dev::SetOffset(ghostAddress, 0x2E0, recordDataPtr);
+                for (uint i = 0; i < gpsGhosts.Length; i++) {
+                    CGameCtnGhost@ ghost = gpsGhosts[i];
 
-                    // Preload the nod
-                    CMwNod@ ghostNod = Fids::Preload(Fids::GetFake(outputFileName));
-                    if (ghostNod is null) {
-                        log("Failed to preload ghost nod", LogLevel::Error, 87, "ExtractGPS");
-                        return;
-                    }
+                    CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(outputFileName, map, ghost);
+                    if (taskResult is null) { log("Replay task returned null", LogLevel::Error, 25, "ExtractGPSReplay"); return; }
 
-                    auto ghost = cast<CGameCtnGhost>(ghostNod);
-                    if (ghost is null) {
-                        log("Failed to cast to CGameCtnGhost", LogLevel::Error, 88, "ExtractGPS");
-                        return;
-                    }
+                    while (taskResult.IsProcessing) { yield(); }
+                    if (!taskResult.HasSucceeded) { log("Error while saving replay " + taskResult.ErrorDescription, LogLevel::Error, 28, "ExtractGPSReplay"); return; }
 
-                    SaveGhostToFile(ghostNod, outputFileName);
-
-                    log("Replay extracted to: " + outputFileName, LogLevel::Info, 86, "ExtractGPS");
+                    log("GPS ghost extracted to: " + outputFileName, LogLevel::Info, 30, "ExtractGPSReplay");
                 }
             } catch {
-                log("Error occurred when trying to extract replay: " + getExceptionInfo(), LogLevel::Info, 88, "ExtractGPS");
+                log("Error occurred when trying to extract GPS ghosts: " + getExceptionInfo(), LogLevel::Info, 33, "ExtractGPSReplay");
             }
         }
 
-        void SaveGhostToFile(CMwNod@ ghostNod, const string &in outputFileName) {
-            CSystemFidFile@ file = Fids::GetUser(outputFileName);
-            if (file is null) {
-                log("Failed to get file handle: " + outputFileName, LogLevel::Error, 87, "SaveGhostToFile");
-                return;
+        array<CGameCtnGhost@> GetGPSGhosts() {
+            array<CGameCtnGhost@> ghosts;
+            CTrackMania@ app = cast<CTrackMania>(GetApp());
+            if (app is null) return ghosts;
+
+            CGameCtnChallenge@ map = GetApp().RootMap;
+            if (map is null) return ghosts;
+
+            CGameCtnMediaClipGroup@ clipGroupInGame = map.ClipGroupInGame;
+            if (clipGroupInGame is null) return ghosts;
+
+            for (uint i = 0; i < clipGroupInGame.Clips.Length; i++) {
+                CGameCtnMediaClip@ clip = clipGroupInGame.Clips[i];
+                if (clip is null) continue;
+
+                for (uint j = 0; j < clip.Tracks.Length; j++) {
+                    CGameCtnMediaTrack@ track = clip.Tracks[j];
+                    if (track is null) continue;
+
+                    for (uint k = 0; k < track.Blocks.Length; k++) {
+                        CGameCtnMediaBlockEntity@ block = cast<CGameCtnMediaBlockEntity>(track.Blocks[k]);
+                        if (block is null) continue;
+
+                        // Access CPlugEntRecordData at +0x58
+                        CPlugEntRecordData@ recordData = cast<CPlugEntRecordData>(Dev::GetOffsetNod(block, 0x58));
+                        if (recordData is null) continue;
+
+                        CGameCtnGhost@ ghost = CreateGhostFromRecordData(recordData);
+                        if (ghost is null) continue;
+
+                        ghosts.InsertLast(ghost);
+                    }
+                }
             }
 
-            if (!Fids::Extract(file)) {
-                log("Failed to extract ghost data to: " + outputFileName, LogLevel::Error, 88, "SaveGhostToFile");
-            } else {
-                log("Ghost data saved to: " + outputFileName, LogLevel::Info, 89, "SaveGhostToFile");
-            }
+            return ghosts;
+        }
+
+        CGameCtnGhost@ CreateGhostFromRecordData(CPlugEntRecordData@ recordData) {
+            CTrackMania@ app = cast<CTrackMania>(GetApp());
+            if (app is null) return null;
+
+            CGameCtnPlayground@ playground = cast<CGameCtnPlayground>(app.CurrentPlayground);
+            if (playground is null) return null;
+
+            CGameCtnGhost@ ghost = playground.PlayerRecordedGhost;
+            if (ghost is null) return null;
+
+            Dev::SetOffset(ghost, 0x2E0, recordData);
+            recordData.MwAddRef();
+
+            return ghost;
         }
     }
 }
-
