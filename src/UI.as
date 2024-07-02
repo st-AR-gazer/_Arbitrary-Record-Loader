@@ -404,12 +404,8 @@ void RenderTab_CurrentMapGhost() {
         UI::Text("\\$0f0" + "Validation Replay found for current map.");
     }
     if (!CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
-        if (_UI::DisabledButton("Add validation replay to current run")) {
-            CurrentMapRecords::ValidationReplay::AddValidationReplay();
-        }
-        if (_UI::DisabledButton("Save validation replay")) {
-            SaveRecordPath(CurrentMapRecords::ValidationReplay::GetValidationReplayFilePath());
-        }
+        _UI::DisabledButton("Add validation replay to current run");
+        _UI::DisabledButton("Save validation replay");
     } else {
         if (UI::Button("Add validation replay to current run")) {
             CurrentMapRecords::ValidationReplay::AddValidationReplay();
@@ -421,10 +417,40 @@ void RenderTab_CurrentMapGhost() {
 
     UI::Separator();
 
-    if (!CurrentMapRecords::GPS::GPSExists) {
-        
+    if (!CurrentMapRecords::GPS::GPSReplayExists()) {
+        _UI::DisabledButton("Load GPS Replay");
+    } else {
+        if (CurrentMapRecords::GPS::recordNames.Length > 1) {
+            UI::Text("Select a GPS Replay:");
+            if (UI::BeginCombo("GPS Replays", CurrentMapRecords::GPS::recordNames[CurrentMapRecords::GPS::selectedGhostIndex])) {
+                for (uint i = 0; i < CurrentMapRecords::GPS::recordNames.Length; i++) {
+                    bool isSelected = (CurrentMapRecords::GPS::selectedGhostIndex == int(i));
+                    if (UI::Selectable(CurrentMapRecords::GPS::recordNames[i], isSelected)) {
+                        CurrentMapRecords::GPS::selectedGhostIndex = i;
+                    }
+                    if (isSelected) {
+                        UI::SetItemDefaultFocus();
+                    }
+                }
+                UI::EndCombo();
+            }
+        } else if (CurrentMapRecords::GPS::recordNames.Length == 1) {
+            UI::Text("Single GPS Replay found: " + CurrentMapRecords::GPS::recordNames[0]);
+            CurrentMapRecords::GPS::selectedGhostIndex = 0;
+        }
+
+        if (UI::Button("Load GPS Replay")) {
+            string outputFileName = CurrentMapRecords::GPS::GetGPSReplayFilePath();
+            CMwNod@ ghostNod = Dev::GetOffsetNod(CurrentMapRecords::GPS::ghostAddresses[CurrentMapRecords::GPS::selectedGhostIndex], 0x00);
+            CurrentMapRecords::GPS::SaveGhostToFile(ghostNod, outputFileName);
+            ReplayLoader::LoadReplayFromPath(outputFileName);
+        }
     }
 }
+
+
+
+
 
 ////////////////////////////// End Tabs //////////////////////////////
 

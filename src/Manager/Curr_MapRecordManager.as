@@ -54,8 +54,34 @@ namespace CurrentMapRecords {
         }
     }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     namespace GPS {
         bool gpsCanBeLoaded = false;
+        int selectedGhostIndex = 0;
 
         enum RecordType {
             None,
@@ -64,6 +90,7 @@ namespace CurrentMapRecords {
 
         array<string> recordNames;
         array<RecordType> recordTypes;
+        array<uint64> ghostAddresses;
 
         bool GPSReplayCanLoadForCurrentMap() {
             if (GPSReplayExists()) {
@@ -91,8 +118,11 @@ namespace CurrentMapRecords {
                 if (clip is null) continue;
 
                 RecordType recordType = IdentifyRecordType(clip);
-                recordNames.InsertLast(clip.Name);
-                recordTypes.InsertLast(recordType);
+                if (recordType == RecordType::Ghost) {
+                    recordNames.InsertLast(clip.Name);
+                    recordTypes.InsertLast(recordType);
+                    ghostAddresses.InsertLast(Dev::GetOffsetUint64(clip, 0x58));
+                }
 
                 auto typeInfo = Reflection::TypeOf(clip);
                 if (typeInfo !is null) {
@@ -100,7 +130,7 @@ namespace CurrentMapRecords {
                 }
             }
 
-            return true;
+            return ghostAddresses.Length > 0;
         }
 
         RecordType IdentifyRecordType(CGameCtnMediaTrack@ track) {
@@ -126,7 +156,8 @@ namespace CurrentMapRecords {
             uint maxOffset = 0;
             for (uint i = 0; i < classInfo.Members.Length; i++) {
                 auto member = classInfo.Members[i];
-                uint memberEnd = member.Offset + GetMemberSize(member);
+                uint memberSize = GetMemberSize(member.Name);
+                uint memberEnd = member.Offset + memberSize;
                 if (memberEnd > maxOffset) {
                     maxOffset = memberEnd;
                 }
@@ -135,8 +166,8 @@ namespace CurrentMapRecords {
             return maxOffset + 16;
         }
 
-        uint GetMemberSize(const Reflection::MwMemberInfo &in member) {
-            if (member.Name.Contains("string") || member.Name.Contains("wstring")) {
+        uint GetMemberSize(const string &in memberName) {
+            if (memberName.Contains("string") || memberName.Contains("wstring")) {
                 return 8;
             }
             return 4;
@@ -149,35 +180,61 @@ namespace CurrentMapRecords {
                 CTrackMania@ app = cast<CTrackMania>(GetApp());
                 auto map = cast<CGameCtnChallenge>(app.RootMap);
                 auto InGame = cast<CGameCtnMediaClipGroup>(map.ClipGroupInGame);
-                auto clip = cast<CGameCtnMediaTrack>(InGame.Clips[0]);
 
-                if (clip is null) return;
+                for (uint i = 0; i < ghostAddresses.Length; i++) {
+                    uint64 clipAddress = ghostAddresses[i];
+                    auto blockEntity = cast<CGameCtnMediaBlockEntity>(Dev::GetOffsetNod(clipAddress, 0x2E0));
+                    if (blockEntity is null) continue;
 
-                auto blockEntity = cast<CGameCtnMediaBlockEntity>(clip.Blocks[0]);
-                if (blockEntity is null) return;
+                    // Access CPlugEntRecordData pointer at +0x2E0
+                    uint64 recordDataPtr = Dev::GetOffsetUint64(blockEntity, 0x2E0);
 
-                // Access CPlugEntRecordData pointer at +0x58
-                uint64 blockEntityAddress = Dev::GetOffsetUint64(blockEntity, 0x58);
-                // Access CPlugEntRecordData pointer at +0x2E0
-                uint64 recordDataPtr = Dev::GetOffsetUint64(blockEntityAddress, 0x2E0);
+                    // Determine the size of the CGameCtnGhost class
+                    uint ghostSize = GetClassSize("CGameCtnGhost");
+                    if (ghostSize == 0) {
+                        log("Failed to determine the size of CGameCtnGhost", LogLevel::Error, 89, "ExtractGPS");
+                        return;
+                    }
 
-                uint ghostSize = GetClassSize("CGameCtnGhost");
-                if (ghostSize == 0) {
-                    log("Failed to determine the size of CGameCtnGhost", LogLevel::Error, 89, "ExtractGPS");
-                    return;
+                    uint64 ghostAddress = Dev::Allocate(ghostSize);
+
+                    Dev::SetOffset(ghostAddress, 0x2E0, recordDataPtr);
+
+                    // Preload the nod
+                    CMwNod@ ghostNod = Fids::Preload(Fids::GetFake(outputFileName));
+                    if (ghostNod is null) {
+                        log("Failed to preload ghost nod", LogLevel::Error, 87, "ExtractGPS");
+                        return;
+                    }
+
+                    auto ghost = cast<CGameCtnGhost>(ghostNod);
+                    if (ghost is null) {
+                        log("Failed to cast to CGameCtnGhost", LogLevel::Error, 88, "ExtractGPS");
+                        return;
+                    }
+
+                    SaveGhostToFile(ghostNod, outputFileName);
+
+                    log("Replay extracted to: " + outputFileName, LogLevel::Info, 86, "ExtractGPS");
                 }
-
-                uint64 ghostAddress = Dev::Allocate(ghostSize);
-
-                Dev::SetOffset(ghostAddress, 0x2E0, recordDataPtr);
-
-
-                SaveGhostToFile(ghostAddress, outputFileName);
-
-                log("Replay extracted to: " + outputFileName, LogLevel::Info, 86, "ExtractGPS");
             } catch {
                 log("Error occurred when trying to extract replay: " + getExceptionInfo(), LogLevel::Info, 88, "ExtractGPS");
             }
         }
+
+        void SaveGhostToFile(CMwNod@ ghostNod, const string &in outputFileName) {
+            CSystemFidFile@ file = Fids::GetUser(outputFileName);
+            if (file is null) {
+                log("Failed to get file handle: " + outputFileName, LogLevel::Error, 87, "SaveGhostToFile");
+                return;
+            }
+
+            if (!Fids::Extract(file)) {
+                log("Failed to extract ghost data to: " + outputFileName, LogLevel::Error, 88, "SaveGhostToFile");
+            } else {
+                log("Ghost data saved to: " + outputFileName, LogLevel::Info, 89, "SaveGhostToFile");
+            }
+        }
     }
 }
+
