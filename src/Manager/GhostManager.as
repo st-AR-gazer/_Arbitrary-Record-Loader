@@ -21,9 +21,9 @@ namespace GhostLoader {
 
     void LoadGhostFromUrlAsync(const string &in url) {
         auto ps = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript);
-        auto dfm = ps.DataFileMgr;
-        auto gm = ps.GhostMgr;
-        auto task = dfm.Ghost_Download(_IO::File::GetFileName(url), url);
+        CGameDataFileManagerScript@ dfm = ps.DataFileMgr;
+        CGameGhostMgrScript@ gm = ps.GhostMgr;
+        CWebServicesTaskResult_GhostScript@ task = dfm.Ghost_Download(_IO::File::GetFileName(url), url);
 
         while (task.IsProcessing) {
             yield();
