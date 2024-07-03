@@ -81,122 +81,40 @@ namespace CurrentMapRecords {
 
 
     namespace GPS {
-        bool gpsReplayCanBeLoaded = false;
-        array<string> recordNames;
-        array<CMwNod@> ghostAddresses;
-        int selectedGhostIndex = 0;
+        string savePath = "";
+        CGameCtnChallenge@ rootMap = null;
+        CGameCtnGhost@ ghost = null;
 
-        bool GPSReplayCanBeLoadedForCurrentMap() {
-            if (GPSReplayExists()) { ExtractGPSReplay(); }
-            return true;
+        string finalSavePath = "";
+
+        void OnMapLoad() {
+            FetchMap();
+            FetchPath();
+            FetchGhost();
+
+            SaveReplay();
         }
 
-        string GetGPSReplayFilePath() {
-            return Server::currentMapRecordsValidationReplay + "GPS_" + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
+        void FetchPath() {
+            savePath = Server::currentMapRecordsGPS + "GPS_" + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
         }
 
-        bool GPSReplayExists() {
-            CTrackMania@ app = cast<CTrackMania>(GetApp());
-            if (app is null) return false;
-
-            CGamePlaygroundScript@ playground = cast<CGamePlaygroundScript>(app.PlaygroundScript);
-            if (playground is null) return false;
-
-            CGameCtnChallenge@ map = GetApp().RootMap;
-            if (map is null) return false;
-
-            CGameCtnMediaClipGroup@ clipGroupInGame = map.ClipGroupInGame;
-            if (clipGroupInGame is null) return false;
-
-            return true;
+        void FetchMap() {
+            @rootMap = GetApp().RootMap;
         }
 
-        void ExtractGPSReplay() {
-            try {
-                CTrackMania@ app = cast<CTrackMania>(GetApp());
-                if (app is null) return;
+        void FetchGhost() {
 
-                CGameCtnChallenge@ map = GetApp().RootMap;
-                if (map is null) return;
-
-                CGameCtnMediaClipGroup@ clipGroupInGame = map.ClipGroupInGame;
-                if (clipGroupInGame is null) return;
-
-                string outputFileName = Server::currentMapRecordsValidationReplay + Text::StripFormatCodes(GetApp().RootMap.MapName) + "_GPS.Replay.Gbx";
-                array<CGameCtnGhost@> gpsGhosts = GetGPSGhosts();
-                if (gpsGhosts.Length == 0) { log("No GPS ghosts found", LogLevel::Warn, 15, "ExtractGPSReplay"); return; }
-
-                CGameDataFileManagerScript@ dataFileMgr = cast<CGameDataFileManagerScript>(app.PlaygroundScript.DataFileMgr);
-                if (dataFileMgr is null) { log("DataFileMgr is null", LogLevel::Error, 20, "ExtractGPSReplay"); return; }
-
-                for (uint i = 0; i < gpsGhosts.Length; i++) {
-                    CGameCtnGhost@ ghost = gpsGhosts[i];
-
-                    CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(outputFileName, map, ghost);
-                    if (taskResult is null) { log("Replay task returned null", LogLevel::Error, 25, "ExtractGPSReplay"); return; }
-
-                    while (taskResult.IsProcessing) { yield(); }
-                    if (!taskResult.HasSucceeded) { log("Error while saving replay " + taskResult.ErrorDescription, LogLevel::Error, 28, "ExtractGPSReplay"); return; }
-
-                    log("GPS ghost extracted to: " + outputFileName, LogLevel::Info, 30, "ExtractGPSReplay");
-                }
-            } catch {
-                log("Error occurred when trying to extract GPS ghosts: " + getExceptionInfo(), LogLevel::Info, 33, "ExtractGPSReplay");
-            }
         }
 
-        array<CGameCtnGhost@> GetGPSGhosts() {
-            array<CGameCtnGhost@> ghosts;
-            CTrackMania@ app = cast<CTrackMania>(GetApp());
-            if (app is null) return ghosts;
+        void SaveReplay() {
+            CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
 
-            CGameCtnChallenge@ map = GetApp().RootMap;
-            if (map is null) return ghosts;
-
-            CGameCtnMediaClipGroup@ clipGroupInGame = map.ClipGroupInGame;
-            if (clipGroupInGame is null) return ghosts;
-
-            for (uint i = 0; i < clipGroupInGame.Clips.Length; i++) {
-                CGameCtnMediaClip@ clip = clipGroupInGame.Clips[i];
-                if (clip is null) continue;
-
-                for (uint j = 0; j < clip.Tracks.Length; j++) {
-                    CGameCtnMediaTrack@ track = clip.Tracks[j];
-                    if (track is null) continue;
-
-                    for (uint k = 0; k < track.Blocks.Length; k++) {
-                        CGameCtnMediaBlockEntity@ block = cast<CGameCtnMediaBlockEntity>(track.Blocks[k]);
-                        if (block is null) continue;
-
-                        // Access CPlugEntRecordData at +0x58
-                        CPlugEntRecordData@ recordData = cast<CPlugEntRecordData>(Dev::GetOffsetNod(block, 0x58));
-                        if (recordData is null) continue;
-
-                        CGameCtnGhost@ ghost = CreateGhostFromRecordData(recordData);
-                        if (ghost is null) continue;
-
-                        ghosts.InsertLast(ghost);
-                    }
-                }
-            }
-
-            return ghosts;
+            CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(savePath, rootMap, ghost);
         }
 
-        CGameCtnGhost@ CreateGhostFromRecordData(CPlugEntRecordData@ recordData) {
-            CTrackMania@ app = cast<CTrackMania>(GetApp());
-            if (app is null) return null;
-
-            CGameCtnPlayground@ playground = cast<CGameCtnPlayground>(app.CurrentPlayground);
-            if (playground is null) return null;
-
-            CGameCtnGhost@ ghost = playground.PlayerRecordedGhost;
-            if (ghost is null) return null;
-
-            Dev::SetOffset(ghost, 0x2E0, recordData);
-            recordData.MwAddRef();
-
-            return ghost;
+        void LoadReplay() {
+            ReplayLoader::LoadReplayFromPath(finalSavePath);
         }
     }
 }
