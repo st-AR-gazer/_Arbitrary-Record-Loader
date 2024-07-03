@@ -106,6 +106,14 @@ namespace _IO {
             }
             return path.SubStr(index + 1);
         }
+
+        string GetFilePathWithoutFileName(const string &in path) {
+            int index = _Text::LastIndexOf(path, "/");
+            if (index == -1) {
+                return path;
+            }
+            return path.SubStr(0, index);
+        }
         
         string GetFileNameWithoutExtension(const string &in path) {
             string fileName = _IO::File::GetFileName(path);

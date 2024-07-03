@@ -92,7 +92,7 @@ namespace CurrentMapRecords {
         }
 
         string GetGPSReplayFilePath() {
-            return Server::currentMapRecordsValidationReplay + "GPS_" + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
+            return Server::currentMapRecordsValidationReplay + mapName + "_" + mapUID + "/" + "GPS_Ghost_" + (selectedGhostIndex + 1) + ".Replay.Gbx";
         }
 
         bool GPSReplayExists() {
@@ -122,7 +122,8 @@ namespace CurrentMapRecords {
                 CGameCtnMediaClipGroup@ clipGroupInGame = map.ClipGroupInGame;
                 if (clipGroupInGame is null) return;
 
-                string outputFileName = Server::currentMapRecordsValidationReplay + Text::StripFormatCodes(GetApp().RootMap.MapName) + "_GPS.Replay.Gbx";
+                string folderPath = _IO::File::GetFilePathWithoutFileName(GetGPSReplayFilePath());
+                IO::CreateFolder(folderPath, true);
                 array<CGameCtnGhost@> gpsGhosts = GetGPSGhosts();
                 if (gpsGhosts.Length == 0) { log("No GPS ghosts found", LogLevel::Warn, 15, "ExtractGPSReplay"); return; }
 
@@ -131,14 +132,15 @@ namespace CurrentMapRecords {
 
                 for (uint i = 0; i < gpsGhosts.Length; i++) {
                     CGameCtnGhost@ ghost = gpsGhosts[i];
+                    string ghostFileName = folderPath + "GPS_Ghost_" + (i + 1) + ".Replay.Gbx";
 
-                    CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(outputFileName, map, ghost);
+                    CWebServicesTaskResult@ taskResult = null/*dataFileMgr.Replay_Save(ghostFileName, map, ghost)*/;
                     if (taskResult is null) { log("Replay task returned null", LogLevel::Error, 25, "ExtractGPSReplay"); return; }
 
                     while (taskResult.IsProcessing) { yield(); }
                     if (!taskResult.HasSucceeded) { log("Error while saving replay " + taskResult.ErrorDescription, LogLevel::Error, 28, "ExtractGPSReplay"); return; }
 
-                    log("GPS ghost extracted to: " + outputFileName, LogLevel::Info, 30, "ExtractGPSReplay");
+                    log("GPS ghost extracted to: " + ghostFileName, LogLevel::Info, 30, "ExtractGPSReplay");
                 }
             } catch {
                 log("Error occurred when trying to extract GPS ghosts: " + getExceptionInfo(), LogLevel::Info, 33, "ExtractGPSReplay");
@@ -172,6 +174,7 @@ namespace CurrentMapRecords {
                         CPlugEntRecordData@ recordData = cast<CPlugEntRecordData>(Dev::GetOffsetNod(block, 0x58));
                         if (recordData is null) continue;
 
+                        // Instantiate a new ghost using an existing ghost retrieval method
                         CGameCtnGhost@ ghost = CreateGhostFromRecordData(recordData);
                         if (ghost is null) continue;
 
@@ -184,6 +187,7 @@ namespace CurrentMapRecords {
         }
 
         CGameCtnGhost@ CreateGhostFromRecordData(CPlugEntRecordData@ recordData) {
+            // Use PlayerRecordedGhost to get a new ghost and set its record data
             CTrackMania@ app = cast<CTrackMania>(GetApp());
             if (app is null) return null;
 
@@ -193,6 +197,7 @@ namespace CurrentMapRecords {
             CGameCtnGhost@ ghost = playground.PlayerRecordedGhost;
             if (ghost is null) return null;
 
+            // Set the CPlugEntRecordData pointer
             Dev::SetOffset(ghost, 0x2E0, recordData);
             recordData.MwAddRef();
 
