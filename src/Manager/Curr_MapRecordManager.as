@@ -84,14 +84,12 @@ namespace CurrentMapRecords {
         string savePath = "";
         CGameCtnChallenge@ rootMap = null;
         CGameCtnGhost@ ghost = null;
-
         string finalSavePath = "";
 
         void OnMapLoad() {
             FetchMap();
             FetchPath();
             FetchGhost();
-
             SaveReplay();
         }
 
@@ -104,23 +102,30 @@ namespace CurrentMapRecords {
         }
 
         void FetchGhost() {
-
+            for (uint i = 0; i < rootMap.ClipGroupInGame.Clips.Length; i++) {
+                auto clip = rootMap.ClipGroupInGame.Clips[i];
+                for (uint j = 0; j < clip.Tracks.Length; j++) {
+                    auto track = clip.Tracks[j];
+                    if (track.Name.StartsWith("ghost: ")) {
+                        for (uint k = 0; k < track.Blocks.Length; k++) {
+                            auto block = cast<CGameCtnMediaBlockEntity>(track.Blocks[k]);
+                            if (block !is null) {
+                                auto recordData = cast<CPlugEntRecordData>(Dev::GetOffsetNod(block, 0x58));
+                                if (recordData !is null) {
+                                    @ghost = CGameCtnGhost();
+                                    Dev::SetOffset(ghost, 0x2e0, recordData);
+                                    recordData.MwAddRef();
+                                    return; 
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         void SaveReplay() {
-            CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
-                if (dataFileMgr is null) { log("DataFileMgr is null", LogLevel::Error, 33, "ExtractReplay"); }
-                string outputFileName = Server::currentMapRecordsValidationReplay + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
-
-                CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
-                if (authorGhost is null) { log("Author ghost is empty", LogLevel::Warn, 37, "ExtractReplay"); }
-
-                CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(outputFileName, GetApp().RootMap, authorGhost);
-                if (taskResult is null) { log("Replay task returned null", LogLevel::Error, 40, "ExtractReplay"); }
-
-
-            CWebServicesTaskResult@ taskResult = dataFileMgr.Ghost_Download(_IO::File::GetFileName(url), url);
-            Replay_Save(savePath, rootMap, ghost);
+            // We have the Ghost saved as a CGameCtnGhost object, but we need to convert it to a CGameGhostScript object to properly save it...
         }
 
         void LoadReplay() {
