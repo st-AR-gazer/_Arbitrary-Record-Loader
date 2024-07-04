@@ -17,7 +17,7 @@ void MapCoro() {
             s_currMapName = CurrentMapName;
             mapRecordsLoaded = false;
             CurrentMapRecords::ValidationReplay::validationReplayCanBeLoaded = CurrentMapRecords::ValidationReplay::ValidationReplayCanBeLoadedForCurrentMap();
-            CurrentMapRecords::GPS::gpsReplayCanBeLoaded = CurrentMapRecords::GPS::GPSReplayCanBeLoadedForCurrentMap();
+            // CurrentMapRecords::GPS::gpsReplayCanBeLoaded = CurrentMapRecords::GPS::GPSReplayCanBeLoadedForCurrentMap(); // GPS on hold for now...
 
             if (!mapRecordsLoaded) {
                 ReplayLoader::LoadReplayAfterFileExplorer();

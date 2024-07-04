@@ -109,8 +109,18 @@ namespace CurrentMapRecords {
 
         void SaveReplay() {
             CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
+                if (dataFileMgr is null) { log("DataFileMgr is null", LogLevel::Error, 33, "ExtractReplay"); }
+                string outputFileName = Server::currentMapRecordsValidationReplay + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
 
-            CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(savePath, rootMap, ghost);
+                CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
+                if (authorGhost is null) { log("Author ghost is empty", LogLevel::Warn, 37, "ExtractReplay"); }
+
+                CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(outputFileName, GetApp().RootMap, authorGhost);
+                if (taskResult is null) { log("Replay task returned null", LogLevel::Error, 40, "ExtractReplay"); }
+
+
+            CWebServicesTaskResult@ taskResult = dataFileMgr.Ghost_Download(_IO::File::GetFileName(url), url);
+            Replay_Save(savePath, rootMap, ghost);
         }
 
         void LoadReplay() {

@@ -417,37 +417,39 @@ void RenderTab_CurrentMapGhost() {
 
     UI::Separator();
 
-    if (!CurrentMapRecords::GPS::GPSReplayExists()) {
-        _UI::DisabledButton("Extract GPS Replay");
-    } else {
-        if (UI::Button("Extract GPS Replay")) {
-            CurrentMapRecords::GPS::ExtractGPSReplay();
-            UI::Text("GPS Replay extracted successfully.");
-        }
-        if (CurrentMapRecords::GPS::recordNames.Length > 1) {
-            UI::Text("Select a GPS Replay:");
-            if (UI::BeginCombo("GPS Replays", CurrentMapRecords::GPS::recordNames[CurrentMapRecords::GPS::selectedGhostIndex])) {
-                for (uint i = 0; i < CurrentMapRecords::GPS::recordNames.Length; i++) {
-                    bool isSelected = (CurrentMapRecords::GPS::selectedGhostIndex == int(i));
-                    if (UI::Selectable(CurrentMapRecords::GPS::recordNames[i], isSelected)) {
-                        CurrentMapRecords::GPS::selectedGhostIndex = i;
-                    }
-                    if (isSelected) {
-                        UI::SetItemDefaultFocus();
-                    }
-                }
-                UI::EndCombo();
-            }
-        } else if (CurrentMapRecords::GPS::recordNames.Length == 1) {
-            UI::Text("Single GPS Replay found: " + CurrentMapRecords::GPS::recordNames[0]);
-            CurrentMapRecords::GPS::selectedGhostIndex = 0;
-        }
+    // Decided to put GPS on hold for a while...
 
-        if (UI::Button("Load GPS Replay")) {
-            string outputFileName = CurrentMapRecords::GPS::GetGPSReplayFilePath();
-            ReplayLoader::LoadReplayFromPath(outputFileName);
-        }
-    }
+    // if (!CurrentMapRecords::GPS::GPSReplayExists()) {
+    //     _UI::DisabledButton("Extract GPS Replay");
+    // } else {
+    //     if (UI::Button("Extract GPS Replay")) {
+    //         CurrentMapRecords::GPS::ExtractGPSReplay();
+    //         UI::Text("GPS Replay extracted successfully.");
+    //     }
+    //     if (CurrentMapRecords::GPS::recordNames.Length > 1) {
+    //         UI::Text("Select a GPS Replay:");
+    //         if (UI::BeginCombo("GPS Replays", CurrentMapRecords::GPS::recordNames[CurrentMapRecords::GPS::selectedGhostIndex])) {
+    //             for (uint i = 0; i < CurrentMapRecords::GPS::recordNames.Length; i++) {
+    //                 bool isSelected = (CurrentMapRecords::GPS::selectedGhostIndex == int(i));
+    //                 if (UI::Selectable(CurrentMapRecords::GPS::recordNames[i], isSelected)) {
+    //                     CurrentMapRecords::GPS::selectedGhostIndex = i;
+    //                 }
+    //                 if (isSelected) {
+    //                     UI::SetItemDefaultFocus();
+    //                 }
+    //             }
+    //             UI::EndCombo();
+    //         }
+    //     } else if (CurrentMapRecords::GPS::recordNames.Length == 1) {
+    //         UI::Text("Single GPS Replay found: " + CurrentMapRecords::GPS::recordNames[0]);
+    //         CurrentMapRecords::GPS::selectedGhostIndex = 0;
+    //     }
+
+    //     if (UI::Button("Load GPS Replay")) {
+    //         string outputFileName = CurrentMapRecords::GPS::GetGPSReplayFilePath();
+    //         ReplayLoader::LoadReplayFromPath(outputFileName);
+    //     }
+    // }
 }
 
 
