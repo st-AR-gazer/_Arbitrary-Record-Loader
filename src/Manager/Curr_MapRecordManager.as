@@ -105,7 +105,7 @@ namespace CurrentMapRecords {
 
         bool GPSReplayCanBeLoadedForCurrentMap() {
             if (rootMap is null || rootMap.ClipGroupInGame is null) {
-                log("Error: rootMap or ClipGroupInGame is null", LogLevel::Error);
+                log("Error: rootMap or ClipGroupInGame is null", LogLevel::Error, 108, "GPSReplayCanBeLoadedForCurrentMap");
                 return false;
             }
             for (uint i = 0; i < rootMap.ClipGroupInGame.Clips.Length; i++) {
@@ -136,7 +136,7 @@ namespace CurrentMapRecords {
             string ghostFilePath = storagePath;
 
             auto @loadedGhost = ReplayLoader::LoadReplayFromPath(ghostFilePath, false);
-            if (loadedGhost is null) { log("Error: Failed to load the ghost file", LogLevel::Error); return; }
+            if (loadedGhost is null) { log("Error: Failed to load the ghost file", LogLevel::Error, 139, "LoadDummyReplayFile"); return; }
             CTmRaceResult_VTable_Ptr = Dev::GetOffsetUint64(loadedGhost, 0x0);
         }
 
@@ -220,7 +220,7 @@ namespace CurrentMapRecords {
                     CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
                     CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(savePath, rootMap, ghostScript);
                     if (taskResult is null) {
-                        log("Replay task returned null for ghost " + name, LogLevel::Error, 40, "SaveReplays");
+                        log("Replay task returned null for ghost " + name, LogLevel::Error, 223, "Save");
                     }
                 }
             }
