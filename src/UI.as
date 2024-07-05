@@ -417,39 +417,34 @@ void RenderTab_CurrentMapGhost() {
 
     UI::Separator();
 
-    // Decided to put GPS on hold for a while...
+    if (!CurrentMapRecords::GPS::gpsReplayCanBeLoaded) {
+        UI::Text("No GPS replays available for the current map.");
+        return;
+    }
 
-    // if (!CurrentMapRecords::GPS::GPSReplayExists()) {
-    //     _UI::DisabledButton("Extract GPS Replay");
-    // } else {
-    //     if (UI::Button("Extract GPS Replay")) {
-    //         CurrentMapRecords::GPS::ExtractGPSReplay();
-    //         UI::Text("GPS Replay extracted successfully.");
-    //     }
-    //     if (CurrentMapRecords::GPS::recordNames.Length > 1) {
-    //         UI::Text("Select a GPS Replay:");
-    //         if (UI::BeginCombo("GPS Replays", CurrentMapRecords::GPS::recordNames[CurrentMapRecords::GPS::selectedGhostIndex])) {
-    //             for (uint i = 0; i < CurrentMapRecords::GPS::recordNames.Length; i++) {
-    //                 bool isSelected = (CurrentMapRecords::GPS::selectedGhostIndex == int(i));
-    //                 if (UI::Selectable(CurrentMapRecords::GPS::recordNames[i], isSelected)) {
-    //                     CurrentMapRecords::GPS::selectedGhostIndex = i;
-    //                 }
-    //                 if (isSelected) {
-    //                     UI::SetItemDefaultFocus();
-    //                 }
-    //             }
-    //             UI::EndCombo();
-    //         }
-    //     } else if (CurrentMapRecords::GPS::recordNames.Length == 1) {
-    //         UI::Text("Single GPS Replay found: " + CurrentMapRecords::GPS::recordNames[0]);
-    //         CurrentMapRecords::GPS::selectedGhostIndex = 0;
-    //     }
+    if (CurrentMapRecords::GPS::ghosts.Length == 0) {
+        UI::Text("No GPS replays found.");
+        return;
+    }
 
-    //     if (UI::Button("Load GPS Replay")) {
-    //         string outputFileName = CurrentMapRecords::GPS::GetGPSReplayFilePath();
-    //         ReplayLoader::LoadReplayFromPath(outputFileName);
-    //     }
-    // }
+    UI::Text("GPS Replays:");
+
+    if (UI::BeginCombo("Select GPS Replay", CurrentMapRecords::GPS::ghosts[CurrentMapRecords::GPS::selectedGhostIndex].name)) {
+        for (uint i = 0; i < CurrentMapRecords::GPS::ghosts.Length; i++) {
+            bool isSelected = (CurrentMapRecords::GPS::selectedGhostIndex == int(i));
+            if (UI::Selectable(CurrentMapRecords::GPS::ghosts[i].name, isSelected)) {
+                CurrentMapRecords::GPS::selectedGhostIndex = i;
+            }
+            if (isSelected) {
+                UI::SetItemDefaultFocus();
+            }
+        }
+        UI::EndCombo();
+    }
+
+    if (UI::Button("Load GPS Replay")) {
+        CurrentMapRecords::GPS::LoadReplay();
+    }
 }
 
 

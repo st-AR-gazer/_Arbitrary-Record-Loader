@@ -81,27 +81,93 @@ namespace CurrentMapRecords {
 
 
     namespace GPS {
-        string savePath = "";
+        class GhostData {
+            string name;
+            string savePath;
+            CGameCtnGhost@ ghost;
+            CGameGhostScript@ ghostScript;
+
+            GhostData(const string &in name, const string &in savePath, CGameCtnGhost@ ghost) {
+                this.name = name;
+                this.savePath = savePath;
+                @this.ghost = ghost;
+            }
+
+            void ConvertToScript(uint64 CTmRaceResult_VTable_Ptr) {
+                ghost.MwAddRef();
+                @ghostScript = CGameGhostScript();
+                MwId ghostId = MwId();
+                Dev::SetOffset(ghostScript, 0x18, ghostId.Value);
+                Dev::SetOffset(ghostScript, 0x20, ghost);
+                uint64 ghostPtr = Dev::GetOffsetUint64(ghostScript, 0x20);
+
+                auto @tmRaceResultNodPre = CGameGhostScript();
+                Dev::SetOffset(tmRaceResultNodPre, 0x0, CTmRaceResult_VTable_Ptr);
+                trace('force casting');
+                auto tmRaceResultNod = Dev::ForceCast<CTmRaceResultNod@>(tmRaceResultNodPre).Get();
+                trace('done force casting');
+                @tmRaceResultNodPre = null;
+                Dev::SetOffset(tmRaceResultNod, 0x18, ghostPtr + 0x28);
+                tmRaceResultNod.MwAddRef();
+
+                Dev::SetOffset(ghostScript, 0x28, tmRaceResultNod);
+            }
+
+            void Save(CGameCtnChallenge@ rootMap) {
+                if (ghostScript !is null) {
+                    CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
+                    CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(savePath, rootMap, ghostScript);
+                    if (taskResult is null) {
+                        log("Replay task returned null for ghost " + name, LogLevel::Error, 40, "SaveReplays");
+                    }
+                }
+            }
+        }
+
+        string savePathBase = "";
         CGameCtnChallenge@ rootMap = null;
-        CGameCtnGhost@ ghost = null;
+        array<GhostData@> ghosts;
         string finalSavePath = "";
+        uint64 CTmRaceResult_VTable_Ptr = 0;
+        int selectedGhostIndex = -1;
+
+        bool gpsReplayCanBeLoaded = false;
 
         void OnMapLoad() {
             FetchMap();
+            
+            gpsReplayCanBeLoaded = GPSReplayCanBeLoadedForCurrentMap();
+            if (!gpsReplayCanBeLoaded) { return; }
+
             FetchPath();
-            FetchGhost();
-            SaveReplay();
+            FetchGhosts();
+            GetCTmRaceResultVTablePtr();
+            ConvertGhosts();
+            SaveReplays();
+        }
+
+        bool GPSReplayCanBeLoadedForCurrentMap() {
+            for (uint i = 0; i < rootMap.ClipGroupInGame.Clips.Length; i++) {
+                auto clip = rootMap.ClipGroupInGame.Clips[i];
+                for (uint j = 0; j < clip.Tracks.Length; j++) {
+                    auto track = clip.Tracks[j];
+                    if (track.Name.StartsWith("ghost")) {
+                        return true;
+                    }
+                }
+            }
+            return false;
         }
 
         void FetchPath() {
-            savePath = Server::currentMapRecordsGPS + "GPS_" + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
+            savePathBase = Server::currentMapRecordsGPS + Text::StripFormatCodes(GetApp().RootMap.MapName) + "_" + GetApp().RootMap.MapInfo.MapUid + "/";
         }
 
         void FetchMap() {
             @rootMap = GetApp().RootMap;
         }
 
-        void FetchGhost() {
+        void FetchGhosts() {
             for (uint i = 0; i < rootMap.ClipGroupInGame.Clips.Length; i++) {
                 auto clip = rootMap.ClipGroupInGame.Clips[i];
                 for (uint j = 0; j < clip.Tracks.Length; j++) {
@@ -112,10 +178,12 @@ namespace CurrentMapRecords {
                             if (block !is null) {
                                 auto recordData = cast<CPlugEntRecordData>(Dev::GetOffsetNod(block, 0x58));
                                 if (recordData !is null) {
-                                    @ghost = CGameCtnGhost();
-                                    Dev::SetOffset(ghost, 0x2e0, recordData);
+                                    auto newGhost = CGameCtnGhost();
+                                    Dev::SetOffset(newGhost, 0x2e0, recordData);
                                     recordData.MwAddRef();
-                                    return; 
+                                    string ghostName = track.Name.SubStr(7);  // Remove "ghost: " prefix
+                                    string savePath = savePathBase + ghostName + "_" + Text::Format("%d", i) + ".Replay.Gbx";
+                                    ghosts.InsertLast(GhostData(ghostName, savePath, newGhost));
                                 }
                             }
                         }
@@ -124,12 +192,28 @@ namespace CurrentMapRecords {
             }
         }
 
-        void SaveReplay() {
-            // We have the Ghost saved as a CGameCtnGhost object, but we need to convert it to a CGameGhostScript object to properly save it...
+        void GetCTmRaceResultVTablePtr() {
+            auto dummyGhostScript = CGameGhostScript();
+            auto dummyResult = dummyGhostScript.Result;
+            CTmRaceResult_VTable_Ptr = Dev::GetOffsetUint64(dummyResult, 0x0);
+        }
+
+        void ConvertGhosts() {
+            for (uint i = 0; i < ghosts.Length; i++) {
+                ghosts[i].ConvertToScript(CTmRaceResult_VTable_Ptr);
+            }
+        }
+
+        void SaveReplays() {
+            for (uint i = 0; i < ghosts.Length; i++) {
+                ghosts[i].Save(rootMap);
+            }
         }
 
         void LoadReplay() {
-            ReplayLoader::LoadReplayFromPath(finalSavePath);
+            if (selectedGhostIndex >= 0 && selectedGhostIndex < ghosts.Length) {
+                ReplayLoader::LoadReplayFromPath(ghosts[selectedGhostIndex].savePath);
+            }
         }
     }
 }
