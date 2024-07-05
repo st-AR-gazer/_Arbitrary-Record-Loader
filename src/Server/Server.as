@@ -10,11 +10,11 @@ namespace Server {
     const string currentMapRecords = IO::FromStorageFolder("Server/CurrentMapRecords/");
     const string currentMapRecordsValidationReplay = IO::FromStorageFolder("Server/CurrentMapRecords/ValidationReplay/");
     const string currentMapRecordsGPS = IO::FromStorageFolder("Server/CurrentMapRecords/GPS/");
-    const string specificDownloadedFilesDirectory = IO::FromStorageFolder("Server/Downloaded/Files");
-    const string specificDownloadedJsonFilesDirectory = IO::FromStorageFolder("Server/Downloaded/JsonData");
-    const string officialFilesDirectory = IO::FromStorageFolder("Server/Official/Files");
-    const string officialInfoFilesDirectory = IO::FromStorageFolder("Server/Official/Info");
-    const string officialJsonFilesDirectory = IO::FromStorageFolder("Server/Official/JsonData");
+    const string specificDownloadedFilesDirectory = IO::FromStorageFolder("Server/Downloaded/Files/");
+    const string specificDownloadedJsonFilesDirectory = IO::FromStorageFolder("Server/Downloaded/JsonData/");
+    const string officialFilesDirectory = IO::FromStorageFolder("Server/Official/Files/");
+    const string officialInfoFilesDirectory = IO::FromStorageFolder("Server/Official/Info/");
+    const string officialJsonFilesDirectory = IO::FromStorageFolder("Server/Official/JsonData/");
 
     HttpServer@ server = null;
 
