@@ -156,7 +156,6 @@ namespace CurrentMapRecords {
         }
 
         bool GPSReplayCanBeLoadedForCurrentMap() {
-            print(rootMap.MapName);
             if (rootMap is null) { log("Error: rootMap is null", LogLevel::Error, 158, "GPSReplayCanBeLoadedForCurrentMap"); return false; }
             if (rootMap.ClipGroupInGame is null) { log("Error: ClipGroupInGame is null", LogLevel::Error, 159, "GPSReplayCanBeLoadedForCurrentMap"); return false; }
 
