@@ -211,7 +211,7 @@ namespace CurrentMapRecords {
         }
 
         void LoadReplay() {
-            if (selectedGhostIndex >= 0 && selectedGhostIndex < ghosts.Length) {
+            if (selectedGhostIndex >= 0 && selectedGhostIndex < int(ghosts.Length)) {
                 ReplayLoader::LoadReplayFromPath(ghosts[selectedGhostIndex].savePath);
             }
         }
