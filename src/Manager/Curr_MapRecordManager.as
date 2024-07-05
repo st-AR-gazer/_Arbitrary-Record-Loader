@@ -151,10 +151,12 @@ namespace CurrentMapRecords {
             if (app is null) { log("Error: app is null", LogLevel::Error, 151, "FetchMap"); return; }
 
             @rootMap = cast<CGameCtnChallenge>(app.RootMap);
+            print("rootMap casted");
             if (rootMap is null) { log("Error: rootMap is null", LogLevel::Error, 154, "FetchMap"); return; }
         }
 
         bool GPSReplayCanBeLoadedForCurrentMap() {
+            print(rootMap.MapName);
             if (rootMap is null) { log("Error: rootMap is null", LogLevel::Error, 158, "GPSReplayCanBeLoadedForCurrentMap"); return false; }
             if (rootMap.ClipGroupInGame is null) { log("Error: ClipGroupInGame is null", LogLevel::Error, 159, "GPSReplayCanBeLoadedForCurrentMap"); return false; }
 
