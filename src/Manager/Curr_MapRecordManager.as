@@ -147,13 +147,16 @@ namespace CurrentMapRecords {
         }
 
         bool GPSReplayCanBeLoadedForCurrentMap() {
+            if (rootMap is null) { log("Error: rootMap is null", LogLevel::Error); return false; }
+            if (rootMap.ClipGroupInGame is null) { log("Error: ClipGroupInGame is null", LogLevel::Error); return false; }
+
             for (uint i = 0; i < rootMap.ClipGroupInGame.Clips.Length; i++) {
                 auto clip = rootMap.ClipGroupInGame.Clips[i];
+                if (clip is null) { log("Error: clip is null at index " + i, LogLevel::Error); continue; }
                 for (uint j = 0; j < clip.Tracks.Length; j++) {
                     auto track = clip.Tracks[j];
-                    if (track.Name.StartsWith("ghost")) {
-                        return true;
-                    }
+                    if (track is null) { log("Error: track is null at index " + j, LogLevel::Error); continue; }
+                    if (track.Name.StartsWith("Ghost:")) { return true; }
                 }
             }
             return false;
