@@ -118,7 +118,7 @@ namespace CurrentMapRecords {
                     CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
                     CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(savePath, rootMap, ghostScript);
                     if (taskResult is null) {
-                        log("Replay task returned null for ghost " + name, LogLevel::Error, 40, "SaveReplays");
+                        log("Replay task returned null for ghost " + name, LogLevel::Error, 121, "Save");
                     }
                 }
             }
@@ -146,16 +146,24 @@ namespace CurrentMapRecords {
             SaveReplays();
         }
 
+        void FetchMap() {
+            CTrackMania@ app = cast<CTrackMania>(GetApp());
+            if (app is null) { log("Error: app is null", LogLevel::Error, 151, "FetchMap"); return; }
+
+            @rootMap = cast<CGameCtnChallenge>(app.RootMap);
+            if (rootMap is null) { log("Error: rootMap is null", LogLevel::Error, 154, "FetchMap"); return; }
+        }
+
         bool GPSReplayCanBeLoadedForCurrentMap() {
-            if (rootMap is null) { log("Error: rootMap is null", LogLevel::Error); return false; }
-            if (rootMap.ClipGroupInGame is null) { log("Error: ClipGroupInGame is null", LogLevel::Error); return false; }
+            if (rootMap is null) { log("Error: rootMap is null", LogLevel::Error, 158, "GPSReplayCanBeLoadedForCurrentMap"); return false; }
+            if (rootMap.ClipGroupInGame is null) { log("Error: ClipGroupInGame is null", LogLevel::Error, 159, "GPSReplayCanBeLoadedForCurrentMap"); return false; }
 
             for (uint i = 0; i < rootMap.ClipGroupInGame.Clips.Length; i++) {
                 auto clip = rootMap.ClipGroupInGame.Clips[i];
-                if (clip is null) { log("Error: clip is null at index " + i, LogLevel::Error); continue; }
+                if (clip is null) { log("Error: clip is null at index " + i, LogLevel::Error, 163, "GPSReplayCanBeLoadedForCurrentMap"); continue; }
                 for (uint j = 0; j < clip.Tracks.Length; j++) {
                     auto track = clip.Tracks[j];
-                    if (track is null) { log("Error: track is null at index " + j, LogLevel::Error); continue; }
+                    if (track is null) { log("Error: track is null at index " + j, LogLevel::Error, 166, "GPSReplayCanBeLoadedForCurrentMap"); continue; }
                     if (track.Name.StartsWith("Ghost:")) { return true; }
                 }
             }
@@ -166,9 +174,6 @@ namespace CurrentMapRecords {
             savePathBase = Server::currentMapRecordsGPS + Text::StripFormatCodes(GetApp().RootMap.MapName) + "_" + GetApp().RootMap.MapInfo.MapUid + "/";
         }
 
-        void FetchMap() {
-            @rootMap = GetApp().RootMap;
-        }
 
         void FetchGhosts() {
             for (uint i = 0; i < rootMap.ClipGroupInGame.Clips.Length; i++) {
