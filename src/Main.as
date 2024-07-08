@@ -1,6 +1,7 @@
 void Main() {
     InitApi();
     InitFolders();
+    InitMoveDummy();
 
     string dllPath = IO::FromStorageFolder("DLLs/FileCreationTime.dll");
     _IO::File::SafeMoveSourceFileToNonSource("src/Conditions/CompanionDLLs/FileCreationTime.dll", dllPath);
@@ -17,6 +18,10 @@ void InitApi() {
 }
 
 void InitFolders() {
+    _IO::Folder::SafeCreateFolder(Server::replayARL);
+    _IO::Folder::SafeCreateFolder(Server::replayARLDummy);
+    _IO::Folder::SafeCreateFolder(Server::replayARLAutoMove);
+
     _IO::Folder::SafeCreateFolder(Server::serverDirectory);
     _IO::Folder::SafeCreateFolder(Server::serverDirectoryAutoMove);
 
@@ -33,4 +38,9 @@ void InitFolders() {
     _IO::Folder::SafeCreateFolder(Server::officialFilesDirectory);
     _IO::Folder::SafeCreateFolder(Server::officialInfoFilesDirectory);
     _IO::Folder::SafeCreateFolder(Server::officialJsonFilesDirectory);
+}
+
+void InitMoveDummy() {
+    string storagePath = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Dummy/CTmRaceResult_VTable_Ptr.Replay.Gbx");
+    _IO::File::SafeMoveSourceFileToNonSource("src/Dummy/CTmRaceResult_VTable_Ptr.Replay.Gbx", storagePath);
 }

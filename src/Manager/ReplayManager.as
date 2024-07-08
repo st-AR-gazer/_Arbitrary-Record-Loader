@@ -11,23 +11,52 @@ namespace ReplayLoader {
         }
     }
 
-    void LoadReplayFromPath(const string &in path, bool verbose = true) {
-        if (!_Game::IsPlayingMap()) { if (verbose) NotifyWarn("You are currently not playing a map! Please load a map in a playing state first!"); return; }
+    void LoadReplayFromPath(const string &in path) {
+        if (!_Game::IsPlayingMap()) { NotifyWarn("You are currently not playing a map! Please load a map in a playing state first!"); return; }
+
+        if (!path.Contains("Trackmania") && !path.Contains("Trackmania2020")) {
+            NotifyWarn("The replay file is not located in the Trackmania folder! Please move the replay file to the Trackmania folder and try again!");
+            log("The replay file is not located in the Trackmania folder! Please move the replay file to the Trackmania folder and try again!", LogLevel::Warn, 19, "LoadReplayFromPath");
+            return;
+            
+            // _IO::File::CopyMoveFile(path, Server::replayARLAutoMove + _IO::File::GetFileName(path));
+            // if (!IO::FileExists(Server::replayARLAutoMove + _IO::File::GetFileName(path))) {
+            //     NotifyError("Failed to move replay file to the target directory!");
+            //     log("Failed to move replay file to the target directory!", LogLevel::Error, 25, "LoadReplayFromPath");
+            //     return;
+            // }
+        }
 
         auto task = GetApp().Network.ClientManiaAppPlayground.DataFileMgr.Replay_Load(path);
         
         while (task.IsProcessing) { yield(); }
 
-        if (verbose) log(task.ErrorCode, LogLevel::Info, 21, "LoadReplayFromPath");
-        if (verbose) log(task.ErrorDescription, LogLevel::Info, 22, "LoadReplayFromPath");
-        if (verbose) log(task.ErrorType, LogLevel::Info, 23, "LoadReplayFromPath");
-        if (verbose) log(tostring(task.Ghosts.Length), LogLevel::Info, 24, "LoadReplayFromPath");
+        if (task.HasFailed || !task.HasSucceeded) {
+            NotifyError("Failed to load replay file!");
+            log("Failed to load replay file!", LogLevel::Error, 36, "LoadReplayFromPath");
+            log(task.ErrorCode, LogLevel::Error, 37, "LoadReplayFromPath");
+            log(task.ErrorDescription, LogLevel::Error, 38, "LoadReplayFromPath");
+            log(task.ErrorType, LogLevel::Error, 39, "LoadReplayFromPath");
+            log(tostring(task.Ghosts.Length), LogLevel::Error, 40, "LoadReplayFromPath");
+            return;
+        } else {
+            log(task.ErrorCode, LogLevel::Info, 43, "LoadReplayFromPath");
+            log(task.ErrorDescription, LogLevel::Info, 44, "LoadReplayFromPath");
+            log(task.ErrorType, LogLevel::Info, 45, "LoadReplayFromPath");
+            log(tostring(task.Ghosts.Length), LogLevel::Info, 46, "LoadReplayFromPath");
+        }
+
 
         auto ghostMgr = cast<CSmArenaRulesMode@>(GetApp().PlaygroundScript).GhostMgr;
         for (uint i = 0; i < task.Ghosts.Length; i++) {
             ghostMgr.Ghost_Add(task.Ghosts[i]);
         }
 
-        if (verbose) log("Replay loaded successfully with " + task.Ghosts.Length + " ghosts!", LogLevel::Info, 31, "LoadReplayFromPath");
+        if (task.Ghosts.Length == 0) {
+            NotifyWarn("No ghosts found in the replay file!");
+            log("No ghosts found in the replay file!", LogLevel::Warn, 57, "LoadReplayFromPath");
+            return;
+        }
+        log("Replay loaded successfully with " + task.Ghosts.Length + " ghosts!", LogLevel::Info, 60, "LoadReplayFromPath");
     }
 }

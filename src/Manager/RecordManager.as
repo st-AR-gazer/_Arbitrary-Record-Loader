@@ -164,7 +164,7 @@ namespace LoadRecordFromArbitraryMap {
     }
 
     void SaveReplay(const string &in mapId, const string &in accountId, const string &in offset) {
-        string url = "https://prod.trackmania.core.nadeo.online/mapRecords/?accountIdList=" + accountId + "&mapIdList=" + mapId;
+        string url = "https://prod.trackmania.core.nadeo.online/v2/mapRecords/?accountIdList=" + accountId + "&mapIdList=" + mapId;
         auto req = NadeoServices::Get("NadeoServices", url);
 
         req.Start();
