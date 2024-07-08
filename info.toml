@@ -6,3 +6,4 @@ category = ""
 
 [script]
 dependencies = [ "NadeoServices", "MLHook" ]
+optional_dependencies = [ "ChampionMedals" ]

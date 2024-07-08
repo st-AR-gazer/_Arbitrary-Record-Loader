@@ -19,6 +19,7 @@ void MapCoro() {
             CurrentMapRecords::ValidationReplay::validationReplayCanBeLoaded = CurrentMapRecords::ValidationReplay::ValidationReplayCanBeLoadedForCurrentMap();
 
             // CurrentMapRecords::ValidationReplay::OnMapLoad();
+            CurrentMapRecords::ChampMedal::OnMapLoad();
             CurrentMapRecords::GPS::OnMapLoad();
 
             if (!mapRecordsLoaded) {

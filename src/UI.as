@@ -417,34 +417,43 @@ void RenderTab_CurrentMapGhost() {
 
     UI::Separator();
 
-    if (!CurrentMapRecords::GPS::gpsReplayCanBeLoaded) {
-        UI::Text("No GPS replays available for the current map.");
-        return;
-    }
+        if (!CurrentMapRecords::GPS::gpsReplayCanBeLoaded) {
+            UI::Text("No GPS replays available for the current map.");
+        }
 
-    if (CurrentMapRecords::GPS::ghosts.Length == 0) {
-        UI::Text("No GPS replays found.");
-        return;
-    }
+        UI::Text("GPS Replays:");
 
-    UI::Text("GPS Replays:");
-
-    if (UI::BeginCombo("Select GPS Replay", CurrentMapRecords::GPS::ghosts[CurrentMapRecords::GPS::selectedGhostIndex].name)) {
-        for (uint i = 0; i < CurrentMapRecords::GPS::ghosts.Length; i++) {
-            bool isSelected = (CurrentMapRecords::GPS::selectedGhostIndex == int(i));
-            if (UI::Selectable(CurrentMapRecords::GPS::ghosts[i].name, isSelected)) {
-                CurrentMapRecords::GPS::selectedGhostIndex = i;
-            }
-            if (isSelected) {
-                UI::SetItemDefaultFocus();
+        if (CurrentMapRecords::GPS::ghosts.Length == 1) {
+            UI::Text("Only one GPS replay found.");
+            CurrentMapRecords::GPS::selectedGhostIndex = 0;
+        }
+        if (CurrentMapRecords::GPS::selectedGhostIndex > 0) {
+            if (UI::BeginCombo("Select GPS Replay", CurrentMapRecords::GPS::ghosts[CurrentMapRecords::GPS::selectedGhostIndex].name)) {
+                for (uint i = 0; i < CurrentMapRecords::GPS::ghosts.Length; i++) {
+                    bool isSelected = (CurrentMapRecords::GPS::selectedGhostIndex == int(i));
+                    if (UI::Selectable(CurrentMapRecords::GPS::ghosts[i].name, isSelected)) {
+                        CurrentMapRecords::GPS::selectedGhostIndex = i;
+                    }
+                    if (isSelected) {
+                        UI::SetItemDefaultFocus();
+                    }
+                }
+                UI::EndCombo();
             }
         }
-        UI::EndCombo();
-    }
+        if (!CurrentMapRecords::GPS::gpsReplayCanBeLoaded) {
+            _UI::DisabledButton("Load GPS Replay");
+        } else {
+            if (UI::Button("Load GPS Replay")) {
+                CurrentMapRecords::GPS::LoadReplay();
+            }
+        }
+#if DEPENDENCY_CHAMPIONMEDALS
+    UI::Separator();
 
-    if (UI::Button("Load GPS Replay")) {
-        CurrentMapRecords::GPS::LoadReplay();
-    }
+    UI::Text("Champion medal dings");
+    
+#endif
 }
 
 
