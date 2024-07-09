@@ -458,6 +458,8 @@ void RenderTab_CurrentMapGhost() {
     if (UI::Button("Load Nearest Champion Medal Time")) {
         CurrentMapRecords::ChampMedal::LoadNearestChampionMedal();
     }
+    if (championMedalHasExactMatch) { UI::Text("There is an exact match for the champion medal, using that ghost"); } 
+        else {                        UI::Text("There is no exact match for the champion medal, using the closest ghost, that still beats the champion medal time"); } // Not added yet, must add
 
     string FromMsToFormat(uint ms) {
         uint minutes = ms / 60000;
