@@ -87,10 +87,6 @@ namespace ChampMedal {
         }
     }
 
-    void OnMapExit() {
-        ResetState();
-    }
-
     void ResetState() {
         championMedalExists = false;
         currentMapChampionMedal = 0;
@@ -105,13 +101,14 @@ namespace ChampMedal {
 
     void FetchMap() {
         @rootMap = GetApp().RootMap;
+        if (rootMap is null) { log("Root map is null", LogLevel::Warn, 97, "FetchMap"); return; }
         globalMapUid = rootMap.MapInfo.MapUid;
         mapName = rootMap.MapInfo.Name;
     }
 
     bool ChampionMedalExists() {
         int startTime = Time::Now;
-        while ((Time::Now - startTime < 500) || (ChampionMedals::GetCMTime() == 0)) { yield(); }
+        while (Time::Now - startTime < 500 || ChampionMedals::GetCMTime() == 0) { yield(); }
         log("" + ChampionMedals::GetCMTime(), LogLevel::Info, 108, "ChampionMedalExists");
         return ChampionMedals::GetCMTime() > 0;
     }
@@ -142,19 +139,31 @@ namespace ChampMedal {
         Json::Value top = tops[0]["top"];
         if (top.GetType() != Json::Type::Array || top.Length == 0) { log("Invalid top data in response.", LogLevel::Error, 125, "FetchSurroundingRecords"); return; }
 
-        uint closestFasterScore = 0;
+        uint closestScore = 0;
         int smallestDifference = int(0x7FFFFFFF);
         string closestAccountId;
         int closestPosition = -1;
+        bool exactMatchFound = false;
+
         for (uint i = 0; i < top.Length; i++) {
+            if (i == top.Length / 2) continue;
+
             uint score = top[i]["score"];
             string accountId = top[i]["accountId"];
             int position = top[i]["position"];
             int difference = int(currentMapChampionMedal) - int(score);
+
             log("Found surrounding record: score = " + score + ", accountId = " + accountId + ", position = " + position + ", difference = " + difference, LogLevel::Info, 134, "FetchSurroundingRecords");
 
-            if (difference >= 0 && difference < smallestDifference) {
-                closestFasterScore = score;
+            if (difference == 0) {
+                closestScore = score;
+                closestAccountId = accountId;
+                closestPosition = position;
+                smallestDifference = difference;
+                exactMatchFound = true;
+                break;
+            } else if (difference > 0 && difference < smallestDifference) {
+                closestScore = score;
                 closestAccountId = accountId;
                 closestPosition = position;
                 smallestDifference = difference;
@@ -163,14 +172,22 @@ namespace ChampMedal {
 
         if (closestAccountId != "") {
             timeDifference = smallestDifference;
-            championMedalHasExactMatch = (timeDifference == 0);
-            LoadRecordFromArbitraryMap::LoadSelectedRecord(globalMapUid, tostring(closestPosition - 1));
+            championMedalHasExactMatch = exactMatchFound;
+
+            log("Closest record found: score = " + closestScore + ", accountId = " + closestAccountId + ", position = " + closestPosition + ", difference = " + timeDifference, LogLevel::Info, 147, "FetchSurroundingRecords");
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(globalMapUid, tostring(closestPosition - 1), closestAccountId);
         }
 
         ReqForCurrentMapFinished = true;
     }
+
+
 }
 #endif
+
+
+
+
 
 
 

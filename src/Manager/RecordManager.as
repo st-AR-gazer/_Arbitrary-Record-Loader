@@ -49,13 +49,17 @@ void ProcessSelectedFile(const string &in filePath) {
 namespace LoadRecordFromArbitraryMap {
     string accountId;
     string mapId;
+
     string globalMapUid;
     string globalOffset;
 
     bool mapIdFetched = false;
     bool accountIdFetched = false;
 
-    void LoadSelectedRecord(const string &in mapUid, const string &in offset) {
+    void LoadSelectedRecord(const string &in mapUid, const string &in offset, const string &in _accountId = "", const string &in _mapId = "") {
+        // if (_accountId.Length != 0) { accountId = _accountId; }
+        // if (_mapId.Length != 0) { mapId = _mapId; }
+        
         globalMapUid = mapUid;
         globalOffset = offset;
         startnew(Coro_LoadSelectedGhost);
@@ -80,6 +84,8 @@ namespace LoadRecordFromArbitraryMap {
     }
 
     void Coro_FetchAccountId() {
+        // if (accountId.Length > 0) { log("AccountId provided in LoadSelectedRevord"); accountIdFetched = true; return; }
+
         accountIdFetched = false;
 
         string url = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/" + globalMapUid + "/top?onlyWorld=true&length=1&offset=" + globalOffset;
@@ -87,9 +93,7 @@ namespace LoadRecordFromArbitraryMap {
 
         req.Start();
 
-        while (!req.Finished()) {
-            yield();
-        }
+        while (!req.Finished()) { yield(); }
 
         if (req.ResponseCode() != 200) {
             log("Failed to fetch account ID, response code: " + req.ResponseCode(), LogLevel::Error, 95, "Coro_FetchAccountId");
@@ -120,6 +124,8 @@ namespace LoadRecordFromArbitraryMap {
     }
 
     void Coro_FetchMapId() {
+        // if (mapId.Length > 0) { log("MapId provided in LoadSelectedRevord"); mapIdFetched = true; return; }
+
         mapIdFetched = false;
         string url = "https://prod.trackmania.core.nadeo.online/maps/?mapUidList=" + globalMapUid;
         auto req = NadeoServices::Get("NadeoServices", url);
