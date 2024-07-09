@@ -4,14 +4,20 @@ namespace Server {
 
     const string HTTP_BASE_URL = "http://" + HOSTNAME + ":" + PORT + "/";
     const string serverDirectory = IO::FromStorageFolder("Server/");
+    
     const string serverDirectoryAutoMove = IO::FromStorageFolder("Server/AutoMove/");
+    
     const string savedFilesDirectory = IO::FromStorageFolder("Server/Saved/Files/");
     const string savedJsonDirectory = IO::FromStorageFolder("Server/Saved/JsonData/");
+    
     const string currentMapRecords = IO::FromStorageFolder("Server/CurrentMapRecords/");
     const string currentMapRecordsValidationReplay = IO::FromStorageFolder("Server/CurrentMapRecords/ValidationReplay/");
     const string currentMapRecordsGPS = IO::FromStorageFolder("Server/CurrentMapRecords/GPS/");
+    const string currentMapRecordsChampionMedal = IO::FromStorageFolder("Server/CurrentMapRecords/ChampionMedal/");
+
     const string specificDownloadedFilesDirectory = IO::FromStorageFolder("Server/Downloaded/Files/");
     const string specificDownloadedJsonFilesDirectory = IO::FromStorageFolder("Server/Downloaded/JsonData/");
+
     const string officialFilesDirectory = IO::FromStorageFolder("Server/Official/Files/");
     const string officialInfoFilesDirectory = IO::FromStorageFolder("Server/Official/Info/");
     const string officialJsonFilesDirectory = IO::FromStorageFolder("Server/Official/JsonData/");

@@ -452,7 +452,19 @@ void RenderTab_CurrentMapGhost() {
     UI::Separator();
 
     UI::Text("Champion medal dings");
-    
+
+    UI::Text("Current Champion Medal Time: " + FromMsToFormat(CurrentMapRecords::ChampMedal::currentMapChampionMedal));
+
+    if (UI::Button("Load Nearest Champion Medal Time")) {
+        CurrentMapRecords::ChampMedal::LoadNearestChampionMedal();
+    }
+
+    string FromMsToFormat(uint ms) {
+        uint minutes = ms / 60000;
+        uint seconds = (ms % 60000) / 1000;
+        uint milliseconds = ms % 1000;
+        return minutes + ":" + seconds + ":" + milliseconds;
+    }
 #endif
 }
 

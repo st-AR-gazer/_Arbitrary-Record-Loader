@@ -1,13 +1,17 @@
 namespace CurrentMapRecords {
     namespace ValidationReplay {
-        bool validationReplayCanBeLoaded = false;
+        bool validationReplayExists = false;
 
-        bool ValidationReplayCanBeLoadedForCurrentMap() {
-            if (ValidationReplayExists()) { ExtractReplay(); }
-            return true;
+        void OnMapLoad() {
+            if (ValidationReplayExists()) { 
+                validationReplayExists = true; 
+                ExtractReplay();    
+            } else {
+                validationReplayExists = false;
+            }
         }
         
-        string GetValidationReplayFilePath() {
+        string FetchPath() {
             return Server::currentMapRecordsValidationReplay + "Validation_" + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
         }
 
@@ -49,24 +53,38 @@ namespace CurrentMapRecords {
         }
 
         void AddValidationReplay() {
-            if (validationReplayCanBeLoaded) { ExtractReplay(); }
-            ReplayLoader::LoadReplayFromPath(GetValidationReplayFilePath());
+            if (validationReplayExists) { ExtractReplay(); }
+            ReplayLoader::LoadReplayFromPath(FetchPath());
         }
     }
+
 #if DEPENDENCY_CHAMPIONMEDALS
     namespace ChampMedal {
         bool championMedalExists = false;
         uint currentMapChampionMedal = 0;
+        string globalMapUid;
+        string mapName;
+        int timeDifference = 0;
 
-        void OnMapLoad() {
-            DoesChampionMedalExist();
-            FetchChampionMedalTime();
-        }
-        
-        void DoesChampionMedalExist() {
-            if (ChampionMedals::GetCMTime() > 0) {
+        string displaySavePath = "";
+        uint displayTimeDifference = 0;
+
+        bool championMedalHasExactMatch = false;
+
+        void OnMapLoad(const string &in mapUid, const string &in currentMapName) {
+            globalMapUid = mapUid;
+            mapName = currentMapName;
+            if (ChampionMedalExists()) {
                 championMedalExists = true;
+                FetchChampionMedalTime();
+                FetchSurroundingRecords();
+            } else {
+                championMedalExists = false;
             }
+        }
+
+        bool ChampionMedalExists() {
+            return ChampionMedals::GetCMTime() > 0;
         }
 
         void FetchChampionMedalTime() {
@@ -75,9 +93,95 @@ namespace CurrentMapRecords {
             }
         }
 
+        void AddChampionMedal() {
+            if (championMedalExists) {
+                startnew(FetchSurroundingRecords);
+            }
+        }
 
+        void FetchSurroundingRecords() {
+            if (!championMedalExists) return;
+
+            string url = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/" + globalMapUid + "/surround/1/1?score=" + currentMapChampionMedal;
+            auto req = NadeoServices::Get("NadeoLiveServices", url);
+            req.Start();
+
+            while (!req.Finished()) { yield(); }
+
+            if (req.ResponseCode() != 200) { log("Failed to fetch surrounding records, response code: " + req.ResponseCode(), LogLevel::Error, 30, "FetchSurroundingRecords"); return; }
+
+            Json::Value data = Json::Parse(req.String());
+            if (data.GetType() == Json::Type::Null) { log("Failed to parse response for surrounding records.", LogLevel::Error, 35, "FetchSurroundingRecords"); return; }
+
+            Json::Value tops = data["tops"];
+            if (tops.GetType() != Json::Type::Array || tops.Length == 0) { log("Invalid tops data in response.", LogLevel::Error, 40, "FetchSurroundingRecords"); return; }
+
+            Json::Value top = tops[0]["top"];
+            if (top.GetType() != Json::Type::Array || top.Length == 0) { log("Invalid top data in response.", LogLevel::Error, 45, "FetchSurroundingRecords"); return; }
+
+            uint closestScore = 0;
+            string closestAccountId;
+            for (uint i = 0; i < top.Length; i++) {
+                uint score = top[i]["score"];
+                string accountId = top[i]["accountId"];
+                log("Found surrounding record: score = " + score + ", accountId = " + accountId, LogLevel::Info, 50, "FetchSurroundingRecords");
+
+                if (closestScore == 0 || Math::Abs(int(score) - int(currentMapChampionMedal)) < Math::Abs(int(closestScore) - int(currentMapChampionMedal))) {
+                    closestScore = score;
+                    closestAccountId = accountId;
+                }
+            }
+
+            if (closestAccountId != "") {
+                timeDifference = Math::Abs(int(closestScore) - int(currentMapChampionMedal));
+                FetchGhostFile(closestAccountId, closestScore);
+            }
+        }
+
+        void FetchGhostFile(const string &in accountId, uint score) {
+            string url = "https://prod.trackmania.core.nadeo.online/v2/mapRecords/?accountIdList=" + accountId + "&mapIdList=" + globalMapUid;
+            auto req = NadeoServices::Get("NadeoServices", url);
+            req.Start();
+
+            while (!req.Finished()) { yield(); }
+
+            if (req.ResponseCode() != 200) { log("Failed to fetch replay record, response code: " + req.ResponseCode(), LogLevel::Error, 60, "FetchGhostFile"); return; }
+
+            Json::Value data = Json::Parse(req.String());
+            if (data.GetType() == Json::Type::Null) { log("Failed to parse response for replay record.", LogLevel::Error, 65, "FetchGhostFile"); return; }
+
+            if (data.GetType() != Json::Type::Array || data.Length == 0) { log("Invalid replay data in response.", LogLevel::Error, 70, "FetchGhostFile"); return; }
+
+            string fileUrl = data[0]["url"];
+            string playerName = data[0]["playerName"];
+            string timestamp = Time::FormatString("%Y%m%d_%H%M%S", Time::Stamp);
+            string folderPath = Server::currentMapRecordsChampionMedal + "/" + mapName + "_" + globalMapUid;
+            IO::CreateFolder(folderPath);
+            string savePath = folderPath + "/" + playerName + "_" + timestamp + ".ghost.gbx";
+
+            auto fileReq = NadeoServices::Get("NadeoServices", fileUrl);
+            fileReq.Start();
+
+            while (!fileReq.Finished()) { yield(); }
+
+            if (fileReq.ResponseCode() != 200) {
+                log("Failed to download replay file, response code: " + fileReq.ResponseCode(), LogLevel::Error, 80, "FetchGhostFile");
+                return;
+            }
+
+            fileReq.SaveToFile(savePath);
+
+            ProcessSelectedFile(savePath);
+
+            displaySavePath = savePath;
+            displayTimeDifference = timeDifference;
+
+            log("Replay file saved to: " + savePath + " with a time difference of " + timeDifference + "ms", LogLevel::Info, 85, "FetchGhostFile");
+        }
     }
 #endif
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
