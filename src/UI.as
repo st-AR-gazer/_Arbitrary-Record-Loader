@@ -451,23 +451,45 @@ void RenderTab_CurrentMapGhost() {
 #if DEPENDENCY_CHAMPIONMEDALS
     UI::Separator();
 
-    UI::Text("Champion medal dings");
+    UI::Text("Champion Medal Information");
 
     UI::Text("Current Champion Medal Time: " + FromMsToFormat(CurrentMapRecords::ChampMedal::currentMapChampionMedal));
 
-    if (UI::Button("Load Nearest Champion Medal Time")) {
-        CurrentMapRecords::ChampMedal::LoadNearestChampionMedal();
+    if (!CurrentMapRecords::ChampMedal::championMedalExists) {
+        _UI::DisabledButton("Load Nearest Champion Medal Time");
+    } else {
+        if (UI::Button("Load Nearest Champion Medal Time")) {
+            CurrentMapRecords::ChampMedal::AddChampionMedal();
+        }
     }
-    if (championMedalHasExactMatch) { UI::Text("There is an exact match for the champion medal, using that ghost"); } 
-        else {                        UI::Text("There is no exact match for the champion medal, using the closest ghost, that still beats the champion medal time"); } // Not added yet, must add
 
-    string FromMsToFormat(uint ms) {
-        uint minutes = ms / 60000;
-        uint seconds = (ms % 60000) / 1000;
-        uint milliseconds = ms % 1000;
-        return minutes + ":" + seconds + ":" + milliseconds;
+    if (CurrentMapRecords::ChampMedal::ReqForCurrentMapFinished) {
+        if (CurrentMapRecords::ChampMedal::championMedalHasExactMatch) {
+            UI::Text("Exact match found for the champion medal.");
+            UI::Text("Time difference: " + tostring(CurrentMapRecords::ChampMedal::timeDifference) + " ms");
+        } else {
+            UI::Text("There is no exact match for the champion medal. Using the closest ghost that still beats the champion medal time.");
+            UI::Text("Time difference: " + tostring(CurrentMapRecords::ChampMedal::timeDifference) + " ms");
+        }
+    } else {
+        UI::Text("The current state of the champion medal record is unknown. Please load a champion medal record to check if there is an exact match.");
     }
 #endif
+}
+
+string FromMsToFormat(uint ms) {
+    uint minutes = ms / 60000;
+    uint seconds = (ms % 60000) / 1000;
+    uint milliseconds = ms % 1000;
+    return pad(minutes, 2) + ":" + pad(seconds, 2) + "." + pad(milliseconds, 3);
+}
+
+string pad(uint value, uint length) {
+    string result = "" + value;
+    while (result.Length < length) {
+        result = "0" + result;
+    }
+    return result;
 }
 
 

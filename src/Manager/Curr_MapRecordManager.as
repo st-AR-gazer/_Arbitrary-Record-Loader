@@ -1,17 +1,13 @@
 namespace CurrentMapRecords {
     namespace ValidationReplay {
-        bool validationReplayExists = false;
+        bool validationReplayCanBeLoaded = false;
 
-        void OnMapLoad() {
-            if (ValidationReplayExists()) { 
-                validationReplayExists = true; 
-                ExtractReplay();    
-            } else {
-                validationReplayExists = false;
-            }
+        bool ValidationReplayCanBeLoadedForCurrentMap() {
+            if (ValidationReplayExists()) { ExtractReplay(); }
+            return true;
         }
         
-        string FetchPath() {
+        string GetValidationReplayFilePath() {
             return Server::currentMapRecordsValidationReplay + "Validation_" + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
         }
 
@@ -53,133 +49,109 @@ namespace CurrentMapRecords {
         }
 
         void AddValidationReplay() {
-            if (validationReplayExists) { ExtractReplay(); }
-            ReplayLoader::LoadReplayFromPath(FetchPath());
+            if (validationReplayCanBeLoaded) { ExtractReplay(); }
+            ReplayLoader::LoadReplayFromPath(GetValidationReplayFilePath());
         }
     }
 
 #if DEPENDENCY_CHAMPIONMEDALS
-    namespace ChampMedal {
-        bool championMedalExists = false;
-        uint currentMapChampionMedal = 0;
-        string globalMapUid;
-        string mapName;
-        int timeDifference = 0;
+namespace ChampMedal {
+    bool championMedalExists = false;
+    uint currentMapChampionMedal = 0;
+    string globalMapUid;
+    string mapName;
+    int timeDifference = 0;
 
-        string displaySavePath = "";
-        uint displayTimeDifference = 0;
+    CGameCtnChallenge@ rootMap = null;
 
-        bool championMedalHasExactMatch = false;
+    string displaySavePath = "";
+    uint displayTimeDifference = 0;
 
-        void OnMapLoad(const string &in mapUid, const string &in currentMapName) {
-            globalMapUid = mapUid;
-            mapName = currentMapName;
-            if (ChampionMedalExists()) {
-                championMedalExists = true;
-                FetchChampionMedalTime();
-                FetchSurroundingRecords();
-            } else {
-                championMedalExists = false;
-            }
-        }
+    bool championMedalHasExactMatch = false;
 
-        bool ChampionMedalExists() {
-            return ChampionMedals::GetCMTime() > 0;
-        }
+    bool ReqForCurrentMapFinished = false;
 
-        void FetchChampionMedalTime() {
-            if (championMedalExists) {
-                currentMapChampionMedal = ChampionMedals::GetCMTime();
-            }
-        }
-
-        void AddChampionMedal() {
-            if (championMedalExists) {
-                startnew(FetchSurroundingRecords);
-            }
-        }
-
-        void FetchSurroundingRecords() {
-            if (!championMedalExists) return;
-
-            string url = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/" + globalMapUid + "/surround/1/1?score=" + currentMapChampionMedal;
-            auto req = NadeoServices::Get("NadeoLiveServices", url);
-            req.Start();
-
-            while (!req.Finished()) { yield(); }
-
-            if (req.ResponseCode() != 200) { log("Failed to fetch surrounding records, response code: " + req.ResponseCode(), LogLevel::Error, 30, "FetchSurroundingRecords"); return; }
-
-            Json::Value data = Json::Parse(req.String());
-            if (data.GetType() == Json::Type::Null) { log("Failed to parse response for surrounding records.", LogLevel::Error, 35, "FetchSurroundingRecords"); return; }
-
-            Json::Value tops = data["tops"];
-            if (tops.GetType() != Json::Type::Array || tops.Length == 0) { log("Invalid tops data in response.", LogLevel::Error, 40, "FetchSurroundingRecords"); return; }
-
-            Json::Value top = tops[0]["top"];
-            if (top.GetType() != Json::Type::Array || top.Length == 0) { log("Invalid top data in response.", LogLevel::Error, 45, "FetchSurroundingRecords"); return; }
-
-            uint closestScore = 0;
-            string closestAccountId;
-            for (uint i = 0; i < top.Length; i++) {
-                uint score = top[i]["score"];
-                string accountId = top[i]["accountId"];
-                log("Found surrounding record: score = " + score + ", accountId = " + accountId, LogLevel::Info, 50, "FetchSurroundingRecords");
-
-                if (closestScore == 0 || Math::Abs(int(score) - int(currentMapChampionMedal)) < Math::Abs(int(closestScore) - int(currentMapChampionMedal))) {
-                    closestScore = score;
-                    closestAccountId = accountId;
-                }
-            }
-
-            if (closestAccountId != "") {
-                timeDifference = Math::Abs(int(closestScore) - int(currentMapChampionMedal));
-                FetchGhostFile(closestAccountId, closestScore);
-            }
-        }
-
-        void FetchGhostFile(const string &in accountId, uint score) {
-            string url = "https://prod.trackmania.core.nadeo.online/v2/mapRecords/?accountIdList=" + accountId + "&mapIdList=" + globalMapUid;
-            auto req = NadeoServices::Get("NadeoServices", url);
-            req.Start();
-
-            while (!req.Finished()) { yield(); }
-
-            if (req.ResponseCode() != 200) { log("Failed to fetch replay record, response code: " + req.ResponseCode(), LogLevel::Error, 60, "FetchGhostFile"); return; }
-
-            Json::Value data = Json::Parse(req.String());
-            if (data.GetType() == Json::Type::Null) { log("Failed to parse response for replay record.", LogLevel::Error, 65, "FetchGhostFile"); return; }
-
-            if (data.GetType() != Json::Type::Array || data.Length == 0) { log("Invalid replay data in response.", LogLevel::Error, 70, "FetchGhostFile"); return; }
-
-            string fileUrl = data[0]["url"];
-            string playerName = data[0]["playerName"];
-            string timestamp = Time::FormatString("%Y%m%d_%H%M%S", Time::Stamp);
-            string folderPath = Server::currentMapRecordsChampionMedal + "/" + mapName + "_" + globalMapUid;
-            IO::CreateFolder(folderPath);
-            string savePath = folderPath + "/" + playerName + "_" + timestamp + ".ghost.gbx";
-
-            auto fileReq = NadeoServices::Get("NadeoServices", fileUrl);
-            fileReq.Start();
-
-            while (!fileReq.Finished()) { yield(); }
-
-            if (fileReq.ResponseCode() != 200) {
-                log("Failed to download replay file, response code: " + fileReq.ResponseCode(), LogLevel::Error, 80, "FetchGhostFile");
-                return;
-            }
-
-            fileReq.SaveToFile(savePath);
-
-            ProcessSelectedFile(savePath);
-
-            displaySavePath = savePath;
-            displayTimeDifference = timeDifference;
-
-            log("Replay file saved to: " + savePath + " with a time difference of " + timeDifference + "ms", LogLevel::Info, 85, "FetchGhostFile");
+    void AddChampionMedal() {
+        if (championMedalExists) {
+            startnew(FetchSurroundingRecords);
         }
     }
+
+    void OnMapLoad() {
+        if (ChampionMedalExists()) {
+            ReqForCurrentMapFinished = false;
+            championMedalExists = true;
+            FetchMap();
+            FetchChampionMedalTime();
+        } else {
+            championMedalExists = false;
+        }
+    }
+
+    void FetchMap() {
+        @rootMap = GetApp().RootMap;
+        globalMapUid = rootMap.MapInfo.MapUid;
+        mapName = rootMap.MapInfo.Name;
+    }
+
+    bool ChampionMedalExists() {
+        return ChampionMedals::GetCMTime() > 0;
+    }
+
+    void FetchChampionMedalTime() {
+        if (championMedalExists) {
+            currentMapChampionMedal = ChampionMedals::GetCMTime();
+        }
+    }
+
+    void FetchSurroundingRecords() {
+        if (!championMedalExists) return;
+
+        string url = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/" + globalMapUid + "/surround/1/1?score=" + currentMapChampionMedal;
+        auto req = NadeoServices::Get("NadeoLiveServices", url);
+        req.Start();
+
+        while (!req.Finished()) { yield(); }
+
+        if (req.ResponseCode() != 200) { log("Failed to fetch surrounding records, response code: " + req.ResponseCode(), LogLevel::Error, 116, "FetchSurroundingRecords"); return; }
+
+        Json::Value data = Json::Parse(req.String());
+        if (data.GetType() == Json::Type::Null) { log("Failed to parse response for surrounding records.", LogLevel::Error, 119, "FetchSurroundingRecords"); return; }
+
+        Json::Value tops = data["tops"];
+        if (tops.GetType() != Json::Type::Array || tops.Length == 0) { log("Invalid tops data in response.", LogLevel::Error, 122, "FetchSurroundingRecords"); return; }
+
+        Json::Value top = tops[0]["top"];
+        if (top.GetType() != Json::Type::Array || top.Length == 0) { log("Invalid top data in response.", LogLevel::Error, 125, "FetchSurroundingRecords"); return; }
+
+        uint closestScore = 0;
+        string closestAccountId;
+        int closestPosition = -1;
+        for (uint i = 0; i < top.Length; i++) {
+            uint score = top[i]["score"];
+            string accountId = top[i]["accountId"];
+            int position = top[i]["position"];
+            log("Found surrounding record: score = " + score + ", accountId = " + accountId + ", position = " + position, LogLevel::Info, 134, "FetchSurroundingRecords");
+
+            if (closestScore == 0 || Math::Abs(int(score) - int(currentMapChampionMedal)) < Math::Abs(int(closestScore) - int(currentMapChampionMedal))) {
+                closestScore = score;
+                closestAccountId = accountId;
+                closestPosition = position;
+            }
+        }
+
+        if (closestAccountId != "") {
+            timeDifference = Math::Abs(int(closestScore) - int(currentMapChampionMedal));
+            if (timeDifference == 0) { championMedalHasExactMatch = true;
+            } else {                   championMedalHasExactMatch = false; }
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(globalMapUid, tostring(closestPosition));
+        }
+
+        ReqForCurrentMapFinished = true;
+    }
+}
 #endif
+
 
 
 
@@ -241,7 +213,7 @@ namespace CurrentMapRecords {
 
         bool GPSReplayCanBeLoadedForCurrentMap() {
             if (rootMap is null || rootMap.ClipGroupInGame is null) {
-                log("rootMap or ClipGroupInGame is null", LogLevel::Error, 140, "GPSReplayCanBeLoadedForCurrentMap");
+                log("rootMap or ClipGroupInGame is null", LogLevel::Error, 216, "GPSReplayCanBeLoadedForCurrentMap");
                 return false;
             }
 
@@ -284,18 +256,18 @@ namespace CurrentMapRecords {
             while (get_CurrentRaceTime() < 0) { yield(); }
 
             auto ghostMgr = cast<CSmArenaRulesMode@>(GetApp().PlaygroundScript).GhostMgr;
-            if (ghostMgr is null) { log("ghostMgr is null", LogLevel::Error, 183, "FetchVTablePtr"); return; }
+            if (ghostMgr is null) { log("ghostMgr is null", LogLevel::Error, 259, "FetchVTablePtr"); return; }
 
             auto dfm = cast<CGameDataFileManagerScript>(GetApp().Network.ClientManiaAppPlayground.DataFileMgr);
 
             ReplayLoader::LoadReplayFromPath(ghostFilePath);
 
             array<CGameGhostScript@> ghost = GetGhost(dfm);
-            if (ghost is null) { log("Failed to retrieve the ghost by ID", LogLevel::Error, 190, "FetchVTablePtr"); return; }
+            if (ghost is null) { log("Failed to retrieve the ghost by ID", LogLevel::Error, 266, "FetchVTablePtr"); return; }
 
             uint64 decimal_pointer = Dev::GetOffsetUint64(ghost[0].Result, 0x0);
             string hex_pointer = "0x" + Text::Format("%016llx", decimal_pointer);
-            log("Hexadecimal pointer: " + hex_pointer, LogLevel::Info, 194, "FetchVTablePtr");
+            log("Hexadecimal pointer: " + hex_pointer, LogLevel::Info, 270, "FetchVTablePtr");
 
             CTmRaceResult_VTable_Ptr = decimal_pointer;
         }
@@ -343,7 +315,7 @@ namespace CurrentMapRecords {
         void ConvertGhosts() {
             for (uint i = 0; i < ghosts.Length; i++) {
                 if (ghosts[i] is null) {
-                    log("Ghost at index " + i + " is null", LogLevel::Error, 242, "ConvertGhosts");
+                    log("Ghost at index " + i + " is null", LogLevel::Error, 318, "ConvertGhosts");
                     continue;
                 }
                 ghosts[i].ConvertToScript(CTmRaceResult_VTable_Ptr);
@@ -353,7 +325,7 @@ namespace CurrentMapRecords {
         void SaveReplays() {
             for (uint i = 0; i < ghosts.Length; i++) {
                 if (ghosts[i] is null) {
-                    log("Ghost at index " + i + " is null", LogLevel::Error, 252, "SaveReplays");
+                    log("Ghost at index " + i + " is null", LogLevel::Error, 328, "SaveReplays");
                     continue;
                 }
                 ghosts[i].Save(rootMap);
@@ -377,7 +349,7 @@ namespace CurrentMapRecords {
 
         void ConvertToScript(uint64 CTmRaceResult_VTable_Ptr) {
             if (ghost is null) {
-                log("Ghost is null in ConvertToScript", LogLevel::Error, 276, "ConvertToScript");
+                log("Ghost is null in ConvertToScript", LogLevel::Error, 352, "ConvertToScript");
                 return;
             }
 
@@ -403,14 +375,14 @@ namespace CurrentMapRecords {
 
         void Save(CGameCtnChallenge@ rootMap) {
             if (ghostScript is null) {
-                log("GhostScript is null in Save for ghost " + name, LogLevel::Error, 302, "Save");
+                log("GhostScript is null in Save for ghost " + name, LogLevel::Error, 378, "Save");
                 return;
             }
 
             CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
             CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(savePath, rootMap, ghostScript);
             if (taskResult is null) {
-                log("Replay task returned null for ghost " + name, LogLevel::Error, 309, "Save");
+                log("Replay task returned null for ghost " + name, LogLevel::Error, 385, "Save");
             }
         }
     }
