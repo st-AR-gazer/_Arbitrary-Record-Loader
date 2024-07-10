@@ -13,7 +13,7 @@ namespace _Text {
     int LastIndexOf(const string &in str, const string &in value) {
         int lastIndex = -1;
         int index = str.IndexOf(value);
-        while (index != -1) {
+        while (index != -1) { 
             lastIndex = index;
             if (index + value.Length >= str.Length) break;
             index = str.SubStr(index + value.Length).IndexOf(value);
