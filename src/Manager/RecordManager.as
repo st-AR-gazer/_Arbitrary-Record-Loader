@@ -1,4 +1,6 @@
 namespace RecordManager {
+    array<CGameGhostScript@> ghosts;
+
     void OpenGhostFileDialogWindow() {
         _IO::FileExplorer::OpenFileExplorer(true, IO::FromUserGameFolder("Replays/"), "", { "replay", "ghost" });
     }
@@ -12,9 +14,61 @@ namespace RecordManager {
     void RemoveInstanceRecord(MwId instanceId) {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_Remove(instanceId);
-        log("Record with the MwID of: " + instanceId.GetName() + " .", LogLevel::Info, 15, "RemoveInstanceRecord");
+        log("Record with the MwID of: " + instanceId.GetName() + " removed.", LogLevel::Info, 15, "RemoveInstanceRecord");
     }
+
+    void SetRecordDossard(MwId instanceId, const int &in dossard, vec3 color = vec3()) {
+        auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
+        gm.Ghost_SetDossard(instanceId, dossard, color);
+        log("Record dossard set.", LogLevel::Info, 21, "SetRecordDossard");
+    }
+
+    bool IsReplayVisible(MwId instanceId) {
+        auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
+        bool isVisible = gm.Ghost_IsVisible(instanceId);
+        return isVisible;
+    }
+
+    bool IsReplayOver(MwId instanceId) {
+        auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
+        bool isOver = gm.Ghost_IsReplayOver(instanceId);
+        return isOver;
+    }
+
+    void AddGhostWithOffset(CGameGhostScript@ ghost, const int &in offset) {
+        auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
+        gm.Ghost_Add(ghost, true, offset);
+        log("Ghost added with offset.", LogLevel::Info, 21, "AddGhostWithOffset");
+    }
+
+    string GetGhostNameById(MwId id) {
+        for (uint i = 0; i < ghosts.Length; i++) {
+            if (ghosts[i].Id == id) {
+                return ghosts[i].Nickname;
+            }
+        }
+        return "";
+    }
+
+    string GetGhostInfo(MwId id) {
+        for (uint i = 0; i < ghosts.Length; i++) {
+            if (ghosts[i].Id == id) {
+                auto ghost = ghosts[i];
+                return "Nickname: " + ghost.Nickname + "\n"
+                       + "Trigram: " + ghost.Trigram + "\n"
+                       + "Country Path: " + ghost.CountryPath + "\n"
+                       + "Time: " + ghost.Result.Time + "\n"
+                       + "Stunt Score: " + ghost.Result.Score + "\n"
+                       + "MwId: " + ghost.Id.Value + "\n";
+            }
+        }
+        return "No ghost selected.";
+    }
+
 }
+
+
+
 
 void ProcessSelectedFile(const string &in filePath) {
     if (filePath.StartsWith("https://") || filePath.StartsWith("http://")) {
@@ -45,6 +99,10 @@ void ProcessSelectedFile(const string &in filePath) {
         NotifyWarn("Error | Unsupported file type.");
     }
 }
+
+
+
+
 
 namespace LoadRecordFromArbitraryMap {
     string accountId;

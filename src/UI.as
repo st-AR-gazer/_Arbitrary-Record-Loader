@@ -79,22 +79,39 @@ void RenderTab_LocalFiles() {
 
 //////////////////// Render Current Loaded Records Tab /////////////////////
 
-MwId recordID;
+MwId selectedRecordID;
 
 void RenderTab_CurrentLoadedRecords() {
-    // UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
-    // UI::Separator();
-
-    // recordID = UI::InputText("RecordID", recordID);
-    // UI::SameLine();
-    if (UI::Button("Remove Specific Record")) {        // TODO: Crate a loop that loops through all the current records and make a dropdown weather you can select the record you
-        RecordManager::RemoveInstanceRecord(recordID); // want to remove based on it's MwId and also display the record's name (maybe just dossard will do?). Should probably be done in RecordManager::
-    }
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Separator();
 
     if (UI::Button("Remove All Records")) {
         RecordManager::RemoveAllRecords();
     }
 
+    if (UI::BeginCombo("Select a ghost instance", RecordManager::GetGhostNameById(selectedRecordID))) {
+        for (uint i = 0; i < RecordManager::ghosts.Length; i++) {
+            auto ghost = RecordManager::ghosts[i];
+            bool isSelected = (selectedRecordID == ghost.Id);
+            if (UI::Selectable(ghost.Nickname, isSelected)) {
+                selectedRecordID = ghost.Id;
+            }
+            if (isSelected) {
+                UI::SetItemDefaultFocus();
+            } 
+        }
+        UI::EndCombo();
+    }
+
+    if (selectedRecordID != MwId()) {
+        string ghostInfo = RecordManager::GetGhostInfo(selectedRecordID);
+        UI::Text("Selected Record Info:");
+        UI::Text(ghostInfo);
+    }
+
+    if (UI::Button("Remove Specific Record")) {
+        RecordManager::RemoveInstanceRecord(selectedRecordID);
+    }
 }
 
 
@@ -291,6 +308,14 @@ void RenderTab_OfficialMaps() {
     if (UI::Button("Run check for New Campaigns again")) {
         OfficialManager::DownloadingFiles::CheckForNewCampaignIfNeeded();
     }
+    UI::SameLine();
+    if (UI::Button("Set season year to current")) {
+        OfficialManager::UI::SetSeasonYearToCurrent();
+    }
+    UI::SameLine();
+    if (UI::Button("Try to set current map based on name")) {
+        OfficialManager::UI::SetCurrentMapBasedOnName();
+    }
 
     // Year Dropdown
     if (UI::BeginCombo("Year", selectedYear == -1 ? "Select Year" : tostring(years[selectedYear]))) {
@@ -339,7 +364,7 @@ void RenderTab_OfficialMaps() {
 
     UI::Separator();
 
-    Official_MapUID = FetchOfficialMapUID();
+    Official_MapUID = OfficialManager::UI::FetchOfficialMapUID();
 
     UI::Text(Official_MapUID);
 
@@ -347,46 +372,6 @@ void RenderTab_OfficialMaps() {
     if (UI::Button("Load Record")) {
         LoadRecordFromArbitraryMap::LoadSelectedRecord(Official_MapUID, tostring(selectedOffset));
     }
-}
-
-string FetchOfficialMapUID() {
-    if (selectedYear == -1 || selectedSeason == -1 || selectedMap == -1) {
-        return "";
-    }
-
-    string season = seasons[selectedSeason];
-    int year = years[selectedYear];
-    int mapPosition = selectedMap;
-
-    string filePath = Server::officialJsonFilesDirectory + "/" + season + "_" + tostring(year) + ".json";
-    if (!IO::FileExists(filePath)) {
-        log("File not found: " + filePath, LogLevel::Error, 363, "FetchOfficialMapUID");
-        return "";
-    }
-
-    Json::Value root = Json::Parse(_IO::File::ReadFileToEnd(filePath));
-    if (root.GetType() == Json::Type::Null) {
-        log("Failed to parse JSON file: " + filePath, LogLevel::Error, 369, "FetchOfficialMapUID");
-        return "";
-    }
-
-    for (uint i = 0; i < root.Length; i++) {
-        auto playlist = root["playlist"];
-        if (playlist.GetType() != Json::Type::Array) {
-            continue;
-        }
-
-        for (uint j = 0; j < playlist.Length; j++) {
-            auto map = playlist[j];
-            if (map["position"] == mapPosition) {
-                string mapUid = map["mapUid"];
-                return mapUid;
-            }
-        }
-    }
-
-    log("Map UID not found for position: " + tostring(mapPosition), LogLevel::Error, 388, "FetchOfficialMapUID");
-    return "";
 }
 
 

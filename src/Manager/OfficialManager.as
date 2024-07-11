@@ -119,6 +119,46 @@ namespace OfficialManager {
             UpdateMaps();
         }
 
+        string FetchOfficialMapUID() {
+            if (selectedYear == -1 || selectedSeason == -1 || selectedMap == -1) {
+                return "";
+            }
+
+            string season = seasons[selectedSeason];
+            int year = years[selectedYear];
+            int mapPosition = selectedMap;
+
+            string filePath = Server::officialJsonFilesDirectory + "/" + season + "_" + tostring(year) + ".json";
+            if (!IO::FileExists(filePath)) {
+                log("File not found: " + filePath, LogLevel::Error, 363, "FetchOfficialMapUID");
+                return "";
+            }
+
+            Json::Value root = Json::Parse(_IO::File::ReadFileToEnd(filePath));
+            if (root.GetType() == Json::Type::Null) {
+                log("Failed to parse JSON file: " + filePath, LogLevel::Error, 369, "FetchOfficialMapUID");
+                return "";
+            }
+
+            for (uint i = 0; i < root.Length; i++) {
+                auto playlist = root["playlist"];
+                if (playlist.GetType() != Json::Type::Array) {
+                    continue;
+                }
+
+                for (uint j = 0; j < playlist.Length; j++) {
+                    auto map = playlist[j];
+                    if (map["position"] == mapPosition) {
+                        string mapUid = map["mapUid"];
+                        return mapUid;
+                    }
+                }
+            }
+
+            log("Map UID not found for position: " + tostring(mapPosition), LogLevel::Error, 388, "FetchOfficialMapUID");
+            return "";
+        }
+
         void UpdateSeasons() {
             seasons.RemoveRange(0, seasons.Length);
             selectedSeason = -1;
@@ -155,7 +195,63 @@ namespace OfficialManager {
             }
             log("Years populated: " + years.Length + " years", LogLevel::Info, 156, "UpdateYears");
         }
+
+        void SetSeasonYearToCurrent() {
+            int64 currentTime = Time::Stamp;
+
+            string path = Server::officialJsonFilesDirectory;
+
+            array<string>@ jsonFiles = IO::IndexFolder(path, true);
+
+            for (uint i = 0; i < jsonFiles.Length; i++) {
+                string filePath = jsonFiles[i];
+                IO::File file(filePath, IO::FileMode::Read);
+                string jsonContent = file.ReadToEnd();
+                file.Close();
+
+                Json::Value root = Json::Parse(jsonContent);
+
+                auto latestSeasons = root["latestSeasons"];
+                for (uint j = 0; j < latestSeasons.Length; j++) {
+                    auto season = latestSeasons[j];
+                    int64 startTimestamp = season["startTimestamp"];
+                    int64 endTimestamp = season["endTimestamp"];
+                    if (currentTime >= startTimestamp && currentTime <= endTimestamp) {
+                        string seasonName = season["name"];
+                        ParseSeasonYear(seasonName);
+                        return;
+                    }
+                }
+            }
+        }
+
+        void ParseSeasonYear(const string &in seasonName) {
+            array<string> parts = seasonName.Split(" ");
+            if (parts.Length == 2) {
+                string season = parts[0];
+                int year = Text::ParseInt(parts[1]);
+
+                selectedSeason = season;
+                selectedYear = year;
+            }
+        }
+
+        void SetCurrentMapBasedOnName() {
+            auto root = GetApp().RootMap;
+            if (root is null) return;
+
+            string mapName = root.MapInfo.Name;
+            if (mapName.Length == 0) return;
+
+            string pattern = "\\b([1-9]|1[0-9]|2[0-5])\\b";
+            array<string> matches = Regex::Match(mapName, pattern);
+
+            if (matches.Length > 0) {
+                string mapNumberStr = matches[0];
+                int mapNumber = Text::ParseInt(mapNumberStr);
+
+                selectedMap = mapNumber;
+            }
+        }
     }
 }
-
-// xdd, saving a set of maps that is automagically updated by the API whilst still fetching records etc proved to be a bit more challenging than I thought it would be :D
