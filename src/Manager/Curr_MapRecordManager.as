@@ -276,21 +276,11 @@ namespace ChampMedal {
             @rootMap = GetApp().RootMap;
         }
 
-        int get_CurrentRaceTime() {
-            CTrackMania@ app = cast<CTrackMania>(GetApp());
-            if (app is null) return -1;
-
-            CSmArenaClient@ playground = cast<CSmArenaClient>(app.CurrentPlayground);
-            if (playground is null || playground.Arena.Players.Length == 0) return -1;
-
-            CSmScriptPlayer@ script = cast<CSmScriptPlayer>(playground.Arena.Players[0].ScriptAPI);
-            return script.CurrentRaceTime;
-        }
-
         void FetchVTablePtr() {
             string ghostFilePath = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Dummy/CTmRaceResult_VTable_Ptr.Replay.Gbx");
 
-            while (get_CurrentRaceTime() < 0) { yield(); }
+            while (rootMap is null) { yield(); } // Change to something that waits untill the player is loaded.
+            sleep(1000); // Change to something that waits untill the player is loaded.
 
             auto ghostMgr = cast<CSmArenaRulesMode@>(GetApp().PlaygroundScript).GhostMgr;
             if (ghostMgr is null) { log("ghostMgr is null", LogLevel::Error, 296, "FetchVTablePtr"); return; }
@@ -302,11 +292,10 @@ namespace ChampMedal {
             array<CGameGhostScript@> ghost = GetGhost(dfm);
             if (ghost is null) { log("Failed to retrieve the ghost by ID", LogLevel::Error, 303, "FetchVTablePtr"); return; }
 
-            uint64 decimal_pointer = Dev::GetOffsetUint64(ghost[0].Result, 0x0);
-            string hex_pointer = "0x" + Text::Format("%016llx", decimal_pointer);
-            log("Hexadecimal pointer: " + hex_pointer, LogLevel::Info, 307, "FetchVTablePtr");
+            uint64 pointer = Dev::GetOffsetUint64(ghost[0].Result, 0x0);
+            log("Hexadecimal pointer: " + Text::FormatPointer(pointer), LogLevel::Info, 307, "FetchVTablePtr");
 
-            CTmRaceResult_VTable_Ptr = decimal_pointer;
+            CTmRaceResult_VTable_Ptr = pointer;
         }
 
         array<CGameGhostScript@> GetGhost(CGameDataFileManagerScript@ dfm) {
