@@ -72,7 +72,7 @@ void RenderTab_LocalFiles() {
         SaveRecordPath();
     }
 
-    if (UI::Button(Icons::Users + Icons::EyeSlash" Remove All Ghosts")) {
+    if (UI::Button(Icons::Users + Icons::EyeSlash + " Remove All Ghosts")) {
         RecordManager::RemoveAllRecords();
     }
 }
