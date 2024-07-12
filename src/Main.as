@@ -19,6 +19,7 @@ void InitApi() {
 
 void InitFolders() {
     _IO::Folder::SafeCreateFolder(Server::replayARL);
+    _IO::Folder::SafeCreateFolder(Server::replayARLTmp);
     _IO::Folder::SafeCreateFolder(Server::replayARLDummy);
     _IO::Folder::SafeCreateFolder(Server::replayARLAutoMove);
 

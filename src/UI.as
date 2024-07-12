@@ -14,31 +14,31 @@ void RenderInterface() {
         // UI::SetNextWindowSize(670, 300, UI::Cond::FirstUseEver);
         if (UI::Begin(Icons::UserPlus + " Load arbitrary Records", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
             UI::BeginTabBar("Tabs");
-            if (UI::BeginTabItem(Icons::Users + Icons::Folder + "Local Files")) {
+            if (UI::BeginTabItem(Icons::Users + " " + Icons::Folder + " Local Files")) {
                 RenderTab_LocalFiles();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Users + Icons::Info + " Current Loaded Records")) {
+            if (UI::BeginTabItem(Icons::Users + Icons::Info + "Current Loaded Records")) {
                 RenderTab_CurrentLoadedRecords();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Users + Icons::Kenney::Save + " Saved Records")) {
+            if (UI::BeginTabItem(Icons::Users + " " + Icons::Kenney::Save + " Saved Records")) {
                 RenderTab_SavedGhostsAndReplays();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Users + Icons::Download + " Load record from other")) {
+            if (UI::BeginTabItem(Icons::Users + " " + Icons::Download + " Load record from other")) {
                 RenderTab_OtherSpecificUIDs();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Map + Icons::Download + "Load record from any Map")) {
+            if (UI::BeginTabItem(Icons::Map + " " + Icons::Download + " Load record from any Map")) {
                 RenderTab_LoadGhostFromMap();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Map + Icons::Globe + "Official Maps")) {
+            if (UI::BeginTabItem(Icons::Map + " " + Icons::Globe + " Official Maps")) {
                 RenderTab_OfficialMaps();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Map + "Current Map Ghost")) {
+            if (UI::BeginTabItem(Icons::Map + " Current Map Ghost")) {
                 RenderTab_CurrentMapGhost();
                 UI::EndTabItem();
             }
@@ -53,7 +53,7 @@ void RenderInterface() {
 //////////////////// Render Loacal Files Tab /////////////////////
 
 void RenderTab_LocalFiles() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
@@ -83,7 +83,7 @@ void RenderTab_CurrentLoadedRecords() {
     UI::Separator();
 
     if (UI::Button("Remove All Records")) {
-        log("Remove All Records button clicked", LogLevel::Info);
+        log("Remove All Records button clicked", LogLevel::Info, 86, "RenderTab_CurrentLoadedRecords");
         RecordManager::RemoveAllRecords();
     }
 
@@ -119,14 +119,14 @@ void RenderTab_CurrentLoadedRecords() {
     }
 
     if (UI::Button(Icons::UserTimes + " Remove Specific Record")) {
-        log("Remove Specific Record button clicked", LogLevel::Info);
+        log("Remove Specific Record button clicked", LogLevel::Info, 122, "RenderTab_CurrentLoadedRecords");
         RecordManager::RemoveInstanceRecord(selectedRecordID);
         RecordManager::GhostTracker::RefreshTrackedGhosts();
         selectedRecordID = MwId();
     }
 
     if (UI::Button(Icons::Kenney::Save + " Save Ghost/Replay")) {
-        log("Save Ghost button clicked", LogLevel::Info);
+        log("Save Ghost button clicked", LogLevel::Info, 129, "RenderTab_CurrentLoadedRecords");
         RecordManager::Save::SaveRecord();
     }
 }
@@ -139,7 +139,7 @@ void RenderTab_CurrentLoadedRecords() {
 //////////////////// Render Saved Ghosts and Replays Tab /////////////////////
 
 void RenderTab_SavedGhostsAndReplays() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     if (UI::Button(Icons::Folder + "Open Saved Folder")) {
@@ -158,37 +158,57 @@ void RenderTab_SavedGhostsAndReplays() {
     UI::Text("Current selected file: ");
     UI::InputText("File Path", _IO::FileExplorer::Exports::GetExportPath());
 
-    array<string> files = /*IO::IndexFolder(Server::savedJsonDirectory)*/ { "test.json" };
+    array<string>@ files = IO::IndexFolder(Server::savedJsonDirectory, true);
     UI::Text("Saved Runs:");
+    UI::Separator();
 
     for (uint i = 0; i < files.Length; i++) {
-        // string fileName = files[i];
-        // string jsonContent = _IO::File::ReadFileToEnd(Server::savedJsonDirectory + fileName);
-        // Json::Value json = Json::Parse(jsonContent);
+        string fullFilePath = files[i];
+        string fileName = _IO::File::GetFileName(fullFilePath);
+        if (fileName.EndsWith(".json")) {
+            string jsonContent = _IO::File::ReadFileToEnd(Server::savedJsonDirectory + fileName);
+            Json::Value json = Json::Parse(jsonContent);
 
-        
-        // if (json.GetType() == Json::Type::Object && json.HasKey("content")) {
-        //     UI::Text("FileName: " + json["content"]["FileName"]);
-        //     UI::Text("FromLocalFile: " + tostring(json["content"]["FromLocalFile"]));
-        //     UI::Text("FilePath: " + json["content"]["FilePath"]);
 
-        //     if (UI::Button("Load " + fileName)) {
-        //         if (json["content"]["FromLocalFile"]) {
-        //             ProcessSelectedFile(json["content"]["FilePath"]);
-        //         } else {
-        //             NotifyWarn("Func not implemented yet..."); // TODO: Implement this :xdd:
-        //         }
-        //     }
-        // } else {
-        //     UI::Text("Error reading " + fileName);
-        // }
+            if (json.GetType() == Json::Type::Object && json.HasKey("content")) {
+                Json::Value content = json["content"];
+
+                UI::Text("Nickname: " + string(content["Nickname"]));
+                UI::Text("FileName: " + string(content["FileName"]));
+                UI::Text("Trigram: " + string(content["Trigram"]));
+                UI::Text("Time: " + int(content["Time"]));
+                UI::Text("ReplayFilePath: " + string(content["ReplayFilePath"]));
+                UI::Text("FullFilePath: " + string(content["FullFilePath"]));
+                UI::Text("CountryPath: " + string(content["CountryPath"]));
+                if (!bool(content["FromLocalFile"])) UI::Text("FromLocalFile: " + bool(content["FromLocalFile"]));
+                UI::Text("StuntScore: " + int(content["StuntScore"]));
+                UI::Text("MwId: " + uint(content["MwId Value"]));
+
+                if (UI::Button("Load " + fileName)) {
+                    if (bool(content["FromLocalFile"])) {
+                        ProcessSelectedFile(string(content["ReplayFilePath"]) + string(content["FileName"]));
+                    } else {
+                        NotifyWarn("Func not implemented yet... You can only load local files.."); // TODO: Implement this :xdd:
+                    }
+                }
+                UI::SameLine();
+                if (UI::Button("Delete " + fileName)) {
+                    IO::Delete(Server::savedJsonDirectory + fileName);
+                    IO::Delete(Server::savedFilesDirectory + string(content["FileName"]));
+                }
+                UI::Separator();
+            } else {
+                UI::Text("Error reading " + fileName);
+            }
+        }
     }
 }
+
 
 //////////////////// Render Other Specific UIDs Tab /////////////////////
 
 void RenderTab_OtherSpecificUIDs() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     // UI::Separator();
 
     // string downloadPath;
@@ -282,7 +302,7 @@ string LoadJsonContent(const string &in fileName) {
 string ghostPosition;
 
 void RenderTab_LoadGhostFromMap() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     UI::Text("Build a request: ");
@@ -317,7 +337,7 @@ array<string> seasons;
 array<string> maps;
 
 void RenderTab_OfficialMaps() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     if (UI::Button("Reset Selections")) {
@@ -399,7 +419,7 @@ void RenderTab_OfficialMaps() {
 //////////////////// Render Current Map Ghost Tab /////////////////////
 
 void RenderTab_CurrentMapGhost() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles at some point, this will not be possible for maps older than _NN_");
