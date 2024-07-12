@@ -91,10 +91,10 @@ void RenderTab_CurrentLoadedRecords() {
     }
 
     string selectedGhostName = RecordManager::GhostTracker::GetTrackedGhostNameById(selectedRecordID);
-
     if (UI::BeginCombo("Select a ghost instance", selectedGhostName)) {
         log("Selected ghost name: " + selectedGhostName, LogLevel::Info);
         log("Opening ghost selection combo box...", LogLevel::Info);
+        log("Tracked ghosts count: " + RecordManager::GhostTracker::trackedGhosts.Length, LogLevel::Info);
         for (uint i = 0; i < RecordManager::GhostTracker::trackedGhosts.Length; i++) {
             auto ghost = RecordManager::GhostTracker::trackedGhosts[i];
             bool isSelected = (selectedRecordID.Value == ghost.Id.Value);

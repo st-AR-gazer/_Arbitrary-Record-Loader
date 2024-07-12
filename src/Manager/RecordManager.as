@@ -90,6 +90,7 @@ namespace RecordManager {
             for (uint i = 0; i < newGhosts.Length; i++) {
                 CGameGhostScript@ ghost = cast<CGameGhostScript>(newGhosts[i]);
                 ghosts.InsertLast(ghost);
+                AddTrackedGhost(ghost);
             }
             log("Ghosts updated, count: " + ghosts.Length, LogLevel::Info);
         }
