@@ -76,6 +76,7 @@ void RenderTab_LocalFiles() {
 //////////////////// Render Current Loaded Records Tab /////////////////////
 
 MwId selectedRecordID;
+bool isDropdownOpen = false;
 
 void RenderTab_CurrentLoadedRecords() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
@@ -87,7 +88,13 @@ void RenderTab_CurrentLoadedRecords() {
     }
 
     string selectedGhostName = RecordManager::GhostTracker::GetTrackedGhostNameById(selectedRecordID);
+
     if (UI::BeginCombo("Select a ghost instance", selectedGhostName)) {
+        if (!isDropdownOpen) {
+            RecordManager::GhostTracker::UpdateGhosts();
+            isDropdownOpen = true;
+        }
+
         for (uint i = 0; i < RecordManager::GhostTracker::trackedGhosts.Length; i++) {
             auto ghost = RecordManager::GhostTracker::trackedGhosts[i];
             bool isSelected = (selectedRecordID.Value == ghost.Id.Value);
@@ -99,6 +106,8 @@ void RenderTab_CurrentLoadedRecords() {
             }
         }
         UI::EndCombo();
+    } else {
+        isDropdownOpen = false;
     }
 
     if (selectedRecordID.Value != MwId().Value) {

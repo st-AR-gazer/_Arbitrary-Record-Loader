@@ -70,6 +70,7 @@ namespace RecordManager {
 
     namespace GhostTracker {
         array<CGameGhostScript@> trackedGhosts;
+        array<MwId> removedGhosts;
 
         void Init() {
             log("Initializing GhostTracker", LogLevel::Info);
@@ -89,8 +90,10 @@ namespace RecordManager {
 
             for (uint i = 0; i < newGhosts.Length; i++) {
                 CGameGhostScript@ ghost = cast<CGameGhostScript>(newGhosts[i]);
-                ghosts.InsertLast(ghost);
-                AddTrackedGhost(ghost);
+                if (!IsGhostRemoved(ghost.Id)) {
+                    ghosts.InsertLast(ghost);
+                    AddTrackedGhost(ghost);
+                }
             }
             log("Ghosts updated, count: " + ghosts.Length, LogLevel::Info);
         }
@@ -105,6 +108,7 @@ namespace RecordManager {
                 if (trackedGhosts[i].Id.Value == instanceId.Value) {
                     log("Tracked ghost removed: " + trackedGhosts[i].Nickname, LogLevel::Info);
                     trackedGhosts.RemoveAt(i);
+                    removedGhosts.InsertLast(instanceId);
                     return;
                 }
             }
@@ -113,6 +117,15 @@ namespace RecordManager {
         void ClearTrackedGhosts() {
             trackedGhosts.RemoveRange(0, trackedGhosts.Length);
             log("Cleared all tracked ghosts.", LogLevel::Info);
+        }
+
+        bool IsGhostRemoved(MwId id) {
+            for (uint i = 0; i < removedGhosts.Length; i++) {
+                if (removedGhosts[i].Value == id.Value) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         string GetTrackedGhostNameById(MwId id) {
