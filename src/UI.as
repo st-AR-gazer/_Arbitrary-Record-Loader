@@ -86,41 +86,31 @@ void RenderTab_CurrentLoadedRecords() {
     UI::Separator();
 
     if (UI::Button("Remove All Records")) {
-        log("Remove All Records button clicked", LogLevel::Info);
         RecordManager::RemoveAllRecords();
     }
 
     string selectedGhostName = RecordManager::GhostTracker::GetTrackedGhostNameById(selectedRecordID);
     if (UI::BeginCombo("Select a ghost instance", selectedGhostName)) {
-        log("Selected ghost name: " + selectedGhostName, LogLevel::Info);
-        log("Opening ghost selection combo box...", LogLevel::Info);
-        log("Tracked ghosts count: " + RecordManager::GhostTracker::trackedGhosts.Length, LogLevel::Info);
         for (uint i = 0; i < RecordManager::GhostTracker::trackedGhosts.Length; i++) {
             auto ghost = RecordManager::GhostTracker::trackedGhosts[i];
             bool isSelected = (selectedRecordID.Value == ghost.Id.Value);
-            log("Ghost " + i + ": " + ghost.Nickname + ", isSelected: " + isSelected, LogLevel::Info);
             if (UI::Selectable(ghost.Nickname, isSelected)) {
                 selectedRecordID = ghost.Id;
-                log("Selected ghost ID updated to: " + selectedRecordID.Value, LogLevel::Info);
             }
             if (isSelected) {
                 UI::SetItemDefaultFocus();
             } 
         }
         UI::EndCombo();
-        log("Closed ghost selection combo box", LogLevel::Info);
     }
 
     if (selectedRecordID.Value != MwId().Value) {
-        log("Selected record ID is valid: " + selectedRecordID.Value, LogLevel::Info);
         string ghostInfo = RecordManager::GhostTracker::GetTrackedGhostInfo(selectedRecordID);
-        log("Selected Record Info: " + ghostInfo, LogLevel::Info);
         UI::Text("Selected Record Info:");
         UI::Text(ghostInfo);
     }
 
     if (UI::Button(Icons::UserTimes + " Remove Specific Record")) {
-        log("Remove Specific Record button clicked", LogLevel::Info);
         RecordManager::RemoveInstanceRecord(selectedRecordID);
     }
 }
