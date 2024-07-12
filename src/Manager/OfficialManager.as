@@ -197,6 +197,9 @@ namespace OfficialManager {
         }
 
         void SetSeasonYearToCurrent() {
+            selectedSeason = 0;
+            selectedYear = 0;
+
             int64 currentTime = Time::Stamp;
 
             string path = Server::officialJsonFilesDirectory;
@@ -231,8 +234,18 @@ namespace OfficialManager {
                 string season = parts[0];
                 int year = Text::ParseInt(parts[1]);
 
-                selectedSeason = season;
-                selectedYear = year;
+                if (season == "Spring") {
+                    selectedSeason = 0;
+                } else if (season == "Summer") {
+                    selectedSeason = 1;
+                } else if (season == "Fall") {
+                    selectedSeason = 2;
+                } else if (season == "Winter") {
+                    selectedSeason = 3;
+                }
+
+                const int baseYear = 2020;
+                selectedYear = year - baseYear;
             }
         }
 
@@ -243,14 +256,28 @@ namespace OfficialManager {
             string mapName = root.MapInfo.Name;
             if (mapName.Length == 0) return;
 
-            string pattern = "\\b([1-9]|1[0-9]|2[0-5])\\b";
-            array<string> matches = Regex::Match(mapName, pattern);
+            string pattern = "\\b(0[1-9]|1[0-9]|2[0-5])\\b";
+            
+            auto matches = Regex::Search(mapName, pattern);
+
+            print(matches.Length);
 
             if (matches.Length > 0) {
-                string mapNumberStr = matches[0];
-                int mapNumber = Text::ParseInt(mapNumberStr);
+                for (uint i = 0; i < matches.Length; i++) {
+                    string match = matches[i];
+                    int matchIndex = mapName.IndexOf(match);
+                    
+                    if (matchIndex > 1) {
+                        string prefix = mapName.SubStr(matchIndex - 2, 2);
+                        if (prefix == "20") {
+                            continue;
+                        }
+                    }
 
-                selectedMap = mapNumber;
+                    int mapNumber = Text::ParseInt(match);
+                    selectedMap = mapNumber - 1;
+                    break;
+                }
             }
         }
     }

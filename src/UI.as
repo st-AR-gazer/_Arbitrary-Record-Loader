@@ -92,7 +92,7 @@ void RenderTab_CurrentLoadedRecords() {
     if (UI::BeginCombo("Select a ghost instance", RecordManager::GetGhostNameById(selectedRecordID))) {
         for (uint i = 0; i < RecordManager::ghosts.Length; i++) {
             auto ghost = RecordManager::ghosts[i];
-            bool isSelected = (selectedRecordID == ghost.Id);
+            bool isSelected = (selectedRecordID.Value == ghost.Id.Value);
             if (UI::Selectable(ghost.Nickname, isSelected)) {
                 selectedRecordID = ghost.Id;
             }
@@ -103,7 +103,7 @@ void RenderTab_CurrentLoadedRecords() {
         UI::EndCombo();
     }
 
-    if (selectedRecordID != MwId()) {
+    if (selectedRecordID.Value != MwId().Value) {
         string ghostInfo = RecordManager::GetGhostInfo(selectedRecordID);
         UI::Text("Selected Record Info:");
         UI::Text(ghostInfo);
@@ -113,7 +113,6 @@ void RenderTab_CurrentLoadedRecords() {
         RecordManager::RemoveInstanceRecord(selectedRecordID);
     }
 }
-
 
 //////////////////// Render Saved Ghosts and Replays Tab /////////////////////
 
@@ -322,7 +321,7 @@ void RenderTab_OfficialMaps() {
         for (uint i = 0; i < years.Length; i++) {
             bool isSelected = (selectedYear == int(i));
             if (UI::Selectable(tostring(years[i]), isSelected)) {
-                selectedYear = i;
+                selectedYear = int(i);
             }
             if (isSelected) {
                 UI::SetItemDefaultFocus();
@@ -336,7 +335,7 @@ void RenderTab_OfficialMaps() {
         for (uint i = 0; i < seasons.Length; i++) {
             bool isSelected = (selectedSeason == int(i));
             if (UI::Selectable(seasons[i], isSelected)) {
-                selectedSeason = i;
+                selectedSeason = int(i);
             }
             if (isSelected) {
                 UI::SetItemDefaultFocus();
@@ -350,7 +349,7 @@ void RenderTab_OfficialMaps() {
         for (uint i = 0; i < maps.Length; i++) {
             bool isSelected = (selectedMap == int(i));
             if (UI::Selectable(maps[i], isSelected)) {
-                selectedMap = i;
+                selectedMap = int(i);
             }
             if (isSelected) {
                 UI::SetItemDefaultFocus();

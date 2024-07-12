@@ -17,7 +17,7 @@ namespace RecordManager {
         log("Record with the MwID of: " + instanceId.GetName() + " removed.", LogLevel::Info, 15, "RemoveInstanceRecord");
     }
 
-    void SetRecordDossard(MwId instanceId, const int &in dossard, vec3 color = vec3()) {
+    void SetRecordDossard(MwId instanceId, const string &in dossard, vec3 color = vec3()) {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_SetDossard(instanceId, dossard, color);
         log("Record dossard set.", LogLevel::Info, 21, "SetRecordDossard");
@@ -43,7 +43,7 @@ namespace RecordManager {
 
     string GetGhostNameById(MwId id) {
         for (uint i = 0; i < ghosts.Length; i++) {
-            if (ghosts[i].Id == id) {
+            if (ghosts[i].Id.Value == id.Value) {
                 return ghosts[i].Nickname;
             }
         }
@@ -52,7 +52,7 @@ namespace RecordManager {
 
     string GetGhostInfo(MwId id) {
         for (uint i = 0; i < ghosts.Length; i++) {
-            if (ghosts[i].Id == id) {
+            if (ghosts[i].Id.Value == id.Value) {
                 auto ghost = ghosts[i];
                 return "Nickname: " + ghost.Nickname + "\n"
                        + "Trigram: " + ghost.Trigram + "\n"
@@ -64,8 +64,9 @@ namespace RecordManager {
         }
         return "No ghost selected.";
     }
-
 }
+
+
 
 
 
