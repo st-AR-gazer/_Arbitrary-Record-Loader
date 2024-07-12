@@ -68,7 +68,6 @@ namespace RecordManager {
         return "No ghost selected.";
     }
 
-    // New namespace for ghost tracking
     namespace GhostTracker {
         array<CGameGhostScript@> trackedGhosts;
 
@@ -86,7 +85,7 @@ namespace RecordManager {
 
             auto dataFileMgr = app.Network.ClientManiaAppPlayground.DataFileMgr;
             auto newGhosts = dataFileMgr.Ghosts;
-            ghosts.RemoveRange(0, ghosts.Length);  // Clear existing ghosts
+            ghosts.RemoveRange(0, ghosts.Length);
 
             for (uint i = 0; i < newGhosts.Length; i++) {
                 CGameGhostScript@ ghost = cast<CGameGhostScript>(newGhosts[i]);
