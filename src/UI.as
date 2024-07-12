@@ -117,8 +117,6 @@ void RenderTab_CurrentLoadedRecords() {
         log("Selected Record Info: " + ghostInfo, LogLevel::Info);
         UI::Text("Selected Record Info:");
         UI::Text(ghostInfo);
-    } else {
-        log("No valid record selected", LogLevel::Info);
     }
 
     if (UI::Button(Icons::UserTimes + " Remove Specific Record")) {
