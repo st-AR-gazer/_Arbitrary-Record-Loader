@@ -12,33 +12,33 @@ void RenderInterface() {
 
     if (S_windowOpen) {
         // UI::SetNextWindowSize(670, 300, UI::Cond::FirstUseEver);
-        if (UI::Begin("Load arbitrary Records", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
+        if (UI::Begin(Icons::UserPlus + " Load arbitrary Records", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
             UI::BeginTabBar("Tabs");
-            if (UI::BeginTabItem("Local Files")) {
+            if (UI::BeginTabItem(Icons::Users + Icons::Folder + "Local Files")) {
                 RenderTab_LocalFiles();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem("Current Loaded Records")) {
+            if (UI::BeginTabItem(Icons::Users + Icons::Info + " Current Loaded Records")) {
                 RenderTab_CurrentLoadedRecords();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem("Saved Records")) {
+            if (UI::BeginTabItem(Icons::Users + Icons::Kenney::Save + " Saved Records")) {
                 RenderTab_SavedGhostsAndReplays();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem("Load record from other")) {
+            if (UI::BeginTabItem(Icons::Users + Icons::Download + " Load record from other")) {
                 RenderTab_OtherSpecificUIDs();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem("Load record from any Map")) {
+            if (UI::BeginTabItem(Icons::Map + Icons::Download + "Load record from any Map")) {
                 RenderTab_LoadGhostFromMap();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem("Official Maps")) {
+            if (UI::BeginTabItem(Icons::Map + Icons::Globe + "Official Maps")) {
                 RenderTab_OfficialMaps();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem("Current Map Ghost")) {
+            if (UI::BeginTabItem(Icons::Map + "Current Map Ghost")) {
                 RenderTab_CurrentMapGhost();
                 UI::EndTabItem();
             }
@@ -56,7 +56,7 @@ void RenderTab_LocalFiles() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
-    if (UI::Button("Open File Explorer")) {
+    if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
         _IO::FileExplorer::OpenFileExplorer(true, IO::FromUserGameFolder("Replays/"), "", { "replay", "ghost" });
     }
 
@@ -64,15 +64,15 @@ void RenderTab_LocalFiles() {
     UI::Text("Selected File: " + filePath);
     filePath = UI::InputText("File Path", filePath);
 
-    if (UI::Button("Load Ghost or Replay")) {
+    if (UI::Button(Icons::Download + Icons::SnapchatGhost + " Load Ghost or Replay")) {
         ProcessSelectedFile(filePath);
     }
 
-    if (UI::Button("Save Ghost/Replay")) {
+    if (UI::Button(Icons::Kenney::Save + " Save Ghost/Replay")) {
         SaveRecordPath();
     }
 
-    if (UI::Button("Remove All Ghosts")) {
+    if (UI::Button(Icons::Users + Icons::EyeSlash" Remove All Ghosts")) {
         RecordManager::RemoveAllRecords();
     }
 }
@@ -82,34 +82,49 @@ void RenderTab_LocalFiles() {
 MwId selectedRecordID;
 
 void RenderTab_CurrentLoadedRecords() {
+    log("Rendering UI for Current Loaded Records...", LogLevel::Info);
+
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     if (UI::Button("Remove All Records")) {
+        log("Remove All Records button clicked", LogLevel::Info);
         RecordManager::RemoveAllRecords();
     }
 
-    if (UI::BeginCombo("Select a ghost instance", RecordManager::GetGhostNameById(selectedRecordID))) {
-        for (uint i = 0; i < RecordManager::ghosts.Length; i++) {
-            auto ghost = RecordManager::ghosts[i];
+    string selectedGhostName = RecordManager::GhostTracker::GetTrackedGhostNameById(selectedRecordID);
+    log("Selected ghost name: " + selectedGhostName, LogLevel::Info);
+
+    if (UI::BeginCombo("Select a ghost instance", selectedGhostName)) {
+        log("Opening ghost selection combo box...", LogLevel::Info);
+        for (uint i = 0; i < RecordManager::GhostTracker::trackedGhosts.Length; i++) {
+            auto ghost = RecordManager::GhostTracker::trackedGhosts[i];
             bool isSelected = (selectedRecordID.Value == ghost.Id.Value);
+            log("Ghost " + i + ": " + ghost.Nickname + ", isSelected: " + isSelected, LogLevel::Info);
             if (UI::Selectable(ghost.Nickname, isSelected)) {
                 selectedRecordID = ghost.Id;
+                log("Selected ghost ID updated to: " + selectedRecordID.Value, LogLevel::Info);
             }
             if (isSelected) {
                 UI::SetItemDefaultFocus();
             } 
         }
         UI::EndCombo();
+        log("Closed ghost selection combo box", LogLevel::Info);
     }
 
     if (selectedRecordID.Value != MwId().Value) {
-        string ghostInfo = RecordManager::GetGhostInfo(selectedRecordID);
+        log("Selected record ID is valid: " + selectedRecordID.Value, LogLevel::Info);
+        string ghostInfo = RecordManager::GhostTracker::GetTrackedGhostInfo(selectedRecordID);
+        log("Selected Record Info: " + ghostInfo, LogLevel::Info);
         UI::Text("Selected Record Info:");
         UI::Text(ghostInfo);
+    } else {
+        log("No valid record selected", LogLevel::Info);
     }
 
-    if (UI::Button("Remove Specific Record")) {
+    if (UI::Button(Icons::UserTimes + " Remove Specific Record")) {
+        log("Remove Specific Record button clicked", LogLevel::Info);
         RecordManager::RemoveInstanceRecord(selectedRecordID);
     }
 }
@@ -120,7 +135,7 @@ void RenderTab_SavedGhostsAndReplays() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
-    if (UI::Button("Open Saved Folder")) {
+    if (UI::Button(Icons::Folder + "Open Saved Folder")) {
         _IO::FileExplorer::OpenFileExplorer(true, Server::savedFilesDirectory, "", { "replay", "ghost" });
     }
 
@@ -388,13 +403,13 @@ void RenderTab_CurrentMapGhost() {
         UI::Text("\\$0f0" + "Validation Replay found for current map.");
     }
     if (!CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
-        _UI::DisabledButton("Add validation replay to current run");
-        _UI::DisabledButton("Save validation replay");
+        _UI::DisabledButton(Icons::UserPlus + " Add validation replay to current run");
+        _UI::DisabledButton(Icons::Kenney::Save + " Save validation replay");
     } else {
-        if (UI::Button("Add validation replay to current run")) {
+        if (UI::Button(Icons::UserPlus + " Add validation replay to current run")) {
             CurrentMapRecords::ValidationReplay::AddValidationReplay();
         }
-        if (UI::Button("Save validation replay")) {
+        if (UI::Button(Icons::Kenney::Save + " Save validation replay")) {
             SaveRecordPath(CurrentMapRecords::ValidationReplay::GetValidationReplayFilePath());
         }
     }
@@ -426,9 +441,9 @@ void RenderTab_CurrentMapGhost() {
             }
         }
         if (!CurrentMapRecords::GPS::gpsReplayCanBeLoaded) {
-            _UI::DisabledButton("Load GPS Replay");
+            _UI::DisabledButton(Icons::UserPlus + " Load GPS Replay");
         } else {
-            if (UI::Button("Load GPS Replay")) {
+            if (UI::Button(Icons::UserPlus + " Load GPS Replay")) {
                 CurrentMapRecords::GPS::LoadReplay();
             }
         }
@@ -440,9 +455,9 @@ void RenderTab_CurrentMapGhost() {
     UI::Text("Current Champion Medal Time: " + FromMsToFormat(CurrentMapRecords::ChampMedal::currentMapChampionMedal));
 
     if (!CurrentMapRecords::ChampMedal::championMedalExists) {
-        _UI::DisabledButton("Load Nearest Champion Medal Time");
+        _UI::DisabledButton(Icons::UserPlus + " Load Nearest Champion Medal Time");
     } else {
-        if (UI::Button("Load Nearest Champion Medal Time")) {
+        if (UI::Button(Icons::UserPlus + " Load Nearest Champion Medal Time")) {
             CurrentMapRecords::ChampMedal::AddChampionMedal();
         }
     }

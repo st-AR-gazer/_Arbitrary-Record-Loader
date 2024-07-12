@@ -28,6 +28,8 @@ void MapCoro() {
                 mapUID = s_currMap;
                 mapName = s_currMapName;
             }
+
+            RecordManager::GhostTracker::Init();
         }
     }
 }

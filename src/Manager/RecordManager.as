@@ -9,12 +9,14 @@ namespace RecordManager {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_RemoveAll();
         log("All ghosts removed.", LogLevel::Info, 9, "RemoveAllRecords");
+        GhostTracker::ClearTrackedGhosts();
     }
 
     void RemoveInstanceRecord(MwId instanceId) {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_Remove(instanceId);
         log("Record with the MwID of: " + instanceId.GetName() + " removed.", LogLevel::Info, 15, "RemoveInstanceRecord");
+        GhostTracker::RemoveTrackedGhost(instanceId);
     }
 
     void SetRecordDossard(MwId instanceId, const string &in dossard, vec3 color = vec3()) {
@@ -39,6 +41,7 @@ namespace RecordManager {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_Add(ghost, true, offset);
         log("Ghost added with offset.", LogLevel::Info, 21, "AddGhostWithOffset");
+        GhostTracker::AddTrackedGhost(ghost);
     }
 
     string GetGhostNameById(MwId id) {
@@ -64,7 +67,80 @@ namespace RecordManager {
         }
         return "No ghost selected.";
     }
+
+    // New namespace for ghost tracking
+    namespace GhostTracker {
+        array<CGameGhostScript@> trackedGhosts;
+
+        void Init() {
+            log("Initializing GhostTracker", LogLevel::Info);
+            UpdateGhosts();
+        }
+
+        void UpdateGhosts() {
+            auto app = GetApp();
+            if (app is null || app.Network is null || app.Network.ClientManiaAppPlayground is null) {
+                log("App or network components not ready", LogLevel::Info);
+                return;
+            }
+
+            auto dataFileMgr = app.Network.ClientManiaAppPlayground.DataFileMgr;
+            auto newGhosts = dataFileMgr.Ghosts;
+            ghosts.RemoveRange(0, ghosts.Length);  // Clear existing ghosts
+
+            for (uint i = 0; i < newGhosts.Length; i++) {
+                CGameGhostScript@ ghost = cast<CGameGhostScript>(newGhosts[i]);
+                ghosts.InsertLast(ghost);
+            }
+            log("Ghosts updated, count: " + ghosts.Length, LogLevel::Info);
+        }
+
+        void AddTrackedGhost(CGameGhostScript@ ghost) {
+            trackedGhosts.InsertLast(ghost);
+            log("Tracked ghost added: " + ghost.Nickname, LogLevel::Info);
+        }
+
+        void RemoveTrackedGhost(MwId instanceId) {
+            for (uint i = 0; i < trackedGhosts.Length; i++) {
+                if (trackedGhosts[i].Id.Value == instanceId.Value) {
+                    log("Tracked ghost removed: " + trackedGhosts[i].Nickname, LogLevel::Info);
+                    trackedGhosts.RemoveAt(i);
+                    return;
+                }
+            }
+        }
+
+        void ClearTrackedGhosts() {
+            trackedGhosts.RemoveRange(0, trackedGhosts.Length);
+            log("Cleared all tracked ghosts.", LogLevel::Info);
+        }
+
+        string GetTrackedGhostNameById(MwId id) {
+            for (uint i = 0; i < trackedGhosts.Length; i++) {
+                if (trackedGhosts[i].Id.Value == id.Value) {
+                    return trackedGhosts[i].Nickname;
+                }
+            }
+            return "";
+        }
+
+        string GetTrackedGhostInfo(MwId id) {
+            for (uint i = 0; i < trackedGhosts.Length; i++) {
+                if (trackedGhosts[i].Id.Value == id.Value) {
+                    auto ghost = trackedGhosts[i];
+                    return "Nickname: " + ghost.Nickname + "\n"
+                           + "Trigram: " + ghost.Trigram + "\n"
+                           + "Country Path: " + ghost.CountryPath + "\n"
+                           + "Time: " + ghost.Result.Time + "\n"
+                           + "Stunt Score: " + ghost.Result.Score + "\n"
+                           + "MwId: " + ghost.Id.Value + "\n";
+                }
+            }
+            return "No ghost selected.";
+        }
+    }
 }
+
 
 
 
