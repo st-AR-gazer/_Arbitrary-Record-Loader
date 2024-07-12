@@ -139,9 +139,69 @@ namespace RecordManager {
             return "No ghost selected.";
         }
     }
+
+    namespace Save {
+        void SaveRecord() {
+            if (selectedRecordID.Value == MwId().Value) { NotifyError("No ghost selected to save."); return; }
+
+            CGameGhostScript@ ghost = GetTrackedGhostById(selectedRecordID);
+            if (ghost is null) { NotifyError("Selected ghost not found."); return; }
+
+            string timeStamp = Time::FormatString("yyyyMMdd_HHmmss", Time::Stamp);
+            string fileName = ghost.Id.Value + "_" + ghost.Nickname + "_" + ghost.Result.Time + "_" + timeStamp;
+            fileName = fileName.Replace(" ", "-").Replace(":", "_");
+
+            string replayFilePath = Server::savedFilesDirectory + fileName + ".Replay.Gbx";
+            string jsonFilePath = Server::savedJsonDirectory + fileName + ".json";
+
+            log("Saving ghost to file: " + replayFilePath, LogLevel::Info, 11, "SaveRecordPath");
+
+            auto app = GetApp();
+            if (app is null || app.Network is null || app.Network.ClientManiaAppPlayground is null) { NotifyError("App or network components not ready."); return; }
+            auto playground = cast<CGameCtnChallenge@>(app.RootMap);
+            if (playground is null) { NotifyError("RootMap is not a valid CGameCtnChallenge."); return; }
+
+            CWebServicesTaskResult@ saveResult = app.Network.ClientManiaAppPlayground.DataFileMgr.Replay_Save(wstring(replayFilePath), playground, ghost);
+            if (saveResult.HasSucceeded && !saveResult.HasFailed) {
+                log("Replay save successful", LogLevel::Info);
+
+                int ID = Math::Rand(0, 999999999);
+                Json::Value json = Json::Object();
+                json["content"] = Json::Object();
+                json["content"]["ID"] = ID;
+                json["content"]["FileName"] = fileName;
+                json["content"]["FromLocalFile"] = true;
+                json["content"]["ReplayFilePath"] = replayFilePath;
+                json["content"]["Nickname"] = ghost.Nickname;
+                json["content"]["Trigram"] = ghost.Trigram;
+                json["content"]["CountryPath"] = ghost.CountryPath;
+                json["content"]["Time"] = ghost.Result.Time;
+                json["content"]["StuntScore"] = ghost.Result.Score;
+                json["content"]["MwId"] = ghost.Id.Value;
+
+                _IO::File::WriteJsonToFile(jsonFilePath, json);
+
+                NotifyInfo("Ghost saved successfully.");
+            } else {
+                log("Replay save failed: " + saveResult.ErrorDescription, LogLevel::Error);
+                NotifyError("Failed to save ghost replay.");
+            }
+        }
+
+        CGameGhostScript@ GetTrackedGhostById(MwId id) {
+            for (uint i = 0; i < GhostTracker::trackedGhosts.Length; i++) {
+                if (GhostTracker::trackedGhosts[i].Id.Value == id.Value) {
+                    return GhostTracker::trackedGhosts[i];
+                }
+            }
+            return null;
+        }
+
+        void SaveRecordByPath(const string &in overwritePath) {
+
+        }
+    }
 }
-
-
 
 
 

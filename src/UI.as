@@ -68,10 +68,6 @@ void RenderTab_LocalFiles() {
         ProcessSelectedFile(filePath);
     }
 
-    if (UI::Button(Icons::Kenney::Save + " Save Ghost/Replay")) {
-        SaveRecordPath();
-    }
-
     if (UI::Button(Icons::Users + Icons::EyeSlash + " Remove All Ghosts")) {
         RecordManager::RemoveAllRecords();
     }
@@ -86,6 +82,7 @@ void RenderTab_CurrentLoadedRecords() {
     UI::Separator();
 
     if (UI::Button("Remove All Records")) {
+        log("Remove All Records button clicked", LogLevel::Info);
         RecordManager::RemoveAllRecords();
     }
 
@@ -99,7 +96,7 @@ void RenderTab_CurrentLoadedRecords() {
             }
             if (isSelected) {
                 UI::SetItemDefaultFocus();
-            } 
+            }
         }
         UI::EndCombo();
     }
@@ -111,9 +108,20 @@ void RenderTab_CurrentLoadedRecords() {
     }
 
     if (UI::Button(Icons::UserTimes + " Remove Specific Record")) {
+        log("Remove Specific Record button clicked", LogLevel::Info);
         RecordManager::RemoveInstanceRecord(selectedRecordID);
     }
+
+    if (UI::Button(Icons::Kenney::Save + " Save Ghost/Replay")) {
+        log("Save Ghost button clicked", LogLevel::Info);
+        RecordManager::Save::SaveRecord();
+    }
 }
+
+
+    /*if (UI::Button(Icons::Kenney::Save + " Save validation replay")) {
+        RecordManager::Save::SaveRecord(CurrentMapRecords::ValidationReplay::GetValidationReplayFilePath());
+    }*/
 
 //////////////////// Render Saved Ghosts and Replays Tab /////////////////////
 
@@ -390,13 +398,9 @@ void RenderTab_CurrentMapGhost() {
     }
     if (!CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
         _UI::DisabledButton(Icons::UserPlus + " Add validation replay to current run");
-        _UI::DisabledButton(Icons::Kenney::Save + " Save validation replay");
     } else {
         if (UI::Button(Icons::UserPlus + " Add validation replay to current run")) {
             CurrentMapRecords::ValidationReplay::AddValidationReplay();
-        }
-        if (UI::Button(Icons::Kenney::Save + " Save validation replay")) {
-            SaveRecordPath(CurrentMapRecords::ValidationReplay::GetValidationReplayFilePath());
         }
     }
 
