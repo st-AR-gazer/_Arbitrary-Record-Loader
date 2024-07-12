@@ -99,8 +99,10 @@ namespace RecordManager {
         }
 
         void AddTrackedGhost(CGameGhostScript@ ghost) {
-            trackedGhosts.InsertLast(ghost);
-            log("Tracked ghost added: " + ghost.Nickname, LogLevel::Info);
+            if (!IsGhostTracked(ghost.Id)) {
+                trackedGhosts.InsertLast(ghost);
+                log("Tracked ghost added: " + ghost.Nickname, LogLevel::Info);
+            }
         }
 
         void RemoveTrackedGhost(MwId instanceId) {
@@ -159,6 +161,11 @@ namespace RecordManager {
                 }
             }
             return "No ghost selected.";
+        }
+
+        void RefreshTrackedGhosts() {
+            trackedGhosts.RemoveRange(0, trackedGhosts.Length);
+            UpdateGhosts();
         }
     }
 

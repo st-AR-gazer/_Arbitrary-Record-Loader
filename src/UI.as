@@ -79,7 +79,7 @@ MwId selectedRecordID;
 bool isDropdownOpen = false;
 
 void RenderTab_CurrentLoadedRecords() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     if (UI::Button("Remove All Records")) {
@@ -87,7 +87,9 @@ void RenderTab_CurrentLoadedRecords() {
         RecordManager::RemoveAllRecords();
     }
 
-    string selectedGhostName = RecordManager::GhostTracker::GetTrackedGhostNameById(selectedRecordID);
+    string selectedGhostName = selectedRecordID.Value != MwId().Value 
+                               ? RecordManager::GhostTracker::GetTrackedGhostNameById(selectedRecordID) 
+                               : "Select a ghost instance";
 
     if (UI::BeginCombo("Select a ghost instance", selectedGhostName)) {
         if (!isDropdownOpen) {
@@ -119,6 +121,8 @@ void RenderTab_CurrentLoadedRecords() {
     if (UI::Button(Icons::UserTimes + " Remove Specific Record")) {
         log("Remove Specific Record button clicked", LogLevel::Info);
         RecordManager::RemoveInstanceRecord(selectedRecordID);
+        RecordManager::GhostTracker::RefreshTrackedGhosts();
+        selectedRecordID = MwId();
     }
 
     if (UI::Button(Icons::Kenney::Save + " Save Ghost/Replay")) {
