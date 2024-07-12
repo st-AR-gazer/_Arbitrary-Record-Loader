@@ -79,12 +79,14 @@ MwId selectedRecordID;
 bool isDropdownOpen = false;
 
 void RenderTab_CurrentLoadedRecords() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE \nNO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     if (UI::Button("Remove All Records")) {
         log("Remove All Records button clicked", LogLevel::Info);
         RecordManager::RemoveAllRecords();
+        selectedRecordID = MwId();
+        RecordManager::GhostTracker::RefreshTrackedGhosts();
     }
 
     string selectedGhostName = selectedRecordID.Value != MwId().Value 
@@ -118,16 +120,25 @@ void RenderTab_CurrentLoadedRecords() {
         UI::Text(ghostInfo);
     }
 
-    if (UI::Button(Icons::UserTimes + " Remove Specific Record")) {
-        log("Remove Specific Record button clicked", LogLevel::Info);
-        RecordManager::RemoveInstanceRecord(selectedRecordID);
-        RecordManager::GhostTracker::RefreshTrackedGhosts();
-        selectedRecordID = MwId();
+    if (selectedRecordID.Value != MwId().Value) {
+        if (UI::Button(Icons::UserPlus + " Remove Specific Record")) {
+            log("Remove Specific Record button clicked", LogLevel::Info);
+            RecordManager::RemoveInstanceRecord(selectedRecordID);
+            RecordManager::GhostTracker::RemoveTrackedGhost(selectedRecordID);
+            RecordManager::GhostTracker::RefreshTrackedGhosts();
+            selectedRecordID = MwId();
+        }
+    } else {
+        _UI::DisabledButton(Icons::UserPlus + " Load Specific Record");
     }
 
-    if (UI::Button(Icons::Kenney::Save + " Save Ghost/Replay")) {
-        log("Save Ghost button clicked", LogLevel::Info);
-        RecordManager::Save::SaveRecord();
+    if (selectedRecordID.Value != MwId().Value) {
+        if (UI::Button(Icons::UserPlus + " Save Ghost/Replay")) {
+            log("Save Ghost button clicked", LogLevel::Info);
+            RecordManager::Save::SaveRecord();
+        }
+    } else {
+        _UI::DisabledButton(Icons::UserPlus + " Save Ghost/Replay");
     }
 }
 
