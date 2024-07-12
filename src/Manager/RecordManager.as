@@ -90,7 +90,7 @@ namespace RecordManager {
 
             for (uint i = 0; i < newGhosts.Length; i++) {
                 CGameGhostScript@ ghost = cast<CGameGhostScript>(newGhosts[i]);
-                if (!IsGhostRemoved(ghost.Id)) {
+                if (!IsGhostRemoved(ghost.Id) && !IsGhostTracked(ghost.Id)) {
                     ghosts.InsertLast(ghost);
                     AddTrackedGhost(ghost);
                 }
@@ -122,6 +122,15 @@ namespace RecordManager {
         bool IsGhostRemoved(MwId id) {
             for (uint i = 0; i < removedGhosts.Length; i++) {
                 if (removedGhosts[i].Value == id.Value) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool IsGhostTracked(MwId id) {
+            for (uint i = 0; i < trackedGhosts.Length; i++) {
+                if (trackedGhosts[i].Id.Value == id.Value) {
                     return true;
                 }
             }
