@@ -194,7 +194,7 @@ void RenderTab_SavedGhostsAndReplays() {
                 UI::SameLine();
                 if (UI::Button("Delete " + fileName)) {
                     IO::Delete(Server::savedJsonDirectory + fileName);
-                    IO::Delete(Server::savedFilesDirectory + string(content["FileName"]));
+                    IO::Delete(Server::savedFilesDirectory + string(content["FileName"]) + ".Replay.Gbx");
                 }
                 UI::Separator();
             } else {
