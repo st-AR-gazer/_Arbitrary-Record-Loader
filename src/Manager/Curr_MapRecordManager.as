@@ -349,10 +349,7 @@ namespace ChampMedal {
 
         void ConvertGhosts() {
             for (uint i = 0; i < ghosts.Length; i++) {
-                if (ghosts[i] is null) {
-                    log("Ghost at index " + i + " is null", LogLevel::Error, 353, "ConvertGhosts");
-                    continue;
-                }
+                if (ghosts[i] is null) { log("Ghost at index " + i + " is null", LogLevel::Error, 353, "ConvertGhosts"); continue; }
                 ghosts[i].ConvertToScript(CTmRaceResult_VTable_Ptr, ghosts[i].ghost);
             }
         }
