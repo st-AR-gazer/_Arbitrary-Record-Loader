@@ -260,8 +260,6 @@ namespace OfficialManager {
             
             auto matches = Regex::Search(mapName, pattern);
 
-            print(matches.Length);
-
             if (matches.Length > 0) {
                 for (uint i = 0; i < matches.Length; i++) {
                     string match = matches[i];

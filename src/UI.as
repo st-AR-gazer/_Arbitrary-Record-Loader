@@ -317,7 +317,7 @@ void RenderTab_LoadGhostFromMap() {
 
     if (UI::Button("Fetch Ghost")) {
 
-        LoadRecordFromArbitraryMap::LoadSelectedRecord(mapUID, ghostPosition);
+        LoadRecordFromArbitraryMap::LoadSelectedRecord(mapUID, ghostPosition, "AnyMap");
     }
 
     UI::Separator();
@@ -411,7 +411,7 @@ void RenderTab_OfficialMaps() {
 
     // Load Button
     if (UI::Button("Load Record")) {
-        LoadRecordFromArbitraryMap::LoadSelectedRecord(Official_MapUID, tostring(selectedOffset));
+        LoadRecordFromArbitraryMap::LoadSelectedRecord(Official_MapUID, tostring(selectedOffset), "Official");
     }
 }
 
@@ -446,6 +446,7 @@ void RenderTab_CurrentMapGhost() {
         UI::Text("GPS Replays:");
 
         if (CurrentMapRecords::GPS::ghosts.Length == 1) {
+            UI::Text(CurrentMapRecords::GPS::ghosts[0].name);
             UI::Text("Only one GPS replay found.");
             CurrentMapRecords::GPS::selectedGhostIndex = 0;
         }
@@ -487,7 +488,7 @@ void RenderTab_CurrentMapGhost() {
 
     if (CurrentMapRecords::ChampMedal::ReqForCurrentMapFinished) {
         if (CurrentMapRecords::ChampMedal::championMedalHasExactMatch) {
-            UI::Text("Exact match found for the champion medal.");
+            UI::Text("Exact match found for the champion medal!");
             UI::Text("Time difference: " + tostring(CurrentMapRecords::ChampMedal::timeDifference) + " ms");
         } else {
             UI::Text("There is no exact match for the champion medal. Using the closest ghost that still beats the champion medal time.");
