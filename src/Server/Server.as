@@ -17,6 +17,7 @@ namespace Server {
 
     const string specificDownloadedFilesDirectory = IO::FromStorageFolder("Server/Downloaded/Files/");
     const string specificDownloadedJsonFilesDirectory = IO::FromStorageFolder("Server/Downloaded/JsonData/");
+    const string specificDownloadedCreatedProfilesDirectory = IO::FromStorageFolder("Server/Downloaded/CreatedProfiles/");
 
     const string officialFilesDirectory = IO::FromStorageFolder("Server/Official/Files/");
     const string officialInfoFilesDirectory = IO::FromStorageFolder("Server/Official/Info/");

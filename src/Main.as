@@ -35,6 +35,7 @@ void InitFolders() {
 
     _IO::Folder::SafeCreateFolder(Server::specificDownloadedFilesDirectory);
     _IO::Folder::SafeCreateFolder(Server::specificDownloadedJsonFilesDirectory);
+    _IO::Folder::SafeCreateFolder(Server::specificDownloadedCreatedProfilesDirectory);
     
     _IO::Folder::SafeCreateFolder(Server::officialFilesDirectory);
     _IO::Folder::SafeCreateFolder(Server::officialInfoFilesDirectory);

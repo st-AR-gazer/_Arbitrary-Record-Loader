@@ -425,9 +425,7 @@ namespace ChampMedal {
 
             CGameGhostScript@ tmRaceResultNodPre = CGameGhostScript();
             Dev::SetOffset(tmRaceResultNodPre, 0x0, CTmRaceResult_VTable_Ptr);
-            trace('force casting');
             CTmRaceResultNod@ tmRaceResultNod = Dev::ForceCast<CTmRaceResultNod@>(tmRaceResultNodPre).Get();
-            trace('done force casting');
             @tmRaceResultNodPre = null;
             Dev::SetOffset(tmRaceResultNod, 0x18, ghostPtr + 0x28);
             tmRaceResultNod.MwAddRef();

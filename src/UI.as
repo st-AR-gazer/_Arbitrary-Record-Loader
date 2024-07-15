@@ -207,95 +207,101 @@ void RenderTab_SavedGhostsAndReplays() {
 
 //////////////////// Render Other Specific UIDs Tab /////////////////////
 
+string selectedJsonFile;
+array<string> jsonFiles = OtherManager::GetAvailableJsonFiles();
+int selectedIndex = 0;
+string downloadedContent;
+array<Json::Value> mapList;
+
+int otherOffset = 0;
+
 void RenderTab_OtherSpecificUIDs() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
-    // UI::Separator();
+    UI::Separator();
 
-    // string downloadPath;
-    // string selectedJsonFile;
-    // string downloadedContent;
-    // array<string> jsonFiles = GetAvailableJsonFiles();
-    // int selectedIndex = 0;
+    string downloadPath;
+    UI::InputText("Download URL", downloadPath);
+    UI::SameLine();
+    if (UI::Button("Download Provided")) {
+        OtherManager::StartDownload(downloadPath);
+    }
+    UI::SameLine();
+    if (UI::Button("Create New Download Profile")) {
+        OtherManager::IsCreatingProfile = true;
+    }
 
-    // UI::InputText("Download Provided from external", downloadPath);
-    
-    // if (UI::Button("Download Provided")) {
-    //     if (_IO::File::GetFileExtension(downloadPath).ToLower() != "json" && _IO::File::GetFileExtension(downloadPath).ToLower() != ".json") {
-    //         NotifyWarn("Error | Invalid file extension.");
-    //     } else if (downloadPath != "") {
-    //         string destinationPath = Server::specificDownloadedJsonFilesDirectory + _IO::File::GetFileName(downloadPath);
-    //         _Net::DownloadFileToDestination(downloadPath, destinationPath);
-    //         jsonFiles = GetAvailableJsonFiles();
-    //     } else {
-    //         NotifyWarn("Error | No Json Download provided.");
-    //     }
-    // }
+    otherOffset = UI::InputInt("Offset", otherOffset);
 
-    // UI::Separator();
-    // if (UI::BeginCombo("Select JSON File", selectedJsonFile)) {
-    //     for (uint i = 0; i < jsonFiles.Length; i++) {
-    //         bool isSelected = (selectedIndex == int(i));
-    //         if (UI::Selectable(jsonFiles[i], isSelected)) {
-    //             selectedIndex = i;
-    //             selectedJsonFile = jsonFiles[i];
-    //             downloadedContent = LoadJsonContent(selectedJsonFile);
-    //         }
-    //         if (isSelected) {
-    //             UI::SetItemDefaultFocus();
-    //         }
-    //     }
-    //     UI::EndCombo();
-    // }
+    UI::Separator();
+    if (UI::BeginCombo("Select JSON File", selectedJsonFile)) {
+        for (uint i = 0; i < jsonFiles.Length; i++) {
+            bool isSelected = (selectedIndex == int(i));
+            if (UI::Selectable(jsonFiles[i], isSelected)) {
+                selectedIndex = i;
+                selectedJsonFile = jsonFiles[i];
+                downloadedContent = OtherManager::LoadJsonContent(selectedJsonFile);
+                mapList = OtherManager::GetMapListFromJson(downloadedContent);
+            }
+            if (isSelected) {
+                UI::SetItemDefaultFocus();
+            }
+        }
+        UI::EndCombo();
+    }
 
-    // if (downloadedContent != "") {
-    //     Json::Value json = Json::Parse(downloadedContent);
-    //     if (json.GetType() == Json::Type::Object && json.HasKey("maps")) {
-    //         Json::Value maps = json["maps"];
-    //         for (uint i = 0; i < maps.Length; i++) {
-    //             Json::Value map = maps[i];
-    //             if (map.HasKey("files")) {
-    //                 UI::Text("Title: " + map["title"]);
-    //                 UI::Text("Description: " + map["description"]);
-    //                 UI::Separator();
+    UI::Separator();
+    if (mapList.Length > 0) {
+        for (uint i = 0; i < mapList.Length; i++) {
+            Json::Value map = mapList[i];
+            if (map.HasKey("mapName") && map.HasKey("mapUid")) {
+                UI::Text("Map Name: " + map["mapName"]);
+                UI::SameLine();
+                if (UI::Button("Load Records##" + i)) {
+                    LoadRecordFromArbitraryMap::LoadSelectedRecord(map["mapUid"], tostring(otherOffset), "OtherMaps");
+                }
+                UI::Separator();
+            }
+        }
+    }
 
-    //                 Json::Value files = map["files"];
-    //                 for (uint j = 0; j < files.Length; j++) {
-    //                     Json::Value file = files[j];
-    //                     string fileName = file["fileName"];
-    //                     string filePath = file["filePath"];
+    if (OtherManager::IsDownloading) {
+        UI::OpenPopup("Downloading");
+    }
 
-    //                     UI::Text("File Name: " + fileName);
-    //                     if (UI::Button("Load " + fileName)) {
-    //                         ProcessSelectedFile(filePath);
-    //                     }
-    //                     UI::Text("File Path: " + filePath);
-    //                     UI::Separator();
-    //                 }
-    //             }
-    //         }
-    //     } else {
-    //         UI::Text("Failed to parse downloaded JSON content.");
-    //     }
-    // }
+    if (UI::BeginPopupModal("Downloading", OtherManager::IsDownloading, UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
+        UI::Text("Downloading, please wait...");
+        UI::EndPopup();
+    }
+
+    if (OtherManager::IsCreatingProfile) {
+        UI::OpenPopup("Create New Download Profile");
+    }
+
+    if (UI::BeginPopupModal("Create New Download Profile", OtherManager::IsCreatingProfile, UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
+        string newMapName;
+        string newMapUid;
+        string newJsonName;
+
+        UI::InputText("JSON Name", newJsonName);
+        UI::InputText("Map Name", newMapName);
+        UI::InputText("Map UID", newMapUid);
+
+        if (UI::Button("Save Profile")) {
+            OtherManager::SaveNewProfile(newJsonName, newMapName, newMapUid);
+            OtherManager::IsCreatingProfile = false;
+            UI::CloseCurrentPopup();
+        }
+        
+        if (UI::Button("Cancel")) {
+            OtherManager::IsCreatingProfile = false;
+            UI::CloseCurrentPopup();
+        }
+
+        UI::EndPopup();
+    }
 }
 
-array<string> GetAvailableJsonFiles() {
-    // array<string> jsonFiles;
-    // if (IO::FolderExists(Server::specificDownloadedJsonFilesDirectory) == false) {
-    //     _IO::Folder::RecursiveCreateFolder(Server::specificDownloadedJsonFilesDirectory);
-    // }
-    // array<string> files = IO::IndexFolder(Server::specificDownloadedJsonFilesDirectory);
-    // for (uint i = 0; i < files.Length; i++) {
-    //     jsonFiles.InsertLast(_IO::File::GetFileName(files[i]));
-    // }
-    // return jsonFiles;
-    return { "test.json" };
-}
-string LoadJsonContent(const string &in fileName) {
-    // string filePath = Server::specificDownloadedJsonFilesDirectory + fileName;
-    // return _IO::File::ReadFileToEnd(filePath);
-    return fileName;
-}
+
 
 //////////////////// Render Load Ghost from Map Tab /////////////////////
 
