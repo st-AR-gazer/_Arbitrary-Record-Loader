@@ -331,6 +331,26 @@ namespace ChampMedal {
                                     auto newGhost = CGameCtnGhost();
                                     Dev::SetOffset(newGhost, 0x2e0, recordData);
                                     recordData.MwAddRef();
+                                    
+                                    newGhost.ModelIdentName.SetName("CarSport");
+                                    newGhost.ModelIdentAuthor.SetName("Nadeo");
+                                    newGhost.Validate_ChallengeUid.SetName(rootMap.EdChallengeId);
+
+                                    auto ptr1 = GetSomeMemory();
+                                    auto ptr2 = GetSomeMemory();
+                                    Dev::SetOffset(newGhost, 0x2e8, ptr1);
+                                    Dev::SetOffset(newGhost, 0x2F0, uint(1));
+                                    Dev::SetOffset(newGhost, 0x2F4, uint(1));
+                                    Dev::Write(ptr1, ptr2);
+                                    Dev::Write(ptr2, uint(2));
+                                    Dev::Write(ptr2 + 4, uint(0x02000156));
+                                    Dev::Write(ptr2 + 8, uint(0));
+                                    Dev::Write(ptr2 + 0xC, uint(45450));
+                                    Dev::Write(ptr2 + 0x10, uint64(0));
+                                    Dev::Write(ptr2 + 0x18, uint64(0));
+                                    Dev::Write(ptr2 + 0x20, uint(0xD100000));
+                                    Dev::Write(ptr2 + 0x24, uint(1));
+
                                     string ghostName = track.Name.SubStr(6);  // Remove "ghost:" prefix
                                     string savePath = savePathBase + ghostName + "_" + Text::Format("%d", i) + ".Replay.Gbx";
 
@@ -346,6 +366,17 @@ namespace ChampMedal {
                 }
             }
         }
+
+        uint64 GetSomeMemory() {
+            CGameGhostScript@ tmp1 = CGameGhostScript();
+            Dev::SetOffset(tmp1, 0x8, tmp1);
+            auto ptr = Dev::GetOffsetUint64(tmp1, 0x8);
+            for (uint i = 0; i < 0x58; i += 8) {
+                Dev::SetOffset(tmp1, i, uint64(0));
+            }
+            return ptr;
+        }
+
 
         void ConvertGhosts() {
             for (uint i = 0; i < ghosts.Length; i++) {
