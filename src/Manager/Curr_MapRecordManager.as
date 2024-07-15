@@ -358,6 +358,8 @@ namespace ChampMedal {
                                         IO::CreateFolder(_IO::File::GetFilePathWithoutFileName(savePath), true);
                                     }
 
+                                    print(newGhost.GhostNickname);
+
                                     ghosts.InsertLast(GhostData(ghostName, savePath, newGhost));
                                 }
                             }
