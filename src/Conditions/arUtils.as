@@ -91,6 +91,19 @@ namespace _IO {
                 }
             }
         }
+
+        string GetFolderName(const string &in path) {
+            int index = _Text::LastIndexOf(path, "/");
+            int index2 = _Text::LastIndexOf(path, "\\");
+            
+            index = Math::Max(index, index2);
+
+            if (index == -1) {
+                return path;
+            }
+            
+            return path.SubStr(index + 1);
+        }
     }
 
     namespace File {

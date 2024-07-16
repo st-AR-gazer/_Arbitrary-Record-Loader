@@ -1,8 +1,8 @@
-void FILE_EXPLORER_BASE_RENDERER() { // MUST BE CALLED IN THE MAIN RENDER LOOP OF YOUR PLUGIN
-    if (_IO::FileExplorer::showInterface) {
-        _IO::FileExplorer::RenderFileExplorer();
-    }
-}
+// void FILE_EXPLORER_BASE_RENDERER() { // MUST BE CALLED IN THE MAIN RENDER LOOP OF YOUR PLUGIN
+//     if (_IO::FileExplorer::showInterface) {
+//         _IO::FileExplorer::RenderFileExplorer();
+//     }
+// }
 
 namespace _IO {
     namespace FileExplorer {
