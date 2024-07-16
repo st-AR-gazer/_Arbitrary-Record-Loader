@@ -3,8 +3,15 @@ namespace OtherManager {
     bool IsDownloading = false;
     bool IsCreatingProfile = false;
 
+    class MapEntry {
+        string mapName;
+        string mapUid;
+    }
+
+    array<MapEntry> NewProfileMaps;
+
     void StartDownload(const string &in downloadPath) {
-        startnew(CoroutineFunc(Coro_DownloadAndRefreshJsonFiles), downloadPath);
+        startnew(Coro_DownloadAndRefreshJsonFiles, downloadPath);
     }
 
     void Coro_DownloadAndRefreshJsonFiles(const string &in downloadPath) {
@@ -28,7 +35,7 @@ namespace OtherManager {
         if (IO::FolderExists(Server::specificDownloadedJsonFilesDirectory) == false) {
             _IO::Folder::RecursiveCreateFolder(Server::specificDownloadedJsonFilesDirectory);
         }
-        files = IO::IndexFolder(Server::specificDownloadedJsonFilesDirectory);
+        files = IO::IndexFolder(Server::specificDownloadedJsonFilesDirectory, true);
         jsonFiles.Resize(files.Length);
         for (uint i = 0; i < files.Length; i++) {
             jsonFiles[i] = _IO::File::GetFileName(files[i]);
@@ -60,7 +67,7 @@ namespace OtherManager {
         while (!req.Finished()) {
             yield();
         }
-        if (req.StatusCode() == 200) {
+        if (req.ResponseCode() == 200) {
             auto content = req.String();
             _IO::File::WriteToFile(destinationPath, content);
         } else {
@@ -68,16 +75,23 @@ namespace OtherManager {
         }
     }
 
-    void SaveNewProfile(const string &in jsonName, const string &in mapName, const string &in mapUid) {
-        Json::Value newProfile;
+    void SaveNewProfile(const string &in jsonName) {
+
+        Json::Value newProfile = Json::Object();
+        
         newProfile["jsonName"] = jsonName;
         newProfile["maps"] = Json::Array();
-        Json::Value newMap;
-        newMap["mapName"] = mapName;
-        newMap["mapUid"] = mapUid;
-        newProfile["maps"].Add(newMap);
+        
+        for (uint i = 0; i < NewProfileMaps.Length; i++) {
+            Json::Value newMap = Json::Object();
+            newMap["mapName"] = NewProfileMaps[i].mapName;
+            newMap["mapUid"] = NewProfileMaps[i].mapUid;
+            newProfile["maps"].Add(newMap);
+        }
 
-        string filePath = Server::specificDownloadedJsonFilesDirectory + jsonName + ".json";
+        string filePath = Server::specificDownloadedCreatedProfilesDirectory + jsonName + ".json";
         _IO::File::WriteToFile(filePath, Json::Write(newProfile));
+        
+        NewProfileMaps.RemoveRange(0, NewProfileMaps.Length);
     }
 }

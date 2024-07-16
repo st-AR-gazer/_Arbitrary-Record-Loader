@@ -213,6 +213,8 @@ int selectedIndex = 0;
 string downloadedContent;
 array<Json::Value> mapList;
 
+string newJsonName;
+
 int otherOffset = 0;
 
 void RenderTab_OtherSpecificUIDs() {
@@ -228,6 +230,18 @@ void RenderTab_OtherSpecificUIDs() {
     UI::SameLine();
     if (UI::Button("Create New Download Profile")) {
         OtherManager::IsCreatingProfile = true;
+    }
+    UI::SameLine();
+    if (UI::Button(Icons::Folder + " Profiles Folder")) {
+        _IO::OpenFolder(Server::specificDownloadedCreatedProfilesDirectory);
+    }
+    UI::SameLine();
+    if (UI::Button(Icons::Folder + " Downloads Folder")) {
+        _IO::OpenFolder(Server::specificDownloadedJsonFilesDirectory);
+    }
+    UI::SameLine();
+    if (UI::Button(Icons::Refresh + " Refresh")) {
+        jsonFiles = OtherManager::GetAvailableJsonFiles();
     }
 
     otherOffset = UI::InputInt("Offset", otherOffset);
@@ -254,7 +268,7 @@ void RenderTab_OtherSpecificUIDs() {
         for (uint i = 0; i < mapList.Length; i++) {
             Json::Value map = mapList[i];
             if (map.HasKey("mapName") && map.HasKey("mapUid")) {
-                UI::Text("Map Name: " + map["mapName"]);
+                UI::Text("Map Name: " + string(map["mapName"]));
                 UI::SameLine();
                 if (UI::Button("Load Records##" + i)) {
                     LoadRecordFromArbitraryMap::LoadSelectedRecord(map["mapUid"], tostring(otherOffset), "OtherMaps");
@@ -278,20 +292,30 @@ void RenderTab_OtherSpecificUIDs() {
     }
 
     if (UI::BeginPopupModal("Create New Download Profile", OtherManager::IsCreatingProfile, UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
-        string newMapName;
-        string newMapUid;
-        string newJsonName;
+        newJsonName = UI::InputText("JSON Name", newJsonName);
 
-        UI::InputText("JSON Name", newJsonName);
-        UI::InputText("Map Name", newMapName);
-        UI::InputText("Map UID", newMapUid);
+        for (uint i = 0; i < OtherManager::NewProfileMaps.Length; i++) {
+            OtherManager::NewProfileMaps[i].mapName = UI::InputText("Map Name##" + i, OtherManager::NewProfileMaps[i].mapName);
+            UI::SameLine();
+            OtherManager::NewProfileMaps[i].mapUid = UI::InputText("Map UID##" + i, OtherManager::NewProfileMaps[i].mapUid);
+            UI::SameLine();
+            if (UI::Button("Remove##" + i)) {
+                OtherManager::NewProfileMaps.RemoveAt(i);
+                i--;
+            }
+            UI::Separator();
+        }
 
+        if (UI::Button("Add Map")) {
+            OtherManager::NewProfileMaps.InsertLast(OtherManager::MapEntry());
+        }
+        UI::SameLine();
         if (UI::Button("Save Profile")) {
-            OtherManager::SaveNewProfile(newJsonName, newMapName, newMapUid);
+            OtherManager::SaveNewProfile(newJsonName);
             OtherManager::IsCreatingProfile = false;
             UI::CloseCurrentPopup();
         }
-        
+        UI::SameLine();
         if (UI::Button("Cancel")) {
             OtherManager::IsCreatingProfile = false;
             UI::CloseCurrentPopup();

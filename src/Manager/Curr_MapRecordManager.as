@@ -382,7 +382,7 @@ namespace ChampMedal {
 
         void ConvertGhosts() {
             for (uint i = 0; i < ghosts.Length; i++) {
-                if (ghosts[i] is null) { log("Ghost at index " + i + " is null", LogLevel::Error, 353, "ConvertGhosts"); continue; }
+                if (ghosts[i] is null) { log("Ghost at index " + i + " is null", LogLevel::Error, 385, "ConvertGhosts"); continue; }
                 ghosts[i].ConvertToScript(CTmRaceResult_VTable_Ptr, ghosts[i].ghost);
             }
         }
@@ -390,7 +390,7 @@ namespace ChampMedal {
         void SaveReplays() {
             for (uint i = 0; i < ghosts.Length; i++) {
                 if (ghosts[i] is null) {
-                    log("Ghost at index " + i + " is null", LogLevel::Error, 363, "SaveReplays");
+                    log("Ghost at index " + i + " is null", LogLevel::Error, 393, "SaveReplays");
                     continue;
                 }
                 ghosts[i].Save(rootMap);
@@ -413,7 +413,7 @@ namespace ChampMedal {
         }
 
         void ConvertToScript(uint64 CTmRaceResult_VTable_Ptr, CGameCtnGhost@ ghost) {
-            if (ghost is null) { log("Ghost is null in ConvertToScript", LogLevel::Error, 386, "ConvertToScript"); return; }
+            if (ghost is null) { log("Ghost is null in ConvertToScript", LogLevel::Error, 416, "ConvertToScript"); return; }
 
             ghost.MwAddRef();
 
@@ -434,7 +434,7 @@ namespace ChampMedal {
         }
 
         void Save(CGameCtnChallenge@ rootMap) {
-            if (ghostScript is null) { log("GhostScript is null in Save for ghost " + name, LogLevel::Error, 409, "Save"); return; }
+            if (ghostScript is null) { log("GhostScript is null in Save for ghost " + name, LogLevel::Error, 437, "Save"); return; }
 
             print(savePath);
             print(rootMap.MapName);
@@ -443,7 +443,7 @@ namespace ChampMedal {
             CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
             CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(savePath, rootMap, ghostScript);
             if (taskResult is null) {
-                log("Replay task returned null for ghost " + name, LogLevel::Error, 418, "Save");
+                log("Replay task returned null for ghost " + name, LogLevel::Error, 446, "Save");
             }
         }
     }
