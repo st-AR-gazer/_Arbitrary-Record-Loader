@@ -1,8 +1,5 @@
-string g_leaderboard = "Personal_Best";
-string g_MLHookCustomEvent = "TMGame_Record_ToggleGhost";
-string g_MLHookCustomSpecEvent = "TMGame_Record_SpectateGhost";
-
-string manifestUrl = "http://maniacdn.net/ar_/Arbitrary-Ghost-Loader/manifest/manifest.json";
+string manifestUrl = "http://maniacdn.net/ar_/Arbitrary-Record-Loader/manifest/manifest.json";
+string manifestPreinstalled = "http://maniacdn.net/ar_/Arbitrary-Record-Loader/preinstalled/";
 
 void FetchManifest() {
     Net::HttpRequest req;
@@ -17,21 +14,20 @@ void FetchManifest() {
     if (req.ResponseCode() == 200) {
         ParseManifest(req.String());
     } else {
-        log("Error fetching manifest: " + req.ResponseCode(), LogLevel::Error, 20, "FetchManifest");
+        log("Error fetching manifest: " + req.ResponseCode(), LogLevel::Error, 17, "FetchManifest");
     }
 }
 
 void ParseManifest(const string &in reqBody) {
     Json::Value manifest = Json::Parse(reqBody);
     if (manifest.GetType() != Json::Type::Object) {
-        log("Failed to parse JSON.", LogLevel::Error, 27, "ParseManifest");
+        log("Failed to parse JSON.", LogLevel::Error, 24, "ParseManifest");
         return;
     }
 
     bool shouldUpdate = manifest["shouldUpdate"];
     if (!shouldUpdate) return;
 
-    g_leaderboard = manifest["GetMapRecords"];
-    g_MLHookCustomEvent = manifest["MLHook::Queue_SH_SendCustomEvent_ToggleGhost"];
-    g_MLHookCustomSpecEvent = manifest["MLHook::Queue_SH_SendCustomEvent_SpectateGhost"];
+    
+    _IO::File::WriteToFile(Server::specificDownloadedJsonFilesDirectory + "");
 }

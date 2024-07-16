@@ -1,15 +1,15 @@
 void Main() {
+    startnew(Server::StartHttpServer);
     InitApi();
     InitFolders();
     InitMoveDummy();
+    OfficialManager::DownloadingFiles::Init();
+    OfficialManager::UI::Init();
+    OtherManager::CDN::Init();
 
     string dllPath = IO::FromStorageFolder("DLLs/FileCreationTime.dll");
     _IO::File::SafeMoveSourceFileToNonSource("src/Conditions/CompanionDLLs/FileCreationTime.dll", dllPath);
 
-    OfficialManager::DownloadingFiles::Init();
-    OfficialManager::UI::Init();
-
-    startnew(Server::StartHttpServer);
     startnew(MapCoro);
 }
 

@@ -94,4 +94,81 @@ namespace OtherManager {
         
         NewProfileMaps.RemoveRange(0, NewProfileMaps.Length);
     }
+
+    namespace CDN {
+        bool IsDownloading = false;
+        string manifestUrl = "http://maniacdn.net/ar_/Arbitrary-Record-Loader/manifest/manifest.json";
+        string manifestPreinstalled = "http://maniacdn.net/ar_/Arbitrary-Record-Loader/preinstalled/";
+        string currentVersion = "v1";
+
+        void StartManifestDownload() {
+            startnew(Coro_FetchManifest);
+        }
+
+        void Coro_FetchManifest() {
+            IsDownloading = true;
+            auto req = Net::HttpGet(manifestUrl);
+            while (!req.Finished()) {
+                yield();
+            }
+
+            if (req.ResponseCode() == 200) {
+                ParseManifest(req.String());
+            } else {
+                log("Error fetching manifest: " + req.ResponseCode(), LogLevel::Error, 118, "Coro_FetchManifest");
+            }
+            IsDownloading = false;
+        }
+
+        void ParseManifest(const string &in reqBody) {
+            Json::Value manifest = Json::Parse(reqBody);
+            if (manifest.GetType() != Json::Type::Object) {
+                log("Failed to parse JSON.", LogLevel::Error, 126, "ParseManifest");
+                return;
+            }
+
+            string manifestVersion = manifest["version"];
+            if (currentVersion != manifestVersion) {
+                auto files = manifest["files"];
+                for (uint i = 0; i < files.Length; i++) {
+                    string fileUrl = manifestPreinstalled + string(files[i]);
+                    string destinationPath = Server::specificDownloadedJsonFilesDirectory + string(files[i]);
+                    DownloadFileToDestination(fileUrl, destinationPath);
+                }
+                currentVersion = manifestVersion;
+                SaveCurrentVersion(manifestVersion);
+            }
+        }
+
+        void DownloadFileToDestination(const string &in url, const string &in destinationPath) {
+            auto req = Net::HttpGet(url);
+            while (!req.Finished()) {
+                yield();
+            }
+            if (req.ResponseCode() == 200) {
+                auto content = req.String();
+                _IO::File::WriteToFile(destinationPath, content);
+            } else {
+                NotifyWarn("Error | Failed to download file from URL.");
+            }
+        }
+
+        void SaveCurrentVersion(const string &in version) {
+            string versionFilePath = Server::specificDownloaded + "version.txt";
+            _IO::File::WriteToFile(versionFilePath, version);
+        }
+
+        string LoadCurrentVersion() {
+            string versionFilePath = Server::specificDownloaded + "version.txt";
+            if (IO::FileExists(versionFilePath)) {
+                return _IO::File::ReadFileToEnd(versionFilePath);
+            }
+            return "";
+        }
+
+        void Init() {
+            currentVersion = LoadCurrentVersion();
+            StartManifestDownload();
+        }
+    }
 }
