@@ -358,4 +358,12 @@ void OpenFileExplorerExample() {
 
 void Render() {
     FILE_EXPLORER_BASE_RENDERER();
+    
+    if (UI::Begin(Icons::UserPlus + " File Explorer", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
+        if (UI::Button("Open File Explorer")) {
+            OpenFileExplorerExample();
+        }
+    
+    }    
+    UI::End();
 }
