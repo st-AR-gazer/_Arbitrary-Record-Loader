@@ -147,35 +147,38 @@ namespace FileExplorer {
             IsIndexing = true;
             IndexingMessage = "Folder is being indexed...";
             CurrentIndexingPath = path;
-            startnew(StartIndexingFilesCoroutine);
+            startnew(CoroutineFuncUserdata(StartIndexingFilesCoroutine), this);
         }
 
-        void StartIndexingFilesCoroutine() {
-            CurrentFiles.Resize(0);
-            IndexingMessage = "Folder is being indexed...";
+    void StartIndexingFilesCoroutine(ref@ r) {
+        FileExplorer@ fe = cast<FileExplorer@>(r);
+        if (fe is null) return;
 
-            array<string> fileNames = GetFiles(CurrentIndexingPath);
-            const uint batchSize = 20000;
-            uint totalFiles = fileNames.Length;
-            uint processedFiles = 0;
+        fe.CurrentFiles.Resize(0);
+        fe.IndexingMessage = "Folder is being indexed...";
 
-            for (uint i = 0; i < totalFiles; i += batchSize) {
-                uint end = Math::Min(i + batchSize, totalFiles);
-                for (uint j = i; j < end; j++) {
-                    FileInfo@ fileInfo = GetFileInfo(fileNames[j]);
-                    if (fileInfo !is null) {
-                        CurrentFiles.InsertLast(fileInfo);
-                    }
+        array<string> fileNames = fe.GetFiles(fe.CurrentIndexingPath);
+        const uint batchSize = 20000;
+        uint totalFiles = fileNames.Length;
+        uint processedFiles = 0;
+
+        for (uint i = 0; i < totalFiles; i += batchSize) {
+            uint end = Math::Min(i + batchSize, totalFiles);
+            for (uint j = i; j < end; j++) {
+                FileInfo@ fileInfo = fe.GetFileInfo(fileNames[j]);
+                if (fileInfo !is null) {
+                    fe.CurrentFiles.InsertLast(fileInfo);
                 }
-
-                processedFiles = end;
-                IndexingMessage = "Indexing file " + processedFiles + " out of " + totalFiles;
-
-                yield();
             }
 
-            IsIndexing = false;
+            processedFiles = end;
+            fe.IndexingMessage = "Indexing file " + processedFiles + " out of " + totalFiles;
+
+            yield();
         }
+
+        fe.IsIndexing = false;
+    }
 
         array<string> GetFiles(const string &in path) {
             return IO::IndexFolder(path, false);
