@@ -53,9 +53,11 @@ namespace FileExplorer {
         Navigation Navigation;
         array<FileInfo@> Files;
         Config@ Config;
+        FileExplorer@ explorer;
 
-        FileTab(Config@ cfg) {
+        FileTab(Config@ cfg, FileExplorer@ fe) {
             @Config = cfg;
+            @explorer = fe;
             LoadDirectory(Config.Path);
         }
 
@@ -101,17 +103,16 @@ namespace FileExplorer {
         bool IsIndexing = false;
         string IndexingMessage = "";
         array<FileInfo@> CurrentFiles;
-
         string CurrentIndexingPath;
 
         FileExplorer(Config@ cfg) {
             @Config = cfg;
-            Tabs.InsertLast(FileTab(@Config));
+            Tabs.InsertLast(FileTab(@Config, this));
             CurrentTabIndex = 0;
         }
 
         void OpenTab() {
-            Tabs.InsertLast(FileTab(@Config));
+            Tabs.InsertLast(FileTab(@Config, this));
             CurrentTabIndex = Tabs.Length - 1;
         }
 
@@ -150,35 +151,35 @@ namespace FileExplorer {
             startnew(CoroutineFuncUserdata(StartIndexingFilesCoroutine), this);
         }
 
-    void StartIndexingFilesCoroutine(ref@ r) {
-        FileExplorer@ fe = cast<FileExplorer@>(r);
-        if (fe is null) return;
+        void StartIndexingFilesCoroutine(ref@ r) {
+            FileExplorer@ fe = cast<FileExplorer@>(r);
+            if (fe is null) return;
 
-        fe.CurrentFiles.Resize(0);
-        fe.IndexingMessage = "Folder is being indexed...";
+            fe.CurrentFiles.Resize(0);
+            fe.IndexingMessage = "Folder is being indexed...";
 
-        array<string> fileNames = fe.GetFiles(fe.CurrentIndexingPath);
-        const uint batchSize = 20000;
-        uint totalFiles = fileNames.Length;
-        uint processedFiles = 0;
+            array<string> fileNames = fe.GetFiles(fe.CurrentIndexingPath);
+            const uint batchSize = 20000;
+            uint totalFiles = fileNames.Length;
+            uint processedFiles = 0;
 
-        for (uint i = 0; i < totalFiles; i += batchSize) {
-            uint end = Math::Min(i + batchSize, totalFiles);
-            for (uint j = i; j < end; j++) {
-                FileInfo@ fileInfo = fe.GetFileInfo(fileNames[j]);
-                if (fileInfo !is null) {
-                    fe.CurrentFiles.InsertLast(fileInfo);
+            for (uint i = 0; i < totalFiles; i += batchSize) {
+                uint end = Math::Min(i + batchSize, totalFiles);
+                for (uint j = i; j < end; j++) {
+                    FileInfo@ fileInfo = fe.GetFileInfo(fileNames[j]);
+                    if (fileInfo !is null) {
+                        fe.CurrentFiles.InsertLast(fileInfo);
+                    }
                 }
+
+                processedFiles = end;
+                fe.IndexingMessage = "Indexing file " + processedFiles + " out of " + totalFiles;
+
+                yield();
             }
 
-            processedFiles = end;
-            fe.IndexingMessage = "Indexing file " + processedFiles + " out of " + totalFiles;
-
-            yield();
+            fe.IsIndexing = false;
         }
-
-        fe.IsIndexing = false;
-    }
 
         array<string> GetFiles(const string &in path) {
             return IO::IndexFolder(path, false);
