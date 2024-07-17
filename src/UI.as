@@ -8,7 +8,8 @@ void RenderMenu() {
 }
 
 void RenderInterface() {
-    FILE_EXPLORER_BASE_RENDERER(); // Required for the file explorer to work.
+    // FILE_EXPLORER_BASE_RENDERER(); // Required for the file explorer to work.
+    // Temporaryly moved to the main Render script to avoid conflicts with the file explorer while develoption, this should be moved back to the main RenderInterface functions once the file explorer is fully implemented.
 
     if (S_windowOpen) {
         // UI::SetNextWindowSize(670, 300, UI::Cond::FirstUseEver);

@@ -3,7 +3,6 @@ namespace FileExplorer {
     bool showInterface = false;
     FileExplorer@ explorer;
 
-    // Store settings
     class Config {
         bool MustReturnFilePath;
         string Path;
@@ -20,7 +19,6 @@ namespace FileExplorer {
         }
     }
 
-    // Store file details
     class FileInfo {
         string Name;
         string Path;
@@ -39,7 +37,6 @@ namespace FileExplorer {
         }
     }
 
-    // Path management
     class Navigation {
         string CurrentPath;
 
@@ -52,7 +49,6 @@ namespace FileExplorer {
         }
     }
 
-    // Manage a single tab in the file explorer
     class FileTab {
         Navigation Navigation;
         array<FileInfo@> Files;
@@ -68,10 +64,10 @@ namespace FileExplorer {
             Files = LoadFiles(path);
 
             if (Config.SearchQuery != "") {
-                // Apply search query filtering logic
+                // Apply search query filtering logic later at some point
             }
             if (Config.Filters.Length > 0) {
-                // Apply filters logic
+                // Apply filters logic later at some point
             }
 
             if (Config.MustReturnFilePath && Config.RenderFlag) {
@@ -85,19 +81,26 @@ namespace FileExplorer {
 
         array<FileInfo@> LoadFiles(const string &in path) {
             array<FileInfo@> fileList;
-            // Load file data here (pseudo-code)
-            // Example:
-            // fileList.InsertLast(FileInfo("example.txt", path + "/example.txt", 1024, "txt", 1625097600000));
+            array<string> fileNames = explorer.GetFiles(path);
+            for (uint i = 0; i < fileNames.Length; i++) {
+                FileInfo@ fileInfo = explorer.GetFileInfo(fileNames[i]);
+                if (fileInfo !is null) {
+                    fileList.InsertLast(fileInfo);
+                }
+            }
             return fileList;
         }
     }
 
-    // Main FileExplorer class
     class FileExplorer {
         array<FileTab@> Tabs;
         uint CurrentTabIndex;
         Config@ Config;
         array<string> PinnedItems;
+
+        bool IsIndexing = false;
+        string IndexingMessage = "";
+        array<FileInfo@> CurrentFiles;
 
         FileExplorer(Config@ cfg) {
             @Config = cfg;
@@ -126,7 +129,6 @@ namespace FileExplorer {
             const string &in path = "",
             const string &in searchQuery = "",
             array<string> filters = array<string>()
-            // Add more parameters as needed or if I come up with something that can be usefull
         ) {
             Config.MustReturnFilePath = mustReturnFilePath;
             Config.Path = path;
@@ -134,13 +136,67 @@ namespace FileExplorer {
             Config.Filters = filters;
             Config.RenderFlag = true;
 
-            GetCurrentTab().LoadDirectory(Config.Path); // Load the initial directory
+            GetCurrentTab().LoadDirectory(Config.Path);
 
             showInterface = true;
         }
+
+        void StartIndexingFiles(const string &in path) {
+            IsIndexing = true;
+            IndexingMessage = "Folder is being indexed...";
+            startnew(CoroutineFuncUserdata(StartIndexingFilesCoroutine), this, path);
+        }
+
+        void StartIndexingFilesCoroutine(ref@ r, const string &in path) {
+            FileExplorer@ fe = cast<FileExplorer@>(r);
+            if (fe is null) return;
+
+            fe.CurrentFiles.Resize(0);
+            fe.IndexingMessage = "Folder is being indexed...";
+
+            array<string> fileNames = GetFiles(path);
+            const uint batchSize = 20000;
+            uint totalFiles = fileNames.Length;
+            uint processedFiles = 0;
+
+            for (uint i = 0; i < totalFiles; i += batchSize) {
+                uint end = Math::Min(i + batchSize, totalFiles);
+                for (uint j = i; j < end; j++) {
+                    FileInfo@ fileInfo = GetFileInfo(fileNames[j]);
+                    if (fileInfo !is null) {
+                        fe.CurrentFiles.InsertLast(fileInfo);
+                    }
+                }
+
+                processedFiles = end;
+                fe.IndexingMessage = "Indexing file " + processedFiles + " out of " + totalFiles;
+
+                yield();
+            }
+
+            fe.IsIndexing = false;
+        }
+
+        array<string> GetFiles(const string &in path) {
+            return IO::IndexFolder(path, false);
+        }
+
+        FileInfo@ GetFileInfo(const string &in path) {
+            if (_IO::File::IsFile(path)) {
+                string name = _IO::File::GetFileName(path);
+                uint64 size = IO::FileSize(path);
+                string type = _IO::File::GetFileExtension(path);
+                int64 lastModified = IO::FileModifiedTime(path);
+                return FileInfo(name, path, size, type, lastModified);
+            } else {
+                string name = _IO::File::GetFileName(path);
+                string type = "folder";
+                int64 lastModified = IO::FileModifiedTime(path);
+                return FileInfo(name, path, 0, type, lastModified);
+            }
+        }
     }
 
-    // Handle UI rendering
     class UserInterface {
         FileExplorer@ explorer;
 
@@ -186,7 +242,7 @@ namespace FileExplorer {
             // Custom rendering logic for each tab can be implemented here
             FileTab@ tab = explorer.Tabs[index];
             // Example:
-            // UI::Text("Content of " + _IO::Folder::GetFolderName(tab.Navigation.GetPath()));
+            // UI::Text("Content of Tab " + _IO::Folder::GetFolderName(tab.Navigation.GetPath()));
         }
 
         void Render_NavigationBar() {
@@ -216,23 +272,42 @@ namespace FileExplorer {
         }
 
         void Render_PinBar() {
-            // Simulating a vertical layout using selectable items
             for (uint i = 0; i < explorer.PinnedItems.Length; i++) {
                 UI::Selectable(explorer.PinnedItems[i], false, UI::SelectableFlags::SpanAllColumns);
             }
         }
 
         void Render_MainAreaBar() {
-            // Simulating a vertical layout using selectable items
-            array<FileInfo@> files = explorer.GetCurrentTab().Files;
-            for (uint i = 0; i < files.Length; i++) {
-                UI::Selectable(files[i].Name, false, UI::SelectableFlags::SpanAllColumns);
+            if (explorer.IsIndexing) {
+                UI::Text(explorer.IndexingMessage);
+            } else {
+                UI::BeginTable("FilesTable", 4, UI::TableFlags::Resizable | UI::TableFlags::Borders);
+                UI::TableSetupColumn("Name");
+                UI::TableSetupColumn("Type");
+                UI::TableSetupColumn("Size");
+                UI::TableSetupColumn("Last Modified");
+                UI::TableHeadersRow();
+
+                for (uint i = 0; i < explorer.CurrentFiles.Length; i++) {
+                    FileInfo@ file = explorer.CurrentFiles[i];
+                    UI::TableNextRow();
+                    UI::TableSetColumnIndex(0);
+                    UI::Text(file.Name);
+                    UI::TableSetColumnIndex(1);
+                    UI::Text(file.Type == "folder" ? "Folder" : "File");
+                    UI::TableSetColumnIndex(2);
+                    UI::Text("" + file.Size);
+                    UI::TableSetColumnIndex(3);
+                    UI::Text("" + file.LastModifiedDate);
+                }
+
+                UI::EndTable();
             }
         }
 
         void Render_DetailBar() {
             if (explorer.GetCurrentTab().Files.Length > 0) {
-                FileInfo@ file = explorer.GetCurrentTab().Files[0]; // Change logic to display selected file when that func is added
+                FileInfo@ file = explorer.GetCurrentTab().Files[0];
                 if (file !is null) {
                     UI::Text("Name: " + file.Name);
                     UI::Text("Path: " + file.Path);
@@ -267,12 +342,10 @@ namespace FileExplorer {
     }
 }
 
-// Function to be called in the main render loop of the plugin
 void FILE_EXPLORER_BASE_RENDERER() {
     FileExplorer::RenderFileExplorer();
 }
 
-// Example usage to open the file explorer
 void OpenFileExplorerExample() {
     FileExplorer::OpenFileExplorer(
         true, // mustReturnFilePath
@@ -280,16 +353,9 @@ void OpenFileExplorerExample() {
         "", // searchQuery
         { "txt", "docx" } // filters
     );
+    FileExplorer::explorer.StartIndexingFiles(Server::serverDirectory);
 }
 
 void Render() {
-    // FILE_EXPLORER_BASE_RENDERER();
-    
-    if (UI::Begin(Icons::UserPlus + " File Explorer", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
-        if (UI::Button("Open File Explorer")) {
-            OpenFileExplorerExample();
-        }
-    
-    }    
-    UI::End();
+    FILE_EXPLORER_BASE_RENDERER();
 }
