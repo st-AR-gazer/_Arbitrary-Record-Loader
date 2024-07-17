@@ -186,16 +186,7 @@ namespace FileExplorer {
             // Custom rendering logic for each tab can be implemented here
             FileTab@ tab = explorer.Tabs[index];
             // Example:
-            // UI::Text("Content of " + GetFolderName(tab.Navigation.GetPath()));
-        }
-
-        string GetFolderName(const string &in path) {
-            // Extract the folder name from the path
-            array<string> parts = path.Split("\\");
-            if (parts.Length > 0) {
-                return parts[parts.Length - 1];
-            }
-            return path;
+            // UI::Text("Content of " + _IO::Folder::GetFolderName(tab.Navigation.GetPath()));
         }
 
         void Render_NavigationBar() {

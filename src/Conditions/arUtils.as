@@ -93,16 +93,22 @@ namespace _IO {
         }
 
         string GetFolderName(const string &in path) {
-            int index = _Text::LastIndexOf(path, "/");
-            int index2 = _Text::LastIndexOf(path, "\\");
+            string trimmedPath = path;
             
+            while (trimmedPath.EndsWith("/") || trimmedPath.EndsWith("\\")) {
+                trimmedPath = trimmedPath.SubStr(0, trimmedPath.Length - 1);
+            }
+            
+            int index = _Text::LastIndexOf(trimmedPath, "/");
+            int index2 = _Text::LastIndexOf(trimmedPath, "\\");
+
             index = Math::Max(index, index2);
 
             if (index == -1) {
-                return path;
+                return trimmedPath;
             }
-            
-            return path.SubStr(index + 1);
+
+            return trimmedPath.SubStr(index + 1);
         }
     }
 
