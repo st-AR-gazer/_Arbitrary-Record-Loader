@@ -65,6 +65,8 @@ namespace FileExplorer {
             Navigation.SetPath(path);
             Files = LoadFiles(path);
 
+            print(Files.Length);
+
             if (Config.SearchQuery != "") {
                 // Apply search query filtering logic later at some point
             }
