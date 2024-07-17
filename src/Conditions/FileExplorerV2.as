@@ -353,7 +353,7 @@ void FILE_EXPLORER_BASE_RENDERER() {
 void OpenFileExplorerExample() {
     FileExplorer::OpenFileExplorer(
         true, // mustReturnFilePath
-        Server::serverDirectory, // path
+        IO::FromUserGameFolder("Replays/"), // path
         "", // searchQuery
         { "txt", "docx" } // filters
     );
