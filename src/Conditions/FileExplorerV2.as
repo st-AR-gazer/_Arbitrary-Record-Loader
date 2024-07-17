@@ -102,6 +102,8 @@ namespace FileExplorer {
         string IndexingMessage = "";
         array<FileInfo@> CurrentFiles;
 
+        string CurrentIndexingPath;
+
         FileExplorer(Config@ cfg) {
             @Config = cfg;
             Tabs.InsertLast(FileTab(@Config));
@@ -144,17 +146,15 @@ namespace FileExplorer {
         void StartIndexingFiles(const string &in path) {
             IsIndexing = true;
             IndexingMessage = "Folder is being indexed...";
-            startnew(CoroutineFuncUserdata(StartIndexingFilesCoroutine), this, path);
+            CurrentIndexingPath = path;
+            startnew(StartIndexingFilesCoroutine);
         }
 
-        void StartIndexingFilesCoroutine(ref@ r, const string &in path) {
-            FileExplorer@ fe = cast<FileExplorer@>(r);
-            if (fe is null) return;
+        void StartIndexingFilesCoroutine() {
+            CurrentFiles.Resize(0);
+            IndexingMessage = "Folder is being indexed...";
 
-            fe.CurrentFiles.Resize(0);
-            fe.IndexingMessage = "Folder is being indexed...";
-
-            array<string> fileNames = GetFiles(path);
+            array<string> fileNames = GetFiles(CurrentIndexingPath);
             const uint batchSize = 20000;
             uint totalFiles = fileNames.Length;
             uint processedFiles = 0;
@@ -164,17 +164,17 @@ namespace FileExplorer {
                 for (uint j = i; j < end; j++) {
                     FileInfo@ fileInfo = GetFileInfo(fileNames[j]);
                     if (fileInfo !is null) {
-                        fe.CurrentFiles.InsertLast(fileInfo);
+                        CurrentFiles.InsertLast(fileInfo);
                     }
                 }
 
                 processedFiles = end;
-                fe.IndexingMessage = "Indexing file " + processedFiles + " out of " + totalFiles;
+                IndexingMessage = "Indexing file " + processedFiles + " out of " + totalFiles;
 
                 yield();
             }
 
-            fe.IsIndexing = false;
+            IsIndexing = false;
         }
 
         array<string> GetFiles(const string &in path) {
