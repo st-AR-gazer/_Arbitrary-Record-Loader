@@ -66,6 +66,8 @@ namespace FileExplorer {
             Files = LoadFiles(path);
 
             print(Files.Length);
+            print(Files[0].Name + " " + Files[0].Path + " " + Files[0].Size + " " + Files[0].Type + " " + Files[0].LastModifiedDate);
+            print("yek");
 
             if (Config.SearchQuery != "") {
                 // Apply search query filtering logic later at some point
