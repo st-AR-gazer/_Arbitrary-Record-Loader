@@ -468,40 +468,41 @@ void RenderTab_CurrentMapGhost() {
         }
     }
 
-    UI::Separator();
+    // GPS extraction/loading is something I've canned for now, due to lack of knowledge on my part...
 
-        if (!CurrentMapRecords::GPS::gpsReplayCanBeLoaded) {
-            UI::Text("No GPS replays available for the current map.");
-        }
+    // UI::Separator();
+    // if (!CurrentMapRecords::GPS::gpsReplayCanBeLoaded) {
+    //     UI::Text("No GPS replays available for the current map.");
+    // }
 
-        UI::Text("GPS Replays:");
+    // UI::Text("GPS Replays:");
 
-        if (CurrentMapRecords::GPS::ghosts.Length == 1) {
-            UI::Text(CurrentMapRecords::GPS::ghosts[0].name);
-            UI::Text("Only one GPS replay found.");
-            CurrentMapRecords::GPS::selectedGhostIndex = 0;
-        }
-        if (CurrentMapRecords::GPS::selectedGhostIndex > 0) {
-            if (UI::BeginCombo("Select GPS Replay", CurrentMapRecords::GPS::ghosts[CurrentMapRecords::GPS::selectedGhostIndex].name)) {
-                for (uint i = 0; i < CurrentMapRecords::GPS::ghosts.Length; i++) {
-                    bool isSelected = (CurrentMapRecords::GPS::selectedGhostIndex == int(i));
-                    if (UI::Selectable(CurrentMapRecords::GPS::ghosts[i].name, isSelected)) {
-                        CurrentMapRecords::GPS::selectedGhostIndex = i;
-                    }
-                    if (isSelected) {
-                        UI::SetItemDefaultFocus();
-                    }
-                }
-                UI::EndCombo();
-            }
-        }
-        if (!CurrentMapRecords::GPS::gpsReplayCanBeLoaded) {
-            _UI::DisabledButton(Icons::UserPlus + " Load GPS Replay");
-        } else {
-            if (UI::Button(Icons::UserPlus + " Load GPS Replay")) {
-                CurrentMapRecords::GPS::LoadReplay();
-            }
-        }
+    // if (CurrentMapRecords::GPS::ghosts.Length == 1) {
+    //     UI::Text(CurrentMapRecords::GPS::ghosts[0].name);
+    //     UI::Text("Only one GPS replay found.");
+    //     CurrentMapRecords::GPS::selectedGhostIndex = 0;
+    // }
+    // if (CurrentMapRecords::GPS::selectedGhostIndex > 0) {
+    //     if (UI::BeginCombo("Select GPS Replay", CurrentMapRecords::GPS::ghosts[CurrentMapRecords::GPS::selectedGhostIndex].name)) {
+    //         for (uint i = 0; i < CurrentMapRecords::GPS::ghosts.Length; i++) {
+    //             bool isSelected = (CurrentMapRecords::GPS::selectedGhostIndex == int(i));
+    //             if (UI::Selectable(CurrentMapRecords::GPS::ghosts[i].name, isSelected)) {
+    //                 CurrentMapRecords::GPS::selectedGhostIndex = i;
+    //             }
+    //             if (isSelected) {
+    //                 UI::SetItemDefaultFocus();
+    //             }
+    //         }
+    //         UI::EndCombo();
+    //     }
+    // }
+    // if (!CurrentMapRecords::GPS::gpsReplayCanBeLoaded) {
+    //     _UI::DisabledButton(Icons::UserPlus + " Load GPS Replay");
+    // } else {
+    //     if (UI::Button(Icons::UserPlus + " Load GPS Replay")) {
+    //         CurrentMapRecords::GPS::LoadReplay();
+    //     }
+    // }
 #if DEPENDENCY_CHAMPIONMEDALS
     UI::Separator();
 
