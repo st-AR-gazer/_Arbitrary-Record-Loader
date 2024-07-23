@@ -65,10 +65,6 @@ namespace FileExplorer {
             Navigation.SetPath(path);
             Files = LoadFiles(path);
 
-            print(Files.Length);
-            print(Files[0].Name + " " + Files[0].Path + " " + Files[0].Size + " " + Files[0].Type + " " + Files[0].LastModifiedDate);
-            print("yek");
-
             if (Config.SearchQuery != "") {
                 // Apply search query filtering logic later at some point
             }
@@ -99,8 +95,7 @@ namespace FileExplorer {
     }
 
     class FileExplorer {
-        array<FileTab@> Tabs;
-        uint CurrentTabIndex;
+        FileTab@ tab;
         Config@ Config;
         array<string> PinnedItems;
 
@@ -111,24 +106,7 @@ namespace FileExplorer {
 
         FileExplorer(Config@ cfg) {
             @Config = cfg;
-            Tabs.InsertLast(FileTab(@Config, this));
-            CurrentTabIndex = 0;
-        }
-
-        void OpenTab() {
-            Tabs.InsertLast(FileTab(@Config, this));
-            CurrentTabIndex = Tabs.Length - 1;
-        }
-
-        void CloseTab(uint index) {
-            if (index < Tabs.Length) {
-                Tabs.RemoveAt(index);
-                CurrentTabIndex = index > 0 ? index - 1 : 0;
-            }
-        }
-
-        FileTab@ GetCurrentTab() {
-            return Tabs[CurrentTabIndex];
+            @tab = FileTab(@Config, this);
         }
 
         void OpenFileExplorer(
@@ -143,9 +121,11 @@ namespace FileExplorer {
             Config.Filters = filters;
             Config.RenderFlag = true;
 
-            GetCurrentTab().LoadDirectory(Config.Path);
+            tab.LoadDirectory(Config.Path);
 
             showInterface = true;
+
+            explorer.StartIndexingFiles(IO::FromUserGameFolder("Replays/"));
         }
 
         void StartIndexingFiles(const string &in path) {
@@ -164,9 +144,6 @@ namespace FileExplorer {
 
             array<string> fileNames = fe.GetFiles(fe.CurrentIndexingPath);
 
-            print("Total files: " + fileNames.Length);
-            print("CurrentIndexingPath: " + fe.CurrentIndexingPath);
-
             const uint batchSize = 20000;
             uint totalFiles = fileNames.Length;
             uint processedFiles = 0;
@@ -182,8 +159,6 @@ namespace FileExplorer {
 
                 processedFiles = end;
                 fe.IndexingMessage = "Indexing file " + processedFiles + " out of " + totalFiles;
-
-                print(fe.IndexingMessage);
 
                 yield();
             }
@@ -224,7 +199,6 @@ namespace FileExplorer {
         }
 
         void Render_Rows() {
-            Render_TabBar();
             Render_NavigationBar();
             Render_ActionBar();
         }
@@ -240,25 +214,6 @@ namespace FileExplorer {
             UI::EndTable();
         }
 
-        void Render_TabBar() {
-            UI::BeginTabBar("Tabs");
-            for (uint i = 0; i < explorer.Tabs.Length; i++) {
-                string tabName = _IO::Folder::GetFolderName(explorer.Tabs[i].Navigation.GetPath());
-                if (UI::BeginTabItem(tabName)) {
-                    RenderTab(i);
-                    UI::EndTabItem();
-                }
-            }
-            UI::EndTabBar();
-        }
-
-        void RenderTab(uint index) {
-            // Custom rendering logic for each tab can be implemented here
-            FileTab@ tab = explorer.Tabs[index];
-            // Example:
-            // UI::Text("Content of Tab " + _IO::Folder::GetFolderName(tab.Navigation.GetPath()));
-        }
-
         void Render_NavigationBar() {
             UI::Separator();
             if (UI::Button(Icons::ArrowLeft)) { /* Handle back navigation */ }
@@ -267,7 +222,7 @@ namespace FileExplorer {
             UI::SameLine();
             if (UI::Button(Icons::ArrowUp)) { /* Handle up navigation */ }
             UI::SameLine();
-            UI::Text(explorer.GetCurrentTab().Navigation.GetPath());
+            UI::Text(explorer.tab.Navigation.GetPath());
             UI::SameLine();
             explorer.Config.SearchQuery = UI::InputText("Search", explorer.Config.SearchQuery);
             UI::Separator();
@@ -310,9 +265,9 @@ namespace FileExplorer {
                     UI::TableSetColumnIndex(1);
                     UI::Text(file.Type == "folder" ? "Folder" : "File");
                     UI::TableSetColumnIndex(2);
-                    UI::Text("" + file.Size);
+                    UI::Text(file.Type == "folder" ? "-" : "" + file.Size);
                     UI::TableSetColumnIndex(3);
-                    UI::Text("" + file.LastModifiedDate);
+                    UI::Text("" + Time::FormatString("%Y-%m-%d %H:%M:%S", file.LastModifiedDate));
                 }
 
                 UI::EndTable();
@@ -320,8 +275,8 @@ namespace FileExplorer {
         }
 
         void Render_DetailBar() {
-            if (explorer.GetCurrentTab().Files.Length > 0) {
-                FileInfo@ file = explorer.GetCurrentTab().Files[0];
+            if (explorer.tab.Files.Length > 0) {
+                FileInfo@ file = explorer.tab.Files[0];
                 if (file !is null) {
                     UI::Text("Name: " + file.Name);
                     UI::Text("Path: " + file.Path);
@@ -365,9 +320,8 @@ void OpenFileExplorerExample() {
         true, // mustReturnFilePath
         IO::FromUserGameFolder("Replays/"), // path
         "", // searchQuery
-        { "txt", "docx" } // filters
+        { "" } // filters
     );
-    FileExplorer::explorer.StartIndexingFiles(Server::serverDirectory);
 }
 
 void Render() {
