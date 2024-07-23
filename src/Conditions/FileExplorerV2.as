@@ -163,6 +163,10 @@ namespace FileExplorer {
             fe.IndexingMessage = "Folder is being indexed...";
 
             array<string> fileNames = fe.GetFiles(fe.CurrentIndexingPath);
+
+            print("Total files: " + fileNames.Length);
+            print("CurrentIndexingPath: " + fe.CurrentIndexingPath);
+
             const uint batchSize = 20000;
             uint totalFiles = fileNames.Length;
             uint processedFiles = 0;
