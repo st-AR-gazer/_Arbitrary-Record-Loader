@@ -119,7 +119,7 @@ namespace _IO {
         }
 
         string GetFileName(const string &in path) {
-            if (path == _IO::Folder::IsDirectory(path)) log("This is a folder", LogLevel::Error, 122, "GetFileName"); return ""; 
+            if (_IO::Folder::IsDirectory(path)) log("This is a folder", LogLevel::Error, 122, "GetFileName"); return ""; 
             int index = _Text::LastIndexOf(path, "/");
             if (index == -1) {
                 return path;
