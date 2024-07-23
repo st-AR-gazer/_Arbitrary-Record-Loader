@@ -19,21 +19,23 @@ namespace FileExplorer {
         }
     }
 
-    class FileInfo {
+    class ElementInfo {
         string Name;
         string Path;
         uint64 Size;
         string Type;
         int64 LastModifiedDate;
         int64 CreationDate;  // Placeholder for now, use LastModifiedDate
+        bool IsFolder;
 
-        FileInfo(const string &in name, const string &in path, uint64 size, const string &in type, int64 lastModifiedDate, int64 creationDate) {
+        ElementInfo(const string &in name, const string &in path, uint64 size, const string &in type, int64 lastModifiedDate, bool isFolder) {
             this.Name = name;
             this.Path = path;
             this.Size = size;
             this.Type = type;
             this.LastModifiedDate = lastModifiedDate;
             this.CreationDate = lastModifiedDate;  // Placeholder, to be replaced
+            this.IsFolder = isFolder;
         }
     }
 
@@ -51,7 +53,7 @@ namespace FileExplorer {
 
     class FileTab {
         Navigation Navigation;
-        array<FileInfo@> Files;
+        array<ElementInfo@> Elements;
         Config@ Config;
         FileExplorer@ explorer;
 
@@ -63,7 +65,7 @@ namespace FileExplorer {
 
         void LoadDirectory(const string &in path) {
             Navigation.SetPath(path);
-            Files = LoadFiles(path);
+            Elements = LoadElements(path);
 
             if (Config.SearchQuery != "") {
                 // Apply search query filtering logic later at some point
@@ -74,23 +76,23 @@ namespace FileExplorer {
 
             if (Config.MustReturnFilePath && Config.RenderFlag) {
                 array<string> paths;
-                for (uint i = 0; i < Files.Length; i++) {
-                    paths.InsertLast(Files[i].Path);
+                for (uint i = 0; i < Elements.Length; i++) {
+                    paths.InsertLast(Elements[i].Path);
                 }
                 Config.SelectedPaths = paths;
             }
         }
 
-        array<FileInfo@> LoadFiles(const string &in path) {
-            array<FileInfo@> fileList;
-            array<string> fileNames = explorer.GetFiles(path);
-            for (uint i = 0; i < fileNames.Length; i++) {
-                FileInfo@ fileInfo = explorer.GetFileInfo(fileNames[i]);
-                if (fileInfo !is null) {
-                    fileList.InsertLast(fileInfo);
+        array<ElementInfo@> LoadElements(const string &in path) {
+            array<ElementInfo@> elementList;
+            array<string> elementNames = explorer.GetFiles(path);
+            for (uint i = 0; i < elementNames.Length; i++) {
+                ElementInfo@ elementInfo = explorer.GetElementInfo(elementNames[i]);
+                if (elementInfo !is null) {
+                    elementList.InsertLast(elementInfo);
                 }
             }
-            return fileList;
+            return elementList;
         }
     }
 
@@ -101,7 +103,7 @@ namespace FileExplorer {
 
         bool IsIndexing = false;
         string IndexingMessage = "";
-        array<FileInfo@> CurrentFiles;
+        array<ElementInfo@> CurrentElements;
         string CurrentIndexingPath;
 
         FileExplorer(Config@ cfg) {
@@ -124,8 +126,6 @@ namespace FileExplorer {
             tab.LoadDirectory(Config.Path);
 
             showInterface = true;
-
-            explorer.StartIndexingFiles(IO::FromUserGameFolder("Replays/"));
         }
 
         void StartIndexingFiles(const string &in path) {
@@ -139,7 +139,7 @@ namespace FileExplorer {
             FileExplorer@ fe = cast<FileExplorer@>(r);
             if (fe is null) return;
 
-            fe.CurrentFiles.Resize(0);
+            fe.CurrentElements.Resize(0);
             fe.IndexingMessage = "Folder is being indexed...";
 
             array<string> elements = fe.GetFiles(fe.CurrentIndexingPath);
@@ -156,14 +156,14 @@ namespace FileExplorer {
                         path = path.Replace("\\/", "/");
                     }
                     
-                    FileInfo@ fileInfo = fe.GetFileInfo(path);
-                    if (fileInfo !is null) {
-                        fe.CurrentFiles.InsertLast(fileInfo);
+                    ElementInfo@ elementInfo = fe.GetElementInfo(path);
+                    if (elementInfo !is null) {
+                        fe.CurrentElements.InsertLast(elementInfo);
                     }
                 }
 
                 processedFiles = end;
-                fe.IndexingMessage = "Indexing file " + processedFiles + " out of " + totalFiles;
+                fe.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
 
                 print(fe.IndexingMessage);
 
@@ -174,20 +174,21 @@ namespace FileExplorer {
         }
 
         array<string> GetFiles(const string &in path) {
-            print("yek yek");
-            print("yekkers " + path);
             return IO::IndexFolder(path, false);
         }
 
-        FileInfo@ GetFileInfo(const string &in path) {
+        ElementInfo@ GetElementInfo(const string &in path) {
             bool isFolder = _IO::Folder::IsDirectory(path);
-            string name = _IO::File::GetFileName(path);
+            
+            string name;
+            if (isFolder) { name = _IO::Folder::GetFolderName(path); } 
+            else          { name = _IO::File::GetFileName(path); }
+
             string type = isFolder ? "folder" : _IO::File::GetFileExtension(path);
             uint64 size = isFolder ? 0 : IO::FileSize(path);
             int64 lastModified = IO::FileModifiedTime(path);
-            int64 creationDate = IO::FileModifiedTime(path)/*IO::FileCreationTime(path)*/;
 
-            return FileInfo(name, path, size, type, lastModified, creationDate);
+            return ElementInfo(name, path, size, type, lastModified, isFolder);
         }
     }
 
@@ -260,19 +261,22 @@ namespace FileExplorer {
                 UI::TableSetupColumn("Type");
                 UI::TableSetupColumn("Size");
                 UI::TableSetupColumn("Last Modified");
+                UI::TableSetupColumn("Created Date");
                 UI::TableHeadersRow();
 
-                for (uint i = 0; i < explorer.CurrentFiles.Length; i++) {
-                    FileInfo@ file = explorer.CurrentFiles[i];
+                for (uint i = 0; i < explorer.CurrentElements.Length; i++) {
+                    ElementInfo@ element = explorer.CurrentElements[i];
                     UI::TableNextRow();
                     UI::TableSetColumnIndex(0);
-                    UI::Text(file.Name);
+                    UI::Text(element.Name);
                     UI::TableSetColumnIndex(1);
-                    UI::Text(file.Type == "folder" ? "Folder" : "File");
+                    UI::Text(element.IsFolder ? "Folder" : "File");
                     UI::TableSetColumnIndex(2);
-                    UI::Text(file.Type == "folder" ? "-" : "" + file.Size);
+                    UI::Text(element.IsFolder ? "-" : "" + element.Size);
                     UI::TableSetColumnIndex(3);
-                    UI::Text("" + Time::FormatString("%Y-%m-%d %H:%M:%S", file.LastModifiedDate));
+                    UI::Text("" + Time::FormatString("%Y-%m-%d %H:%M:%S", element.LastModifiedDate));
+                    UI::TableSetColumnIndex(4);
+                    UI::Text(Time::FormatString("%Y-%m-%d %H:%M:%S", element.CreationDate));
                 }
 
                 UI::EndTable();
@@ -280,17 +284,17 @@ namespace FileExplorer {
         }
 
         void Render_DetailBar() {
-            if (explorer.tab.Files.Length > 0) {
-                FileInfo@ file = explorer.tab.Files[0];
-                if (file !is null) {
-                    UI::Text("Name: " + file.Name);
-                    UI::Text("Path: " + file.Path);
-                    UI::Text("Size: " + file.Size);
-                    UI::Text("Type: " + file.Type);
-                    UI::Text("Last Modified: " + file.LastModifiedDate);
+            if (explorer.tab.Elements.Length > 0) {
+                ElementInfo@ element = explorer.tab.Elements[0];
+                if (element !is null) {
+                    UI::Text("Name: " + element.Name);
+                    UI::Text("Path: " + element.Path);
+                    UI::Text("Size: " + element.Size);
+                    UI::Text("Type: " + element.Type);
+                    UI::Text("Last Modified: " + element.LastModifiedDate);
                 }
             } else {
-                UI::Text("No file selected.");
+                UI::Text("No element selected.");
             }
         }
     }
@@ -325,8 +329,9 @@ void OpenFileExplorerExample() {
         true, // mustReturnFilePath
         IO::FromUserGameFolder("Replays/"), // path
         "", // searchQuery
-        { "" } // filters
+        { "txt", "docx" } // filters
     );
+    // FileExplorer::explorer.StartIndexingFiles(IO::FromUserGameFolder("Replays/"));
 }
 
 void Render() {
