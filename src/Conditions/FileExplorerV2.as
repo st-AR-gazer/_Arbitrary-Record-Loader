@@ -142,16 +142,21 @@ namespace FileExplorer {
             fe.CurrentFiles.Resize(0);
             fe.IndexingMessage = "Folder is being indexed...";
 
-            array<string> fileNames = fe.GetFiles(fe.CurrentIndexingPath);
+            array<string> elements = fe.GetFiles(fe.CurrentIndexingPath);
 
             const uint batchSize = 20000;
-            uint totalFiles = fileNames.Length;
+            uint totalFiles = elements.Length;
             uint processedFiles = 0;
 
             for (uint i = 0; i < totalFiles; i += batchSize) {
                 uint end = Math::Min(i + batchSize, totalFiles);
                 for (uint j = i; j < end; j++) {
-                    FileInfo@ fileInfo = fe.GetFileInfo(fileNames[j]);
+                    string path = elements[j];
+                    if (path.Contains("\\/")) {
+                        path = path.Replace("\\/", "/");
+                    }
+                    
+                    FileInfo@ fileInfo = fe.GetFileInfo(path);
                     if (fileInfo !is null) {
                         fe.CurrentFiles.InsertLast(fileInfo);
                     }
@@ -167,22 +172,18 @@ namespace FileExplorer {
         }
 
         array<string> GetFiles(const string &in path) {
-            return IO::IndexFolder(path, true);
+            return IO::IndexFolder(path, false);
         }
 
         FileInfo@ GetFileInfo(const string &in path) {
-            if (_IO::File::IsFile(path)) {
-                string name = _IO::File::GetFileName(path);
-                uint64 size = IO::FileSize(path);
-                string type = _IO::File::GetFileExtension(path);
-                int64 lastModified = IO::FileModifiedTime(path);
-                return FileInfo(name, path, size, type, lastModified);
-            } else {
-                string name = _IO::File::GetFileName(path);
-                string type = "folder";
-                int64 lastModified = IO::FileModifiedTime(path);
-                return FileInfo(name, path, 0, type, lastModified);
-            }
+            bool isFolder = _IO::Folder::IsDirectory(path);
+            string name = _IO::File::GetFileName(path);
+            string type = isFolder ? "folder" : _IO::File::GetFileExtension(path);
+            uint64 size = isFolder ? 0 : IO::FileSize(path);
+            int64 lastModified = IO::FileModifiedTime(path);
+            int64 creationDate = IO::FileModifiedTime(path)/*IO::FileCreationTime(path)*/;
+
+            return FileInfo(name, path, size, type, lastModified, creationDate);
         }
     }
 
