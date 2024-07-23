@@ -27,7 +27,7 @@ namespace FileExplorer {
         int64 LastModifiedDate;
         int64 CreationDate;  // Placeholder for now, use LastModifiedDate
 
-        FileInfo(const string &in name, const string &in path, uint64 size, const string &in type, int64 lastModifiedDate) {
+        FileInfo(const string &in name, const string &in path, uint64 size, const string &in type, int64 lastModifiedDate, int64 creationDate) {
             this.Name = name;
             this.Path = path;
             this.Size = size;
