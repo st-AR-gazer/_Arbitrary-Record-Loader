@@ -162,28 +162,24 @@ namespace FileExplorer {
             fe.CurrentFiles.Resize(0);
             fe.IndexingMessage = "Folder is being indexed...";
 
-            array<string> elements = fe.GetFiles(fe.CurrentIndexingPath);
+            array<string> fileNames = fe.GetFiles(fe.CurrentIndexingPath);
             const uint batchSize = 20000;
-            uint totalFiles = elements.Length;
+            uint totalFiles = fileNames.Length;
             uint processedFiles = 0;
 
             for (uint i = 0; i < totalFiles; i += batchSize) {
                 uint end = Math::Min(i + batchSize, totalFiles);
                 for (uint j = i; j < end; j++) {
-                    string path = elements[j];
-                    bool isFolder = _IO::Folder::IsDirectory(path);
-                    FileInfo@ fileInfo = FileInfo(
-                        _IO::File::GetFileName(path),
-                        path,
-                        isFolder ? 0 : IO::FileSize(path),
-                        isFolder ? "folder" : _IO::File::GetFileExtension(path),
-                        IO::FileModifiedTime(path)
-                    );
-                    fe.CurrentFiles.InsertLast(fileInfo);
+                    FileInfo@ fileInfo = fe.GetFileInfo(fileNames[j]);
+                    if (fileInfo !is null) {
+                        fe.CurrentFiles.InsertLast(fileInfo);
+                    }
                 }
 
                 processedFiles = end;
                 fe.IndexingMessage = "Indexing file " + processedFiles + " out of " + totalFiles;
+
+                print(fe.IndexingMessage);
 
                 yield();
             }
@@ -192,7 +188,7 @@ namespace FileExplorer {
         }
 
         array<string> GetFiles(const string &in path) {
-            return IO::IndexFolder(path);
+            return IO::IndexFolder(path, false);
         }
 
         FileInfo@ GetFileInfo(const string &in path) {
@@ -306,16 +302,13 @@ namespace FileExplorer {
                     FileInfo@ file = explorer.CurrentFiles[i];
                     UI::TableNextRow();
                     UI::TableSetColumnIndex(0);
-                    bool isSelected = false;
-                    if (UI::Selectable(file.Name, isSelected, UI::SelectableFlags::SpanAllColumns)) {
-                        // Handle file selection
-                    }
+                    UI::Text(file.Name);
                     UI::TableSetColumnIndex(1);
                     UI::Text(file.Type == "folder" ? "Folder" : "File");
                     UI::TableSetColumnIndex(2);
-                    UI::Text(file.Type == "folder" ? "-" : "" + file.Size);
+                    UI::Text("" + file.Size);
                     UI::TableSetColumnIndex(3);
-                    UI::Text("" + Time::FormatString("%Y-%m-%d %H:%M:%S", file.LastModifiedDate));
+                    UI::Text("" + file.LastModifiedDate);
                 }
 
                 UI::EndTable();

@@ -20,7 +20,7 @@ void MapCoro() {
 
             // CurrentMapRecords::ValidationReplay::OnMapLoad();
             CurrentMapRecords::ChampMedal::OnMapLoad();
-            CurrentMapRecords::GPS::OnMapLoad();
+            // CurrentMapRecords::GPS::OnMapLoad();
 
             if (!mapRecordsLoaded) {
                 ReplayLoader::LoadReplayAfterFileExplorer();
