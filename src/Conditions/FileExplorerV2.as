@@ -167,7 +167,7 @@ namespace FileExplorer {
         }
 
         array<string> GetFiles(const string &in path) {
-            return IO::IndexFolder(path, false);
+            return IO::IndexFolder(path, true);
         }
 
         FileInfo@ GetFileInfo(const string &in path) {
