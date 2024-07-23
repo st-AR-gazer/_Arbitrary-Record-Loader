@@ -182,6 +182,7 @@ namespace FileExplorer {
 
         array<string> GetFiles(const string &in path) {
             print("yek yek");
+            print(path);
             return IO::IndexFolder(path, false);
         }
 
