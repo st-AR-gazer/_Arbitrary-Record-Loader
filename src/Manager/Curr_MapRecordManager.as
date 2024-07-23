@@ -219,7 +219,7 @@ namespace CurrentMapRecords {
 
     //     bool GPSReplayCanBeLoadedForCurrentMap() {
     //         if (rootMap is null || rootMap.ClipGroupInGame is null) {
-    //             log("rootMap or ClipGroupInGame is null", LogLevel::Error, 252, "GPSReplayCanBeLoadedForCurrentMap");
+    //             log("rootMap or ClipGroupInGame is null", LogLevel::Error, 222, "GPSReplayCanBeLoadedForCurrentMap");
     //             return false;
     //         }
 
@@ -252,27 +252,27 @@ namespace CurrentMapRecords {
     //         sleep(1000);                            // Change to something that waits until the player is loaded.
 
     //         auto dfm = cast<CGameDataFileManagerScript>(GetApp().Network.ClientManiaAppPlayground.DataFileMgr);
-    //         if (dfm is null) { log("DataFileMgr is null", LogLevel::Error, 285, "FetchVTablePtr"); return; }
+    //         if (dfm is null) { log("DataFileMgr is null", LogLevel::Error, 255, "FetchVTablePtr"); return; }
 
     //         auto task = dfm.Replay_Load(ghostFilePath);
     //         while (task.IsProcessing) { yield(); }
 
     //         if (task.HasFailed || !task.HasSucceeded) {
-    //             log("Failed to load replay file!", LogLevel::Error, 291, "FetchVTablePtr");
-    //             log(task.ErrorCode, LogLevel::Error, 292, "FetchVTablePtr");
-    //             log(task.ErrorDescription, LogLevel::Error, 293, "FetchVTablePtr");
-    //             log(task.ErrorType, LogLevel::Error, 294, "FetchVTablePtr");
-    //             log(tostring(task.Ghosts.Length), LogLevel::Error, 295, "FetchVTablePtr");
+    //             log("Failed to load replay file!", LogLevel::Error, 261, "FetchVTablePtr");
+    //             log(task.ErrorCode, LogLevel::Error, 262, "FetchVTablePtr");
+    //             log(task.ErrorDescription, LogLevel::Error, 263, "FetchVTablePtr");
+    //             log(task.ErrorType, LogLevel::Error, 264, "FetchVTablePtr");
+    //             log(tostring(task.Ghosts.Length), LogLevel::Error, 265, "FetchVTablePtr");
     //             return;
     //         }
 
-    //         if (task.Ghosts.Length == 0) { log("No ghosts found in the replay file!", LogLevel::Warn, 299, "FetchVTablePtr"); return; }
+    //         if (task.Ghosts.Length == 0) { log("No ghosts found in the replay file!", LogLevel::Warn, 269, "FetchVTablePtr"); return; }
 
     //         auto ghost = task.Ghosts[0];
-    //         if (ghost is null) { log("Failed to retrieve the ghost from the replay file", LogLevel::Error, 302, "FetchVTablePtr"); return; }
+    //         if (ghost is null) { log("Failed to retrieve the ghost from the replay file", LogLevel::Error, 272, "FetchVTablePtr"); return; }
 
     //         uint64 pointer = Dev::GetOffsetUint64(ghost.Result, 0x0);
-    //         log("Hexadecimal pointer: " + Text::FormatPointer(pointer), LogLevel::Info, 305, "FetchVTablePtr");
+    //         log("Hexadecimal pointer: " + Text::FormatPointer(pointer), LogLevel::Info, 275, "FetchVTablePtr");
 
     //         CTmRaceResult_VTable_Ptr = pointer;
     //     }
@@ -352,7 +352,7 @@ namespace CurrentMapRecords {
 
     //     void ConvertGhosts() {
     //         for (uint i = 0; i < ghosts.Length; i++) {
-    //             if (ghosts[i] is null) { log("Ghost at index " + i + " is null", LogLevel::Error, 385, "ConvertGhosts"); continue; }
+    //             if (ghosts[i] is null) { log("Ghost at index " + i + " is null", LogLevel::Error, 355, "ConvertGhosts"); continue; }
     //             ghosts[i].ConvertToScript(CTmRaceResult_VTable_Ptr, ghosts[i].ghost);
     //         }
     //     }
@@ -360,7 +360,7 @@ namespace CurrentMapRecords {
     //     void SaveReplays() {
     //         for (uint i = 0; i < ghosts.Length; i++) {
     //             if (ghosts[i] is null) {
-    //                 log("Ghost at index " + i + " is null", LogLevel::Error, 393, "SaveReplays");
+    //                 log("Ghost at index " + i + " is null", LogLevel::Error, 363, "SaveReplays");
     //                 continue;
     //             }
     //             ghosts[i].Save(rootMap);
@@ -383,7 +383,7 @@ namespace CurrentMapRecords {
     //     }
 
     //     void ConvertToScript(uint64 CTmRaceResult_VTable_Ptr, CGameCtnGhost@ ghost) {
-    //         if (ghost is null) { log("Ghost is null in ConvertToScript", LogLevel::Error, 416, "ConvertToScript"); return; }
+    //         if (ghost is null) { log("Ghost is null in ConvertToScript", LogLevel::Error, 386, "ConvertToScript"); return; }
 
     //         ghost.MwAddRef();
 
@@ -404,7 +404,7 @@ namespace CurrentMapRecords {
     //     }
 
     //     void Save(CGameCtnChallenge@ rootMap) {
-    //         if (ghostScript is null) { log("GhostScript is null in Save for ghost " + name, LogLevel::Error, 437, "Save"); return; }
+    //         if (ghostScript is null) { log("GhostScript is null in Save for ghost " + name, LogLevel::Error, 407, "Save"); return; }
 
     //         print(savePath);
     //         print(rootMap.MapName);
@@ -413,7 +413,7 @@ namespace CurrentMapRecords {
     //         CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
     //         CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(savePath, rootMap, ghostScript);
     //         if (taskResult is null) {
-    //             log("Replay task returned null for ghost " + name, LogLevel::Error, 446, "Save");
+    //             log("Replay task returned null for ghost " + name, LogLevel::Error, 416, "Save");
     //         }
     //     }
     // }

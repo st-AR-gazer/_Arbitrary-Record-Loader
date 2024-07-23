@@ -144,17 +144,11 @@ namespace FileExplorer {
 
             array<string> elements = fe.GetFiles(fe.CurrentIndexingPath);
 
-            print("1");
-
             const uint batchSize = 20000;
             uint totalFiles = elements.Length;
             uint processedFiles = 0;
 
             for (uint i = 0; i < totalFiles; i += batchSize) {
-
-            print("2");
-                
-
                 uint end = Math::Min(i + batchSize, totalFiles);
                 for (uint j = i; j < end; j++) {
                     string path = elements[j];
@@ -167,12 +161,11 @@ namespace FileExplorer {
                         fe.CurrentFiles.InsertLast(fileInfo);
                     }
                 }
-            print("3");
 
                 processedFiles = end;
                 fe.IndexingMessage = "Indexing file " + processedFiles + " out of " + totalFiles;
 
-            print("4");
+                print(fe.IndexingMessage);
 
                 yield();
             }
