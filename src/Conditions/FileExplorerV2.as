@@ -10,8 +10,8 @@ class Config {
     array<string> Filters;
     bool RenderFlag;
     array<string> SelectedPaths;
-    bool HideFiles = false;      // New setting for hiding files
-    bool HideFolders = false;    // New setting for hiding folders
+    bool HideFiles = false;
+    bool HideFolders = false;
     bool EnablePagination = false;
 
     Config() {
