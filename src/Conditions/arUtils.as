@@ -119,19 +119,20 @@ namespace _IO {
         }
 
         string GetFileName(const string &in path) {
-            if (_IO::Folder::IsDirectory(path)) log("This is a folder", LogLevel::Error, 122, "GetFileName"); return ""; 
+            if (_IO::Folder::IsDirectory(path)) { log("This is a folder", LogLevel::Error, 122, "GetFileName"); return "";  }
+            
             int index = _Text::LastIndexOf(path, "/");
-            if (index == -1) {
-                return path;
-            }
+            int backslashIndex = _Text::LastIndexOf(path, "\\");
+            if (backslashIndex > index) { index = backslashIndex; }
+            if (index == -1) { return path; }
             return path.SubStr(index + 1);
         }
 
         string GetFilePathWithoutFileName(const string &in path) {
             int index = _Text::LastIndexOf(path, "/");
-            if (index == -1) {
-                return path;
-            }
+            int backslashIndex = _Text::LastIndexOf(path, "\\");
+            if (backslashIndex > index) { index = backslashIndex; }
+            if (index == -1) { return path; }
             return path.SubStr(0, index);
         }
         
