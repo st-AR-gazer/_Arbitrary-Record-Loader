@@ -192,7 +192,7 @@ namespace _IO {
         // Read from file
         string ReadFileToEnd(const string &in path, bool verbose = false) {
             if (!IO::FileExists(path)) {
-                log("File does not exist: " + path, LogLevel::Error, 194, "ReadFileToEnd");
+                log("File does not exist: " + path, LogLevel::Error, 195, "ReadFileToEnd");
                 return "";
             }
             IO::File file(path, IO::FileMode::Read);
@@ -202,7 +202,7 @@ namespace _IO {
         }
         
         string ReadSourceFileToEnd(const string &in path, bool verbose = false) {
-            // if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 204, "ReadSourceFileToEnd"); return ""; }
+            // if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 205, "ReadSourceFileToEnd"); return ""; }
             // FileSource assumes the top dir is _PLUGINNAME_.op, not C:\ so this has to be assumed to be an existing path...
 
             IO::FileSource f(path);
@@ -212,8 +212,8 @@ namespace _IO {
 
         // Move file
         void MoveFile(const string &in source, const string &in destination, bool shouldUseSafeMode = false, bool verbose = false) {
-            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 214, "MoveFile"); return; }
-            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 215, "MoveFile"); return; }
+            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 215, "MoveFile"); return; }
+            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 216, "MoveFile"); return; }
 
             IO::File file;
             file.Open(source, IO::FileMode::Read);
@@ -225,29 +225,29 @@ namespace _IO {
         }
 
         void SafeMoveSourceFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
-            if (verbose) log("Moving the file content", LogLevel::Info, 227, "SafeMoveSourceFileToNonSource");
+            if (verbose) log("Moving the file content", LogLevel::Info, 228, "SafeMoveSourceFileToNonSource");
             
             string fileContents = _IO::File::ReadSourceFileToEnd(originalPath);
             _IO::Folder::SafeCreateFolder(_IO::File::StripFileNameFromFilePath(storagePath), true);
             _IO::File::WriteToFile(storagePath, fileContents);
 
-            if (verbose) log("Finished moving the file", LogLevel::Info, 233, "SafeMoveSourceFileToNonSource");
+            if (verbose) log("Finished moving the file", LogLevel::Info, 234, "SafeMoveSourceFileToNonSource");
         }
 
         void SafeMoveFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
-            if (verbose) log("Moving the file content", LogLevel::Info, 237, "SafeMoveFileToNonSource");
+            if (verbose) log("Moving the file content", LogLevel::Info, 238, "SafeMoveFileToNonSource");
             
             string fileContents = _IO::File::ReadFileToEnd(originalPath);
             _IO::Folder::SafeCreateFolder(_IO::File::StripFileNameFromFilePath(storagePath), true);
             _IO::File::WriteToFile(storagePath, fileContents);
 
-            if (verbose) log("Finished moving the file", LogLevel::Info, 243, "SafeMoveFileToNonSource");
+            if (verbose) log("Finished moving the file", LogLevel::Info, 244, "SafeMoveFileToNonSource");
         }
 
         // Copy file
         void CopyMoveFile(const string &in source, const string &in destination, bool verbose = false) {
-            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 248, "CopyMoveFile"); return; }
-            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 249, "CopyMoveFile"); return; }
+            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 249, "CopyMoveFile"); return; }
+            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 250, "CopyMoveFile"); return; }
 
             IO::File file;
             file.Open(source, IO::FileMode::Read);
@@ -259,7 +259,7 @@ namespace _IO {
 
         // Rename file
         void RenameFile(const string &in filePath, string _newFileName, bool verbose = false) {
-            if (verbose) log("Attempting to rename file: " + filePath, LogLevel::Info, 261, "RenameFile");
+            if (verbose) log("Attempting to rename file: " + filePath, LogLevel::Info, 262, "RenameFile");
 
             if (IO::FileExists(filePath)) {
                 string dirPath = _IO::File::StripFileNameFromFilePath(filePath);
@@ -268,8 +268,8 @@ namespace _IO {
 
                 verbose = true;
                 if (verbose) {
-                    log("Old File Path: " + filePath, LogLevel::Info, 270, "RenameFile");
-                    log("New File Path: " + newFilePath, LogLevel::Info, 271, "RenameFile");
+                    log("Old File Path: " + filePath, LogLevel::Info, 271, "RenameFile");
+                    log("New File Path: " + newFilePath, LogLevel::Info, 272, "RenameFile");
                 }
 
                 IO::File fileOld;
@@ -283,9 +283,9 @@ namespace _IO {
                 fileNew.Close();
 
                 IO::Delete(filePath);
-                if (verbose) log("File renamed successfully.", LogLevel::Info, 285, "RenameFile");
+                if (verbose) log("File renamed successfully.", LogLevel::Info, 286, "RenameFile");
             } else {
-                if (verbose) log("File does not exist: " + filePath, LogLevel::Info, 287, "RenameFile");
+                if (verbose) log("File does not exist: " + filePath, LogLevel::Info, 288, "RenameFile");
             }
         }
 
@@ -316,7 +316,7 @@ namespace _IO {
         if (IO::FolderExists(path)) {
             OpenExplorerPath(path);
         } else {
-            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 318, "OpenFolder");
+            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 319, "OpenFolder");
         }
     }
 }
