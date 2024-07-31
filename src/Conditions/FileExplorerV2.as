@@ -127,6 +127,7 @@ namespace FileExplorer {
         }
 
         void LoadDirectory(const string &in path) {
+            explorer.utils.UpdateHistory(path);
             Navigation.SetPath(path);
             Elements = LoadElements(path);
 
@@ -155,7 +156,7 @@ namespace FileExplorer {
                                 break;
                             }
                         }
-                        element.shouldShow = found;
+                    element.shouldShow = found;
                     }
                 }
             }
@@ -234,6 +235,7 @@ namespace FileExplorer {
             }
             path += "/";
 
+            explorer.utils.UpdateHistory(path);
             explorer.tab[0].LoadDirectory(path);
         }
 
@@ -241,6 +243,7 @@ namespace FileExplorer {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null && selectedElement.IsFolder) {
                 log("Moving into directory: " + selectedElement.Path, LogLevel::Info, 243, "MoveIntoSelectedDirectory");
+                explorer.utils.UpdateHistory(selectedElement.Path);
                 explorer.tab[0].LoadDirectory(selectedElement.Path);
             }
         }
@@ -303,6 +306,39 @@ namespace FileExplorer {
                 explorer.PinnedItems.InsertLast(selectedElement.Path);
             }
         }
+
+        // History management
+        array<string> History;
+        int HistoryIndex = -1;
+        bool NavigatingHistory = false;
+        void UpdateHistory(const string &in path) {
+            if (!NavigatingHistory) {
+                if (HistoryIndex < int(History.Length) - 1) {
+                    History.Resize(HistoryIndex + 1);
+                }
+                History.InsertLast(path);
+                HistoryIndex = History.Length - 1;
+            }
+            NavigatingHistory = false;
+        }
+
+        void NavigateBack() {
+            if (HistoryIndex > 0) {
+                NavigatingHistory = true;
+                HistoryIndex--;
+                string path = History[HistoryIndex];
+                explorer.tab[0].LoadDirectory(path);
+            }
+        }
+    
+        void NavigateForward() {
+            if (HistoryIndex < int(History.Length) - 1) {
+                NavigatingHistory = true;
+                HistoryIndex++;
+                string path = History[HistoryIndex];
+                explorer.tab[0].LoadDirectory(path);
+            }
+        }
     }
 
     class FileExplorer {
@@ -328,6 +364,8 @@ namespace FileExplorer {
             @utils = Utils(this);
             @exports = Exports();
             @CurrentSelectedElement = null;
+
+            explorer.utils.UpdateHistory(cfg.Path); 
         }
 
         void UpdateCurrentSelectedElement() {
@@ -505,14 +543,15 @@ namespace FileExplorer {
         }
 
         void Render_NavigationBar() {
-            if (UI::Button(Icons::ArrowLeft)) { /* Handle timeline back navigation */ }
+            if (UI::Button(Icons::ArrowLeft)) { explorer.utils.NavigateBack(); }
             UI::SameLine();
-            if (UI::Button(Icons::ArrowRight)) { /* Handle timeline forward navigation */ }
+            if (UI::Button(Icons::ArrowRight)) { explorer.utils.NavigateForward(); }
             UI::SameLine();
             if (UI::Button(Icons::ArrowUp)) { explorer.utils.MoveUpOneDirectory(); }
             UI::SameLine();
             if (!explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
-                _UI::DisabledButton(Icons::ArrowDown); } else {
+                _UI::DisabledButton(Icons::ArrowDown); 
+            } else {
                 if (UI::Button(Icons::ArrowDown)) { explorer.utils.MoveIntoSelectedDirectory(); }
                 UI::SameLine();
             }
@@ -520,7 +559,7 @@ namespace FileExplorer {
             UI::SameLine();
             explorer.Config.SearchQuery = UI::InputText("Search", explorer.Config.SearchQuery);
             UI::Separator();
-        }
+        }        
 
         string newFilter = "";
         void Render_ActionBar() {
