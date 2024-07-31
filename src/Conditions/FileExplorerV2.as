@@ -220,10 +220,15 @@ namespace FileExplorer {
             @explorer = fe;
         }
 
+        bool CanMoveUpDirectory() {
+            string path = explorer.tab[0].Navigation.GetPath();
+            if (path == "/" || path == "\\") return true;
+            return false;
+        }
+
         void MoveUpOneDirectory() {
             string path = explorer.tab[0].Navigation.GetPath();
 
-            print("Original Path: " + path);
             if (path.EndsWith("/") || path.EndsWith("\\")) {
                 path = path.SubStr(0, path.Length - 1);
             }
@@ -236,15 +241,14 @@ namespace FileExplorer {
             }
             path += "/";
 
-            explorer.utils.UpdateHistory(path);
+            UpdateHistory(path);
             explorer.tab[0].LoadDirectory(path);
         }
 
         void MoveIntoSelectedDirectory() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null && selectedElement.IsFolder) {
-                log("Moving into directory: " + selectedElement.Path, LogLevel::Info, 243, "MoveIntoSelectedDirectory");
-                explorer.utils.UpdateHistory(selectedElement.Path);
+                UpdateHistory(selectedElement.Path);
                 explorer.tab[0].LoadDirectory(selectedElement.Path);
             }
         }
@@ -547,11 +551,23 @@ namespace FileExplorer {
         }
 
         void Render_NavigationBar() {
-            if (UI::Button(Icons::ArrowLeft)) { explorer.utils.NavigateBack(); }
+            if (explorer.utils.HistoryIndex > 0) {
+                if (UI::Button(Icons::ArrowLeft)) { explorer.utils.NavigateBack(); }
+            } else {
+                _UI::DisabledButton(Icons::ArrowLeft);
+            }
             UI::SameLine();
-            if (UI::Button(Icons::ArrowRight)) { explorer.utils.NavigateForward(); }
+            if (explorer.utils.HistoryIndex < int(explorer.utils.History.Length) - 1) {
+                if (UI::Button(Icons::ArrowRight)) { explorer.utils.NavigateForward(); }
+            } else {
+                _UI::DisabledButton(Icons::ArrowRight);
+            }
             UI::SameLine();
-            if (UI::Button(Icons::ArrowUp)) { explorer.utils.MoveUpOneDirectory(); }
+            if (explorer.utils.CanMoveUpDirectory()) {
+                if (UI::Button(Icons::ArrowUp)) { explorer.utils.MoveUpOneDirectory(); }
+            } else {
+                _UI::DisabledButton(Icons::ArrowUp);
+            }
             UI::SameLine();
             if (!explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
                 _UI::DisabledButton(Icons::ArrowDown); 
@@ -563,7 +579,7 @@ namespace FileExplorer {
             UI::SameLine();
             explorer.Config.SearchQuery = UI::InputText("Search", explorer.Config.SearchQuery);
             UI::Separator();
-        }        
+        }
 
         string newFilter = "";
         void Render_ActionBar() {
