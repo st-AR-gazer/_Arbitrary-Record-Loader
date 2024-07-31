@@ -127,6 +127,7 @@ namespace FileExplorer {
         }
 
         void LoadDirectory(const string &in path) {
+            if (explorer.utils is null) return;
             explorer.utils.UpdateHistory(path);
             Navigation.SetPath(path);
             Elements = LoadElements(path);
