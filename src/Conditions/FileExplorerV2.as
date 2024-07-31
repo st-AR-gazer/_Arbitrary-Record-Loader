@@ -318,7 +318,7 @@ namespace FileExplorer {
         bool NavigatingHistory = false;
 
         void UpdateHistory(const string &in path) {
-            if (!NavigatingHistory) {
+            if (!NavigatingHistory && path != "") {
                 if (HistoryIndex == -1 || History[HistoryIndex] != path) {
                     if (HistoryIndex < int(History.Length) - 1) {
                         History.Resize(HistoryIndex + 1);
