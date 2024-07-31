@@ -592,7 +592,7 @@ namespace FileExplorer {
             // Filter TODO:
             // - Automatically add all filter types on new folder index (should be togglable setting)
             // - Add remove button for filters
-            
+
             if (UI::BeginPopup("filterMenu")) {
                 UI::MenuItem("All filters");
                 UI::Separator();
