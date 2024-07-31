@@ -365,7 +365,7 @@ namespace FileExplorer {
             @exports = Exports();
             @CurrentSelectedElement = null;
 
-            explorer.utils.UpdateHistory(cfg.Path); 
+            utils.UpdateHistory(cfg.Path);
         }
 
         void UpdateCurrentSelectedElement() {
