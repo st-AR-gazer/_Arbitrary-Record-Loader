@@ -127,8 +127,8 @@ namespace FileExplorer {
         }
 
         void LoadDirectory(const string &in path) {
-            if (explorer.utils is null) return;
-            explorer.utils.UpdateHistory(path);
+            if (explorer.utils !is null) { explorer.utils.UpdateHistory(path); }
+            
             Navigation.SetPath(path);
             Elements = LoadElements(path);
 
@@ -312,13 +312,16 @@ namespace FileExplorer {
         array<string> History;
         int HistoryIndex = -1;
         bool NavigatingHistory = false;
+
         void UpdateHistory(const string &in path) {
             if (!NavigatingHistory) {
-                if (HistoryIndex < int(History.Length) - 1) {
-                    History.Resize(HistoryIndex + 1);
+                if (HistoryIndex == -1 || History[HistoryIndex] != path) {
+                    if (HistoryIndex < int(History.Length) - 1) {
+                        History.Resize(HistoryIndex + 1);
+                    }
+                    History.InsertLast(path);
+                    HistoryIndex = History.Length - 1;
                 }
-                History.InsertLast(path);
-                HistoryIndex = History.Length - 1;
             }
             NavigatingHistory = false;
         }
@@ -331,7 +334,7 @@ namespace FileExplorer {
                 explorer.tab[0].LoadDirectory(path);
             }
         }
-    
+
         void NavigateForward() {
             if (HistoryIndex < int(History.Length) - 1) {
                 NavigatingHistory = true;
