@@ -8,6 +8,7 @@ void RenderMenu() {
 }
 
 void RenderInterface() {
+    FILE_EXPLORER_V1_BASE_RENDERER(); // Required for the file explorer to work.
     // FILE_EXPLORER_BASE_RENDERER(); // Required for the file explorer to work.
     // Temporaryly moved to the main Render script to avoid conflicts with the file explorer while develoption, this should be moved back to the main RenderInterface functions once the file explorer is fully implemented.
 
@@ -84,7 +85,7 @@ void RenderTab_CurrentLoadedRecords() {
     UI::Separator();
 
     if (UI::Button("Remove All Records")) {
-        log("Remove All Records button clicked", LogLevel::Info, 87, "RenderTab_CurrentLoadedRecords");
+        log("Remove All Records button clicked", LogLevel::Info, 88, "RenderTab_CurrentLoadedRecords");
         RecordManager::RemoveAllRecords();
     }
 
@@ -120,14 +121,14 @@ void RenderTab_CurrentLoadedRecords() {
     }
 
     if (UI::Button(Icons::UserTimes + " Remove Specific Record")) {
-        log("Remove Specific Record button clicked", LogLevel::Info, 123, "RenderTab_CurrentLoadedRecords");
+        log("Remove Specific Record button clicked", LogLevel::Info, 124, "RenderTab_CurrentLoadedRecords");
         RecordManager::RemoveInstanceRecord(selectedRecordID);
         RecordManager::GhostTracker::RefreshTrackedGhosts();
         selectedRecordID = MwId();
     }
 
     if (UI::Button(Icons::Kenney::Save + " Save Ghost/Replay")) {
-        log("Save Ghost button clicked", LogLevel::Info, 130, "RenderTab_CurrentLoadedRecords");
+        log("Save Ghost button clicked", LogLevel::Info, 131, "RenderTab_CurrentLoadedRecords");
         RecordManager::Save::SaveRecord();
     }
 }

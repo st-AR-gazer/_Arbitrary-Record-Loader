@@ -57,7 +57,7 @@ namespace FileExplorer {
             return path;
         }
 
-        string ReturnFilePathForSelectedFiles() {
+        array<string> ReturnFilePathForSelectedFiles() {
             array<string> paths = explorer.Config.SelectedPaths;
             explorer.Config.SelectedPaths = array<string>();
             
@@ -296,10 +296,10 @@ namespace FileExplorer {
             }
         }
 
-        void PenSelectedElement() {
+        void PinSelectedElement() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null) {
-                log("Pinning element: " + selectedElement.Path, LogLevel::Info, 302, "PenSelectedElement");
+                log("Pinning element: " + selectedElement.Path, LogLevel::Info, 302, "PinSelectedElement");
                 explorer.PinnedItems.InsertLast(selectedElement.Path);
             }
         }
@@ -315,17 +315,23 @@ namespace FileExplorer {
 
         bool IsIndexing = false;
         string IndexingMessage = "";
-        array<ElementInfo@> CurrentElements = explorer.tab[0].Elements;
+        array<ElementInfo@> CurrentElements;
         string CurrentIndexingPath;
-        
-        ElementInfo CurrentSelectedElement = explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex];
+
+        ElementInfo@ CurrentSelectedElement;
 
         FileExplorer(Config@ cfg) {
             @Config = cfg;
-            @tab = FileTab(@Config, this);
+            tab.Resize(1);
+            @tab[0] = FileTab(cfg, this);
             @ui = UserInterface(this);
             @utils = Utils(this);
             @exports = Exports();
+            @CurrentSelectedElement = null;
+        }
+
+        void UpdateCurrentSelectedElement() {
+            @CurrentSelectedElement = tab[0].GetSelectedElement();
         }
 
         void OpenFileExplorer(
@@ -382,7 +388,7 @@ namespace FileExplorer {
                 processedFiles = end;
                 fe.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
 
-                log(fe.IndexingMessage, LogLevel::Info, 383, "StartIndexingFilesCoroutine");
+                log(fe.IndexingMessage, LogLevel::Info, 391, "StartIndexingFilesCoroutine");
 
                 yield();
             }
@@ -537,11 +543,16 @@ namespace FileExplorer {
                 UI::SameLine();
                 if (UI::Button(Icons::Pencil)) { explorer.utils.RENDER_RENAME_POPUP_FLAG = !explorer.utils.RENDER_RENAME_POPUP_FLAG; }
                 UI::SameLine();
-                if (UI::Button(Icons::ThumbTack)) { explorer.utils.PenSelectedElement(); }
-                UI::SameLine();
+                if (UI::Button(Icons::ThumbTack)) { explorer.utils.PinSelectedElement(); }
             }
+            UI::SameLine();
             if (UI::Button(Icons::Filter)) { UI::OpenPopup("filterMenu"); }
 
+
+            // Filter TODO:
+            // - Automatically add all filter types on new folder index (should be togglable setting)
+            // - Add remove button for filters
+            
             if (UI::BeginPopup("filterMenu")) {
                 UI::MenuItem("All filters");
                 UI::Separator();
@@ -590,7 +601,7 @@ namespace FileExplorer {
                 UI::OpenPopup("RenamePopup");
             }
 
-            if (UI::BeginPopupModal("RenamePopup", null, UI::WindowFlags::AlwaysAutoResize)) {
+            if (UI::BeginPopupModal("RenamePopup", explorer.utils.RENDER_RENAME_POPUP_FLAG, UI::WindowFlags::AlwaysAutoResize)) {
                 UI::Text("Rename Selected Element");
                 UI::Separator();
                 UI::InputText("New File Name", "NewFileName");
@@ -608,7 +619,7 @@ namespace FileExplorer {
             if (explorer.Config.MustReturnFilePath) {
                 UI::Separator();
                 if (UI::Button("Return Selected Path")) {
-                    explorer.exports.ReturnSelectedPath();
+                    explorer.exports.ReturnSelectedFilePath();
 
                     explorer.Config.MustReturnFilePath = false;
                     showInterface = false;
@@ -664,10 +675,11 @@ namespace FileExplorer {
 
         void HandleElementSelection(ElementInfo@ element) {
             if (!element.IsSelected) {
-                log("Selecting element: " + element.Name, LogLevel::Info, 665, "HandleElementSelection");
+                log("Selecting element: " + element.Name, LogLevel::Info, 673, "HandleElementSelection");
                 DeselectAll();
                 element.IsSelected = true;
                 element.LastSelectedTime = Time::Now;
+                explorer.UpdateCurrentSelectedElement();
             }
         }
 
@@ -694,29 +706,43 @@ namespace FileExplorer {
                     UI::Separator();
                     UI::Text("GBX File Detected - Displaying GBX Info");
 
-                    dictionary gbxMetadata = ReadGbxHeader(selectedElement.Path);
+                    dictionary gbxMetadata = selectedElement.GbxMetadata;
 
                     string value;
                     if (gbxMetadata.Get("type", value)) UI::Text("Type: " + value);
                     if (gbxMetadata.Get("exever", value)) UI::Text("Exe Version: " + value);
                     if (gbxMetadata.Get("exebuild", value)) UI::Text("Exe Build: " + value);
                     if (gbxMetadata.Get("title", value)) UI::Text("Title: " + value);
+
                     if (gbxMetadata.Get("map_uid", value)) UI::Text("Map UID: " + value);
                     if (gbxMetadata.Get("map_name", value)) UI::Text("Map Name: " + Text::StripFormatCodes(value));
-                    if (gbxMetadata.Get("map_name", value)) UI::Text("Map Name: " + value);
                     if (gbxMetadata.Get("map_author", value)) UI::Text("Map Author: " + value);
                     if (gbxMetadata.Get("map_authorzone", value)) UI::Text("Map Author Zone: " + value);
+
                     if (gbxMetadata.Get("desc_envir", value)) UI::Text("Environment: " + value);
                     if (gbxMetadata.Get("desc_mood", value)) UI::Text("Mood: " + value);
                     if (gbxMetadata.Get("desc_maptype", value)) UI::Text("Map Type: " + value);
                     if (gbxMetadata.Get("desc_mapstyle", value)) UI::Text("Map Style: " + value);
                     if (gbxMetadata.Get("desc_displaycost", value)) UI::Text("Display Cost: " + value);
                     if (gbxMetadata.Get("desc_mod", value)) UI::Text("Mod: " + value);
+
+                    if (gbxMetadata.Get("times_bronze", value)) UI::Text("Bronze Time: " + value);
+                    if (gbxMetadata.Get("times_silver", value)) UI::Text("Silver Time: " + value);
+                    if (gbxMetadata.Get("times_gold", value)) UI::Text("Gold Time: " + value);
+                    if (gbxMetadata.Get("times_authortime", value)) UI::Text("Author Time: " + value);
+                    if (gbxMetadata.Get("times_authorscore", value)) UI::Text("Author Score: " + value);
+
+                    uint depIndex = 0;
+                    while (gbxMetadata.Get("dep_file_" + tostring(depIndex), value)) {
+                        UI::Text("Dependency File: " + value);
+                        depIndex++;
+                    }
                 }
             } else {
                 UI::Text("No element selected.");
             }
         }
+
 
         ElementInfo@ GetSelectedElement() {
             for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
@@ -756,7 +782,7 @@ void FILE_EXPLORER_BASE_RENDERER() {
 void OpenFileExplorerExample() {
     FileExplorer::OpenFileExplorer(
         true, // mustReturnFilePath
-        IO::FromUserGameFolder("Replays/"), // path
+        IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
         "", // searchQuery
         { "txt", "docx" } // filters
     );
@@ -775,6 +801,15 @@ void Render() {
     UI::End();
 }
 
+
+
+/* ------------------------ GBX Parsing ------------------------ */
+
+// TODO:
+// 
+
+// Fixme:
+// - Currently only Replay type is accounted for, need to add Map (and more) types as well (but it's proving to be a bit tricky) (Reason: nothing is being added to the xmlString)
 
 class GbxHeaderChunkInfo
 {
@@ -803,7 +838,10 @@ dictionary ReadGbxHeader(const string &in path) {
 
     for (uint i = 0; i < chunks.Length; i++) {
         MemoryBuffer chunkBuffer = mapFile.Read(chunks[i].ChunkSize);
-        if (chunks[i].ChunkId == 50933761) {
+        if (
+               chunks[i].ChunkId == 50933761 // Replay chunk id
+            || chunks[i].ChunkId == 50606082 // Map chunk id
+            ) {
             int stringLength = chunkBuffer.ReadInt32();
             xmlString = chunkBuffer.ReadString(stringLength);
             break;
@@ -816,35 +854,113 @@ dictionary ReadGbxHeader(const string &in path) {
         XML::Document doc;
         doc.LoadString(xmlString);
         XML::Node headerNode = doc.Root().FirstChild();
-        
+
         if (headerNode) {
-            metadata["type"] = headerNode.Attribute("type");
+            string gbxType = headerNode.Attribute("type");
+            metadata["type"] = gbxType;
             metadata["exever"] = headerNode.Attribute("exever");
             metadata["exebuild"] = headerNode.Attribute("exebuild");
             metadata["title"] = headerNode.Attribute("title");
 
-            XML::Node mapNode = headerNode.Child("map");
-            if (mapNode) {
-                metadata["map_uid"] = mapNode.Attribute("uid");
-                metadata["map_name"] = mapNode.Attribute("name");
-                metadata["map_author"] = mapNode.Attribute("author");
-                metadata["map_authorzone"] = mapNode.Attribute("authorzone");
+            if (gbxType == "map") {
+                ParseMapMetadata(headerNode, metadata);
+            } else if (gbxType == "replay") {
+                ParseReplayMetadata(headerNode, metadata);
             }
 
-            XML::Node descNode = headerNode.Child("desc");
-            if (descNode) {
-                metadata["desc_envir"] = descNode.Attribute("envir");
-                metadata["desc_mood"] = descNode.Attribute("mood");
-                metadata["desc_maptype"] = descNode.Attribute("maptype");
-                metadata["desc_mapstyle"] = descNode.Attribute("mapstyle");
-                metadata["desc_displaycost"] = descNode.Attribute("displaycost");
-                metadata["desc_mod"] = descNode.Attribute("mod");
+            XML::Node playermodelNode = headerNode.Child("playermodel");
+            if (playermodelNode) {
+                metadata["playermodel_id"] = playermodelNode.Attribute("id");
             }
         }
     }
 
     return metadata;
 }
+
+void ParseMapMetadata(XML::Node &in headerNode, dictionary &inout metadata) {
+    XML::Node identNode = headerNode.Child("ident");
+    if (identNode) {
+        metadata["map_uid"] = identNode.Attribute("uid");
+        metadata["map_name"] = identNode.Attribute("name");
+        metadata["map_author"] = identNode.Attribute("author");
+        metadata["map_authorzone"] = identNode.Attribute("authorzone");
+    }
+
+    XML::Node descNode = headerNode.Child("desc");
+    if (descNode) {
+        metadata["desc_envir"] = descNode.Attribute("envir");
+        metadata["desc_mood"] = descNode.Attribute("mood");
+        metadata["desc_maptype"] = descNode.Attribute("type");
+        metadata["desc_mapstyle"] = descNode.Attribute("mapstyle");
+        metadata["desc_displaycost"] = descNode.Attribute("displaycost");
+        metadata["desc_mod"] = descNode.Attribute("mod");
+        metadata["desc_validated"] = descNode.Attribute("validated");
+        metadata["desc_nblaps"] = descNode.Attribute("nblaps");
+        metadata["desc_hasghostblocks"] = descNode.Attribute("hasghostblocks");
+    }
+
+    XML::Node timesNode = headerNode.Child("times");
+    if (timesNode) {
+        metadata["times_bronze"] = timesNode.Attribute("bronze");
+        metadata["times_silver"] = timesNode.Attribute("silver");
+        metadata["times_gold"] = timesNode.Attribute("gold");
+        metadata["times_authortime"] = timesNode.Attribute("authortime");
+        metadata["times_authorscore"] = timesNode.Attribute("authorscore");
+    }
+
+    XML::Node depsNode = headerNode.Child("deps");
+    if (depsNode) {
+        XML::Node depNode = depsNode.FirstChild();
+        int depIndex = 0;
+        while (depNode) {
+            metadata["dep_file_" + tostring(depIndex)] = depNode.Attribute("file");
+            depNode = depNode.NextSibling();
+            depIndex++;
+        }
+    }
+}
+
+void ParseReplayMetadata(XML::Node &in headerNode, dictionary &inout metadata) {
+    XML::Node mapNode = headerNode.Child("map");
+    if (mapNode) {
+        metadata["map_uid"] = mapNode.Attribute("uid");
+        metadata["map_name"] = mapNode.Attribute("name");
+        metadata["map_author"] = mapNode.Attribute("author");
+        metadata["map_authorzone"] = mapNode.Attribute("authorzone");
+    }
+
+    XML::Node descNode = headerNode.Child("desc");
+    if (descNode) {
+        metadata["desc_envir"] = descNode.Attribute("envir");
+        metadata["desc_mood"] = descNode.Attribute("mood");
+        metadata["desc_maptype"] = descNode.Attribute("maptype");
+        metadata["desc_mapstyle"] = descNode.Attribute("mapstyle");
+        metadata["desc_displaycost"] = descNode.Attribute("displaycost");
+        metadata["desc_mod"] = descNode.Attribute("mod");
+    }
+
+    XML::Node timesNode = headerNode.Child("times");
+    if (timesNode) {
+        metadata["replay_best"] = timesNode.Attribute("best");
+        metadata["replay_respawns"] = timesNode.Attribute("respawns");
+        metadata["replay_stuntscore"] = timesNode.Attribute("stuntscore");
+        metadata["replay_validable"] = timesNode.Attribute("validable");
+    }
+
+    XML::Node checkpointsNode = headerNode.Child("checkpoints");
+    if (checkpointsNode) {
+        metadata["replay_checkpoints"] = checkpointsNode.Attribute("cur");
+    }
+}
+
+/* ------------------------ End GBX Parsing ------------------------ */
+
+
+
+
+
+/* ------------------------ DLL ------------------------ */
 
 namespace DLL {
     Import::Library@ lib;
@@ -855,7 +971,7 @@ namespace DLL {
             string dllPath = IO::FromStorageFolder("DLLs/FileCreationTime.dll");
             @lib = Import::GetLibrary(dllPath);
             if (lib is null) {
-                log("Failed to load DLL: " + dllPath, LogLevel::Error, 856, "loadLibrary");
+                log("Failed to load DLL: " + dllPath, LogLevel::Error, 917, "loadLibrary");
                 return false;
             }
         }
@@ -863,7 +979,7 @@ namespace DLL {
         if (getFileCreationTimeFunc is null) {
             @getFileCreationTimeFunc = lib.GetFunction("GetFileCreationTime");
             if (getFileCreationTimeFunc is null) {
-                log("Failed to get function from DLL.", LogLevel::Error, 864, "loadLibrary");
+                log("Failed to get function from DLL.", LogLevel::Error, 925, "loadLibrary");
                 return false;
             }
             getFileCreationTimeFunc.SetConvention(Import::CallConvention::cdecl);
@@ -884,19 +1000,20 @@ namespace DLL {
 }
 
 string FileCreatedTime(const string &in filePath) {
-    log("Attempting to retrieve file creation time for: " + filePath, LogLevel::Info, 885, "FileCreatedTime");
+    log("Attempting to retrieve file creation time for: " + filePath, LogLevel::Info, 946, "FileCreatedTime");
 
     if (!DLL::loadLibrary()) {
-        log("Failed to load library for file creation time retrieval.", LogLevel::Error, 888, "FileCreatedTime");
-        return -300;
+        log("Failed to load library for file creation time retrieval.", LogLevel::Error, 949, "FileCreatedTime");
+        return "-300";
     }
 
-    int64 _result = DLL::FileCreatedTime(filePath);
-    string result = tostring(_result); 
-    if (result < 0) {
-        log("Error retrieving file creation time. Code: " + result, LogLevel::Warn, 895, "FileCreatedTime");
+    string result = DLL::FileCreatedTime(filePath);
+    if (result != "") {
+        log("Error retrieving file creation time. Code: " + result, LogLevel::Warn, 955, "FileCreatedTime");
     } else {
-        log("File creation time retrieved successfully: " + result, LogLevel::Info, 897, "FileCreatedTime");
+        log("File creation time retrieved successfully: " + result, LogLevel::Info, 957, "FileCreatedTime");
     }
     return result;
 }
+
+/* ------------------------ End DLL ------------------------ */
