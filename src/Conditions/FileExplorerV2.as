@@ -134,60 +134,8 @@ namespace FileExplorer {
             
             Navigation.SetPath(path);
             Elements = LoadElements(path);
-
-            if (Config.SearchQuery != "") {
-                string search = Config.SearchQuery;
-
-                for (uint i = 0; i < Elements.Length; i++) {
-                    ElementInfo@ element = Elements[i];
-                    if (element.Name.Contains(search)) {
-                        element.shouldShow = true;
-                    } else {
-                        element.shouldShow = false;
-                    }
-                }
-            }
-            if (Config.Filters.Length > 0) {
-                for (uint i = 0; i < Elements.Length; i++) {
-                    ElementInfo@ element = Elements[i];
-                    if (!element.IsFolder) {
-                        bool found = false;
-                        for (uint j = 0; j < Config.Filters.Length; j++) {
-                            if (element.Type.ToLower() == Config.Filters[j]) {
-                                found = true;
-                                break;
-                            }
-                        }
-                        element.shouldShow = found;
-                    }
-                }
-            }
-
+            ApplyFiltersAndSearch();
             ApplyVisibilitySettings();
-
-            if (Config.MustReturnFilePath && Config.RenderFlag) {
-                array<string> paths;
-                for (uint i = 0; i < Elements.Length; i++) {
-                    paths.InsertLast(Elements[i].Path);
-                }
-                Config.SelectedPaths = paths;
-            }
-
-            explorer.StartIndexingFiles(path);
-        }
-
-        void ApplyVisibilitySettings() {
-            for (uint i = 0; i < Elements.Length; i++) {
-                ElementInfo@ element = Elements[i];
-                element.shouldShow = true;
-                
-                if (Config.HideFiles && !element.IsFolder) {
-                    element.shouldShow = false;
-                }
-                if (Config.HideFolders && element.IsFolder) {
-                    element.shouldShow = false;
-                }
-            }
         }
 
         array<ElementInfo@> LoadElements(const string &in path) {
@@ -202,13 +150,45 @@ namespace FileExplorer {
             return elementList;
         }
 
+        void ApplyFiltersAndSearch() {
+            for (uint i = 0; i < Elements.Length; i++) {
+                ElementInfo@ element = Elements[i];
+                element.shouldShow = true;
+
+                if (Config.SearchQuery != "" && !element.Name.ToLower().Contains(Config.SearchQuery.ToLower())) {
+                    element.shouldShow = false;
+                }
+
+                if (Config.Filters.Length > 0 && !element.IsFolder) {
+                    bool found = false;
+                    for (uint j = 0; j < Config.Filters.Length; j++) {
+                        if (element.Type.ToLower() == Config.Filters[j].ToLower()) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    element.shouldShow = found;
+                }
+            }
+        }
+
+        void ApplyVisibilitySettings() {
+            for (uint i = 0; i < Elements.Length; i++) {
+                ElementInfo@ element = Elements[i];
+                if (Config.HideFiles && !element.IsFolder) {
+                    element.shouldShow = false;
+                }
+                if (Config.HideFolders && element.IsFolder) {
+                    element.shouldShow = false;
+                }
+            }
+        }
+
         ElementInfo@ GetSelectedElement() {
             for (uint i = 0; i < Elements.Length; i++) {
                 if (Elements[i].IsSelected) {
-                    print(Elements[i].IsSelected + " " + Elements[i].Path);
                     return Elements[i];
                 }
-                print(Elements[i].IsSelected + " " + Elements[i].Path);
             }
             return null;
         }
@@ -393,8 +373,7 @@ namespace FileExplorer {
             Config.Filters = filters;
             Config.RenderFlag = true;
 
-            tab[0].LoadDirectory(Config.Path);
-
+            StartIndexingFiles(Config.Path);
             showInterface = true;
         }
 
@@ -425,7 +404,7 @@ namespace FileExplorer {
                     if (path.Contains("\\/")) {
                         path = path.Replace("\\/", "/");
                     }
-                    
+
                     ElementInfo@ elementInfo = fe.GetElementInfo(path);
                     if (elementInfo !is null) {
                         fe.tab[0].Elements.InsertLast(elementInfo);
@@ -434,12 +413,12 @@ namespace FileExplorer {
 
                 processedFiles = end;
                 fe.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
-
                 log(fe.IndexingMessage, LogLevel::Info, 391, "StartIndexingFilesCoroutine");
-
                 yield();
             }
 
+            fe.tab[0].ApplyFiltersAndSearch();
+            fe.tab[0].ApplyVisibilitySettings();
             fe.IsIndexing = false;
         }
 
@@ -449,45 +428,33 @@ namespace FileExplorer {
 
         ElementInfo@ GetElementInfo(const string &in path) {
             bool isFolder = _IO::Folder::IsDirectory(path);
-
             string name;
             if (isFolder) { name = _IO::Folder::GetFolderName(path); } 
-            else          { name = _IO::File::GetFileName(path); }
-
+            else { name = _IO::File::GetFileName(path); }
             string type = isFolder ? "folder" : _IO::File::GetFileExtension(path);
             string size = isFolder ? "-" : ConvertFileSizeToString(IO::FileSize(path));
             int64 lastModified = IO::FileModifiedTime(path);
-            int64 creationDate = lastModified;  // Placeholder, to be replaced
+            int64 creationDate = lastModified;
             Icon icon = GetElementIcon(isFolder, type);
             bool isSelected = false;
 
             ElementInfo@ elementInfo = ElementInfo(name, path, size, type, lastModified, creationDate, isFolder, icon, isSelected);
-
             if (type.ToLower() == "gbx") {
                 dictionary gbxMetadata = ReadGbxHeader(path);
                 elementInfo.SetGbxMetadata(gbxMetadata);
             }
-
             return elementInfo;
         }
 
         string ConvertFileSizeToString(uint64 size) {
-            if (size < 1024) {
-                return size + " B";
-            } else if (size < 1024 * 1024) {
-                return (size / 1024) + " KB";
-            } else if (size < 1024 * 1024 * 1024) {
-                return (size / (1024 * 1024)) + " MB";
-            } else {
-                return (size / (1024 * 1024 * 1024)) + " GB";
-            }
+            if (size < 1024) return size + " B";
+            else if (size < 1024 * 1024) return (size / 1024) + " KB";
+            else if (size < 1024 * 1024 * 1024) return (size / (1024 * 1024)) + " MB";
+            else return (size / (1024 * 1024 * 1024)) + " GB";
         }
 
         Icon GetElementIcon(bool isFolder, const string &in type) {
-            if (isFolder) { 
-                return Icon::Folder; 
-            }
-
+            if (isFolder) return Icon::Folder;
             string ext = type.ToLower();
             if (ext == "txt" || ext == "rtf" || ext == "csv" || ext == "json") return Icon::FileText;
             if (ext == "pdf") return Icon::FilePdf;
@@ -521,6 +488,7 @@ namespace FileExplorer {
             }
         }
     }
+
 
     class UserInterface {
         FileExplorer@ explorer;
