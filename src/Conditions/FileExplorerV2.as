@@ -924,9 +924,9 @@ dictionary ReadGbxHeader(const string &in path) {
 
     for (uint i = 0; i < chunks.Length; i++) {
         MemoryBuffer chunkBuffer = mapFile.Read(chunks[i].ChunkSize);
-        if (
-               chunks[i].ChunkId == 50933761 // Replay chunk id
-            || chunks[i].ChunkId == 50606082 // Map chunk id
+        if (    chunks[i].ChunkId == 50933761 // Maps
+             || chunks[i].ChunkId == 50606082 // Replays
+             || chunks[i].ChunkId == 0 // Challenges
             ) {
             int stringLength = chunkBuffer.ReadInt32();
             xmlString = chunkBuffer.ReadString(stringLength);
@@ -952,6 +952,8 @@ dictionary ReadGbxHeader(const string &in path) {
                 ParseMapMetadata(headerNode, metadata);
             } else if (gbxType == "replay") {
                 ParseReplayMetadata(headerNode, metadata);
+            } else if (gbxType == "challenge") {
+                ParseChallengeMetadata(headerNode, metadata);
             }
 
             XML::Node playermodelNode = headerNode.Child("playermodel");
@@ -1040,14 +1042,49 @@ void ParseReplayMetadata(XML::Node &in headerNode, dictionary &inout metadata) {
     }
 }
 
+void ParseChallengeMetadata(XML::Node &in headerNode, dictionary &inout metadata) {
+    XML::Node identNode = headerNode.Child("ident");
+    if (identNode) {
+        metadata["map_uid"] = identNode.Attribute("uid");
+        metadata["map_name"] = identNode.Attribute("name");
+        metadata["map_author"] = identNode.Attribute("author");
+    }
+
+    XML::Node descNode = headerNode.Child("desc");
+    if (descNode) {
+        metadata["desc_envir"] = descNode.Attribute("envir");
+        metadata["desc_mood"] = descNode.Attribute("mood");
+        metadata["desc_maptype"] = descNode.Attribute("type");
+        metadata["desc_nblaps"] = descNode.Attribute("nblaps");
+        metadata["desc_price"] = descNode.Attribute("price");
+    }
+
+    XML::Node timesNode = headerNode.Child("times");
+    if (timesNode) {
+        metadata["times_bronze"] = timesNode.Attribute("bronze");
+        metadata["times_silver"] = timesNode.Attribute("silver");
+        metadata["times_gold"] = timesNode.Attribute("gold");
+        metadata["times_authortime"] = timesNode.Attribute("authortime");
+        metadata["times_authorscore"] = timesNode.Attribute("authorscore");
+    }
+
+    XML::Node depsNode = headerNode.Child("deps");
+    if (depsNode) {
+        XML::Node depNode = depsNode.FirstChild();
+        int depIndex = 0;
+        while (depNode) {
+            metadata["dep_file_" + tostring(depIndex)] = depNode.Attribute("file");
+            depNode = depNode.NextSibling();
+            depIndex++;
+        }
+    }
+}
+
 /* ------------------------ End GBX Parsing ------------------------ */
 
 
-
-
-
 /* ------------------------ DLL ------------------------ */
-
+/* ------------------------ File Creation Time ------------------------ */
 namespace DLL {
     Import::Library@ lib;
     Import::Function@ getFileCreationTimeFunc;
@@ -1102,4 +1139,5 @@ string FileCreatedTime(const string &in filePath) {
     return result;
 }
 
+/* ------------------------ End File Creation Time ------------------------ */
 /* ------------------------ End DLL ------------------------ */
