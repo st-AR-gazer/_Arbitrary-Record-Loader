@@ -104,6 +104,12 @@ namespace FileExplorer {
 
     class Navigation {
         string CurrentPath;
+        FileExplorer@ explorer;
+
+        Navigation(FileExplorer@ fe) {
+            @explorer = fe;
+            CurrentPath = fe.Config.Path;
+        }
 
         void SetPath(const string &in path) {
             CurrentPath = path;
@@ -111,6 +117,80 @@ namespace FileExplorer {
 
         string GetPath() {
             return CurrentPath;
+        }
+
+        bool IsInRootDirectory() {
+            return CurrentPath == "/" || CurrentPath == "\\";
+        }
+
+        void MoveUpOneDirectory() {
+            string path = explorer.tab[0].Navigation.GetPath();
+
+            if (path.EndsWith("/") || path.EndsWith("\\")) {
+                path = path.SubStr(0, path.Length - 1);
+            }
+
+            int lastSlash = Math::Max(_Text::LastIndexOf("/", path), _Text::LastIndexOf(path, "\\"));
+            if (lastSlash > 0) {
+                path = path.SubStr(0, lastSlash);
+            } else {
+                path = "/";
+            }
+            path += "/";
+
+            UpdateHistory(path);
+            explorer.tab[0].LoadDirectory(path);
+        }
+
+        void MoveIntoSelectedDirectory() {
+            ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+            if (selectedElement !is null && selectedElement.IsFolder) {
+                UpdateHistory(selectedElement.Path);
+                explorer.tab[0].LoadDirectory(selectedElement.Path);
+            }
+        }
+
+        bool CanMoveUpDirectory() {
+            string path = explorer.tab[0].Navigation.GetPath();
+            if (IsInRootDirectory() || path == "") return false;
+            return;
+        }
+
+
+        // History management
+        array<string> History;
+        int HistoryIndex = -1;
+        bool NavigatingHistory = false;
+
+        void UpdateHistory(const string &in path) {
+            if (!NavigatingHistory && path != "") {
+                if (HistoryIndex == -1 || History[HistoryIndex] != path) {
+                    if (HistoryIndex < int(History.Length) - 1) {
+                        History.Resize(HistoryIndex + 1);
+                    }
+                    History.InsertLast(path);
+                    HistoryIndex = History.Length - 1;
+                }
+            }
+            NavigatingHistory = false;
+        }
+
+        void NavigateBack() {
+            if (HistoryIndex > 0) {
+                NavigatingHistory = true;
+                HistoryIndex--;
+                string path = History[HistoryIndex];
+                explorer.tab[0].LoadDirectory(path);
+            }
+        }
+
+        void NavigateForward() {
+            if (HistoryIndex < int(History.Length) - 1) {
+                NavigatingHistory = true;
+                HistoryIndex++;
+                string path = History[HistoryIndex];
+                explorer.tab[0].LoadDirectory(path);
+            }
         }
     }
 
@@ -130,7 +210,7 @@ namespace FileExplorer {
         }
 
         void LoadDirectory(const string &in path) {
-            if (explorer.utils !is null) { explorer.utils.UpdateHistory(path); }
+            if (explorer.utils !is null) { explorer.tab[0].Navigation.UpdateHistory(path); }
             
             Navigation.SetPath(path);
             Elements = LoadElements(path);
@@ -201,39 +281,6 @@ namespace FileExplorer {
             @explorer = fe;
         }
 
-        bool CanMoveUpDirectory() {
-            string path = explorer.tab[0].Navigation.GetPath();
-            if (path == "/" || path == "\\") return true;
-            return false;
-        }
-
-        void MoveUpOneDirectory() {
-            string path = explorer.tab[0].Navigation.GetPath();
-
-            if (path.EndsWith("/") || path.EndsWith("\\")) {
-                path = path.SubStr(0, path.Length - 1);
-            }
-
-            int lastSlash = Math::Max(_Text::LastIndexOf("/", path), _Text::LastIndexOf(path, "\\"));
-            if (lastSlash > 0) {
-                path = path.SubStr(0, lastSlash);
-            } else {
-                path = "/";
-            }
-            path += "/";
-
-            UpdateHistory(path);
-            explorer.tab[0].LoadDirectory(path);
-        }
-
-        void MoveIntoSelectedDirectory() {
-            ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
-            if (selectedElement !is null && selectedElement.IsFolder) {
-                UpdateHistory(selectedElement.Path);
-                explorer.tab[0].LoadDirectory(selectedElement.Path);
-            }
-        }
-
         void RefreshCurrentDirectory() {
             string currentPath = explorer.tab[0].Navigation.GetPath();
             log("Refreshing directory: " + currentPath, LogLevel::Info, 250, "RefreshCurrentDirectory");
@@ -292,42 +339,6 @@ namespace FileExplorer {
                 explorer.PinnedItems.InsertLast(selectedElement.Path);
             }
         }
-
-        // History management
-        array<string> History;
-        int HistoryIndex = -1;
-        bool NavigatingHistory = false;
-
-        void UpdateHistory(const string &in path) {
-            if (!NavigatingHistory && path != "") {
-                if (HistoryIndex == -1 || History[HistoryIndex] != path) {
-                    if (HistoryIndex < int(History.Length) - 1) {
-                        History.Resize(HistoryIndex + 1);
-                    }
-                    History.InsertLast(path);
-                    HistoryIndex = History.Length - 1;
-                }
-            }
-            NavigatingHistory = false;
-        }
-
-        void NavigateBack() {
-            if (HistoryIndex > 0) {
-                NavigatingHistory = true;
-                HistoryIndex--;
-                string path = History[HistoryIndex];
-                explorer.tab[0].LoadDirectory(path);
-            }
-        }
-
-        void NavigateForward() {
-            if (HistoryIndex < int(History.Length) - 1) {
-                NavigatingHistory = true;
-                HistoryIndex++;
-                string path = History[HistoryIndex];
-                explorer.tab[0].LoadDirectory(path);
-            }
-        }
     }
 
     class FileExplorer {
@@ -337,6 +348,7 @@ namespace FileExplorer {
         UserInterface@ ui;
         Utils@ utils;
         Exports@ exports;
+        Navigation@ nav;
 
         bool IsIndexing = false;
         string IndexingMessage = "";
@@ -352,9 +364,11 @@ namespace FileExplorer {
             @ui = UserInterface(this);
             @utils = Utils(this);
             @exports = Exports();
+            @nav = Navigation();
+
             @CurrentSelectedElement = null;
 
-            utils.UpdateHistory(cfg.Path);
+            nav.UpdateHistory(cfg.Path);
         }
 
         void UpdateCurrentSelectedElement() {
@@ -372,6 +386,8 @@ namespace FileExplorer {
             Config.SearchQuery = searchQuery;
             Config.Filters = filters;
             Config.RenderFlag = true;
+
+            nav.SetPath(Config.Path);
 
             StartIndexingFiles(Config.Path);
             showInterface = true;
@@ -520,20 +536,20 @@ namespace FileExplorer {
         }
 
         void Render_NavigationBar() {
-            if (explorer.utils.HistoryIndex > 0) {
-                if (UI::Button(Icons::ArrowLeft)) { explorer.utils.NavigateBack(); }
+            if (explorer.tab[0].Navigation.HistoryIndex > 0) {
+                if (UI::Button(Icons::ArrowLeft)) { explorer.tab[0].Navigation.NavigateBack(); }
             } else {
                 _UI::DisabledButton(Icons::ArrowLeft);
             }
             UI::SameLine();
-            if (explorer.utils.HistoryIndex < int(explorer.utils.History.Length) - 1) {
-                if (UI::Button(Icons::ArrowRight)) { explorer.utils.NavigateForward(); }
+            if (explorer.tab[0].Navigation.HistoryIndex < int(explorer.tab[0].Navigation.History.Length) - 1) {
+                if (UI::Button(Icons::ArrowRight)) { explorer.tab[0].Navigation.NavigateForward(); }
             } else {
                 _UI::DisabledButton(Icons::ArrowRight);
             }
             UI::SameLine();
-            if (explorer.utils.CanMoveUpDirectory()) {
-                if (UI::Button(Icons::ArrowUp)) { explorer.utils.MoveUpOneDirectory(); }
+            if (explorer.tab[0].Navigation.CanMoveUpDirectory()) {
+                if (UI::Button(Icons::ArrowUp)) { explorer.tab[0].Navigation.MoveUpOneDirectory(); }
             } else {
                 _UI::DisabledButton(Icons::ArrowUp);
             }
@@ -541,7 +557,7 @@ namespace FileExplorer {
             if (!explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
                 _UI::DisabledButton(Icons::ArrowDown); 
             } else {
-                if (UI::Button(Icons::ArrowDown)) { explorer.utils.MoveIntoSelectedDirectory(); }
+                if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
                 UI::SameLine();
             }
             UI::Text(explorer.tab[0].Navigation.GetPath());
