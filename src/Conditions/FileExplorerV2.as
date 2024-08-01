@@ -210,7 +210,7 @@ namespace FileExplorer {
         }
 
         void LoadDirectory(const string &in path) {
-            if (explorer.utils !is null) { explorer.tab[0].Navigation.UpdateHistory(path); }
+            if (explorer.tab[0].Navigation !is null) { explorer.tab[0].Navigation.UpdateHistory(path); }
             
             Navigation.SetPath(path);
             Elements = LoadElements(path);
