@@ -126,6 +126,9 @@ namespace FileExplorer {
         void MoveUpOneDirectory() {
             string path = explorer.tab[0].Navigation.GetPath();
 
+            UpdateHistory(path);
+            print(path);
+
             if (path.EndsWith("/") || path.EndsWith("\\")) {
                 path = path.SubStr(0, path.Length - 1);
             }
@@ -138,7 +141,6 @@ namespace FileExplorer {
             }
             path += "/";
 
-            UpdateHistory(path);
             explorer.tab[0].LoadDirectory(path);
         }
 
@@ -164,7 +166,6 @@ namespace FileExplorer {
         bool NavigatingHistory = false;
 
         void UpdateHistory(const string &in path) {
-            print("Updating history: " + path + " " + NavigatingHistory);
             if (!NavigatingHistory && path != "") {
                 if (HistoryIndex == -1 || History[HistoryIndex] != path) {
                     if (HistoryIndex < int(History.Length) - 1) {
