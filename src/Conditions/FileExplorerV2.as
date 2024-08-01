@@ -17,6 +17,7 @@ namespace FileExplorer {
         bool EnablePagination = false;
         dictionary columsToShow;
         int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
+        bool RecursiveSearch = false;
 
         Config() {
             MustReturnFilePath = false;
@@ -221,9 +222,45 @@ namespace FileExplorer {
             explorer.tab[0].Navigation.UpdateHistory(path);
             explorer.tab[0].Navigation.SetPath(path);
 
-            Elements = LoadElements(path);
-            ApplyFiltersAndSearch();
-            ApplyVisibilitySettings();
+            startnew(CoroutineFuncUserdata(LoadElementsCoroutine), this);
+        }
+
+        void LoadElementsCoroutine(ref@ r) {
+            FileTab@ tab = cast<FileTab@>(r);
+            if (tab is null) return;
+
+            tab.Elements.Resize(0);
+            tab.explorer.IndexingMessage = "Folder is being indexed...";
+
+            array<string> elements = tab.explorer.GetFiles(tab.Navigation.GetPath(), tab.Config.RecursiveSearch);
+
+            const uint batchSize = 2000;
+            uint totalFiles = elements.Length;
+            uint processedFiles = 0;
+
+            for (uint i = 0; i < totalFiles; i += batchSize) {
+                uint end = Math::Min(i + batchSize, totalFiles);
+                for (uint j = i; j < end; j++) {
+                    string path = elements[j];
+                    if (path.Contains("\\/")) {
+                        path = path.Replace("\\/", "/");
+                    }
+
+                    ElementInfo@ elementInfo = tab.explorer.GetElementInfo(path);
+                    if (elementInfo !is null) {
+                        tab.Elements.InsertLast(elementInfo);
+                    }
+                }
+
+                processedFiles = end;
+                tab.explorer.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
+                log(tab.explorer.IndexingMessage, LogLevel::Info, 391, "LoadElementsCoroutine");
+                yield();
+            }
+
+            tab.ApplyFiltersAndSearch();
+            tab.ApplyVisibilitySettings();
+            tab.explorer.IsIndexing = false;
         }
 
         array<ElementInfo@> LoadElements(const string &in path) {
@@ -238,30 +275,66 @@ namespace FileExplorer {
             return elementList;
         }
 
-        // TODO: Adding / removing a filter shouldn't hide the UI popup
         void ApplyFiltersAndSearch() {
+            if (explorer.Config.RecursiveSearch) {
+                ApplyRecursiveSearch();
+            } else {
+                ApplyNonRecursiveSearch();
+            }
+
+            ApplyFilters();
+        }
+
+        void ApplyNonRecursiveSearch() {
+            array<ElementInfo@> tempElements = LoadElements(Navigation.GetPath());
+            Elements.Resize(0);
+            for (uint i = 0; i < tempElements.Length; i++) {
+                if (Config.SearchQuery == "" || tempElements[i].Name.ToLower().Contains(Config.SearchQuery.ToLower())) {
+                    Elements.InsertLast(tempElements[i]);
+                }
+            }
+        }
+
+        void ApplyRecursiveSearch() {
+            array<ElementInfo@> tempElements = LoadAllElementsRecursively(Navigation.GetPath());
+            Elements.Resize(0);
+            for (uint i = 0; i < tempElements.Length; i++) {
+                if (Config.SearchQuery == "" || tempElements[i].Name.ToLower().Contains(Config.SearchQuery.ToLower())) {
+                    Elements.InsertLast(tempElements[i]);
+                }
+            }
+        }
+
+        array<ElementInfo@> LoadAllElementsRecursively(const string &in path) {
+            array<ElementInfo@> elementList;
+            array<string> elementNames = explorer.GetFiles(path, true);
+            for (uint i = 0; i < elementNames.Length; i++) {
+                ElementInfo@ elementInfo = explorer.GetElementInfo(elementNames[i]);
+                if (elementInfo !is null) {
+                    elementList.InsertLast(elementInfo);
+                }
+                if (elementInfo.IsFolder) {
+                    array<ElementInfo@> subElements = LoadAllElementsRecursively(elementInfo.Path);
+                    for (uint j = 0; j < subElements.Length; j++) {
+                        elementList.InsertLast(subElements[j]);
+                    }
+                }
+            }
+            return elementList;
+        }
+
+        void ApplyFilters() {
             for (uint i = 0; i < Elements.Length; i++) {
                 ElementInfo@ element = Elements[i];
                 element.shouldShow = true;
 
-                if (Config.SearchQuery != "" && !element.Name.ToLower().Contains(Config.SearchQuery.ToLower())) {
-                    element.shouldShow = false;
-                }
-
                 if (Config.Filters.Length > 0 && !element.IsFolder) {
                     bool found = false;
                     for (uint j = 0; j < Config.Filters.Length; j++) {
-                        string filter = Config.Filters[j].ToLower();
-                        if (filter == "replay" && element.Path.ToLower().EndsWith(".replay.gbx")) {
+                        if (element.Type.ToLower() == Config.Filters[j].ToLower()) {
                             found = true;
                             break;
-                        } else if (filter == "map" && element.Path.ToLower().EndsWith(".map.gbx")) {
-                            found = true;
-                            break;
-                        } else if (filter == "challenge" && element.Path.ToLower().EndsWith(".challenge.gbx")) {
-                            found = true;
-                            break;
-                        } else if (element.Type.ToLower() == filter) {
+                        } else if (Config.Filters[j].ToLower() == "replay" && element.Path.ToLower().Contains(".replay.gbx")) {
                             found = true;
                             break;
                         }
@@ -432,7 +505,13 @@ namespace FileExplorer {
             fe.tab[0].Elements.Resize(0);
             fe.IndexingMessage = "Folder is being indexed...";
 
-            array<string> elements = fe.GetFiles(fe.CurrentIndexingPath);
+            fe.LoadElementsCoroutine(fe.CurrentIndexingPath);
+
+            fe.IsIndexing = false;
+        }
+
+        void LoadElementsCoroutine(const string &in path) {
+            array<string> elements = GetFiles(path, Config.RecursiveSearch);
 
             const uint batchSize = 2000;
             uint totalFiles = elements.Length;
@@ -446,25 +525,24 @@ namespace FileExplorer {
                         path = path.Replace("\\/", "/");
                     }
 
-                    ElementInfo@ elementInfo = fe.GetElementInfo(path);
+                    ElementInfo@ elementInfo = GetElementInfo(path);
                     if (elementInfo !is null) {
-                        fe.tab[0].Elements.InsertLast(elementInfo);
+                        tab[0].Elements.InsertLast(elementInfo);
                     }
                 }
 
                 processedFiles = end;
-                fe.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
-                log(fe.IndexingMessage, LogLevel::Info, 391, "StartIndexingFilesCoroutine");
+                IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
+                log(IndexingMessage, LogLevel::Info, 391, "StartIndexingFilesCoroutine");
                 yield();
             }
 
-            fe.tab[0].ApplyFiltersAndSearch();
-            fe.tab[0].ApplyVisibilitySettings();
-            fe.IsIndexing = false;
+            tab[0].ApplyFiltersAndSearch();
+            tab[0].ApplyVisibilitySettings();
         }
 
-        array<string> GetFiles(const string &in path) {
-            return IO::IndexFolder(path, false);
+        array<string> GetFiles(const string &in path, bool recursive) {
+            return IO::IndexFolder(path, recursive);
         }
 
         ElementInfo@ GetElementInfo(const string &in path) {
@@ -625,7 +703,6 @@ namespace FileExplorer {
                 if (UI::Button("Add")) {
                     explorer.Config.Filters.InsertLast(newFilter.ToLower());
                     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
-                    UI::CloseCurrentPopup();
                 }
                 UI::Separator();
                 UI::Text("Filter length: " + explorer.Config.Filters.Length);
@@ -646,6 +723,8 @@ namespace FileExplorer {
                         if (UI::MenuItem("Remove Filter")) {
                             explorer.Config.Filters.RemoveAt(i);
                             explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+                            // FIXME: It currenly closes the popup regardless of it UI::CloseCurrentPopup(); is commented out or not
+                            // UI::CloseCurrentPopup();
                         }
                         UI::EndMenu();
                     }
@@ -671,6 +750,10 @@ namespace FileExplorer {
                 if (UI::MenuItem("Enable Pagination", "", explorer.Config.EnablePagination)) {
                     explorer.Config.EnablePagination = !explorer.Config.EnablePagination;
                     explorer.utils.RefreshCurrentDirectory();
+                }
+                if (UI::MenuItem("Recursive Search", "", explorer.Config.RecursiveSearch)) {
+                    explorer.Config.RecursiveSearch = !explorer.Config.RecursiveSearch;
+                    explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                 }
                 UI::Separator();
                 
