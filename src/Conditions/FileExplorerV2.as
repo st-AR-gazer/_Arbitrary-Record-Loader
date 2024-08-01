@@ -13,7 +13,8 @@ namespace FileExplorer {
         bool HideFiles = false;
         bool HideFolders = false;
         bool EnablePagination = false;
-        dictionary columsToShow; 
+        dictionary columsToShow;
+        int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
 
         Config() {
             MustReturnFilePath = false;
@@ -592,13 +593,13 @@ namespace FileExplorer {
             if (UI::Button(Icons::FolderOpen)) { explorer.utils.OpenSelectedFolder(); }
             UI::SameLine();
             if (!explorer.utils.IsItemSelected()) {
-               _UI::DisabledButton(Icons::Trash); 
+                _UI::DisabledButton(Icons::Trash); 
                 UI::SameLine();
-               _UI::DisabledButton(Icons::Pencil);
+                _UI::DisabledButton(Icons::Pencil);
                 UI::SameLine();
-               _UI::DisabledButton(Icons::ThumbTack);
+                _UI::DisabledButton(Icons::ThumbTack);
             } else {
-                if (UI::Button(Icons::Trash)) {  explorer.utils.DeleteSelectedElement(); }
+                if (UI::Button(Icons::Trash)) { explorer.utils.DeleteSelectedElement(); }
                 UI::SameLine();
                 if (UI::Button(Icons::Pencil)) { explorer.utils.RENDER_RENAME_POPUP_FLAG = !explorer.utils.RENDER_RENAME_POPUP_FLAG; }
                 UI::SameLine();
@@ -606,7 +607,6 @@ namespace FileExplorer {
             }
             UI::SameLine();
             if (UI::Button(Icons::Filter)) { UI::OpenPopup("filterMenu"); }
-
 
             // Filter TODO:
             // - Automatically add all filter types on new folder index (should be togglable setting)
@@ -631,7 +631,6 @@ namespace FileExplorer {
                 UI::EndPopup();
             }
 
-
             UI::SameLine();
             UI::Dummy(vec2(UI::GetContentRegionAvail().x - 45, 0));
             UI::SameLine();
@@ -650,6 +649,21 @@ namespace FileExplorer {
                     explorer.Config.EnablePagination = !explorer.Config.EnablePagination;
                     explorer.utils.RefreshCurrentDirectory();
                 }
+                UI::Separator();
+                
+                if (UI::BeginMenu("File Name Display Options")) {
+                    if (UI::MenuItem("Default File Name", "", explorer.Config.FileNameDisplayOption == 0)) {
+                        explorer.Config.FileNameDisplayOption = 0;
+                    }
+                    if (UI::MenuItem("No Formatting", "", explorer.Config.FileNameDisplayOption == 1)) {
+                        explorer.Config.FileNameDisplayOption = 1;
+                    }
+                    if (UI::MenuItem("ManiaPlanet Formatting", "", explorer.Config.FileNameDisplayOption == 2)) {
+                        explorer.Config.FileNameDisplayOption = 2;
+                    }
+                    UI::EndMenu();
+                }
+                
                 UI::EndPopup();
             }
             UI::Separator();
@@ -714,7 +728,20 @@ namespace FileExplorer {
                     UI::TableSetColumnIndex(0);
                     UI::Text(explorer.GetElementIconString(element.Icon, element.IsSelected));
                     UI::TableSetColumnIndex(1);
-                    if (UI::Selectable(element.Name, element.IsSelected)) {
+
+                    string displayName;
+                    switch (explorer.Config.FileNameDisplayOption) {
+                        case 1:
+                            displayName = Text::StripFormatCodes(element.Name);
+                            break;
+                        case 2:
+                            displayName = element.Name.Replace("$", "\\$");
+                            break;
+                        default:
+                            displayName = element.Name;
+                    }
+
+                    if (UI::Selectable(displayName, element.IsSelected)) {
                         HandleElementSelection(element);
                     }
                     UI::TableSetColumnIndex(2);
