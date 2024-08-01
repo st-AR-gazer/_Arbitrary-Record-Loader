@@ -150,17 +150,15 @@ namespace FileExplorer {
             if (Config.Filters.Length > 0) {
                 for (uint i = 0; i < Elements.Length; i++) {
                     ElementInfo@ element = Elements[i];
-                    if (element.IsFolder) {
-                        element.shouldShow = true;
-                    } else {
+                    if (!element.IsFolder) {
                         bool found = false;
                         for (uint j = 0; j < Config.Filters.Length; j++) {
-                            if (element.Type.ToLower() == Config.Filters[j].ToLower()) {
+                            if (element.Type.ToLower() == Config.Filters[j]) {
                                 found = true;
                                 break;
                             }
                         }
-                    element.shouldShow = found;
+                        element.shouldShow = found;
                     }
                 }
             }
