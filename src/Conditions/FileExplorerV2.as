@@ -364,7 +364,7 @@ namespace FileExplorer {
             @ui = UserInterface(this);
             @utils = Utils(this);
             @exports = Exports();
-            @nav = Navigation();
+            @nav = Navigation(this);
 
             @CurrentSelectedElement = null;
 
