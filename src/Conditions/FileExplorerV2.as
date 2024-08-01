@@ -576,10 +576,6 @@ namespace FileExplorer {
             UI::SameLine();
             if (UI::Button(Icons::Filter)) { UI::OpenPopup("filterMenu"); }
 
-            // Filter TODO:
-            // - Automatically add all filter types on new folder index (should be togglable setting)
-            // - Add remove button for filters
-
             if (UI::BeginPopup("filterMenu")) {
                 UI::Text("All filters");
                 UI::Separator();
@@ -592,8 +588,26 @@ namespace FileExplorer {
                 }
                 UI::Separator();
                 UI::Text("Filter length: " + explorer.Config.Filters.Length);
+
+                if (UI::Button("Remove All Filters")) {
+                    explorer.Config.Filters.Resize(0);
+                    explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+                }
+
                 for (uint i = 0; i < explorer.Config.Filters.Length; i++) {
-                    UI::Text(explorer.Config.Filters[i]);
+                    string filter = explorer.Config.Filters[i];
+                    if (UI::BeginMenu(filter)) {
+                        // TODO: Add filter selection, you should be able to select a filter instead of just removing or adding a filter.
+                        
+                        // if (UI::MenuItem("Select Filter")) {
+                        //     SelectFilter(filter);
+                        // }
+                        if (UI::MenuItem("Remove Filter")) {
+                            explorer.Config.Filters.RemoveAt(i);
+                            explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+                        }
+                        UI::EndMenu();
+                    }
                 }
 
                 UI::EndPopup();
