@@ -210,9 +210,12 @@ namespace FileExplorer {
         }
 
         void LoadDirectory(const string &in path) {
-            if (explorer.tab[0].Navigation !is null) { explorer.tab[0].Navigation.UpdateHistory(path); }
+            while (explorer.tab[0] is null) { yield(); }
+            while (explorer.tab[0].Navigation is null) { yield(); }
+
+            explorer.tab[0].Navigation.UpdateHistory(path);
+            explorer.tab[0].Navigation.SetPath(path);
             
-            Navigation.SetPath(path);
             Elements = LoadElements(path);
             ApplyFiltersAndSearch();
             ApplyVisibilitySettings();
