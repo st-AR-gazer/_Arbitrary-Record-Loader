@@ -152,7 +152,7 @@ namespace FileExplorer {
 
         bool CanMoveUpDirectory() {
             string path = explorer.tab[0].Navigation.GetPath();
-            if (IsInRootDirectory() || path == "" || (path[1] == ':' && path.Length == 3)) { return false; }
+            if (IsInRootDirectory() || path == "" || (path.Contains(":") && path.Length == 3)) { return false; }
                                                   // Used since C:/ D:/ E:/ etc. has a colon at index 1
                                                   // and the path is only 3 characters long
             return true;
