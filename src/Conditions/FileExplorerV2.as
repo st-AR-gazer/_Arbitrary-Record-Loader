@@ -153,7 +153,7 @@ namespace FileExplorer {
         bool CanMoveUpDirectory() {
             string path = explorer.tab[0].Navigation.GetPath();
             if (IsInRootDirectory() || path == "") return false;
-            return;
+            return true;
         }
 
 
@@ -197,7 +197,7 @@ namespace FileExplorer {
     class FileTab {
         uint currentSelectedTab = 0; // Decided to only go with one tab for now, but might add more in the future...
 
-        Navigation Navigation;
+        Navigation@ Navigation;
         array<ElementInfo@> Elements;
         Config@ Config;
         FileExplorer@ explorer;
