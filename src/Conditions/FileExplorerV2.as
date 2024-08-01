@@ -251,7 +251,17 @@ namespace FileExplorer {
                 if (Config.Filters.Length > 0 && !element.IsFolder) {
                     bool found = false;
                     for (uint j = 0; j < Config.Filters.Length; j++) {
-                        if (element.Type.ToLower() == Config.Filters[j].ToLower()) {
+                        string filter = Config.Filters[j].ToLower();
+                        if (filter == "replay" && element.Path.ToLower().EndsWith(".replay.gbx")) {
+                            found = true;
+                            break;
+                        } else if (filter == "map" && element.Path.ToLower().EndsWith(".map.gbx")) {
+                            found = true;
+                            break;
+                        } else if (filter == "challenge" && element.Path.ToLower().EndsWith(".challenge.gbx")) {
+                            found = true;
+                            break;
+                        } else if (element.Type.ToLower() == filter) {
                             found = true;
                             break;
                         }
@@ -883,7 +893,7 @@ void OpenFileExplorerExample() {
         true, // mustReturnFilePath
         IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
         "", // searchQuery
-        { "txt", "docx" } // filters
+        { "replay" } // filters
     );
 }
 
