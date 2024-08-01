@@ -4,7 +4,9 @@ namespace FileExplorer {
     FileExplorer@ explorer;
 
     class Config {
-        bool MustReturnFilePath;
+        bool MustReturnFilePath; // Shuold rename: MustReturn
+        // bool ShouldReturnMultipleElements; // Should be added to export logic later
+
         string Path;
         string SearchQuery;
         array<string> Filters;
@@ -613,19 +615,19 @@ namespace FileExplorer {
             // - Add remove button for filters
 
             if (UI::BeginPopup("filterMenu")) {
-                UI::MenuItem("All filters");
+                UI::Text("All filters");
                 UI::Separator();
-                UI::MenuItem("Add filter");
+                UI::Text("Add filter");
                 newFilter = UI::InputText("New Filter", newFilter);
                 if (UI::Button("Add")) {
-                    explorer.Config.Filters.InsertLast(newFilter);
+                    explorer.Config.Filters.InsertLast(newFilter.ToLower());
                     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                     UI::CloseCurrentPopup();
                 }
                 UI::Separator();
-                UI::MenuItem("Filter length: " + explorer.Config.Filters.Length);
+                UI::Text("Filter length: " + explorer.Config.Filters.Length);
                 for (uint i = 0; i < explorer.Config.Filters.Length; i++) {
-                    UI::MenuItem(explorer.Config.Filters[i]);
+                    UI::Text(explorer.Config.Filters[i]);
                 }
 
                 UI::EndPopup();
@@ -872,7 +874,6 @@ void OpenFileExplorerExample() {
         "", // searchQuery
         { "txt", "docx" } // filters
     );
-    // FileExplorer::explorer.StartIndexingFiles(IO::FromUserGameFolder("Replays/"));
 }
 
 void Render() {
