@@ -206,10 +206,13 @@ namespace FileExplorer {
         FileTab(Config@ cfg, FileExplorer@ fe) {
             @Config = cfg;
             @explorer = fe;
+            @Navigation = fe.nav;
+            
             LoadDirectory(Config.Path);
         }
 
         void LoadDirectory(const string &in path) {
+            if (explorer.tab[0] is null) { return; }
             if (explorer.tab[0].Navigation is null) { return; }
 
             explorer.tab[0].Navigation.UpdateHistory(path);
@@ -361,12 +364,12 @@ namespace FileExplorer {
 
         FileExplorer(Config@ cfg) {
             @Config = cfg;
+            @nav = Navigation(this);
             tab.Resize(1);
             @tab[0] = FileTab(cfg, this);
             @ui = UserInterface(this);
             @utils = Utils(this);
             @exports = Exports();
-            @nav = Navigation(this);
 
             @CurrentSelectedElement = null;
 
