@@ -152,10 +152,11 @@ namespace FileExplorer {
 
         bool CanMoveUpDirectory() {
             string path = explorer.tab[0].Navigation.GetPath();
-            if (IsInRootDirectory() || path == "") return false;
+            if (IsInRootDirectory() || path == "" || (path[1] == ':' && path.Length == 3)) { return false; }
+                                                  // Used since C:/ D:/ E:/ etc. has a colon at index 1
+                                                  // and the path is only 3 characters long
             return true;
         }
-
 
         // History management
         array<string> History;
@@ -235,6 +236,7 @@ namespace FileExplorer {
             return elementList;
         }
 
+        // TODO: Adding / removing a filter shouldn't hide the UI popup
         void ApplyFiltersAndSearch() {
             for (uint i = 0; i < Elements.Length; i++) {
                 ElementInfo@ element = Elements[i];
@@ -292,7 +294,7 @@ namespace FileExplorer {
             explorer.tab[0].LoadDirectory(currentPath);
         }
 
-        void OpenSelectedFolder() {
+        void OpenSelectedFolderInNativeFileExplorer() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null && selectedElement.IsFolder) {
                 log("Opening folder: " + selectedElement.Path, LogLevel::Info, 257, "OpenSelectedFolder");
@@ -300,6 +302,12 @@ namespace FileExplorer {
             } else {
                 log("No folder selected or selected element is not a folder.", LogLevel::Error, 260, "OpenSelectedFolder");
             }
+        }
+
+        void OpenCurrentFolderInNativeFileExplorer() {
+            string currentPath = explorer.tab[0].Navigation.GetPath();
+            log("Opening folder: " + currentPath, LogLevel::Info, 267, "OpenCurrentFolder");
+            _IO::OpenFolder(currentPath);
         }
 
         bool IsItemSelected() {
@@ -579,7 +587,7 @@ namespace FileExplorer {
             UI::SameLine();
             if (UI::Button(Icons::Refresh)) { explorer.utils.RefreshCurrentDirectory(); }
             UI::SameLine();
-            if (UI::Button(Icons::FolderOpen)) { explorer.utils.OpenSelectedFolder(); }
+            if (UI::Button(Icons::FolderOpen)) { explorer.utils.OpenCurrentFolderInNativeFileExplorer(); }
             UI::SameLine();
             if (!explorer.utils.IsItemSelected()) {
                 _UI::DisabledButton(Icons::Trash); 
