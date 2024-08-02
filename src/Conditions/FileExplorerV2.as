@@ -44,9 +44,8 @@
         - Recursive search is not fully working as intended, it is very hard to explain what is wrong, but it's just 
           not working as intended, it needs to be looked into more. Normal search works just fine though.
 
-        - At times the entire file explorer enters a 'null state', e.g everything in the UI is removed with the 
-          exception of the 'move up' button (it moves to the wrong directory), and the history buttons (they work
-          as intended). This is a very weird bug that needs to be looked into.
+        - Moving up a directory does not work as intended, it should move one directory up form the current directory, 
+          it moves one up from the directory assigned in the OpenFileExplorer function, but not from the current...
 */
 
 
@@ -181,33 +180,30 @@ namespace FileExplorer {
 
         void MoveUpOneDirectory() {
             string path = explorer.tab[0].Navigation.GetPath();
+            log("Current path before moving up: " + path, LogLevel::Info);
 
             UpdateHistory(path);
-            print(path);
 
             if (path.EndsWith("/") || path.EndsWith("\\")) {
                 path = path.SubStr(0, path.Length - 1);
             }
 
-            print(path);
-
             int lastSlash = Math::Max(_Text::LastIndexOf("/", path), _Text::LastIndexOf(path, "\\"));
             if (lastSlash > 0) {
                 path = path.SubStr(0, lastSlash);
-    
-                print(path);
             } else {
                 path = "/";
-
-                print(path);
             }
-            path += "/";
 
-            print(path);
+            if (!path.EndsWith("/")) {
+                path += "/";
+            }
 
+            log("New path after moving up: " + path, LogLevel::Info);
 
             explorer.tab[0].LoadDirectory(path);
         }
+
 
         void MoveIntoSelectedDirectory() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
