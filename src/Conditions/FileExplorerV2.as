@@ -188,14 +188,14 @@ namespace FileExplorer {
                 path = path.SubStr(0, path.Length - 1);
             }
 
-            int lastSlash = Math::Max(_Text::LastIndexOf("/", path), _Text::LastIndexOf(path, "\\"));
+            int lastSlash = Math::Max(_Text::LastIndexOf("/", path), _Text::LastIndexOf("\\", path));
             if (lastSlash > 0) {
                 path = path.SubStr(0, lastSlash);
             } else {
                 path = "/";
             }
 
-            if (!path.EndsWith("/")) {
+            if (!path.EndsWith("/") && !path.EndsWith("\\")) {
                 path += "/";
             }
 
@@ -203,7 +203,6 @@ namespace FileExplorer {
 
             explorer.tab[0].LoadDirectory(path);
         }
-
 
         void MoveIntoSelectedDirectory() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
