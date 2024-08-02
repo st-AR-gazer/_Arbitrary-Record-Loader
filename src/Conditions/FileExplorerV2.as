@@ -83,6 +83,8 @@ namespace FileExplorer {
         dictionary GbxMetadata;
         bool shouldShow;
 
+        uint64 LastClickTime;
+
         ElementInfo(const string &in name, const string &in path, string size, const string &in type, int64 lastModifiedDate, int64 creationDate, bool isFolder, Icon icon, bool isSelected) {
             this.Name = name;
             this.Path = path;
@@ -95,6 +97,7 @@ namespace FileExplorer {
             this.IsSelected = isSelected;
             this.LastSelectedTime = 0;
             this.shouldShow = true;
+            this.LastClickTime = 0;
         }
 
         void SetGbxMetadata(dictionary@ metadata) {
@@ -779,7 +782,6 @@ namespace FileExplorer {
                 for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
                     ElementInfo@ element = explorer.tab[0].Elements[i];
                     if (!element.shouldShow) continue;
-                    // print("Element: " + element.Name + " " + element.shouldShow + " " + element.Type);
 
                     UI::TableNextRow();
                     UI::TableSetColumnIndex(0);
@@ -815,13 +817,26 @@ namespace FileExplorer {
             }
         }
 
-
         void HandleElementSelection(ElementInfo@ element) {
-            if (!element.IsSelected) {
-                log("Selecting element: " + element.Name, LogLevel::Info, 673, "HandleElementSelection");
+            uint64 currentTime = Time::Now;
+            const uint64 doubleClickThreshold = 600; // 0.6 seconds
+
+            if (element.IsSelected) {
+                if (currentTime - element.LastClickTime <= doubleClickThreshold) {
+                    if (element.IsFolder) {
+                        explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
+                    } else {
+                        explorer.UpdateCurrentSelectedElement();
+                        // TODO: When returning a file path is added, this should open a popup to confirm the selection
+                    }
+                } else {
+                    element.LastClickTime = currentTime;
+                }
+            } else {
                 DeselectAll();
                 element.IsSelected = true;
-                element.LastSelectedTime = Time::Now;
+                element.LastSelectedTime = currentTime;
+                element.LastClickTime = currentTime;
                 explorer.UpdateCurrentSelectedElement();
             }
         }
