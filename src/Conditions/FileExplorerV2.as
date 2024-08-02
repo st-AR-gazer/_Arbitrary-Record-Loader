@@ -155,9 +155,8 @@ namespace FileExplorer {
 
         bool CanMoveUpDirectory() {
             string path = explorer.tab[0].Navigation.GetPath();
-            if (IsInRootDirectory() || path == "" || (path.Contains(":") && path.Length == 3)) { return false; }
-                                                  // Used since C:/ D:/ E:/ etc. has a colon at index 1
-                                                  // and the path is only 3 characters long
+            if (IsInRootDirectory() || path == "" || path.Length == 3) { return false; }
+                                                     // Used since C:/ D:/ E:/ etc. is three characteres long
             return true;
         }
 
@@ -216,16 +215,24 @@ namespace FileExplorer {
         }
 
         void LoadDirectory(const string &in path) {
-            if (explorer.tab[0] is null) { return; }
-            if (explorer.tab[0].Navigation is null) { return; }
+            explorer.nav.UpdateHistory(path);
+            explorer.nav.SetPath(path);
 
-            explorer.tab[0].Navigation.UpdateHistory(path);
-            explorer.tab[0].Navigation.SetPath(path);
-
-            startnew(CoroutineFuncUserdata(LoadElementsCoroutine), this);
+            StartIndexingFiles(path);
         }
 
-        void LoadElementsCoroutine(ref@ r) {
+        void StartIndexingFiles(const string &in path) {
+            explorer.IsIndexing = true;
+            explorer.IndexingMessage = "Folder is being indexed...";
+            explorer.CurrentIndexingPath = path;
+            startnew(CoroutineFuncUserdata(IndexFilesCoroutine), this);
+        }
+
+        // FIXME: Currently this only updates if you refresh the directory, it should update on the fly
+        // FIXME: Recursive is also a bit weird, will need to look into this tomorrow...
+        // TODO: Integrate this coroutine loading into the main explorer coroutine loading to avoid duplicate code (this works for now tho)
+
+        void IndexFilesCoroutine(ref@ r) {
             FileTab@ tab = cast<FileTab@>(r);
             if (tab is null) return;
 
@@ -485,45 +492,7 @@ namespace FileExplorer {
             IsIndexing = true;
             IndexingMessage = "Folder is being indexed...";
             CurrentIndexingPath = path;
-            startnew(CoroutineFuncUserdata(Coro_LoadElements), this);
-        }
-
-        void Coro_LoadElements(ref@ r) {
-            FileExplorer@ fe = cast<FileExplorer@>(r);
-            if (fe is null) return;
-
-            fe.tab[0].Elements.Resize(0);
-            fe.IndexingMessage = "Folder is being indexed...";
-
-            array<string> elements = fe.GetFiles(fe.nav.GetPath(), fe.Config.RecursiveSearch);
-
-            const uint batchSize = 2000;
-            uint totalFiles = elements.Length;
-            uint processedFiles = 0;
-
-            for (uint i = 0; i < totalFiles; i += batchSize) {
-                uint end = Math::Min(i + batchSize, totalFiles);
-                for (uint j = i; j < end; j++) {
-                    string path = elements[j];
-                    if (path.Contains("\\/")) {
-                        path = path.Replace("\\/", "/");
-                    }
-
-                    ElementInfo@ elementInfo = fe.GetElementInfo(path);
-                    if (elementInfo !is null) {
-                        fe.tab[0].Elements.InsertLast(elementInfo);
-                    }
-                }
-
-                processedFiles = end;
-                fe.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
-                log(fe.IndexingMessage, LogLevel::Info, 391, "LoadElementsCoroutine");
-                yield();
-            }
-
-            fe.tab[0].ApplyFiltersAndSearch();
-            fe.tab[0].ApplyVisibilitySettings();
-            fe.IsIndexing = false;
+            tab[0].StartIndexingFiles(path);
         }
 
         array<string> GetFiles(const string &in path, bool recursive) {
@@ -532,17 +501,14 @@ namespace FileExplorer {
 
         ElementInfo@ GetElementInfo(const string &in path) {
             bool isFolder = _IO::Folder::IsDirectory(path);
-            string name;
-            if (isFolder) { name = _IO::Folder::GetFolderName(path); } 
-            else { name = _IO::File::GetFileName(path); }
+            string name = isFolder ? _IO::Folder::GetFolderName(path) : _IO::File::GetFileName(path);
             string type = isFolder ? "folder" : _IO::File::GetFileExtension(path);
             string size = isFolder ? "-" : ConvertFileSizeToString(IO::FileSize(path));
             int64 lastModified = IO::FileModifiedTime(path);
-            int64 creationDate = lastModified;
+            int64 creationDate = lastModified; // Placeholder for actual creation date
             Icon icon = GetElementIcon(isFolder, type);
-            bool isSelected = false;
+            ElementInfo@ elementInfo = ElementInfo(name, path, size, type, lastModified, creationDate, isFolder, icon, false);
 
-            ElementInfo@ elementInfo = ElementInfo(name, path, size, type, lastModified, creationDate, isFolder, icon, isSelected);
             if (type.ToLower() == "gbx") {
                 dictionary gbxMetadata = ReadGbxHeader(path);
                 elementInfo.SetGbxMetadata(gbxMetadata);
