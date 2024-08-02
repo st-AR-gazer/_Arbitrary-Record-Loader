@@ -184,19 +184,13 @@ namespace FileExplorer {
 
             UpdateHistory(path);
 
-            print(path);
-
             if (path.EndsWith("/") || path.EndsWith("\\")) {
                 path = path.SubStr(0, path.Length - 1);
             }
-
-            print(path);
-
-            int lastSlash = Math::Max(_Text::LastIndexOf("/", path), _Text::LastIndexOf("\\", path));
+            
+            int lastSlash = Math::Max(_Text::LastIndexOf(path, "/"), _Text::LastIndexOf(path, "\\"));
             if (lastSlash > 0) {
                 path = path.SubStr(0, lastSlash);
-
-                print(path);
             } else {
                 path = "/";
             }
@@ -204,8 +198,6 @@ namespace FileExplorer {
             if (!path.EndsWith("/") && !path.EndsWith("\\")) {
                 path += "/";
             }
-
-            print(path);
 
             log("New path after moving up: " + path, LogLevel::Info);
 
