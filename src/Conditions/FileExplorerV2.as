@@ -189,13 +189,22 @@ namespace FileExplorer {
                 path = path.SubStr(0, path.Length - 1);
             }
 
+            print(path);
+
             int lastSlash = Math::Max(_Text::LastIndexOf("/", path), _Text::LastIndexOf(path, "\\"));
             if (lastSlash > 0) {
                 path = path.SubStr(0, lastSlash);
+    
+                print(path);
             } else {
                 path = "/";
+
+                print(path);
             }
             path += "/";
+
+            print(path);
+
 
             explorer.tab[0].LoadDirectory(path);
         }
