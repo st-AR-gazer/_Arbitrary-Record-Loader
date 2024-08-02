@@ -1,3 +1,55 @@
+/*
+
+    TODO: 
+        - Add support for multiple tabs (not planned)
+
+        - Add pagination
+
+        - Add support for multiple file return
+            - Add support for multiple file selection (should maybe be it's own point?)
+            - Keep track of selected files in a UI element (maybe on the left side under the pin bar)
+            - Add a button to return all selected files (shuold be optional from the OpenFileExplorer function)
+            - Returning should happen in the 3rd row of the UI. (this should open based on the inputs in 
+              OpenFileExplorer function)
+        
+        - Add support for returning paths in general
+
+        - Add three main areas to the left UI.
+            1. Hardcoded paths, e.g same as home, desktop, documents, downloads, etc, but TM related so it would be
+               like Maps, Replays, Openplanet, StorageFolder, GameFolder etc.
+            2. Pinned items, items that the user has have pinned from the main area, should be displayed in the second 
+               area in the left UI.
+            3. Selected items, items that the user has selected from the main area, should be displayed in the third
+               area in the left UI.
+        
+        - Add rename button support, (it currently does nothing when clicked)
+
+
+    FIXME: 
+        - Delete button does not work
+            WORKS: Deleting a file
+            WORKS: Deleting an empty folder
+            
+            FIXME: Deleting a folder with contents, does not work, nothing happens do the folder when it is called.
+                   Luckily, DeleteFolder(string path, bool recursive = false) has a recursice parameter, so this 
+                   should be easy to fix, but a UI that asks if you want to delete the folder and it's contents, 
+                   should be added.
+
+            FIXME: Deleteing all elements in a folder sets the current folder to 'NULL STATE' (nothing is 
+                   shown in the UI except move up (moves to the wrong directory, and history (history workds)))
+
+        - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
+          (only .replay .map and .challenge should be supported)
+
+        - Recursive search is not fully working as intended, it is very hard to explain what is wrong, but it's just 
+          not working as intended, it needs to be looked into more. Normal search works just fine though.
+
+        - At times the entire file explorer enters a 'null state', e.g everything in the UI is removed with the 
+          exception of the 'move up' button (it moves to the wrong directory), and the history buttons (they work
+          as intended). This is a very weird bug that needs to be looked into.
+*/
+
+
 namespace FileExplorer {
 
     bool showInterface = false;
@@ -150,7 +202,6 @@ namespace FileExplorer {
 
         void MoveIntoSelectedDirectory() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
-            print(selectedElement.Path);
             if (selectedElement !is null && selectedElement.IsFolder) {
                 UpdateHistory(selectedElement.Path);
                 explorer.tab[0].LoadDirectory(selectedElement.Path);
@@ -232,7 +283,7 @@ namespace FileExplorer {
             startnew(CoroutineFuncUserdata(IndexFilesCoroutine), this);
         }
 
-        // FIXME: Currently this only updates if you refresh the directory, it should update on the fly
+        // FIXME: Search currently only updates if you refresh the directory, it should update on the fly
         // FIXME: Recursive is also a bit weird, will need to look into this tomorrow...
         // TODO: Integrate this coroutine loading into the main explorer coroutine loading to avoid duplicate code (this works for now tho)
 
