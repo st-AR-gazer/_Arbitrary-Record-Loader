@@ -205,6 +205,8 @@ namespace FileExplorer {
             if (selectedElement !is null && selectedElement.IsFolder) {
                 UpdateHistory(selectedElement.Path);
                 explorer.tab[0].LoadDirectory(selectedElement.Path);
+            } else {
+                log("No folder selected or selected element is not a folder.", LogLevel::Warn);
             }
         }
 
@@ -293,8 +295,13 @@ namespace FileExplorer {
 
             tab.Elements.Resize(0);
             tab.explorer.IndexingMessage = "Folder is being indexed...";
+            log("Indexing started for path: " + tab.Navigation.GetPath(), LogLevel::Info);
 
             array<string> elements = tab.explorer.GetFiles(tab.Navigation.GetPath(), tab.Config.RecursiveSearch);
+
+            if (elements.Length == 0) {
+                log("No files found in directory: " + tab.Navigation.GetPath(), LogLevel::Info);
+            }
 
             const uint batchSize = 2000;
             uint totalFiles = elements.Length;
@@ -323,6 +330,8 @@ namespace FileExplorer {
             tab.ApplyFiltersAndSearch();
             tab.ApplyVisibilitySettings();
             tab.explorer.IsIndexing = false;
+
+            log("Indexing completed. Number of elements: " + tab.Elements.Length, LogLevel::Info);
         }
 
         void ApplyFiltersAndSearch() {
@@ -663,12 +672,16 @@ namespace FileExplorer {
                 _UI::DisabledButton(Icons::ArrowUp);
             }
             UI::SameLine();
-            if (!explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
+
+            if (explorer.tab[0].Elements.Length > 0 && !explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
                 _UI::DisabledButton(Icons::ArrowDown); 
-            } else {
+            } else if (explorer.tab[0].Elements.Length > 0) {
                 if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
                 UI::SameLine();
+            } else {
+                _UI::DisabledButton(Icons::ArrowDown);
             }
+
             UI::Text(explorer.tab[0].Navigation.GetPath());
             UI::SameLine();
             explorer.Config.SearchQuery = UI::InputText("Search", explorer.Config.SearchQuery);
@@ -821,6 +834,9 @@ namespace FileExplorer {
         void Render_MainAreaBar() {
             if (explorer.IsIndexing) {
                 UI::Text(explorer.IndexingMessage);
+            } else if (explorer.tab[0].Elements.Length == 0) {
+                UI::Text("No elements to display.");
+                log("No elements found in the directory.", LogLevel::Warn);
             } else {
                 UI::BeginTable("FilesTable", 6, UI::TableFlags::Resizable | UI::TableFlags::Borders | UI::TableFlags::SizingFixedSame);
                 UI::TableSetupColumn("ico");
