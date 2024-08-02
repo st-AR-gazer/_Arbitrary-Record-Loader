@@ -150,6 +150,7 @@ namespace FileExplorer {
 
         void MoveIntoSelectedDirectory() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+            print(selectedElement);
             if (selectedElement !is null && selectedElement.IsFolder) {
                 UpdateHistory(selectedElement.Path);
                 explorer.tab[0].LoadDirectory(selectedElement.Path);
