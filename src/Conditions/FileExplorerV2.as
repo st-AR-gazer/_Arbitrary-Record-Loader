@@ -945,6 +945,8 @@ namespace FileExplorer {
             }
         }
 
+        bool openContextMenu = false; // Add this flag at an appropriate place in your code
+
         void HandleElementSelection(ElementInfo@ element) {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
@@ -958,8 +960,8 @@ namespace FileExplorer {
 
             // Control- / Right click check
             if (UI::IsItemHovered() && (explorer.utils.isRMouseButtonPressed || (explorer.utils.isLMouseButtonPressed && explorer.utils.isControlPressed))) {
-                UI::OpenPopup("ElementContextMenu");
-                print("Opening context menu for element: " + element.Name);
+                openContextMenu = true; // Set the flag
+                print("Setting flag to open context menu for element: " + element.Name);
             // Double click check
             } else if (element.IsSelected) {
                 if (currentTime - element.LastClickTime <= doubleClickThreshold) {
@@ -987,41 +989,41 @@ namespace FileExplorer {
         }
 
         void Render_ElementContextMenu() {
-            // Test
+            if (openContextMenu) {
+                UI::OpenPopup("ElementContextMenu");
+                openContextMenu = false;
+            }
 
-                if (UI::BeginPopup("ElementContextMenu")) {
-                    print("pop beg");
-                    ElementInfo@ element = explorer.ui.GetSelectedElement();
-                    print(element.Name);
-                    if (element !is null) {
-                        print("ele not nul");
-                        if (UI::MenuItem("Add to Selected Items")) {
-                            if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
-                                explorer.Config.SelectedPaths.InsertLast(element.Path);
-                            }
-                        }
-
-                        if (UI::MenuItem("Remove from Selected Items")) {
-                            int index = explorer.Config.SelectedPaths.Find(element.Path);
-                            if (index != -1) {
-                                explorer.Config.SelectedPaths.RemoveAt(index);
-                            }
-                        }
-
-                        if (UI::MenuItem("Pin Item")) {
-                            explorer.utils.PinSelectedElement();
-                        }
-
-                        if (UI::MenuItem("Delete Item")) {
-                            explorer.utils.DeleteSelectedElement();
+            if (UI::BeginPopup("ElementContextMenu")) {
+                print("pop beg");
+                ElementInfo@ element = explorer.ui.GetSelectedElement();
+                if (element !is null) {
+                    print("ele not nul");
+                    if (UI::MenuItem("Add to Selected Items")) {
+                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
+                            explorer.Config.SelectedPaths.InsertLast(element.Path);
                         }
                     }
-                    UI::EndPopup();
+
+                    if (UI::MenuItem("Remove from Selected Items")) {
+                        int index = explorer.Config.SelectedPaths.Find(element.Path);
+                        if (index != -1) {
+                            explorer.Config.SelectedPaths.RemoveAt(index);
+                        }
+                    }
+
+                    if (UI::MenuItem("Pin Item")) {
+                        explorer.utils.PinSelectedElement();
+                    }
+
+                    if (UI::MenuItem("Delete Item")) {
+                        explorer.utils.DeleteSelectedElement();
+                    }
                 }
-
-
-                // Test
+                UI::EndPopup();
+            }
         }
+
 
         void Render_DetailBar() {
             ElementInfo@ selectedElement = GetSelectedElement();
