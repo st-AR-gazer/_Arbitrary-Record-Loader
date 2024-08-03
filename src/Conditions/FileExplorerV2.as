@@ -940,7 +940,6 @@ namespace FileExplorer {
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
             explorer.utils.isLMouseButtonPressed = true;
-            explorer.utils.isRMouseButtonPressed = true;
 
             print("IsItemHovered " + UI::IsItemHovered());
             print("is RMouse down " + explorer.utils.isRMouseButtonPressed);
