@@ -638,6 +638,13 @@ namespace FileExplorer {
         void Render_FileExplorer() {
             Render_Rows();
             Render_Columns();
+
+            Render_Misc();
+        }
+
+        void Render_Misc() {
+            Render_RenamePopup();
+            Render_ElementContextMenu();
         }
 
         void Render_Rows() {
