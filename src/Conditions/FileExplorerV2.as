@@ -46,15 +46,6 @@
 
 */
 
-UI::InputBlocking OnControlKeyPress(bool down, VirtualKey key) {
-    print("Key pressed: " + key);
-    if (key == VirtualKey::LControl && down) {
-        print("Control key pressed, and down is true.");
-        FileExplorer::explorer.utils.HandleControlKey();
-    }
-    return UI::InputBlocking::DoNothing;
-}
-
 namespace FileExplorer {
     bool showInterface = false;
     FileExplorer@ explorer;
@@ -509,8 +500,11 @@ namespace FileExplorer {
         }
 
         bool isControlPressed = false;
-        void HandleControlKey() {
-            isControlPressed = !isControlPressed;
+        void OnLControlKeyPress(bool down, VirtualKey key) {
+            if (key == VirtualKey::LControl) {
+                print("Control is pressed");
+                isControlPressed = down;
+            }
         }
     }
 
