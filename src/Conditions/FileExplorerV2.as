@@ -1,5 +1,4 @@
 /*
-
     TODO: 
         - Add support for multiple tabs (not planned)
 
@@ -501,6 +500,11 @@ namespace FileExplorer {
                 explorer.PinnedItems.InsertLast(selectedElement.Path);
             }
         }
+
+        bool isControlPressed = false;
+        void HandleControlKey() {
+            isControlPressed = !isControlPressed;
+        }
     }
 
     class FileExplorer {
@@ -535,11 +539,6 @@ namespace FileExplorer {
 
         void UpdateCurrentSelectedElement() {
             @CurrentSelectedElement = tab[0].GetSelectedElement();
-            if (CurrentSelectedElement !is null) {
-                if (CurrentSelectedElement.IsSelected) {
-                    Config.SelectedPaths.InsertLast(CurrentSelectedElement.Path);
-                }
-            }
         }
 
         void OpenFileExplorer(
@@ -881,7 +880,7 @@ namespace FileExplorer {
 
         void Render_SelectedItems() {
             for (uint i = 0; i < explorer.Config.SelectedPaths.Length; i++) {
-                UI::Text(explorer.Config.SelectedPaths[i]);
+                UI::Text(_IO::File::GetFileNameWithoutExtension(explorer.Config.SelectedPaths[i]));
             }
         }
 
@@ -939,23 +938,38 @@ namespace FileExplorer {
             }
         }
 
+        UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
+            if (key == VirtualKey::LControl && down) {
+                explorer.utils.HandleControlKey();
+            }
+            return UI::InputBlocking::DoNothing;
+        }
+
+
         void HandleElementSelection(ElementInfo@ element) {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
-            if (element.IsSelected) {
+            if (UI::IsItemHovered() && UI::IsMouseClicked(1)) { // Right-click
+                UI::OpenPopup("ElementContextMenu");
+            } else if (explorer.utils.isControlPressed && UI::IsMouseDoubleClicked(0)) {
+                if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
+                    explorer.Config.SelectedPaths.InsertLast(element.Path);
+                }
+            } else if (element.IsSelected) {
                 if (currentTime - element.LastClickTime <= doubleClickThreshold) {
                     if (element.IsFolder) {
                         explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
                     } else {
                         explorer.UpdateCurrentSelectedElement();
-                        // TODO: When returning a file path is added, this should open a popup to confirm the selection
                     }
                 } else {
                     element.LastClickTime = currentTime;
                 }
             } else {
-                DeselectAll();
+                for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
+                    explorer.tab[0].Elements[i].IsSelected = false;
+                }
                 element.IsSelected = true;
                 element.LastSelectedTime = currentTime;
                 element.LastClickTime = currentTime;
@@ -963,9 +977,37 @@ namespace FileExplorer {
             }
         }
 
-        void DeselectAll() {
-            for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
-                explorer.tab[0].Elements[i].IsSelected = false;
+
+        void Render_ElementContextMenu() {
+            if (UI::BeginPopup("ElementContextMenu")) {
+                if (UI::MenuItem("Add to Selected Items")) {
+                    ElementInfo@ element = explorer.ui.GetSelectedElement();
+                    if (element !is null) {
+                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
+                            explorer.Config.SelectedPaths.InsertLast(element.Path);
+                        }
+                    }
+                }
+
+                if (UI::MenuItem("Remove from Selected Items")) {
+                    ElementInfo@ element = explorer.ui.GetSelectedElement();
+                    if (element !is null) {
+                        int index = explorer.Config.SelectedPaths.Find(element.Path);
+                        if (index != -1) {
+                            explorer.Config.SelectedPaths.RemoveAt(index);
+                        }
+                    }
+                }
+
+                if (UI::MenuItem("Pin Item")) {
+                    explorer.utils.PinSelectedElement();
+                }
+
+                if (UI::MenuItem("Delete Item")) {
+                    explorer.utils.DeleteSelectedElement();
+                }
+
+                UI::EndPopup();
             }
         }
 
