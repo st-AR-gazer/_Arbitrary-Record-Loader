@@ -1113,8 +1113,9 @@ void Render() {
 
 /* ------------------------ Handle Button Clicks ------------------------ */
 
-UI::InputBlocking OnControKeyPress(bool down, VirtualKey key) {
+UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
     if (key == VirtualKey::Control && down) {
+        print("Control is bring held and a button is bring held");
         FileExplorer::explorer.utils.isControlPressed = down;
     }
     return UI::InputBlocking::DoNothing;
