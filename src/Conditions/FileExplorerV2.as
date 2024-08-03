@@ -939,7 +939,9 @@ namespace FileExplorer {
         }
 
         UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
+            print("Key pressed: " + key);
             if (key == VirtualKey::LControl && down) {
+                print("Control key pressed, and down is true.");
                 explorer.utils.HandleControlKey();
             }
             return UI::InputBlocking::DoNothing;
