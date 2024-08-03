@@ -937,8 +937,13 @@ namespace FileExplorer {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
+            print("IsItemHovered " + UI::IsItemHovered());
+            print("IsMouseClicked(right) " + UI::IsMouseClicked(UI::MouseButton::Right));
+            print("IsMouseClicked(left) " + UI::IsMouseClicked());
+            print("is control down " + explorer.utils.isControlPressed);
+
             // Control- / Right click check
-            if ((UI::IsMouseClicked(UI::MouseButton::Right) || (UI::IsMouseClicked() && explorer.utils.isControlPressed))) {
+            if (UI::IsItemHovered() && (UI::IsMouseClicked(UI::MouseButton::Right) || (UI::IsMouseClicked() && explorer.utils.isControlPressed))) {
                 UI::OpenPopup("ElementContextMenu");
                 print("Opening context menu for element: " + element.Name);
             // Double click check
