@@ -1129,25 +1129,17 @@ UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
     if (FileExplorer::explorer.utils is null) return UI::InputBlocking::DoNothing;
     
     // LMouse Button
-    if (key == VirtualKey::LButton && down) {
-        FileExplorer::explorer.utils.isLMouseButtonPressed = down;
-    } else {
+    if (key == VirtualKey::LButton) {
         FileExplorer::explorer.utils.isLMouseButtonPressed = down;
     }
 
     // RMouse button
-    if (key == VirtualKey::RButton && down) {
-        FileExplorer::explorer.utils.isRMouseButtonPressed = down;
-    } else {
+    if (key == VirtualKey::RButton) {
         FileExplorer::explorer.utils.isRMouseButtonPressed = down;
     }
 
     // Control button
-    if (key == VirtualKey::Control && down) {
-        print("Control key is pressed");
-        FileExplorer::explorer.utils.isControlPressed = down;
-    } else {
-        print("Control key is not pressed");
+    if (key == VirtualKey::LControl || key == VirtualKey::RControl) {
         FileExplorer::explorer.utils.isControlPressed = down;
     }
 
