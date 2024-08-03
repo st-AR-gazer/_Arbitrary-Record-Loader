@@ -831,14 +831,17 @@ namespace FileExplorer {
 
         void Render_LeftSidebar() {
             UI::Text("Hardcoded Paths");
+            UI::Separator();
             Render_HardcodedPaths();
             UI::Separator();
 
             UI::Text("Pinned Items");
+            UI::Separator();
             Render_PinnedItems();
             UI::Separator();
 
             UI::Text("Selected Items");
+            UI::Separator();
             Render_SelectedItems();
             UI::Separator();
         }
@@ -976,36 +979,31 @@ namespace FileExplorer {
             }
         }
 
-
         void Render_ElementContextMenu() {
             if (UI::BeginPopup("ElementContextMenu")) {
-                if (UI::MenuItem("Add to Selected Items")) {
-                    ElementInfo@ element = explorer.ui.GetSelectedElement();
-                    if (element !is null) {
+                ElementInfo@ element = explorer.ui.GetSelectedElement();
+                if (element !is null) {
+                    if (UI::MenuItem("Add to Selected Items")) {
                         if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
                             explorer.Config.SelectedPaths.InsertLast(element.Path);
                         }
                     }
-                }
 
-                if (UI::MenuItem("Remove from Selected Items")) {
-                    ElementInfo@ element = explorer.ui.GetSelectedElement();
-                    if (element !is null) {
+                    if (UI::MenuItem("Remove from Selected Items")) {
                         int index = explorer.Config.SelectedPaths.Find(element.Path);
                         if (index != -1) {
                             explorer.Config.SelectedPaths.RemoveAt(index);
                         }
                     }
-                }
 
-                if (UI::MenuItem("Pin Item")) {
-                    explorer.utils.PinSelectedElement();
-                }
+                    if (UI::MenuItem("Pin Item")) {
+                        explorer.utils.PinSelectedElement();
+                    }
 
-                if (UI::MenuItem("Delete Item")) {
-                    explorer.utils.DeleteSelectedElement();
+                    if (UI::MenuItem("Delete Item")) {
+                        explorer.utils.DeleteSelectedElement();
+                    }
                 }
-
                 UI::EndPopup();
             }
         }
