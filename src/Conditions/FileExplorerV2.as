@@ -20,8 +20,6 @@
                area in the left UI.
             3. Selected items, items that the user has selected from the main area, should be displayed in the third
                area in the left UI.
-        
-        - Add rename button support, (it currently does nothing when clicked)
 
 
     FIXME: 
@@ -44,6 +42,14 @@
           not working as intended, it needs to be looked into more. Normal search works just fine though.
           (recursive search is also not in a coroutine)
 
+        - Renaming currenly does not work. 
+          - Attempting to rename a file does work. The popup pops up and you can write a new name, but when you press
+            rename, nothing happens.
+          - Attempting to rename a folder does not work. The popup pops up and you can write a new name, but when you 
+            press rename, nothing happens.
+          - The renaming popup does not allow for you to change away from the name NewFileName (the string needs to be 
+            outside of the function)
+
 */
 
 namespace FileExplorer {
@@ -51,8 +57,7 @@ namespace FileExplorer {
     FileExplorer@ explorer;
 
     class Config {
-        bool MustReturnFilePath; // Shuold rename: MustReturn
-        // bool ShouldReturnMultipleElements; // Should be added to export logic later
+        bool MustReturn; // Shuold rename: MustReturn
 
         string Path;
         string SearchQuery;
@@ -67,7 +72,7 @@ namespace FileExplorer {
         bool RecursiveSearch = false;
 
         Config() {
-            MustReturnFilePath = false;
+            MustReturn = false;
             Path = "";
             SearchQuery = "";
             Filters = array<string>();
@@ -539,15 +544,15 @@ namespace FileExplorer {
         }
 
         void OpenFileExplorer(
-            bool mustReturnFilePath = false,
-            const string &in path = "",
-            const string &in searchQuery = "",
-            array<string> filters = array<string>()
+            bool _mustReturn = false,
+            const string &in _path = "",
+            const string &in _searchQuery = "",
+            array<string> _filters = array<string>()
         ) {
-            Config.MustReturnFilePath = mustReturnFilePath;
-            Config.Path = path;
-            Config.SearchQuery = searchQuery;
-            Config.Filters = filters;
+            Config.MustReturn = _mustReturn;
+            Config.Path = _path;
+            Config.SearchQuery = _searchQuery;
+            Config.Filters = _filters;
             Config.RenderFlag = true;
 
             nav.SetPath(Config.Path);
@@ -825,12 +830,12 @@ namespace FileExplorer {
 
 
         void Render_ReturnBar() {
-            if (explorer.Config.MustReturnFilePath) {
+            if (explorer.Config.MustReturn) {
                 UI::Separator();
                 if (UI::Button("Return Selected Path")) {
                     explorer.exports.ReturnSelectedFilePath();
 
-                    explorer.Config.MustReturnFilePath = false;
+                    explorer.Config.MustReturn = false;
                     showInterface = false;
                 }
             }
@@ -945,23 +950,24 @@ namespace FileExplorer {
             }
         }
 
-        bool openContextMenu = false; // Add this flag at an appropriate place in your code
+        bool openContextMenu = false;
 
         void HandleElementSelection(ElementInfo@ element) {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
-            explorer.utils.isLMouseButtonPressed = true;
+            explorer.utils.isLMouseButtonPressed = true; // Shuold be kept for reason under
 
-            print("IsItemHovered " + UI::IsItemHovered());
-            print("is RMouse down " + explorer.utils.isRMouseButtonPressed);
-            print("is LMouse down " + explorer.utils.isLMouseButtonPressed);
-            print("is control down " + explorer.utils.isControlPressed);
+            // Should be kept til I figure out if VirtualKey::L/RButton is L and R mouse button
+            // print("IsItemHovered " + UI::IsItemHovered());
+            // print("is RMouse down " + explorer.utils.isRMouseButtonPressed);
+            // print("is LMouse down " + explorer.utils.isLMouseButtonPressed);
+            // print("is control down " + explorer.utils.isControlPressed);
 
             // Control- / Right click check
             if (UI::IsItemHovered() && (explorer.utils.isRMouseButtonPressed || (explorer.utils.isLMouseButtonPressed && explorer.utils.isControlPressed))) {
-                openContextMenu = true; // Set the flag
-                print("Setting flag to open context menu for element: " + element.Name);
+                openContextMenu = true;
+                explorer.UpdateCurrentSelectedElement();
             // Double click check
             } else if (element.IsSelected) {
                 if (currentTime - element.LastClickTime <= doubleClickThreshold) {
@@ -995,10 +1001,8 @@ namespace FileExplorer {
             }
 
             if (UI::BeginPopup("ElementContextMenu")) {
-                print("pop beg");
                 ElementInfo@ element = explorer.ui.GetSelectedElement();
                 if (element !is null) {
-                    print("ele not nul");
                     if (UI::MenuItem("Add to Selected Items")) {
                         if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
                             explorer.Config.SelectedPaths.InsertLast(element.Path);
@@ -1098,16 +1102,16 @@ namespace FileExplorer {
     }
 
     void OpenFileExplorer(
-        bool mustReturnFilePath = false,
-        const string &in path = "",
-        const string &in searchQuery = "",
-        array<string> filters = array<string>()
+        bool _mustReturn = false,
+        const string &in _path = "",
+        const string &in _searchQuery = "",
+        array<string> _filters = array<string>()
     ) {
         if (explorer is null) {
             Config@ config = Config();
             @explorer = FileExplorer(config);
         }
-        explorer.OpenFileExplorer(mustReturnFilePath, path, searchQuery, filters);
+        explorer.OpenFileExplorer(_mustReturn, _path, _searchQuery, _filters);
     }
 }
 
@@ -1117,7 +1121,7 @@ void FILE_EXPLORER_BASE_RENDERER() {
 
 void OpenFileExplorerExample() {
     FileExplorer::OpenFileExplorer(
-        true, // mustReturnFilePath
+        true, // _mustReturn
         IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
         "", // searchQuery
         { "replay" } // filters
