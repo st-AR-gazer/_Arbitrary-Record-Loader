@@ -500,12 +500,6 @@ namespace FileExplorer {
         }
 
         bool isControlPressed = false;
-        UI::InputBlocking OnControlKeyPress(bool down, VirtualKey key) {
-            if (key == VirtualKey::Control) {
-                isControlPressed = down;
-            }
-            return UI::InputBlocking::DoNothing;
-        }
     }
 
     class FileExplorer {
@@ -1117,6 +1111,16 @@ void Render() {
     UI::End();
 }
 
+/* ------------------------ Handle Button Clicks ------------------------ */
+
+UI::InputBlocking OnControKeyPress(bool down, VirtualKey key) {
+    if (key == VirtualKey::Control && down) {
+        FileExplorer::explorer.utils.isControlPressed = down;
+    }
+    return UI::InputBlocking::DoNothing;
+}
+
+/* ------------------------ End Handle Button Clicks ------------------------ */
 
 
 /* ------------------------ GBX Parsing ------------------------ */
