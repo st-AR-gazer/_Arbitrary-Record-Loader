@@ -1110,8 +1110,6 @@ void OpenFileExplorerExample() {
 }
 
 void Render() {
-    if (FileExplorer::explorer !is null) print(FileExplorer::explorer.utils.isControlPressed);
-
     FILE_EXPLORER_BASE_RENDERER();
     FILE_EXPLORER_V1_BASE_RENDERER(); // Used for comparison, should be removed on release
     
@@ -1146,8 +1144,10 @@ UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
 
     // Control button
     if (key == VirtualKey::Control && down) {
+        print("Control key is pressed");
         FileExplorer::explorer.utils.isControlPressed = down;
     } else {
+        print("Control key is not pressed");
         FileExplorer::explorer.utils.isControlPressed = down;
     }
 
