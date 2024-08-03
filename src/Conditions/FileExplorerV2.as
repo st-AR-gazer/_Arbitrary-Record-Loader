@@ -46,9 +46,16 @@
 
 */
 
+UI::InputBlocking OnControlKeyPress(bool down, VirtualKey key) {
+    print("Key pressed: " + key);
+    if (key == VirtualKey::LControl && down) {
+        print("Control key pressed, and down is true.");
+        FileExplorer::explorer.utils.HandleControlKey();
+    }
+    return UI::InputBlocking::DoNothing;
+}
 
 namespace FileExplorer {
-
     bool showInterface = false;
     FileExplorer@ explorer;
 
@@ -937,16 +944,6 @@ namespace FileExplorer {
                 UI::EndTable();
             }
         }
-
-        UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
-            print("Key pressed: " + key);
-            if (key == VirtualKey::LControl && down) {
-                print("Control key pressed, and down is true.");
-                explorer.utils.HandleControlKey();
-            }
-            return UI::InputBlocking::DoNothing;
-        }
-
 
         void HandleElementSelection(ElementInfo@ element) {
             uint64 currentTime = Time::Now;
