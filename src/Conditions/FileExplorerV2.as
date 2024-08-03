@@ -959,6 +959,42 @@ namespace FileExplorer {
             // Control- / Right click check
             if (UI::IsItemHovered() && (explorer.utils.isRMouseButtonPressed || (explorer.utils.isLMouseButtonPressed && explorer.utils.isControlPressed))) {
                 UI::OpenPopup("ElementContextMenu");
+
+                // Test
+
+                if (UI::BeginPopup("ElementContextMenu")) {
+                    print("pop beg");
+                    ElementInfo@ element = explorer.ui.GetSelectedElement();
+                    print(element.Name);
+                    if (element !is null) {
+                        print("ele not nul");
+                        if (UI::MenuItem("Add to Selected Items")) {
+                            if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
+                                explorer.Config.SelectedPaths.InsertLast(element.Path);
+                            }
+                        }
+
+                        if (UI::MenuItem("Remove from Selected Items")) {
+                            int index = explorer.Config.SelectedPaths.Find(element.Path);
+                            if (index != -1) {
+                                explorer.Config.SelectedPaths.RemoveAt(index);
+                            }
+                        }
+
+                        if (UI::MenuItem("Pin Item")) {
+                            explorer.utils.PinSelectedElement();
+                        }
+
+                        if (UI::MenuItem("Delete Item")) {
+                            explorer.utils.DeleteSelectedElement();
+                        }
+                    }
+                    UI::EndPopup();
+                }
+
+
+                // Test
+
                 print("Opening context menu for element: " + element.Name);
             // Double click check
             } else if (element.IsSelected) {
@@ -987,36 +1023,7 @@ namespace FileExplorer {
         }
 
         void Render_ElementContextMenu() {
-            print("beg");
-            if (UI::BeginPopup("ElementContextMenu")) {
-                print("pop beg");
-                ElementInfo@ element = explorer.ui.GetSelectedElement();
-                print(element.Name);
-                if (element !is null) {
-                    print("ele not nul");
-                    if (UI::MenuItem("Add to Selected Items")) {
-                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
-                            explorer.Config.SelectedPaths.InsertLast(element.Path);
-                        }
-                    }
-
-                    if (UI::MenuItem("Remove from Selected Items")) {
-                        int index = explorer.Config.SelectedPaths.Find(element.Path);
-                        if (index != -1) {
-                            explorer.Config.SelectedPaths.RemoveAt(index);
-                        }
-                    }
-
-                    if (UI::MenuItem("Pin Item")) {
-                        explorer.utils.PinSelectedElement();
-                    }
-
-                    if (UI::MenuItem("Delete Item")) {
-                        explorer.utils.DeleteSelectedElement();
-                    }
-                }
-                UI::EndPopup();
-            }
+            
         }
 
         void Render_DetailBar() {
