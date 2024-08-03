@@ -848,22 +848,22 @@ namespace FileExplorer {
         }
 
         void Render_HardcodedPaths() {
-            if (UI::Selectable(Icons::Home + " Trackmania Folder")) {
+            if (UI::Selectable(Icons::Home + " Trackmania Folder", false)) {
                 explorer.tab[0].LoadDirectory(IO::FromUserGameFolder(""));
             }
-            if (UI::Selectable(Icons::Map + " Trackmania Maps Folder")) {
+            if (UI::Selectable(Icons::Map + " Trackmania Maps Folder", false)) {
                 explorer.tab[0].LoadDirectory(IO::FromUserGameFolder("Maps/"));
             }
-            if (UI::Selectable(Icons::SnapchatGhost + " Trackmania Replays Folder")) {
+            if (UI::Selectable(Icons::SnapchatGhost + " Trackmania Replays Folder", false)) {
                 explorer.tab[0].LoadDirectory(IO::FromUserGameFolder("Replays/"));
             }
-            if (UI::Selectable(Icons::Trademark + " Trackmania App Folder")) {
+            if (UI::Selectable(Icons::Trademark + " Trackmania App Folder", false)) {
                 explorer.tab[0].LoadDirectory(IO::FromAppFolder(""));
             }
-            if (UI::Selectable(Icons::Heartbeat + " Openplanet Folder")) {
+            if (UI::Selectable(Icons::Heartbeat + " Openplanet Folder", false)) {
                 explorer.tab[0].LoadDirectory(IO::FromDataFolder(""));
             }
-            if (UI::Selectable(Icons::Inbox + " Openplanet Storage Folder")) {
+            if (UI::Selectable(Icons::Inbox + " Openplanet Storage Folder", false)) {
                 explorer.tab[0].LoadDirectory(IO::FromStorageFolder(""));
             }
             // if (UI::Selectable()) {
