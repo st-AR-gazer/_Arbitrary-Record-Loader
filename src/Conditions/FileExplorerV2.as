@@ -959,8 +959,35 @@ namespace FileExplorer {
             // Control- / Right click check
             if (UI::IsItemHovered() && (explorer.utils.isRMouseButtonPressed || (explorer.utils.isLMouseButtonPressed && explorer.utils.isControlPressed))) {
                 UI::OpenPopup("ElementContextMenu");
+                print("Opening context menu for element: " + element.Name);
+            // Double click check
+            } else if (element.IsSelected) {
+                if (currentTime - element.LastClickTime <= doubleClickThreshold) {
+                    if (element.IsFolder) {
+                        explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
+                    } else {
+                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
+                            explorer.Config.SelectedPaths.InsertLast(element.Path);
+                        }
+                        explorer.UpdateCurrentSelectedElement();
+                    }
+                } else {
+                    element.LastClickTime = currentTime;
+                }
+            // Normal click check
+            } else {
+                for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
+                    explorer.tab[0].Elements[i].IsSelected = false;
+                }
+                element.IsSelected = true;
+                element.LastSelectedTime = currentTime;
+                element.LastClickTime = currentTime;
+                explorer.UpdateCurrentSelectedElement();
+            }
+        }
 
-                // Test
+        void Render_ElementContextMenu() {
+            // Test
 
                 if (UI::BeginPopup("ElementContextMenu")) {
                     print("pop beg");
@@ -994,36 +1021,6 @@ namespace FileExplorer {
 
 
                 // Test
-
-                print("Opening context menu for element: " + element.Name);
-            // Double click check
-            } else if (element.IsSelected) {
-                if (currentTime - element.LastClickTime <= doubleClickThreshold) {
-                    if (element.IsFolder) {
-                        explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
-                    } else {
-                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
-                            explorer.Config.SelectedPaths.InsertLast(element.Path);
-                        }
-                        explorer.UpdateCurrentSelectedElement();
-                    }
-                } else {
-                    element.LastClickTime = currentTime;
-                }
-            // Normal click check
-            } else {
-                for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
-                    explorer.tab[0].Elements[i].IsSelected = false;
-                }
-                element.IsSelected = true;
-                element.LastSelectedTime = currentTime;
-                element.LastClickTime = currentTime;
-                explorer.UpdateCurrentSelectedElement();
-            }
-        }
-
-        void Render_ElementContextMenu() {
-            
         }
 
         void Render_DetailBar() {
