@@ -501,7 +501,7 @@ namespace FileExplorer {
 
         bool isControlPressed = false;
         void OnLControlKeyPress(bool down, VirtualKey key) {
-            if (key == VirtualKey::LControl) {
+            if (key == VirtualKey::Control) {
                 print("Control is pressed");
                 isControlPressed = down;
             }
