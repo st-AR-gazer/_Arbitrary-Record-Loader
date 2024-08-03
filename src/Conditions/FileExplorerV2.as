@@ -980,9 +980,13 @@ namespace FileExplorer {
         }
 
         void Render_ElementContextMenu() {
+            print("beg");
             if (UI::BeginPopup("ElementContextMenu")) {
+                print("pop beg");
                 ElementInfo@ element = explorer.ui.GetSelectedElement();
+                print(element.Name);
                 if (element !is null) {
+                    print("ele not nul");
                     if (UI::MenuItem("Add to Selected Items")) {
                         if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
                             explorer.Config.SelectedPaths.InsertLast(element.Path);
@@ -1120,6 +1124,9 @@ void Render() {
 }
 
 /* ------------------------ Handle Button Clicks ------------------------ */
+
+// FIXME: After clicking ctrl it 'sticks' to you, you have to click ctrl again to remove the stickyness...
+//        Some custom functionality needs to be added to avoid this...
 
 UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
     // This is not good practice, if I ever move click functionality outside of utils this has to be changed to reflect this but (I'm a bit lazy... sorry future me...)
