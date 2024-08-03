@@ -1110,6 +1110,8 @@ void OpenFileExplorerExample() {
 }
 
 void Render() {
+    if (FileExplorer::explorer !is null) print(FileExplorer::explorer.utils.isControlPressed);
+
     FILE_EXPLORER_BASE_RENDERER();
     FILE_EXPLORER_V1_BASE_RENDERER(); // Used for comparison, should be removed on release
     
