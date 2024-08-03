@@ -950,9 +950,9 @@ namespace FileExplorer {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
-            if (UI::IsItemHovered() && UI::IsMouseClicked(1)) { // Right-click
+            if (UI::IsItemHovered() && UI::IsMouseClicked()) { // Right-click
                 UI::OpenPopup("ElementContextMenu");
-            } else if (explorer.utils.isControlPressed && UI::IsMouseDoubleClicked(0)) {
+            } else if (explorer.utils.isControlPressed && UI::IsMouseDoubleClicked()) {
                 if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
                     explorer.Config.SelectedPaths.InsertLast(element.Path);
                 }
