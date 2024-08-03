@@ -43,9 +43,8 @@
 
         - Recursive search is not fully working as intended, it is very hard to explain what is wrong, but it's just 
           not working as intended, it needs to be looked into more. Normal search works just fine though.
+          (recursive search is also not in a coroutine)
 
-        - Moving up a directory does not work as intended, it should move one directory up form the current directory, 
-          it moves one up from the directory assigned in the OpenFileExplorer function, but not from the current...
 */
 
 
@@ -536,6 +535,11 @@ namespace FileExplorer {
 
         void UpdateCurrentSelectedElement() {
             @CurrentSelectedElement = tab[0].GetSelectedElement();
+            if (CurrentSelectedElement !is null) {
+                if (CurrentSelectedElement.IsSelected) {
+                    Config.SelectedPaths.InsertLast(CurrentSelectedElement.Path);
+                }
+            }
         }
 
         void OpenFileExplorer(
@@ -649,7 +653,7 @@ namespace FileExplorer {
         void Render_Columns() {
             UI::BeginTable("FileExplorerTable", 3, UI::TableFlags::Resizable | UI::TableFlags::Borders);
             UI::TableNextColumn();
-            Render_PinBar();
+            Render_LeftSidebar();
             UI::TableNextColumn();
             Render_MainAreaBar();
             UI::TableNextColumn();
@@ -829,9 +833,55 @@ namespace FileExplorer {
             }
         }
 
-        void Render_PinBar() {
+        void Render_LeftSidebar() {
+            UI::Text("Hardcoded Paths");
+            Render_HardcodedPaths();
+            UI::Separator();
+
+            UI::Text("Pinned Items");
+            Render_PinnedItems();
+            UI::Separator();
+
+            UI::Text("Selected Items");
+            Render_SelectedItems();
+            UI::Separator();
+        }
+
+        void Render_HardcodedPaths() {
+            if (UI::Selectable(Icons::Home + " Trackmania Folder")) {
+                explorer.tab[0].LoadDirectory(IO::FromUserGameFolder(""));
+            }
+            if (UI::Selectable(Icons::Map + " Trackmania Maps Folder")) {
+                explorer.tab[0].LoadDirectory(IO::FromUserGameFolder("Maps/"));
+            }
+            if (UI::Selectable(Icons::SnapchatGhost + " Trackmania Replays Folder")) {
+                explorer.tab[0].LoadDirectory(IO::FromUserGameFolder("Replays/"));
+            }
+            if (UI::Selectable(Icons::Trademark + " Trackmania App Folder")) {
+                explorer.tab[0].LoadDirectory(IO::FromAppFolder(""));
+            }
+            if (UI::Selectable(Icons::Heartbeat + " Openplanet Folder")) {
+                explorer.tab[0].LoadDirectory(IO::FromDataFolder(""));
+            }
+            if (UI::Selectable(Icons::Inbox + " Openplanet Storage Folder")) {
+                explorer.tab[0].LoadDirectory(IO::FromStorageFolder(""));
+            }
+            // if (UI::Selectable()) {
+            //     explorer.tab[0].LoadDirectory();
+            // }
+        }
+
+        void Render_PinnedItems() {
             for (uint i = 0; i < explorer.PinnedItems.Length; i++) {
-                UI::Selectable(explorer.PinnedItems[i], false, UI::SelectableFlags::SpanAllColumns);
+                if (UI::Selectable(explorer.PinnedItems[i])) {
+                    explorer.tab[0].LoadDirectory(explorer.PinnedItems[i]);
+                }
+            }
+        }
+
+        void Render_SelectedItems() {
+            for (uint i = 0; i < explorer.Config.SelectedPaths.Length; i++) {
+                UI::Text(explorer.Config.SelectedPaths[i]);
             }
         }
 
