@@ -944,6 +944,8 @@ namespace FileExplorer {
             print("is LMouse down " + explorer.utils.isLMouseButtonPressed);
             print("is control down " + explorer.utils.isControlPressed);
 
+            explorer.utils.isLMouseButtonPressed = true;
+            explorer.utils.isRMouseButtonPressed = true;
 
             // Control- / Right click check
             if (UI::IsItemHovered() && (explorer.utils.isRMouseButtonPressed || (explorer.utils.isLMouseButtonPressed && explorer.utils.isControlPressed))) {
@@ -1141,7 +1143,7 @@ UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
     if (key == VirtualKey::Control && down) {
         FileExplorer::explorer.utils.isControlPressed = down;
     }
-    
+
     return UI::InputBlocking::DoNothing;
 }
 
