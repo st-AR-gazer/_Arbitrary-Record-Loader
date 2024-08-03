@@ -963,6 +963,7 @@ namespace FileExplorer {
                     if (element.IsFolder) {
                         explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
                     } else {
+                        print("file has been clicked twice");
                         explorer.UpdateCurrentSelectedElement();
                     }
                 } else {
