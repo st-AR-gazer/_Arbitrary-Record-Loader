@@ -937,24 +937,24 @@ namespace FileExplorer {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
-            if (UI::IsItemHovered() && UI::IsMouseClicked()) { // Right-click
+            // Control- / Right click check
+            if (UI::IsItemHovered() && ((UI::IsMouseClicked(UI::MouseButton::Right) || (UI::IsMouseClicked() && explorer.utils.isControlPressed)))) {
                 UI::OpenPopup("ElementContextMenu");
-            } else if (explorer.utils.isControlPressed && UI::IsMouseDoubleClicked()) {
-                if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
-                    explorer.Config.SelectedPaths.InsertLast(element.Path);
-                }
+            // Double click check
             } else if (element.IsSelected) {
                 if (currentTime - element.LastClickTime <= doubleClickThreshold) {
                     if (element.IsFolder) {
-                        print("folder has been clicked twice");
                         explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
                     } else {
-                        print("file has been clicked twice");
+                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
+                            explorer.Config.SelectedPaths.InsertLast(element.Path);
+                        }
                         explorer.UpdateCurrentSelectedElement();
                     }
                 } else {
                     element.LastClickTime = currentTime;
                 }
+            // Normal click check
             } else {
                 for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
                     explorer.tab[0].Elements[i].IsSelected = false;
@@ -1114,8 +1114,12 @@ void Render() {
 /* ------------------------ Handle Button Clicks ------------------------ */
 
 UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
+
+    // Control button
     if (key == VirtualKey::Control && down) {
-        print("Control is bring held and a button is bring held");
+        if (FileExplorer::explorer is null) return UI::InputBlocking::DoNothing;
+        if (FileExplorer::explorer.utils is null) return UI::InputBlocking::DoNothing;
+        
         FileExplorer::explorer.utils.isControlPressed = down;
     }
     return UI::InputBlocking::DoNothing;
