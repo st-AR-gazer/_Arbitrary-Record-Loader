@@ -873,7 +873,7 @@ namespace FileExplorer {
 
         void Render_PinnedItems() {
             for (uint i = 0; i < explorer.PinnedItems.Length; i++) {
-                if (UI::Selectable(explorer.PinnedItems[i])) {
+                if (UI::Selectable(explorer.PinnedItems[i], false)) {
                     explorer.tab[0].LoadDirectory(explorer.PinnedItems[i]);
                 }
             }
