@@ -938,7 +938,7 @@ namespace FileExplorer {
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
             // Control- / Right click check
-            if (UI::IsItemHovered() && (UI::IsMouseClicked(UI::MouseButton::Right) || (UI::IsMouseClicked() && explorer.utils.isControlPressed))) {
+            if ((UI::IsMouseClicked(UI::MouseButton::Right) || (UI::IsMouseClicked() && explorer.utils.isControlPressed))) {
                 UI::OpenPopup("ElementContextMenu");
                 print("Opening context menu for element: " + element.Name);
             // Double click check
