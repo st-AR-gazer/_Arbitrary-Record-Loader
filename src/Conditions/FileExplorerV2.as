@@ -939,13 +939,13 @@ namespace FileExplorer {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
+            explorer.utils.isLMouseButtonPressed = true;
+            explorer.utils.isRMouseButtonPressed = true;
+
             print("IsItemHovered " + UI::IsItemHovered());
             print("is RMouse down " + explorer.utils.isRMouseButtonPressed);
             print("is LMouse down " + explorer.utils.isLMouseButtonPressed);
             print("is control down " + explorer.utils.isControlPressed);
-
-            explorer.utils.isLMouseButtonPressed = true;
-            explorer.utils.isRMouseButtonPressed = true;
 
             // Control- / Right click check
             if (UI::IsItemHovered() && (explorer.utils.isRMouseButtonPressed || (explorer.utils.isLMouseButtonPressed && explorer.utils.isControlPressed))) {
