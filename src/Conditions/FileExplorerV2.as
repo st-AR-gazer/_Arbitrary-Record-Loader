@@ -961,6 +961,7 @@ namespace FileExplorer {
             } else if (element.IsSelected) {
                 if (currentTime - element.LastClickTime <= doubleClickThreshold) {
                     if (element.IsFolder) {
+                        print("folder has been clicked twice");
                         explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
                     } else {
                         print("file has been clicked twice");
