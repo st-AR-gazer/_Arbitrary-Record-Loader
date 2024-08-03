@@ -1141,7 +1141,7 @@ UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
     }
 
     // Control button
-    if (key == VirtualKey::LControl || key == VirtualKey::RControl) {
+    if (key == VirtualKey::Control) {
         FileExplorer::explorer.utils.isControlPressed = down;
     }
 
