@@ -181,7 +181,7 @@ namespace FileExplorer {
 
         void MoveUpOneDirectory() {
             string path = explorer.tab[0].Navigation.GetPath();
-            log("Current path before moving up: " + path, LogLevel::Info);
+            log("Current path before moving up: " + path, LogLevel::Info, 184, "MoveUpOneDirectory");
 
             UpdateHistory(path);
 
@@ -200,7 +200,7 @@ namespace FileExplorer {
                 path += "/";
             }
 
-            log("New path after moving up: " + path, LogLevel::Info);
+            log("New path after moving up: " + path, LogLevel::Info, 203, "MoveUpOneDirectory");
 
             explorer.tab[0].LoadDirectory(path);
         }
@@ -211,7 +211,7 @@ namespace FileExplorer {
                 UpdateHistory(selectedElement.Path);
                 explorer.tab[0].LoadDirectory(selectedElement.Path);
             } else {
-                log("No folder selected or selected element is not a folder.", LogLevel::Warn);
+                log("No folder selected or selected element is not a folder.", LogLevel::Warn, 214, "MoveIntoSelectedDirectory");
             }
         }
 
@@ -300,12 +300,12 @@ namespace FileExplorer {
 
             tab.Elements.Resize(0);
             tab.explorer.IndexingMessage = "Folder is being indexed...";
-            log("Indexing started for path: " + tab.Navigation.GetPath(), LogLevel::Info);
+            log("Indexing started for path: " + tab.Navigation.GetPath(), LogLevel::Info, 303, "IndexFilesCoroutine");
 
             array<string> elements = tab.explorer.GetFiles(tab.Navigation.GetPath(), tab.Config.RecursiveSearch);
 
             if (elements.Length == 0) {
-                log("No files found in directory: " + tab.Navigation.GetPath(), LogLevel::Info);
+                log("No files found in directory: " + tab.Navigation.GetPath(), LogLevel::Info, 308, "IndexFilesCoroutine");
             }
 
             const uint batchSize = 2000;
@@ -328,7 +328,7 @@ namespace FileExplorer {
 
                 processedFiles = end;
                 tab.explorer.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
-                log(tab.explorer.IndexingMessage, LogLevel::Info, 391, "LoadElementsCoroutine");
+                log(tab.explorer.IndexingMessage, LogLevel::Info, 331, "IndexFilesCoroutine");
                 yield();
             }
 
@@ -336,7 +336,7 @@ namespace FileExplorer {
             tab.ApplyVisibilitySettings();
             tab.explorer.IsIndexing = false;
 
-            log("Indexing completed. Number of elements: " + tab.Elements.Length, LogLevel::Info);
+            log("Indexing completed. Number of elements: " + tab.Elements.Length, LogLevel::Info, 339, "IndexFilesCoroutine");
         }
 
         void ApplyFiltersAndSearch() {
@@ -441,23 +441,23 @@ namespace FileExplorer {
 
         void RefreshCurrentDirectory() {
             string currentPath = explorer.tab[0].Navigation.GetPath();
-            log("Refreshing directory: " + currentPath, LogLevel::Info, 250, "RefreshCurrentDirectory");
+            log("Refreshing directory: " + currentPath, LogLevel::Info, 444, "RefreshCurrentDirectory");
             explorer.tab[0].LoadDirectory(currentPath);
         }
 
         void OpenSelectedFolderInNativeFileExplorer() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null && selectedElement.IsFolder) {
-                log("Opening folder: " + selectedElement.Path, LogLevel::Info, 257, "OpenSelectedFolder");
+                log("Opening folder: " + selectedElement.Path, LogLevel::Info, 451, "OpenSelectedFolderInNativeFileExplorer");
                 _IO::OpenFolder(selectedElement.Path);
             } else {
-                log("No folder selected or selected element is not a folder.", LogLevel::Error, 260, "OpenSelectedFolder");
+                log("No folder selected or selected element is not a folder.", LogLevel::Error, 454, "OpenSelectedFolderInNativeFileExplorer");
             }
         }
 
         void OpenCurrentFolderInNativeFileExplorer() {
             string currentPath = explorer.tab[0].Navigation.GetPath();
-            log("Opening folder: " + currentPath, LogLevel::Info, 267, "OpenCurrentFolder");
+            log("Opening folder: " + currentPath, LogLevel::Info, 460, "OpenCurrentFolderInNativeFileExplorer");
             _IO::OpenFolder(currentPath);
         }
 
@@ -470,10 +470,10 @@ namespace FileExplorer {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null) {
                 if (selectedElement.IsFolder) {
-                    log("Deleting folder: " + selectedElement.Path, LogLevel::Info, 273, "DeleteSelectedElement");
+                    log("Deleting folder: " + selectedElement.Path, LogLevel::Info, 473, "DeleteSelectedElement");
                     IO::DeleteFolder(selectedElement.Path);
                 } else {
-                    log("Deleting file: " + selectedElement.Path, LogLevel::Info, 276, "DeleteSelectedElement");
+                    log("Deleting file: " + selectedElement.Path, LogLevel::Info, 476, "DeleteSelectedElement");
                     IO::Delete(selectedElement.Path);
                 }
                 explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
@@ -484,7 +484,7 @@ namespace FileExplorer {
         void RenameSelectedElement(const string &in newFileName) {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null) {
-                log("Renaming element: " + selectedElement.Path, LogLevel::Info, 287, "RenameSelectedElement");
+                log("Renaming element: " + selectedElement.Path, LogLevel::Info, 487, "RenameSelectedElement");
                 
                 string fileName = _IO::File::GetFileName(selectedElement.Path);
                 string fileContent = _IO::File::ReadFileToEnd(selectedElement.Path);
@@ -499,7 +499,7 @@ namespace FileExplorer {
         void PinSelectedElement() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null) {
-                log("Pinning element: " + selectedElement.Path, LogLevel::Info, 302, "PinSelectedElement");
+                log("Pinning element: " + selectedElement.Path, LogLevel::Info, 502, "PinSelectedElement");
                 explorer.PinnedItems.InsertLast(selectedElement.Path);
             }
         }
@@ -901,7 +901,7 @@ namespace FileExplorer {
                 UI::Text(explorer.IndexingMessage);
             } else if (explorer.tab[0].Elements.Length == 0) {
                 UI::Text("No elements to display.");
-                log("No elements found in the directory.", LogLevel::Warn);
+                log("No elements found in the directory.", LogLevel::Warn, 904, "Render_MainAreaBar");
             } else {
                 UI::BeginTable("FilesTable", 6, UI::TableFlags::Resizable | UI::TableFlags::Borders | UI::TableFlags::SizingFixedSame);
                 UI::TableSetupColumn("ico");
@@ -1206,9 +1206,9 @@ dictionary ReadGbxHeader(const string &in path) {
 
     for (uint i = 0; i < chunks.Length; i++) {
         MemoryBuffer chunkBuffer = mapFile.Read(chunks[i].ChunkSize);
-        if (    chunks[i].ChunkId == 50933761 // Maps
+        if (    chunks[i].ChunkId == 50606082 // Maps /*50933761*/
              || chunks[i].ChunkId == 50606082 // Replays
-             || chunks[i].ChunkId == 0 // Challenges
+             || chunks[i].ChunkId == 50606082 // Challenges
             ) {
             int stringLength = chunkBuffer.ReadInt32();
             xmlString = chunkBuffer.ReadString(stringLength);
@@ -1376,7 +1376,7 @@ namespace DLL {
             string dllPath = IO::FromStorageFolder("DLLs/FileCreationTime.dll");
             @lib = Import::GetLibrary(dllPath);
             if (lib is null) {
-                log("Failed to load DLL: " + dllPath, LogLevel::Error, 917, "loadLibrary");
+                log("Failed to load DLL: " + dllPath, LogLevel::Error, 1379, "loadLibrary");
                 return false;
             }
         }
@@ -1384,7 +1384,7 @@ namespace DLL {
         if (getFileCreationTimeFunc is null) {
             @getFileCreationTimeFunc = lib.GetFunction("GetFileCreationTime");
             if (getFileCreationTimeFunc is null) {
-                log("Failed to get function from DLL.", LogLevel::Error, 925, "loadLibrary");
+                log("Failed to get function from DLL.", LogLevel::Error, 1387, "loadLibrary");
                 return false;
             }
             getFileCreationTimeFunc.SetConvention(Import::CallConvention::cdecl);
@@ -1405,18 +1405,18 @@ namespace DLL {
 }
 
 string FileCreatedTime(const string &in filePath) {
-    log("Attempting to retrieve file creation time for: " + filePath, LogLevel::Info, 946, "FileCreatedTime");
+    log("Attempting to retrieve file creation time for: " + filePath, LogLevel::Info, 1408, "FileCreatedTime");
 
     if (!DLL::loadLibrary()) {
-        log("Failed to load library for file creation time retrieval.", LogLevel::Error, 949, "FileCreatedTime");
+        log("Failed to load library for file creation time retrieval.", LogLevel::Error, 1411, "FileCreatedTime");
         return "-300";
     }
 
     string result = DLL::FileCreatedTime(filePath);
     if (result != "") {
-        log("Error retrieving file creation time. Code: " + result, LogLevel::Warn, 955, "FileCreatedTime");
+        log("Error retrieving file creation time. Code: " + result, LogLevel::Warn, 1417, "FileCreatedTime");
     } else {
-        log("File creation time retrieved successfully: " + result, LogLevel::Info, 957, "FileCreatedTime");
+        log("File creation time retrieved successfully: " + result, LogLevel::Info, 1419, "FileCreatedTime");
     }
     return result;
 }
