@@ -21,6 +21,9 @@
             3. Selected items, items that the user has selected from the main area, should be displayed in the third
                area in the left UI.
 
+        - Add a custom location for settings so that the user can set custom PINs, and so that they are enabled cross 
+          sessions and plugins.
+
 
     FIXME: 
         - Delete button does not work
