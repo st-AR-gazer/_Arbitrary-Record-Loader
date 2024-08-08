@@ -1117,6 +1117,7 @@ namespace FileExplorer {
 
 void FILE_EXPLORER_BASE_RENDERER() {
     FileExplorer::RenderFileExplorer();
+    // FileExplorer::HandleKeyPresses();
 }
 
 void OpenFileExplorerExample() {
@@ -1148,21 +1149,14 @@ void Render() {
 
 bool isControlPressed;
 
-UI::InputBlocking OnControlKeyPress(bool down, VirtualKey key) {
-    if (FileExplorer::explorer is null) return UI::InputBlocking::DoNothing;
-    if (FileExplorer::explorer.utils is null) return UI::InputBlocking::DoNothing;
-
+void OnControlKeyPress(bool down, VirtualKey key) {
     if (key == VirtualKey::Control) {
         isControlPressed = down;
     }
-
-    return UI::InputBlocking::DoNothing;
 }
 
 void Update() {
-    if (FileExplorer::explorer is null) return;
-    if (FileExplorer::explorer.utils is null) return;
-    
+    OnControlKeyPress();
     print(isControlPressed);
 }
 
