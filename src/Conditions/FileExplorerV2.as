@@ -1155,6 +1155,8 @@ UI::InputBlocking OnControlKeyPress(bool down, VirtualKey key) {
     if (key == VirtualKey::Control) {
         isControlPressed = down;
     }
+
+    return UI::InputBlocking::DoNothing;
 }
 
 void Update() {
