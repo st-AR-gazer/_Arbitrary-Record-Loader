@@ -527,7 +527,7 @@ namespace FileExplorer {
     }
 
     class FileExplorer {
-        HandleKeyPresses@ keyPress;
+        KeyPresses@ keyPress;
 
         array<FileTab@> tab;
         Config@ Config;
@@ -545,7 +545,7 @@ namespace FileExplorer {
         ElementInfo@ CurrentSelectedElement;
 
         FileExplorer(Config@ cfg) {
-            @keyPress = HandleKeyPresses();
+            @keyPress = KeyPresses();
 
             @Config = cfg;
             @nav = Navigation(this);
