@@ -503,13 +503,11 @@ namespace FileExplorer {
                 explorer.PinnedItems.InsertLast(selectedElement.Path);
             }
         }
-
-        bool isControlPressed = false;
-        bool isLMouseButtonPressed = false;
-        bool isRMouseButtonPressed = false;
     }
 
     class FileExplorer {
+        KeyPress@ keyPress;
+
         array<FileTab@> tab;
         Config@ Config;
         array<string> PinnedItems;
@@ -526,6 +524,8 @@ namespace FileExplorer {
         ElementInfo@ CurrentSelectedElement;
 
         FileExplorer(Config@ cfg) {
+            @KeyPress = KeyPress();
+
             @Config = cfg;
             @nav = Navigation(this);
             tab.Resize(1);
@@ -956,16 +956,16 @@ namespace FileExplorer {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
-            explorer.utils.isLMouseButtonPressed = true; // Shuold be kept for reason under
+            explorer.keyPress.isLMouseButtonPressed = true; // Shuold be kept for reason under
 
             // Should be kept til I figure out if VirtualKey::L/RButton is L and R mouse button
             // print("IsItemHovered " + UI::IsItemHovered());
-            // print("is RMouse down " + explorer.utils.isRMouseButtonPressed);
-            // print("is LMouse down " + explorer.utils.isLMouseButtonPressed);
-            // print("is control down " + explorer.utils.isControlPressed);
+            // print("is RMouse down " + explorer..isRMouseButtonPressed);
+            // print("is LMouse down " + explorer..isLMouseButtonPressed);
+            // print("is control down " + explorer..isControlPressed);
 
             // Control- / Right click check
-            if (UI::IsItemHovered() && (explorer.utils.isRMouseButtonPressed || (explorer.utils.isLMouseButtonPressed && explorer.utils.isControlPressed))) {
+            if (UI::IsItemHovered() && (explorer.keyPress.isRMouseButtonPressed || (explorer.keyPress.isLMouseButtonPressed && explorer.keyPress.isControlPressed))) {
                 openContextMenu = true;
                 explorer.UpdateCurrentSelectedElement();
             // Double click check
@@ -1094,6 +1094,37 @@ namespace FileExplorer {
         }
     }
 
+/* ------------------------ Handle Button Clicks ------------------------ */
+// FIXME: After clicking ctrl it 'sticks' to you, you have to click ctrl again to remove the stickyness...
+//        Some custom functionality needs to be added to avoid this...
+    class KeyPress {
+        bool isControlPressed = false;
+        bool isLMouseButtonPressed = false;
+        bool isRMouseButtonPressed = false;
+
+        void OnKeyPress(bool down, VirtualKey key) {
+            if (explorer is null) return;
+            if (explorer.utils is null) return;
+            
+            // Control button
+            if (key == VirtualKey::Control) {
+                isControlPressed = down;
+            }
+
+            // LMouse Button
+            if (key == VirtualKey::LButton) {
+                isLMouseButtonPressed = down;
+            }
+
+            // RMouse button
+            if (key == VirtualKey::RButton) {
+                isRMouseButtonPressed = down;
+            }
+        }
+    }
+
+/* ------------------------ End Handle Button Clicks ------------------------ */
+
     void RenderFileExplorer() {
         if (showInterface && explorer !is null) {
             UserInterface ui(explorer);
@@ -1140,52 +1171,6 @@ void Render() {
     }
     UI::End();
 }
-
-/* ------------------------ Handle Button Clicks ------------------------ */
-
-// FIXME: After clicking ctrl it 'sticks' to you, you have to click ctrl again to remove the stickyness...
-//        Some custom functionality needs to be added to avoid this...
-
-
-bool g_ControlDown;
-
-void OnKeyPress(bool down, VirtualKey key) {
-    if (key == VirtualKey::Control) {
-        g_ControlDown = down;
-    }
-}
-
-void Update() {
-    print(g_ControlDown);
-}
-
-/*
-UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
-    // This is not good practice, if I ever move click functionality outside of utils this has to be changed to reflect this but (I'm a bit lazy... sorry future me...)
-    if (FileExplorer::explorer is null) return UI::InputBlocking::DoNothing;
-    if (FileExplorer::explorer.utils is null) return UI::InputBlocking::DoNothing;
-    
-    // LMouse Button
-    if (key == VirtualKey::LButton) {
-        FileExplorer::explorer.utils.isLMouseButtonPressed = down;
-    }
-
-    // RMouse button
-    if (key == VirtualKey::RButton) {
-        FileExplorer::explorer.utils.isRMouseButtonPressed = down;
-    }
-
-    // Control button
-    if (key == VirtualKey::Control) {
-        FileExplorer::explorer.utils.isControlPressed = down;
-
-    }
-
-    return UI::InputBlocking::DoNothing;
-}
-*/
-
-/* ------------------------ End Handle Button Clicks ------------------------ */
 
 
 /* ------------------------ GBX Parsing ------------------------ */
