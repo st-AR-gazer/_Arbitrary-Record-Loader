@@ -883,6 +883,8 @@ namespace FileExplorer {
                         IO::DeleteFolder(selectedElement.Path, true);
                         explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
                         explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+                    } else {
+                        log("No selected element or element is not a folder.", LogLevel::Error, 491, "Render_DeleteConfirmationPopup");
                     }
                     UI::CloseCurrentPopup();
                 }
