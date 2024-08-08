@@ -54,15 +54,6 @@
 
 
     FIXME: 
-        - Delete button does not work
-            WORKS: Deleting a file
-            WORKS: Deleting an empty folder
-            
-            FIXME: Deleting a folder with contents, does not work, nothing happens do the folder when it is called.
-                   Luckily, DeleteFolder(string path, bool recursive = false) has a recursice parameter, so this 
-                   should be easy to fix, but a UI that asks if you want to delete the folder and it's contents, 
-                   should be added.
-
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
 
@@ -82,7 +73,6 @@
           to work.
             - As a makeshift solution I have set left mouse button to always be true as a click is still needed for other 
               reasons, but the same cannot be done for right clicking...
-
 */
 
 namespace FileExplorer {
