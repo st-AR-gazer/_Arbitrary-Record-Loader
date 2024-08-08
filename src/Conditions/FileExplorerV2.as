@@ -1,3 +1,10 @@
+// :Yayy: FileExplorerV2 go brrrrr
+
+// IMPORTANT:
+// This file is meant to be used together with "logging.as" as this contains that logging functionality needed to make 
+// custom log messages work properly. If you do not want to include this, please ctrl + h and add ` log\(([^,]+),.*\); `
+// to find, and and ` print($1); ` to replace, this will convert all the fancy log messages to normal print messages.
+
 /**
  * How to use the FileExplorer:
  * 
@@ -1044,6 +1051,10 @@ namespace FileExplorer {
                     if (UI::MenuItem("Delete Item")) {
                         explorer.utils.DeleteSelectedElement();
                     }
+
+                    explorer.keyPress.isControlPressed = false; 
+                    // I hate this solution so fucking much, but I've been going crazy over the 'sticky'
+                    // ctrl issue, and I can't take it anymore...
                 }
                 UI::EndPopup();
             }
