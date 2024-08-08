@@ -35,9 +35,6 @@
                    should be easy to fix, but a UI that asks if you want to delete the folder and it's contents, 
                    should be added.
 
-            FIXME: Deleteing all elements in a folder sets the current folder to 'NULL STATE' (nothing is 
-                   shown in the UI except move up (moves to the wrong directory, and history (history workds)))
-
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
 
@@ -1139,7 +1136,7 @@ void Render() {
         if (UI::Button("Open File Explorer")) {
             OpenFileExplorerExample();
         }
-    }    
+    }
     UI::End();
 }
 
@@ -1147,6 +1144,25 @@ void Render() {
 
 // FIXME: After clicking ctrl it 'sticks' to you, you have to click ctrl again to remove the stickyness...
 //        Some custom functionality needs to be added to avoid this...
+
+
+bool isControlPressed;
+
+UI::InputBlocking OnControlKeyPress(bool down, VirtualKey key) {
+    if (FileExplorer::explorer is null) return UI::InputBlocking::DoNothing;
+    if (FileExplorer::explorer.utils is null) return UI::InputBlocking::DoNothing;
+
+    if (key == VirtualKey::Control) {
+        isControlPressed = down;
+    }
+}
+
+void Update() {
+    if (FileExplorer::explorer is null) return;
+    if (FileExplorer::explorer.utils is null) return;
+    
+    print(isControlPressed);
+}
 
 UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
     // This is not good practice, if I ever move click functionality outside of utils this has to be changed to reflect this but (I'm a bit lazy... sorry future me...)
@@ -1166,6 +1182,7 @@ UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
     // Control button
     if (key == VirtualKey::Control) {
         FileExplorer::explorer.utils.isControlPressed = down;
+
     }
 
     return UI::InputBlocking::DoNothing;
