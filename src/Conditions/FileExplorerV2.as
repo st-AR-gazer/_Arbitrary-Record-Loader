@@ -506,7 +506,7 @@ namespace FileExplorer {
     }
 
     class FileExplorer {
-        KeyPress@ keyPress;
+        HandleKeyPresses@ keyPress;
 
         array<FileTab@> tab;
         Config@ Config;
@@ -524,7 +524,7 @@ namespace FileExplorer {
         ElementInfo@ CurrentSelectedElement;
 
         FileExplorer(Config@ cfg) {
-            @KeyPress = KeyPress();
+            @HandleKeyPresses = HandleKeyPresses();
 
             @Config = cfg;
             @nav = Navigation(this);
@@ -1097,7 +1097,7 @@ namespace FileExplorer {
 /* ------------------------ Handle Button Clicks ------------------------ */
 // FIXME: After clicking ctrl it 'sticks' to you, you have to click ctrl again to remove the stickyness...
 //        Some custom functionality needs to be added to avoid this...
-    class KeyPress {
+    class HandleKeyPresses {
         bool isControlPressed = false;
         bool isLMouseButtonPressed = false;
         bool isRMouseButtonPressed = false;
