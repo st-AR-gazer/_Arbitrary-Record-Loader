@@ -1101,6 +1101,28 @@ namespace FileExplorer {
         bool isControlPressed = false;
         bool isLMouseButtonPressed = false;
         bool isRMouseButtonPressed = false;
+
+        void OnKeyPress(bool down, VirtualKey key) {
+            print("yekkers");
+
+            if (explorer is null) return;
+            if (explorer.keyPress is null) return;
+            
+            // Control button
+            if (key == VirtualKey::Control) {
+                isControlPressed = down;
+            }
+
+            // LMouse Button
+            if (key == VirtualKey::LButton) {
+                isLMouseButtonPressed = down;
+            }
+
+            // RMouse button
+            if (key == VirtualKey::RButton) {
+                isRMouseButtonPressed = down;
+            }
+        }
     }
 
 /* ------------------------ End Handle Button Clicks ------------------------ */
@@ -1125,28 +1147,6 @@ namespace FileExplorer {
         explorer.OpenFileExplorer(_mustReturn, _path, _searchQuery, _filters);
     }
 }
-
-void OnKeyPress(bool down, VirtualKey key) {
-            print("yekkers");
-
-            if (FileExplorer::explorer is null) return;
-            if (FileExplorer::explorer.keyPress is null) return;
-            
-            // Control button
-            if (key == VirtualKey::Control) {
-                FileExplorer::explorer.keyPress.isControlPressed = down;
-            }
-
-            // LMouse Button
-            if (key == VirtualKey::LButton) {
-                FileExplorer::explorer.keyPress.isLMouseButtonPressed = down;
-            }
-
-            // RMouse button
-            if (key == VirtualKey::RButton) {
-                FileExplorer::explorer.keyPress.isRMouseButtonPressed = down;
-            }
-        }
 
 void FILE_EXPLORER_BASE_RENDERER() {
     FileExplorer::RenderFileExplorer();
