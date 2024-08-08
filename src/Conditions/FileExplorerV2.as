@@ -874,12 +874,10 @@ namespace FileExplorer {
             }
 
             if (UI::BeginPopupModal("DeleteConfirmationPopup", explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG, UI::WindowFlags::AlwaysAutoResize)) {
-                ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
-                UI::Text(selectedElement.Path);
-
                 UI::Text("Are you sure you want to delete this folder and all its contents?");
                 UI::Separator();
                 if (UI::Button("Yes, delete all")) {
+                    ElementInfo@ selectedElement = explorer.ui.GetSelectedElement(); // this does not get the elemnet we want...
                     if (selectedElement !is null && selectedElement.IsFolder) {
                         log("Deleting folder with contents: " + selectedElement.Path, LogLevel::Info, 487, "Render_DeleteConfirmationPopup");
                         IO::DeleteFolder(selectedElement.Path, true);
