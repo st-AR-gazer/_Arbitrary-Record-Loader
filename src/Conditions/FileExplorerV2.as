@@ -880,7 +880,8 @@ namespace FileExplorer {
                     ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
                     if (selectedElement !is null && selectedElement.IsFolder) {
                         log("Deleting folder with contents: " + selectedElement.Path, LogLevel::Info, 487, "Render_DeleteConfirmationPopup");
-                        IO::DeleteFolder(selectedElement.Path, true); // Recursive deletion
+                        UI::Text(selectedElement.Path);
+                        IO::DeleteFolder(selectedElement.Path, true);
                         explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
                         explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                     }
