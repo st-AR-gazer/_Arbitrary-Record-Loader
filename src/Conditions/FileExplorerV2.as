@@ -1156,7 +1156,6 @@ void OnControlKeyPress(bool down, VirtualKey key) {
 }
 
 void Update() {
-    OnControlKeyPress();
     print(isControlPressed);
 }
 
