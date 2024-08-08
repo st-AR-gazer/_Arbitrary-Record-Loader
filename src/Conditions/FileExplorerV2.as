@@ -78,6 +78,11 @@
           - The renaming popup does not allow for you to change away from the name NewFileName (the string needs to be 
             outside of the function)
 
+        - KeyPresses for "Left mouse button" and "Right mouse button" do not work, this is needed for the context menu
+          to work.
+            - As a makeshift solution I have set left mouse button to always be true as a click is still needed for other 
+              reasons, but the same cannot be done for right clicking...
+
 */
 
 namespace FileExplorer {
@@ -494,12 +499,18 @@ namespace FileExplorer {
             return selectedElement !is null;
         }
 
+        bool RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
         void DeleteSelectedElement() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null) {
                 if (selectedElement.IsFolder) {
-                    log("Deleting folder: " + selectedElement.Path, LogLevel::Info, 473, "DeleteSelectedElement");
-                    IO::DeleteFolder(selectedElement.Path);
+                    array<string> folderContents = IO::IndexFolder(selectedElement.Path, false);
+                    if (folderContents.Length > 0) {
+                        explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = true;
+                    } else {
+                        log("Deleting empty folder: " + selectedElement.Path, LogLevel::Info, 473, "DeleteSelectedElement");
+                        IO::DeleteFolder(selectedElement.Path);
+                    }
                 } else {
                     log("Deleting file: " + selectedElement.Path, LogLevel::Info, 476, "DeleteSelectedElement");
                     IO::Delete(selectedElement.Path);
@@ -678,6 +689,7 @@ namespace FileExplorer {
         void Render_Misc() {
             Render_RenamePopup();
             Render_ElementContextMenu();
+            Render_DeleteConfirmationPopup();
         }
 
         void Render_Rows() {
@@ -850,6 +862,33 @@ namespace FileExplorer {
                 if (UI::Button("Rename")) {
                     explorer.utils.RenameSelectedElement("NewFileName");
                     explorer.utils.RENDER_RENAME_POPUP_FLAG = false;
+                    UI::CloseCurrentPopup();
+                }
+                UI::EndPopup();
+            }
+        }
+
+        void Render_DeleteConfirmationPopup() {
+            if (explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG) {
+                UI::OpenPopup("DeleteConfirmationPopup");
+            }
+
+            if (UI::BeginPopupModal("DeleteConfirmationPopup", explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG, UI::WindowFlags::AlwaysAutoResize)) {
+                UI::Text("Are you sure you want to delete this folder and all its contents?");
+                UI::Separator();
+                if (UI::Button("Yes, delete all")) {
+                    ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+                    if (selectedElement !is null && selectedElement.IsFolder) {
+                        log("Deleting folder with contents: " + selectedElement.Path, LogLevel::Info, 487, "Render_DeleteConfirmationPopup");
+                        IO::DeleteFolder(selectedElement.Path, true); // Recursive deletion
+                        explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
+                        explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+                    }
+                    UI::CloseCurrentPopup();
+                }
+                UI::SameLine();
+                if (UI::Button("Cancel")) {
+                    explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
                     UI::CloseCurrentPopup();
                 }
                 UI::EndPopup();
@@ -1055,6 +1094,8 @@ namespace FileExplorer {
                     explorer.keyPress.isControlPressed = false; 
                     // I hate this solution so fucking much, but I've been going crazy over the 'sticky'
                     // ctrl issue, and I can't take it anymore...
+                    // This doesn't even fix the issue properly, but I'm just over it as this point...
+                    // Hours wasted: 4
                 }
                 UI::EndPopup();
             }
