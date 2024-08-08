@@ -11,6 +11,11 @@ void Main() {
     _IO::File::SafeMoveSourceFileToNonSource("src/Conditions/CompanionDLLs/FileCreationTime.dll", dllPath);
 
     startnew(MapCoro);
+
+    while (true) {
+        Update();
+        yield();
+    }
 }
 
 void InitApi() {
