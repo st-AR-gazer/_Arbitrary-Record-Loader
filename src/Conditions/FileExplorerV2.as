@@ -524,7 +524,7 @@ namespace FileExplorer {
         ElementInfo@ CurrentSelectedElement;
 
         FileExplorer(Config@ cfg) {
-            @HandleKeyPresses = HandleKeyPresses();
+            @keyPress = HandleKeyPresses();
 
             @Config = cfg;
             @nav = Navigation(this);
