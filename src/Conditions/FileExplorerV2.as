@@ -1103,8 +1103,10 @@ namespace FileExplorer {
         bool isRMouseButtonPressed = false;
 
         void OnKeyPress(bool down, VirtualKey key) {
+            print("yekkers");
+
             if (explorer is null) return;
-            if (explorer.utils is null) return;
+            if (explorer.keyPress is null) return;
             
             // Control button
             if (key == VirtualKey::Control) {
