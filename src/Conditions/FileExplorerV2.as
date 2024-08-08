@@ -1,3 +1,24 @@
+/**
+ * How to use the FileExplorer:
+ * 
+ * To add the file explorer to your plugin, simply add this file anywhere in your plugin folder.
+ * 
+ * But, sadly, it cannot be as simple as that... There is still some knowladge that is needed to use the file explorer.
+ * To make use the file explorer works perfectly you need to add FILE_EXPLORER_BASE_RENDERER to the 'Render()' (or 
+ * 'RenderInterface()' if you are using that) function in your plugin. This is needed to make the file explorer render
+ * correctly. When you want to display the file explorer you need to call 'FileExplorer::OpenFileExplorer()' function, 
+ * this will open the file explorer. 
+ * Here is an example of how you can open the file explorer:
+ * FileExplorer::OpenFileExplorer( true, IO::FromUserGameFolder("Replays/"), "", { "replay" } );
+ * 
+ * This handles opening the file explorer, you do not need to worry about closing it, as it will close itself when the 
+ * user has selected a file.
+ * 
+ * Something that is also important to mention is that the file explorer uses some KeyPress functionality, if you are 
+ * any other KeyPress functionality in your plugin, you need to add this: FILE_EXPLORER_KEYPRESS_HANDLER to your own 
+ * 'OnKeyPress()' function. This is needed to make the file explorer work correctly.
+ */
+
 /*
     TODO: 
         - Add support for multiple tabs (not planned)
@@ -1097,14 +1118,23 @@ namespace FileExplorer {
 /* ------------------------ Handle Button Clicks ------------------------ */
 // FIXME: After clicking ctrl it 'sticks' to you, you have to click ctrl again to remove the stickyness...
 //        Some custom functionality needs to be added to avoid this...
-    class HandleKeyPresses {
+    class KeyPresses {
         bool isControlPressed = false;
         bool isLMouseButtonPressed = false;
-        bool isRMouseButtonPressed = false;
-
-        
+        bool isRMouseButtonPressed = false;        
     }
 
+    void fe_HandleKeyPresses(bool down, VirtualKey key) {
+        if (key == VirtualKey::Control) {
+            explorer.keyPress.isControlPressed = down;
+        }
+        if (key == VirtualKey::LButton) {
+            explorer.keyPress.isLMouseButtonPressed = down;
+        }
+        if (key == VirtualKey::RButton) {
+            explorer.keyPress.isRMouseButtonPressed = down;
+        }
+    }
     
 
 /* ------------------------ End Handle Button Clicks ------------------------ */
@@ -1130,31 +1160,23 @@ namespace FileExplorer {
     }
 }
 
+// Sorry, but due to Openplanet limitations "OnKeyPress" has to be in the global namespace (so I cannot 
+// hide it in the FileExplorer namespace). If you are using this code in your own project, and you are 
+// handeling keypresses, please put FILE_EXPLORER_KEYPRESS_HANDLER(down, key), inside of your own OnKeyPress 
+// function. This will make the file explorer keypresses work as intended.
+
+// ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
 void OnKeyPress(bool down, VirtualKey key) {
-            print("yekkers");
+    FILE_EXPLORER_KEYPRESS_HANDLER(down, key);
+}
+// ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
 
-            if (FileExplorer::explorer is null) return;
-            if (FileExplorer::explorer.keyPress is null) return;
-            
-            // Control button
-            if (key == VirtualKey::Control) {
-                FileExplorer::explorer.keyPress.isControlPressed = down;
-            }
-
-            // LMouse Button
-            if (key == VirtualKey::LButton) {
-                FileExplorer::explorer.keyPress.isLMouseButtonPressed = down;
-            }
-
-            // RMouse button
-            if (key == VirtualKey::RButton) {
-                FileExplorer::explorer.keyPress.isRMouseButtonPressed = down;
-            }
-        }
+void FILE_EXPLORER_KEYPRESS_HANDLER(bool down, VirtualKey key) {
+    FileExplorer::fe_HandleKeyPresses(down, key);
+}
 
 void FILE_EXPLORER_BASE_RENDERER() {
     FileExplorer::RenderFileExplorer();
-    // FileExplorer::HandleKeyPresses();
 }
 
 void OpenFileExplorerExample() {
@@ -1188,7 +1210,8 @@ void Render() {
 // 
 
 // Fixme:
-// - Currently only Replay type is accounted for, need to add Map (and more) types as well (but it's proving to be a bit tricky) (Reason: nothing is being added to the xmlString)
+// - Currently only Replay type is accounted for, need to add Map (and more) types as well 
+// (but it's proving to be a bit tricky) (Reason: nothing is being added to the xmlString)
 
 class GbxHeaderChunkInfo
 {
