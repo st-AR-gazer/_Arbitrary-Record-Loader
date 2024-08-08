@@ -1147,18 +1147,19 @@ void Render() {
 //        Some custom functionality needs to be added to avoid this...
 
 
-bool isControlPressed;
+bool g_ControlDown;
 
-void OnControlKeyPress(bool down, VirtualKey key) {
+void OnKeyPress(bool down, VirtualKey key) {
     if (key == VirtualKey::Control) {
-        isControlPressed = down;
+        g_ControlDown = down;
     }
 }
 
 void Update() {
-    print(isControlPressed);
+    print(g_ControlDown);
 }
 
+/*
 UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
     // This is not good practice, if I ever move click functionality outside of utils this has to be changed to reflect this but (I'm a bit lazy... sorry future me...)
     if (FileExplorer::explorer is null) return UI::InputBlocking::DoNothing;
@@ -1182,6 +1183,7 @@ UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
 
     return UI::InputBlocking::DoNothing;
 }
+*/
 
 /* ------------------------ End Handle Button Clicks ------------------------ */
 
