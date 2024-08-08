@@ -1168,6 +1168,9 @@ void Render() {
         if (UI::Button("Open File Explorer")) {
             OpenFileExplorerExample();
         }
+        UI::Text(FileExplorer::explorer.keyPress.isControlPressed);
+        UI::Text(FileExplorer::explorer.keyPress.isLMouseButtonPressed);
+        UI::Text(FileExplorer::explorer.keyPress.isRMouseButtonPressed);
     }
     UI::End();
 }
