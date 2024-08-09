@@ -1122,32 +1122,7 @@ namespace FileExplorer {
                     UI::Text(explorer.GetElementIconString(element.Icon, element.IsSelected));
                     UI::TableSetColumnIndex(1);
 
-                    string displayName;
-                    switch (explorer.Config.FileNameDisplayOption) {
-                        case 1:
-                            displayName = Text::StripFormatCodes(element.Name);
-                            break;
-                        case 2:
-                            displayName = element.Name.Replace("$", "\\$");
-                            break;
-                        default:
-                            displayName = element.Name;
-                    }
-
-                    if (UI::Selectable(displayName, element.IsSelected)) {
-                        HandleElementSelection(element, EnterType::None);
-                    }
-
-                    if (UI::IsMouseDown(UI::MouseButton::Left) && UI::IsItemHovered() && explorer.keyPress.isControlPressed && element.IsSelected) {
-                        HandleElementSelection(element, EnterType::ControlClick);
-                    } else if (UI::IsMouseDown(UI::MouseButton::Left) && UI::IsItemHovered() && element.IsSelected) {
-                        HandleElementSelection(element, EnterType::LeftClick);
-                    } else if (UI::IsMouseDown(UI::MouseButton::Right) && UI::IsItemHovered() && element.IsSelected) {
-                        HandleElementSelection(element, EnterType::RightClick);
-                    } else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left) && UI::IsItemHovered() && element.IsSelected) {
-                        HandleElementSelection(element, EnterType::DoubleClick);
-                    }
-
+                    SelectableWithClickCheck(element);
 
                     UI::TableSetColumnIndex(2);
                     UI::Text(element.IsFolder ? "Folder" : "File");
@@ -1163,11 +1138,27 @@ namespace FileExplorer {
             }
         }
 
+        void SelectableWithClickCheck(ElementInfo@ element) {
+            string displayName;
+            switch (explorer.Config.FileNameDisplayOption) {
+                case 1:
+                    displayName = Text::StripFormatCodes(element.Name);
+                    break;
+                case 2:
+                    displayName = element.Name.Replace("$", "\\$");
+                    break;
+                default:
+                    displayName = element.Name;
+            }
+
+            if (UI::Selectable(displayName, element.IsSelected)) {
+                HandleElementSelection(element, EnterType::LeftClick);
+            }
+        }
+
         bool openContextMenu = false;
 
         void HandleElementSelection(ElementInfo@ element, EnterType enterType) {
-            if (enterType == EnterType::None) { return; }
-
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
