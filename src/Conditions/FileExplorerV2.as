@@ -1134,7 +1134,9 @@ namespace FileExplorer {
                             displayName = element.Name;
                     }
 
-                    SelectableWithClickCheck(displayName, element.IsSelected, element);
+                    if (UI::Selectable(displayName, element.IsSelected)) {
+                        HandleElementSelection(element);
+                    }
 
                     UI::TableSetColumnIndex(2);
                     UI::Text(element.IsFolder ? "Folder" : "File");
@@ -1150,32 +1152,16 @@ namespace FileExplorer {
             }
         }
 
-        void SelectableWithClickCheck(const string &in displayName, bool isSelected, ElementInfo@ element) {
-            bool isRMousePressed;
-            bool isLMousePressed;
-            bool isControlPressed;
-
-            if (UI::Selectable(displayName, isSelected)) {
-                print(isRMousePressed + " " + isLMousePressed + " " + isControlPressed);
-                HandleElementSelection(element, isRMousePressed, isLMousePressed, isControlPressed);
-            }
-
-            isRMousePressed = UI::IsMouseDown(UI::MouseButton::Right);
-            isLMousePressed = UI::IsMouseDown(UI::MouseButton::Left);
-            // isControlPressed = UI::IsKeyPressed(UI::Key::Control); // Uncomment when OP 1.27 is released
-            isControlPressed = explorer.keyPress.isControlPressed;
-        }
-
         bool openContextMenu = false;
 
-        void HandleElementSelection(ElementInfo@ element, bool isRMousePressed, bool isLMousePressed, bool isControlPressed) {
+        void HandleElementSelection(ElementInfo@ element) {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
             // Control- / Right click check
-            if (UI::IsItemHovered() && (isRMousePressed) || (isLMousePressed && isControlPressed)) {
+            if (UI::IsItemHovered() && (UI::IsMouseReleased(MouseButton::Right)) || (UI::IsMouseReleased(MouseButton::Left) && explorer.keyPress.isControlPressed)) {
                 openContextMenu = true;
                 explorer.UpdateCurrentSelectedElement();
             // Double click check
