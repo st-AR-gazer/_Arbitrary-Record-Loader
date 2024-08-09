@@ -1045,7 +1045,12 @@ namespace FileExplorer {
 
         void Render_SelectedItems() {
             for (uint i = 0; i < explorer.Config.SelectedPaths.Length; i++) {
-                UI::Text(_IO::File::GetFileNameWithoutExtension(explorer.Config.SelectedPaths[i]));
+                string path = explorer.Config.SelectedPaths[i];
+                if (_IO::Folder::IsDirectory(path)) {
+                    UI::Text(_IO::Folder::GetFolderName(path));
+                } else {
+                    UI::Text(_IO::File::GetFileNameWithoutExtension(path));
+                }
             }
         }
 
