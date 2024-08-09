@@ -1619,8 +1619,8 @@ void Render() {
             OpenFileExplorerExample();
         }
         if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isControlPressed));
-        UI::Text(UI::IsMouseDown(tostring(UI::MouseButton::Left)));
-        UI::Text(UI::IsMouseDown(tostring(UI::MouseButton::Right)));
+        UI::Text(tostring(UI::IsMouseDown(UI::MouseButton::Left)));
+        UI::Text(tostring(UI::IsMouseDown(UI::MouseButton::Right)));
     }
     UI::End();
 }
