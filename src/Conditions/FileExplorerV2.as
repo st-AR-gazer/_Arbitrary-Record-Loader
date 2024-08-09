@@ -595,7 +595,7 @@ namespace FileExplorer {
                 Config.OnSelectionComplete(Config.SelectedPaths);
             }
             showInterface = false;
-            print("Hiding interface for FileExplorer " + );
+            print("Hiding interface for FileExplorer " + showInterface);
         }
 
         void StartIndexingFiles(const string &in path) {
