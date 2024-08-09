@@ -1,32 +1,98 @@
 // :Yayy: FileExplorerV2 go brrrrr
 
-// IMPORTANT:
-// This file is meant to be used together with "logging.as" as this contains that logging functionality needed to make 
-// custom log messages work properly. If you do not want to include this, please ctrl + h (or ctrl + f and click the 
-// dropdown) and add ` log\(([^,]+),.*\); ` to find, and and ` print($1); ` to replace, this will convert all the fancy 
-// log messages to normal print messages. You must also enable 'regex search' for this to work. (In vscode this can be 
-// done by pressing ctrl + f and selecting the |.*| icon in the search bar)
+/** 
+ * IMPORTANT:
+ * This file is meant to be used together with "logging.as" as this contains that logging functionality needed to make 
+ * custom log messages work properly. If you do not want to include this, please ctrl + h (or ctrl + f and click the 
+ * dropdown) and add ` log\(([^,]+),.*\); ` to find, and and ` print($1); ` to replace, this will convert all the fancy 
+ * log messages to normal print messages. You must also enable 'regex search' for this to work. (In vscode this can be 
+ * done by pressing ctrl + f and selecting the |.*| icon in the search bar)
+ */
 
 /**
- * How to use the FileExplorer:
+ * How to Integrate and Use the FileExplorer:
  * 
- * To add the file explorer to your plugin, simply add this file anywhere in your plugin folder.
+ * To integrate the FileExplorer into your plugin, follow the steps below:
  * 
- * But, sadly, it cannot be as simple as that... There is still some knowladge that is needed to use the file explorer.
- * To make use the file explorer works perfectly you need to add FILE_EXPLORER_BASE_RENDERER to the 'Render()' (or 
- * 'RenderInterface()' if you are using that) function in your plugin. This is needed to make the file explorer render
- * correctly. When you want to display the file explorer you need to call 'FileExplorer::OpenFileExplorer()' function, 
- * this will open the file explorer. 
- * Here is an example of how you can open the file explorer:
- * FileExplorer::OpenFileExplorer( true, IO::FromUserGameFolder("Replays/"), "", { "replay" } );
+ * 1. **Include the FileExplorer Script:**
+ *    Add the FileExplorer script file to your plugin's folder. This script will handle all the file exploration 
+ *    functionalities required in your plugin.
  * 
- * This handles opening the file explorer, you do not need to worry about closing it, as it will close itself when the 
- * user has selected a file.
+ * 2. **Render the FileExplorer:**
+ *    To ensure the FileExplorer renders correctly, you must add the `FILE_EXPLORER_BASE_RENDERER()` function to your 
+ *    plugin's main render loop. This function should be included in either the `Render()` or `RenderInterface()` 
+ *    method of your plugin.
+ *    
+ *    Example:
+ *    ```angelscript
+ *    void RenderInterface() {
+ *        FILE_EXPLORER_BASE_RENDERER();  // This ensures the FileExplorer is rendered properly.
+ *    }
+ *    ```
  * 
- * Something that is also important to mention is that the file explorer uses some KeyPress functionality, if you are 
- * any other KeyPress functionality in your plugin, you need to add this: FILE_EXPLORER_KEYPRESS_HANDLER to your own 
- * 'OnKeyPress()' function. This is needed to make the file explorer work correctly.
+ * 3. **Open the FileExplorer:**
+ *    To display the FileExplorer UI and allow users to select files, you should call the `FileExplorer::fe_Start()` 
+ *    function. This function configures and opens the FileExplorer based on the parameters you provide.
+ *    
+ *    Example:
+ *    ```angelscript
+ *    void OpenFileExplorerExample() {
+ *        FileExplorer::fe_Start(
+ *            true,                               // _mustReturn: Require the user to select and return files.
+ *            vec2(1, 99999),                     // _minmaxReturnAmount: Minimum and maximum number of files to return.
+ *            IO::FromUserGameFolder("Replays/"), // _path: The initial folder path to open.
+ *            "",                                 // _searchQuery: Optional search query to filter files.
+ *            { "replay" }                        // _filters: File type filters (e.g., "replay" to show only replay files).
+ *        );
+ *    }
+ *    ```
+ *    This example opens the FileExplorer in the "Replays/" folder and filters to show only replay files.
+ *    
+ *    **Note:** The FileExplorer will close itself automatically when the user has selected the required files and 
+ *    clicks the "Return Selected Paths" button.
+ * 
+ * 4. **Handle KeyPresses:**
+ *    The FileExplorer requires certain key press events to function correctly. If your plugin uses key press 
+ *    functionality, you must integrate the `FILE_EXPLORER_KEYPRESS_HANDLER()` into your `OnKeyPress()` function. 
+ *    This ensures that the FileExplorer can detect and respond to key presses.
+ *    
+ *    Example:
+ *    ```angelscript
+ *    void OnKeyPress(bool down, VirtualKey key) {
+ *        FILE_EXPLORER_KEYPRESS_HANDLER(down, key);  // Ensures FileExplorer handles key presses.
+ *        // Add your own key handling logic here if needed.
+ *    }
+ *    ```
+ * 
+ * 5. **Retrieve Selected File Paths:**
+ *    Once the user has selected files and clicked "Return Selected Paths," you can retrieve the selected file paths 
+ *    from `FileExplorer::exports.GetSelectedPaths()` in your plugin's main loop or event handler.
+ *    
+ *    Example:
+ *    ```angelscript
+ *    void MonitorFileExplorerSelection() {
+ *        if (FileExplorer::exports.IsSelectionComplete()) {
+ *            array<string> selectedPaths = FileExplorer::exports.GetSelectedPaths();
+ *            // Handle the selected file paths here.
+ *            for (uint i = 0; i < selectedPaths.Length; i++) {
+ *                print("Selected Path: " + selectedPaths[i]);
+ *            }
+ *        }
+ *    }
+ *    ```
+ *    This function checks if the selection process is complete and then processes the selected file paths.
+ * 
+ * **Summary:**
+ * - **Rendering:** Add `FILE_EXPLORER_BASE_RENDERER()` to your `Render()` or `RenderInterface()` method.
+ * - **Opening:** Use `FileExplorer::fe_Start()` to open the FileExplorer.
+ * - **KeyPress Handling:** Integrate `FILE_EXPLORER_KEYPRESS_HANDLER()` into your `OnKeyPress()` function.
+ * - **File Selection:** Retrieve the selected paths using `FileExplorer::exports.GetSelectedPaths()` after the user 
+ *   has made their selection.
+ * 
+ * With these steps, the FileExplorer will be fully integrated into your plugin, and it should allow users easily 
+ * navigate directories and select and return different paths with relative ease files.
  */
+
 
 /*
     TODO: 
@@ -138,19 +204,26 @@ namespace FileExplorer {
     }
 
     class Exports {
-        string ReturnSelectedFilePath() {
-            string path = explorer.CurrentSelectedElement.Path;
-            explorer.CurrentSelectedElement.Path = ""; // Will be refreshed on next fe open
+        bool selectionComplete = false;
+        array<string> selectedPaths;
 
-            return path;
+        void SetSelectionComplete(array<string>@ paths) {
+            selectedPaths = paths;
+            selectionComplete = true;
         }
 
-        array<string> ReturnFilePathForSelectedFiles() {
-            array<string> paths = explorer.Config.SelectedPaths;
-            explorer.Config.SelectedPaths = array<string>();
-            
-            return paths;
+        bool IsSelectionComplete() {
+            return selectionComplete;
         }
+
+        array<string>@ GetSelectedPaths() {
+            selectionComplete = false;
+            return selectedPaths;
+        }
+        
+        // void MarkSelectionComplete() {
+        //     selectionComplete = true;
+        // }
     }
 
     class ElementInfo {
@@ -594,10 +667,7 @@ namespace FileExplorer {
             StartIndexingFiles(Config.Path);
             
             showInterface = true;
-            
-            if (Config.OnSelectionComplete !is null) {
-                Config.OnSelectionComplete(Config.SelectedPaths);
-            }
+            explorer.exports.selectionComplete = false;
         }
 
         void StartIndexingFiles(const string &in path) {
@@ -913,11 +983,16 @@ namespace FileExplorer {
             if (explorer.Config.MustReturn) {
                 UI::Separator();
                 if (UI::Button("Return Selected Paths")) {
-                    if (explorer.Config.OnSelectionComplete !is null) {
-                        explorer.Config.OnSelectionComplete(explorer.Config.SelectedPaths);
+                    if (explorer.Config.SelectedPaths.Length >= explorer.Config.MinMaxReturnAmount.x &&
+                        (explorer.Config.SelectedPaths.Length <= explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1)) {
+                        
+                        explorer.exports.SetSelectionComplete(explorer.Config.SelectedPaths);
+                        
+                        explorer.exports.selectionComplete = true;
+                        showInterface = false;
+                    } else {
+                        log("Selection count not within the required range.", LogLevel::Warn);
                     }
-                    explorer.Config.MustReturn = false;
-                    showInterface = false;
                 }
             }
         }
@@ -1210,9 +1285,7 @@ namespace FileExplorer {
         }
     }
 
-    funcdef void OnSelectionCompleteFunc(array<string>@ paths);
-
-    array<string>@ FE(
+    void fe_Start(
         bool _mustReturn = true,
         vec2 _minmaxReturnAmount = vec2(1, -1),
         string _path = "",
@@ -1226,22 +1299,17 @@ namespace FileExplorer {
         config.SearchQuery = _searchQuery;
         config.Filters = _filters;
 
-
-        @config.OnSelectionComplete = OnSelectionCompleteFunc(function(array<string>@ paths) {
-            @FILE_EXPLORER_selectedPaths = paths;
-        });
-
         if (explorer is null) {
             @explorer = FileExplorer(config);
         } else {
             @explorer.Config = config;
         }
-        // showInterface = true; // Show interface is handled in Open
+        
         explorer.Open(config);
+    }
 
-        while (showInterface) { yield(); }
-
-        return FILE_EXPLORER_selectedPaths;
+    void fe_ForceClose() {
+        showInterface = false;
     }
 }
 
@@ -1541,7 +1609,7 @@ void FILE_EXPLORER_BASE_RENDERER() {
 }
 
 void OpenFileExplorerExample() {
-    FileExplorer::FE(
+    FileExplorer::fe_Start(
         true, // _mustReturn
         vec2(1, 99999), // _minmaxReturnAmount
         IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
