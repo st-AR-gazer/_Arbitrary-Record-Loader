@@ -1081,8 +1081,8 @@ namespace FileExplorer {
                     }
                 }
 
-                // Handle right-click or control-click to open context menu
-                if (UI::IsItemHovered() && (explorer.keyPress.isRMouseButtonPressed || (explorer.keyPress.isLMouseButtonPressed && explorer.keyPress.isControlPressed))) {
+                // Handle right-click or control-click to open context menu                                                       // Uncomment when OP 1.27 is released  // Remove when OP 1.27 is released
+                if (UI::IsItemHovered() && (UI::IsMouseDown(UI::MouseButton::Right)) || (UI::IsMouseDown(UI::MouseButton::Left) && /*UI::IsKeyPressed(UI::Key::Control)*/explorer.keyPress.isControlPressed)) {
                     if (UI::BeginPopupContextItem("SelectedContextMenu" + i)) {
                         if (UI::MenuItem("Remove from Selected Items")) {
                             if (i < explorer.Config.SelectedPaths.Length) {
@@ -1577,14 +1577,6 @@ array<string>@ FILE_EXPLORER_selectedPaths;
         FILE_EXPLORER_KEYPRESS_HANDLER(down, key);
     }
 // ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
-
-// ----- REMOVE THIS IF YOU HANDLE MOUSEPRESSES  IN YOUR OWN CODE (also read the comment above) ----- //
-
-void FILE_EXPLORER_MOUSE_BUTTON_HANDLER(bool down, int button, int x, int y) {
-    if (FileExplorer::explorer !is null) {
-        FileExplorer::explorer.keyPress.OnMouseButton(down, button, x, y);
-    }
-}
 
 void FILE_EXPLORER_KEYPRESS_HANDLER(bool down, VirtualKey key) {
     FileExplorer::fe_HandleKeyPresses(down, key);
