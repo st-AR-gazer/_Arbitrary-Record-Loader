@@ -1204,6 +1204,8 @@ namespace FileExplorer {
 /* ------------------------ End Handle Button Clicks ------------------------ */
 
     void RenderFileExplorer() {
+        if (explorer is null) { print("explorer is null"); } else { print("explorer is not null"); }
+        print("about to render" + showInterface);
         if (showInterface && explorer !is null) {
             print("about to render");
             UserInterface ui(explorer);
