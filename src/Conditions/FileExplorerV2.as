@@ -1318,35 +1318,35 @@ namespace FileExplorer {
             }
         }
 
-        MouseClickType CustomSelectable(ElementInfo@ element, const string &in label, bool isSelected) {
+        MouseClickType CustomSelectable(ElementInfo@ element, const string &in label, bool &inout isSelected) {
             MouseClickType clickType = MouseClickType::None;
 
-            if (UI::IsItemHovered()) {
-                // Right-click
-                if (UI::IsMouseClicked(UI::MouseButton::Right)) {
-                    clickType = MouseClickType::RightClick;
-                }
-                // Control + Left-click // :Waiting: for OP v1.27
-                // else if (UI::IsMouseClicked(UI::MouseButton::Left) && UI::IsKeyDown(Key::Control)) {
-                //     clickType = MouseClickType::ControlClick;
-                // }
-                // Double Left-click
-                else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left)) {
-                    clickType = MouseClickType::DoubleClick;
-                }
-                // Single Left-click
-                else if (UI::IsMouseClicked(UI::MouseButton::Left)) {
-                    clickType = MouseClickType::LeftClick;
-                }
+            // Right-click
+            if (UI::IsMouseClicked(UI::MouseButton::Right)) {
+                clickType = MouseClickType::RightClick;
+            }
+            // Control + Left-click // :Waiting: for OP v1.27
+            // else if (UI::IsMouseClicked(UI::MouseButton::Left) && UI::IsKeyDown(Key::Control)) {
+            //     clickType = MouseClickType::ControlClick;
+            // }
+            // Double Left-click
+            else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left)) {
+                clickType = MouseClickType::DoubleClick;
+            }
+            // Single Left-click
+            else if (UI::IsMouseClicked(UI::MouseButton::Left)) {
+                clickType = MouseClickType::LeftClick;
             }
 
-            bool selected = UI::Selectable(label, isSelected);
+            // Render the selectable
+            bool justSelected = UI::Selectable(label, isSelected);
 
-            if (clickType == MouseClickType::LeftClick || clickType == MouseClickType::DoubleClick) {
-                selected = true;
+            // Only update selection if the item was clicked
+            if (justSelected) {
+                isSelected = true;
+            } else if (clickType != MouseClickType::None) {
+                isSelected = element.IsSelected;
             }
-
-            element.IsSelected = selected;
 
             return clickType;
         }
