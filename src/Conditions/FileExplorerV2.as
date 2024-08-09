@@ -1324,6 +1324,12 @@ namespace FileExplorer {
 
             lastClickType = MouseClickType::None;
 
+            print("isSelected: " + isSelected);
+            print("isControlPressed: " + isControlPressed);
+            print("Right click pressed: " + UI::IsMouseClicked(UI::MouseButton::Right));
+            print("Left click pressed: " + UI::IsMouseClicked(UI::MouseButton::Left));
+            print("Double click pressed: " + UI::IsMouseDoubleClicked(UI::MouseButton::Left));
+
             // Right click check
             if (UI::IsMouseClicked(UI::MouseButton::Right)) {
                 lastClickType = MouseClickType::RightClick;
