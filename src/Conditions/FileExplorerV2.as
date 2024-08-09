@@ -1244,10 +1244,10 @@ namespace FileExplorer {
     }
 }
 
-// Sorry, but due to Openplanet limitations "OnKeyPress" has to be in the global namespace (so I cannot 
-// hide it in the FileExplorer namespace). If you are using this code in your own project, and you are 
-// handeling keypresses, please put FILE_EXPLORER_KEYPRESS_HANDLER(down, key), inside of your own OnKeyPress 
-// function. This will make the file explorer keypresses work as intended.
+// Sorry, due to limitations in Openplanet the "OnKeyPress" function has to be in the global namespace.
+// If you are using this funciton in you own project please add: ` FILE_EXPLORER_KEYPRESS_HANDLER(down, key); `
+// to your own "OnKeyPress" function. 
+// If this is not done, the File Explorer will not work as intended.
 
 // ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
 void OnKeyPress(bool down, VirtualKey key) {
