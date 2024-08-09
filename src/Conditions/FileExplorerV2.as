@@ -1341,7 +1341,7 @@ namespace FileExplorer {
             }
 
             // Render the selectable
-            bool selected = UI::Selectable(label, isSelected);
+            isSelected = UI::Selectable(label, isSelected);
 
             return clickType;
         }
