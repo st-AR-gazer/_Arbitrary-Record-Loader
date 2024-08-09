@@ -1134,6 +1134,8 @@ namespace FileExplorer {
                     }
 
                     if (explorer.keyPress.SelectableWithClickType(displayName, element.IsSelected, element)) {
+                        print("ClickType: " + explorer.keyPress.GetClickType());
+                        print("LastClickType: " + explorer.keyPress.lastClickType);
                         HandleElementSelection(element, explorer.keyPress.GetClickType());
                     }
 
