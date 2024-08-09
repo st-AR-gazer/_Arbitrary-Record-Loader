@@ -216,6 +216,7 @@ namespace FileExplorer {
 
         array<string>@ GetSelectedPaths() {
             selectionComplete = false;
+            explorer.utils.TruncateSelectedPathsIfNeeded();
             return selectedPaths;
         }
         
@@ -618,6 +619,13 @@ namespace FileExplorer {
                 explorer.PinnedItems.InsertLast(selectedElement.Path);
             }
         }
+
+        void TruncateSelectedPathsIfNeeded() {
+            uint maxAllowed = uint(explorer.Config.MinMaxReturnAmount.y);
+            if (explorer.Config.MinMaxReturnAmount.y != -1 && explorer.Config.SelectedPaths.Length > maxAllowed) {
+                explorer.Config.SelectedPaths.Resize(maxAllowed);
+            }
+        }
     }
 
     class FileExplorer {
@@ -980,19 +988,22 @@ namespace FileExplorer {
         void Render_ReturnBar() {
             if (explorer.Config.MustReturn) {
                 UI::Separator();
-                if (UI::Button("Return Selected Paths")) {
-                    if (explorer.Config.SelectedPaths.Length >= explorer.Config.MinMaxReturnAmount.x &&
-                        (explorer.Config.SelectedPaths.Length <= explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1)) {
-                        
+
+                bool validReturnAmount = explorer.Config.SelectedPaths.Length >= explorer.Config.MinMaxReturnAmount.x &&
+                                        (explorer.Config.SelectedPaths.Length <= explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1);
+
+                if (validReturnAmount) {
+                    if (UI::Button("Return Selected Paths")) {
                         explorer.exports.SetSelectionComplete(explorer.Config.SelectedPaths);
-                        
                         explorer.exports.selectionComplete = true;
                         showInterface = false;
-                    } else {
-                        log("Selection count not within the required range.", LogLevel::Warn);
                     }
+                } else {
+                    _UI::DisabledButton("Return Selected Paths");
                 }
             }
+
+            UI::Text("Selected element amount: " + explorer.Config.SelectedPaths.Length);
         }
 
         void Render_LeftSidebar() {
@@ -1123,6 +1134,8 @@ namespace FileExplorer {
             // print("is LMouse down " + explorer..isLMouseButtonPressed);
             // print("is control down " + explorer..isControlPressed);
 
+            bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
+
             // Control- / Right click check
             if (UI::IsItemHovered() && (explorer.keyPress.isRMouseButtonPressed || (explorer.keyPress.isLMouseButtonPressed && explorer.keyPress.isControlPressed))) {
                 openContextMenu = true;
@@ -1132,9 +1145,10 @@ namespace FileExplorer {
                 if (currentTime - element.LastClickTime <= doubleClickThreshold) {
                     if (element.IsFolder) {
                         explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
-                    } else {
+                    } else if (canAddMore) {
                         if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
                             explorer.Config.SelectedPaths.InsertLast(element.Path);
+                            explorer.utils.TruncateSelectedPathsIfNeeded();
                         }
                         explorer.UpdateCurrentSelectedElement();
                     }
@@ -1162,10 +1176,17 @@ namespace FileExplorer {
             if (UI::BeginPopup("ElementContextMenu")) {
                 ElementInfo@ element = explorer.ui.GetSelectedElement();
                 if (element !is null) {
-                    if (UI::MenuItem("Add to Selected Items")) {
-                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
-                            explorer.Config.SelectedPaths.InsertLast(element.Path);
+                    bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
+
+                    if (canAddMore) {
+                        if (UI::MenuItem("Add to Selected Items")) {
+                            if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
+                                explorer.Config.SelectedPaths.InsertLast(element.Path);
+                                explorer.utils.TruncateSelectedPathsIfNeeded();
+                            }
                         }
+                    } else {
+                        UI::MenuItem("Add to Selected Items", "", false, false);
                     }
 
                     if (UI::MenuItem("Remove from Selected Items")) {
