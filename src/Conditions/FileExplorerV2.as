@@ -1172,7 +1172,7 @@ namespace FileExplorer {
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
             // Control- / Right click check
-            if (UI::IsItemHovered() && (explorer.keyPress.isRMouseButtonPressed || (explorer.keyPress.isLMouseButtonPressed && explorer.keyPress.isControlPressed))) {
+            if (UI::IsItemHovered() && (enterType == EnterType::RightClick || enterType == EnterType::ControlClick)) {
                 openContextMenu = true;
                 explorer.UpdateCurrentSelectedElement();
             // Double click check
