@@ -1264,8 +1264,9 @@ void FILE_EXPLORER_BASE_RENDERER() {
 }
 
 void OpenFileExplorerExample() {
-    FileExplorer::OpenFileExplorer(
+    FileExplorer::FE(
         true, // _mustReturn
+        vec2(1, 99999), // _minmaxReturnAmount
         IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
         "", // searchQuery
         { "replay" } // filters
