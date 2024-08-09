@@ -1346,13 +1346,6 @@ namespace FileExplorer {
             return UI::InputBlocking::DoNothing;
         }
 
-        void fe_HandleKeyPresses(bool down, VirtualKey key) {
-            if (explorer !is null) {
-                explorer.keyPress.HandleKeyPress(down, key);
-            }
-            MonitorSystem();
-        }
-
         void ResetState() {
             if (explorer !is null) {
                 explorer.keyPress.Reset();
@@ -1370,6 +1363,13 @@ namespace FileExplorer {
                 }
                 isChecking = true;
             }
+        }
+    }
+
+    void fe_HandleKeyPresses(bool down, VirtualKey key) {
+        if (explorer !is null) {
+            explorer.keyPress.HandleKeyPress(down, key);
+            explorer.keyPress.MonitorSystem();
         }
     }
 
@@ -1682,7 +1682,7 @@ void OnKeyPress(bool down, VirtualKey key) {
 // ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
 
 void FILE_EXPLORER_KEYPRESS_HANDLER(bool down, VirtualKey key) {
-    FileExplorer::KeyPresses.fe_HandleKeyPresses(down, key);
+    FileExplorer::fe_HandleKeyPresses(down, key);
 }
 
 // Sorry, but again, due to limitations in Openplanet the "Render" function has to be in the global namespace.
