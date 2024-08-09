@@ -1082,7 +1082,7 @@ namespace FileExplorer {
                 }
 
                 // Handle right-click or control-click to open context menu
-                if (UI::IsItemHovered() && (explorer.keyPress.isRMouseButtonPressed || (explorer.keyPress.isLMouseButtonPressed && explorer.keyPress.isControlPressed))) {
+                if (UI::IsItemHovered() && (UI::IsMouseDown(UI::MouseButton::Right) || (UI::IsMouseDown(UI::MouseButton::Left) && explorer.keyPress.isControlPressed))) {
                     if (UI::BeginPopupContextItem("SelectedContextMenu" + i)) {
                         if (UI::MenuItem("Remove from Selected Items")) {
                             if (i < explorer.Config.SelectedPaths.Length) {
