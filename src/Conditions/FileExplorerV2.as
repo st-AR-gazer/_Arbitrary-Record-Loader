@@ -166,9 +166,6 @@ namespace FileExplorer {
         int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
         bool RecursiveSearch = false;
 
-        // bool ReturnClicked = false;
-        OnSelectionCompleteFunc@ OnSelectionComplete;
-
         Config() {
             MustReturn = false;
             Path = "";
