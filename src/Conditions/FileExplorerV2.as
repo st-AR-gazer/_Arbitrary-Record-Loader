@@ -582,7 +582,7 @@ namespace FileExplorer {
 
             nav.UpdateHistory(cfg.Path);
         }
-
+´
         void UpdateCurrentSelectedElement() {
             @CurrentSelectedElement = tab[0].GetSelectedElement();
         }
@@ -590,12 +590,12 @@ namespace FileExplorer {
         void Open(Config@ config) {
             @Config = config;
             showInterface = true;
-
+            print("Showing interface for FileExplorer " + showInterface);
             if (Config.OnSelectionComplete !is null) {
                 Config.OnSelectionComplete(Config.SelectedPaths);
             }
-
             showInterface = false;
+            print("Hiding interface for FileExplorer " + );
         }
 
         void StartIndexingFiles(const string &in path) {
@@ -678,7 +678,6 @@ namespace FileExplorer {
         }
 
         void Render_FileExplorer() {
-            print("rendering");
             Render_Rows();
             Render_Columns();
 
@@ -913,7 +912,6 @@ namespace FileExplorer {
                 UI::Separator();
                 if (UI::Button("Return Selected Paths")) {
                     if (explorer.Config.OnSelectionComplete !is null) {
-                        // Pass the selected paths to the callback
                         explorer.Config.OnSelectionComplete(explorer.Config.SelectedPaths);
                     }
                     explorer.Config.MustReturn = false;
@@ -1204,10 +1202,7 @@ namespace FileExplorer {
 /* ------------------------ End Handle Button Clicks ------------------------ */
 
     void RenderFileExplorer() {
-        if (explorer is null) { print("explorer is null"); } else { print("explorer is not null"); }
-        print("about to render" + showInterface);
         if (showInterface && explorer !is null) {
-            print("about to render");
             UserInterface ui(explorer);
             explorer.ui.Render_FileExplorer();
         }
@@ -1239,6 +1234,7 @@ namespace FileExplorer {
         } else {
             @explorer.Config = config;
         }
+        // showInterface = true; // Show interface is handled in Open
         explorer.Open(config);
 
         while (showInterface) { yield(); }
