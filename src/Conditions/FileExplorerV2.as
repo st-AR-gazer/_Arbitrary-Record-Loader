@@ -1169,8 +1169,8 @@ namespace FileExplorer {
             }
 
             enterType = EnterType::None;
-            leftClick = UI::IsItemClicked(UI::MouseButton::Left);
-            rightClick = UI::IsItemClicked(UI::MouseButton::Right);
+            leftClick = UI::IsMouseDown(UI::MouseButton::Left);
+            rightClick = UI::IsMouseDown(UI::MouseButton::Right);
         }
 
         bool openContextMenu = false;
