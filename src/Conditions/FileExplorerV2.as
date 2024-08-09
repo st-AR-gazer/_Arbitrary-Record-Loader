@@ -1165,6 +1165,7 @@ namespace FileExplorer {
             }
 
             if (UI::Selectable(displayName, element.IsSelected)) {
+                print(enterType);
                 HandleElementSelection(element, enterType);
             }
 
