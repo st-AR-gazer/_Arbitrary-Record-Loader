@@ -1156,7 +1156,9 @@ namespace FileExplorer {
             // bool isControlPressed = UI::IsKeyPressed(UI::Key::Control); // Uncomment when OP 1.27 is released
             bool isControlPressed = explorer.keyPress.isControlPressed;
 
+
             if (UI::Selectable(displayName, isSelected)) {
+                print(isRMousePressed + " " + isLMousePressed + " " + isControlPressed);
                 HandleElementSelection(element, isRMousePressed, isLMousePressed, isControlPressed);
             }
         }
