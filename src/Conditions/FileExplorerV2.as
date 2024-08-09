@@ -1134,7 +1134,7 @@ namespace FileExplorer {
                     }
 
                     if (explorer.keyPress.SelectableWithClickType(displayName, element.IsSelected, element)) {
-                        HandleElementSelection(element);
+                        HandleElementSelection(element, explorer.keyPress.GetClickType());
                     }
 
                     UI::TableSetColumnIndex(2);
@@ -1311,6 +1311,7 @@ namespace FileExplorer {
     
     class KeyPresses {
         bool isControlPressed = false;
+        MouseClickType lastClickType = MouseClickType::None;
 
         void HandleKeyPress(bool down, VirtualKey key) {
             if (key == VirtualKey::Control) {
@@ -1320,28 +1321,28 @@ namespace FileExplorer {
 
         bool SelectableWithClickType(string displayName, bool isSelected, ElementInfo@ element) {
             bool selected = UI::Selectable(displayName, isSelected);
-            
-            MouseClickType clickType = MouseClickType::None;
+
+            lastClickType = MouseClickType::None;
 
             // Right click check
             if (UI::IsMouseClicked(UI::MouseButton::Right)) {
-                clickType = MouseClickType::RightClick;
+                lastClickType = MouseClickType::RightClick;
             // Control and Left click check
             } else if (UI::IsMouseClicked(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
-                clickType = MouseClickType::ControlClick;
+                lastClickType = MouseClickType::ControlClick;
             // Left double click check
             } else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left)) {
-                clickType = MouseClickType::DoubleClick;
+                lastClickType = MouseClickType::DoubleClick;
             // Left click check
             } else if (UI::IsMouseClicked(UI::MouseButton::Left)) {
-                clickType = MouseClickType::LeftClick;
-            }
-
-            if (clickType != MouseClickType::None) {
-                explorer.ui.HandleElementSelection(element, clickType);
+                lastClickType = MouseClickType::LeftClick;
             }
 
             return selected;
+        }
+
+        MouseClickType GetClickType() {
+            return lastClickType;
         }
     }
 
