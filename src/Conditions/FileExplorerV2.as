@@ -1133,10 +1133,22 @@ namespace FileExplorer {
                         default:
                             displayName = element.Name;
                     }
-
+                    
                     if (UI::Selectable(displayName, element.IsSelected)) {
-                        HandleElementSelection(element);
+                        element.IsSelected = true;
+                        explorer.UpdateCurrentSelectedElement();
                     }
+
+                    if (UI::IsMouseDown(UI::MouseButton::Left) && UI::IsItemHovered() && explorer.keyPress.isControlPressed && element.IsSelected) {
+                        HandleElementSelection(element, MouseClickType::ControlClick);
+                    } else if (UI::IsMouseDown(UI::MouseButton::Left) && UI::IsItemHovered() && element.IsSelected) {
+                        HandleElementSelection(element, MouseClickType::LeftClick);
+                    } else if (UI::IsMouseDown(UI::MouseButton::Right) && UI::IsItemHovered() && element.IsSelected) {
+                        HandleElementSelection(element, MouseClickType::RightClick);
+                    } else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left) && UI::IsItemHovered() && element.IsSelected) {
+                        HandleElementSelection(element, MouseClickType::DoubleClick);
+                    }
+
 
                     UI::TableSetColumnIndex(2);
                     UI::Text(element.IsFolder ? "Folder" : "File");
@@ -1154,14 +1166,14 @@ namespace FileExplorer {
 
         bool openContextMenu = false;
 
-        void HandleElementSelection(ElementInfo@ element) {
+        void HandleElementSelection(ElementInfo@ element, MouseClickType clickType) {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
             // Control- / Right click check                                                                                   // Uncomment when OP 1.27 is released  // Remove when OP 1.27 is released
-            if (UI::IsItemHovered() && (UI::IsMouseDown(UI::MouseButton::Right)) || (UI::IsMouseDown(UI::MouseButton::Left) && /*UI::IsKeyPressed(UI::Key::Control)*/explorer.keyPress.isControlPressed)) {
+            if (UI::IsItemHovered() && (clickType == MouseClickType::RightClick) || (clickType == MouseClickType::LeftClick && /*UI::IsKeyPressed(UI::Key::Control)*/explorer.keyPress.isControlPressed)) {
                 openContextMenu = true;
                 explorer.UpdateCurrentSelectedElement();
             // Double click check
@@ -1307,6 +1319,14 @@ namespace FileExplorer {
 /* ------------------------ Handle Button Clicks ------------------------ */
 // FIXME: After clicking ctrl it 'sticks' to you, you have to click ctrl again to remove the stickyness...
 //        Some custom functionality needs to be added to avoid this...
+    enum MouseClickType {
+        None,
+        LeftClick,
+        RightClick,
+        DoubleClick,
+        ControlClick
+    }
+
     class KeyPresses {
         bool isControlPressed = false;
 
