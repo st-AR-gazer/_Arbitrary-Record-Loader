@@ -1151,12 +1151,26 @@ namespace FileExplorer {
                     displayName = element.Name;
             }
 
-            if (UI::IsMouseDown(UI::MouseButton::Left)) print("Left mouse button is down");
-            if (UI::IsMouseDown(UI::MouseButton::Right)) print("Right mouse button is down");
+            bool leftClick;
+            bool rightClick;
+
+            EnterType enterType = EnterType::None;
+
+            if (UI::IsItemClicked() && UI::IsMouseDown(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
+                enterType = EnterType::ControlClick;
+            } else if (UI::IsItemClicked() && UI::IsMouseDown(UI::MouseButton::Left)) {
+                enterType = EnterType::LeftClick;
+            } else if (UI::IsItemClicked() && UI::IsMouseDown(UI::MouseButton::Right)) {
+                enterType = EnterType::RightClick;
+            }
 
             if (UI::Selectable(displayName, element.IsSelected)) {
-                HandleElementSelection(element, EnterType::LeftClick);
+                HandleElementSelection(element, enterType);
             }
+
+            enterType = EnterType::None;
+            leftClick = UI::IsItemClicked(UI::MouseButton::Left);
+            rightClick = UI::IsItemClicked(UI::MouseButton::Right);
         }
 
         bool openContextMenu = false;
