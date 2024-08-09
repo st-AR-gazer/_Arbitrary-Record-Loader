@@ -1609,6 +1609,7 @@ array<string>@ FILE_EXPLORER_selectedPaths;
     // }
 
 UI::InputBlocking OnMouseButton(bool down, int button, int x, int y) {
+    print("a");
     if (down) print(button + " a");
     return UI::InputBlocking::DoNothing;
 }
