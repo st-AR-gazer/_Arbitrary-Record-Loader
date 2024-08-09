@@ -1133,9 +1133,7 @@ namespace FileExplorer {
                             displayName = element.Name;
                     }
 
-                    if (UI::Selectable(displayName, element.IsSelected)) {
-                        HandleElementSelection(element);
-                    }
+                    explorer.keyPress.SelectableWithClickType(displayName, element.IsSelected, element);
 
                     UI::TableSetColumnIndex(2);
                     UI::Text(element.IsFolder ? "Folder" : "File");
@@ -1151,24 +1149,18 @@ namespace FileExplorer {
             }
         }
 
-
         bool openContextMenu = false;
 
-        void HandleElementSelection(ElementInfo@ element) {
+        void HandleElementSelection(ElementInfo@ element, MouseClickType clickType) {
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
             // Check if the element was right-clicked or control-clicked
-            if (UI::IsMouseReleased(UI::MouseButton::Right) || 
-                (UI::IsMouseReleased(UI::MouseButton::Left) && explorer.keyPress.isControlPressed)) {
-                for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
-                    explorer.tab[0].Elements[i].IsSelected = false;
-                }
-                element.IsSelected = true;
-                explorer.UpdateCurrentSelectedElement();
+            if (clickType == MouseClickType::RightClick || clickType == MouseClickType::ControlClick) {
                 openContextMenu = true;
+                explorer.UpdateCurrentSelectedElement();
             }
             // Double Click Check
-            else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left)) {
+            else if (clickType == MouseClickType::DoubleClick) {
                 if (element.IsFolder) {
                     explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
                 } else if (canAddMore) {
@@ -1180,7 +1172,7 @@ namespace FileExplorer {
                 }
             }
             // Single Left Click Check
-            else if (UI::IsMouseClicked(UI::MouseButton::Left)) {
+            else if (clickType == MouseClickType::LeftClick) {
                 for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
                     explorer.tab[0].Elements[i].IsSelected = false;
                 }
@@ -1322,6 +1314,32 @@ namespace FileExplorer {
             if (key == VirtualKey::Control) {
                 isControlPressed = down;
             }
+        }
+
+        bool SelectableWithClickType(string displayName, bool isSelected, ElementInfo@ element) {
+            bool selected = UI::Selectable(displayName, isSelected);
+            
+            MouseClickType clickType = MouseClickType::None;
+
+            // Right click check
+            if (UI::IsMouseClicked(UI::MouseButton::Right)) {
+                clickType = MouseClickType::RightClick;
+            // Control and Left click check
+            } else if (UI::IsMouseClicked(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
+                clickType = MouseClickType::ControlClick;
+            // Left double click check
+            } else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left)) {
+                clickType = MouseClickType::DoubleClick;
+            // Left click check
+            } else if (UI::IsMouseClicked(UI::MouseButton::Left)) {
+                clickType = MouseClickType::LeftClick;
+            }
+
+            if (clickType != MouseClickType::None) {
+                explorer.ui.HandleElementSelection(element, clickType);
+            }
+
+            return selected;
         }
     }
 
