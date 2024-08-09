@@ -1167,6 +1167,10 @@ namespace FileExplorer {
 
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
+            print("");
+            print(UI::IsMouseDown(UI::MouseButton::Left));
+            print(UI::IsMouseDown(UI::MouseButton::Right));
+
             // Control- / Right click check                                                                                   // Uncomment when OP 1.27 is released  // Remove when OP 1.27 is released
             if (UI::IsItemHovered() && (UI::IsMouseDown(UI::MouseButton::Right)) || (UI::IsMouseDown(UI::MouseButton::Left) && /*UI::IsKeyPressed(UI::Key::Control)*/explorer.keyPress.isControlPressed)) {
                 openContextMenu = true;
