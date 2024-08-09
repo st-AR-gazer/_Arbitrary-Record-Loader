@@ -1134,9 +1134,12 @@ namespace FileExplorer {
                             displayName = element.Name;
                     }
 
-                    if (UI::Selectable(displayName, element.IsSelected)) {
-                        HandleElementSelection(element, UI::IsMouseDown(UI::MouseButton::Right), UI::IsMouseDown(UI::MouseButton::Left));
+                    // Use the CustomSelectable function
+                    MouseClickType clickType = explorer.keyPress.CustomSelectable(element, displayName, element.IsSelected);
+                    if (clickType != MouseClickType::None) {
+                        HandleElementSelection(element, clickType);
                     }
+
                     UI::TableSetColumnIndex(2);
                     UI::Text(element.IsFolder ? "Folder" : "File");
                     UI::TableSetColumnIndex(3);
@@ -1153,45 +1156,33 @@ namespace FileExplorer {
 
         bool openContextMenu = false;
 
-        void HandleElementSelection(ElementInfo@ element, bool isRMousePressed, bool isLMousePressed) {
-            uint64 currentTime = Time::Now;
-            const uint64 doubleClickThreshold = 600; // 0.6 seconds
-
-            // explorer.keyPress.isLMouseButtonPressed = true; // Shuold be kept for reason under
-
-            print("IsItemHovered " + UI::IsItemHovered());
-            print("is RMouse down " + isRMousePressed);
-            print("is LMouse down " + isLMousePressed);
-
+        void HandleElementSelection(ElementInfo@ element, MouseClickType clickType) {
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
-            // Control- / Right click check                                                                                   // Uncomment when OP 1.27 is released  // Remove when OP 1.27 is released
-            if (UI::IsItemHovered() && (UI::IsMouseDown(UI::MouseButton::Right)) || (UI::IsMouseDown(UI::MouseButton::Left) && /*UI::IsKeyPressed(UI::Key::Control)*/explorer.keyPress.isControlPressed)) {
+            // Right Click Check and Control Click Check
+            if (clickType == MouseClickType::RightClick || clickType == MouseClickType::ControlClick) {
                 openContextMenu = true;
                 explorer.UpdateCurrentSelectedElement();
-            // Double click check
-            } else if (element.IsSelected) {
-                if (currentTime - element.LastClickTime <= doubleClickThreshold) {
-                    if (element.IsFolder) {
-                        explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
-                    } else if (canAddMore) {
-                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
-                            explorer.Config.SelectedPaths.InsertLast(element.Path);
-                            explorer.utils.TruncateSelectedPathsIfNeeded();
-                        }
-                        explorer.UpdateCurrentSelectedElement();
+            }
+            // Double Click Check
+            else if (clickType == MouseClickType::DoubleClick) {
+                if (element.IsFolder) {
+                    explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
+                } else if (canAddMore) {
+                    if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
+                        explorer.Config.SelectedPaths.InsertLast(element.Path);
+                        explorer.utils.TruncateSelectedPathsIfNeeded();
                     }
-                } else {
-                    element.LastClickTime = currentTime;
+                    explorer.UpdateCurrentSelectedElement();
                 }
-            // Normal click check
-            } else {
+            }
+            // Single Left Click Check
+            else if (clickType == MouseClickType::LeftClick) {
                 for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
                     explorer.tab[0].Elements[i].IsSelected = false;
                 }
                 element.IsSelected = true;
-                element.LastSelectedTime = currentTime;
-                element.LastClickTime = currentTime;
+                element.LastSelectedTime = Time::Now;
                 explorer.UpdateCurrentSelectedElement();
             }
         }
@@ -1312,6 +1303,14 @@ namespace FileExplorer {
 /* ------------------------ Handle Button Clicks ------------------------ */
 // FIXME: After clicking ctrl it 'sticks' to you, you have to click ctrl again to remove the stickyness...
 //        Some custom functionality needs to be added to avoid this...
+    enum MouseClickType {
+        None,
+        LeftClick,
+        RightClick,
+        ControlClick,
+        DoubleClick
+    };
+    
     class KeyPresses {
         bool isControlPressed = false;
 
@@ -1319,6 +1318,35 @@ namespace FileExplorer {
             if (key == VirtualKey::Control) {
                 isControlPressed = down;
             }
+        }
+
+        MouseClickType CustomSelectable(ElementInfo@ element, const string &in label, bool isSelected) {
+            MouseClickType clickType = MouseClickType::None;
+
+            // Check if the item is hovered
+            if (UI::IsItemHovered()) {
+                // Right-click
+                if (UI::IsMouseClicked(UI::MouseButton::Right)) {
+                    clickType = MouseClickType::RightClick;
+                }
+                // Control + Left-click // :Waiting: for OP v1.27
+                // else if (UI::IsMouseClicked(UI::MouseButton::Left) && UI::IsKeyDown(Key::Control)) {
+                //     clickType = MouseClickType::ControlClick;
+                // }
+                // Double Left-click
+                else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left)) {
+                    clickType = MouseClickType::DoubleClick;
+                }
+                // Single Left-click
+                else if (UI::IsMouseClicked(UI::MouseButton::Left)) {
+                    clickType = MouseClickType::LeftClick;
+                }
+            }
+
+            // Render the selectable
+            bool selected = UI::Selectable(label, isSelected);
+
+            return clickType;
         }
     }
 
