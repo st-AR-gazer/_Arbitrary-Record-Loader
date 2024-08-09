@@ -1160,8 +1160,8 @@ namespace FileExplorer {
 
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
-            // Control- / Right click check
-            if (UI::IsItemHovered() && (UI::IsMouseReleased(UI::MouseButton::Right)) || (UI::IsMouseReleased(UI::MouseButton::Left) && explorer.keyPress.isControlPressed)) {
+            // Control- / Right click check                                                                                   // Uncomment when OP 1.27 is released  // Remove when OP 1.27 is released
+            if (UI::IsItemHovered() && (UI::IsMouseDown(UI::MouseButton::Right)) || (UI::IsMouseDown(UI::MouseButton::Left) && /*UI::IsKeyPressed(UI::Key::Control)*/explorer.keyPress.isControlPressed)) {
                 openContextMenu = true;
                 explorer.UpdateCurrentSelectedElement();
             // Double click check
@@ -1612,8 +1612,8 @@ void Render() {
             OpenFileExplorerExample();
         }
         if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isControlPressed));
-        UI::Text(tostring(UI::IsMouseDown(UI::MouseButton::Left)));
-        UI::Text(tostring(UI::IsMouseDown(UI::MouseButton::Right)));
+        UI::Text(UI::IsMouseDown(UI::MouseButton::Left));
+        UI::Text(UI::IsMouseDown(UI::MouseButton::Right));
     }
     UI::End();
 }
