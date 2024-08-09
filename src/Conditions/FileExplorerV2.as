@@ -1133,9 +1133,9 @@ namespace FileExplorer {
                             displayName = element.Name;
                     }
 
-                    MouseClickType clickType = explorer.keyPress.CustomSelectable(element, element.Name, element.IsSelected);
-                    print(clickType);
-                    HandleElementSelection(element, clickType);
+                    if (UI::Selectable(displayName, element.IsSelected)) {
+                        HandleElementSelection(element);
+                    }
 
                     UI::TableSetColumnIndex(2);
                     UI::Text(element.IsFolder ? "Folder" : "File");
@@ -1154,16 +1154,21 @@ namespace FileExplorer {
 
         bool openContextMenu = false;
 
-        void HandleElementSelection(ElementInfo@ element, MouseClickType clickType) {
+        void HandleElementSelection(ElementInfo@ element) {
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
-            // Right Click Check and Control Click Check
-            if (clickType == MouseClickType::RightClick || clickType == MouseClickType::ControlClick) {
-                openContextMenu = true;
+            // Check if the element was right-clicked or control-clicked
+            if (UI::IsMouseReleased(UI::MouseButton::Right) || 
+                (UI::IsMouseReleased(UI::MouseButton::Left) && explorer.keyPress.isControlPressed)) {
+                for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
+                    explorer.tab[0].Elements[i].IsSelected = false;
+                }
+                element.IsSelected = true;
                 explorer.UpdateCurrentSelectedElement();
+                openContextMenu = true;
             }
             // Double Click Check
-            else if (clickType == MouseClickType::DoubleClick) {
+            else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left)) {
                 if (element.IsFolder) {
                     explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
                 } else if (canAddMore) {
@@ -1175,7 +1180,7 @@ namespace FileExplorer {
                 }
             }
             // Single Left Click Check
-            else if (clickType == MouseClickType::LeftClick) {
+            else if (UI::IsMouseClicked(UI::MouseButton::Left)) {
                 for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
                     explorer.tab[0].Elements[i].IsSelected = false;
                 }
@@ -1184,6 +1189,7 @@ namespace FileExplorer {
                 explorer.UpdateCurrentSelectedElement();
             }
         }
+
 
         void Render_ElementContextMenu() {
             if (openContextMenu) {
@@ -1316,39 +1322,6 @@ namespace FileExplorer {
             if (key == VirtualKey::Control) {
                 isControlPressed = down;
             }
-        }
-
-        MouseClickType CustomSelectable(ElementInfo@ element, const string &in label, bool isSelected) {
-            MouseClickType clickType = MouseClickType::None;
-
-            // Right-click
-            if (UI::IsMouseClicked(UI::MouseButton::Right)) {
-                clickType = MouseClickType::RightClick;
-            }
-            // Control + Left-click // :Waiting: for OP v1.27
-            // else if (UI::IsMouseClicked(UI::MouseButton::Left) && UI::IsKeyDown(Key::Control)) {
-            //     clickType = MouseClickType::ControlClick;
-            // }
-            // Double Left-click
-            else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left)) {
-                clickType = MouseClickType::DoubleClick;
-            }
-            // Single Left-click
-            else if (UI::IsMouseClicked(UI::MouseButton::Left)) {
-                clickType = MouseClickType::LeftClick;
-            }
-
-            // Render the selectable
-            bool justSelected = UI::Selectable(label, isSelected);
-
-            // Only update selection if the item was clicked
-            if (justSelected) {
-                isSelected = true;
-            } else if (clickType != MouseClickType::None) {
-                isSelected = element.IsSelected;
-            }
-
-            return clickType;
         }
     }
 
