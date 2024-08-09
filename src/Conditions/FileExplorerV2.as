@@ -1134,8 +1134,8 @@ namespace FileExplorer {
                             displayName = element.Name;
                     }
 
-                    // Use the CustomSelectable function
                     MouseClickType clickType = explorer.keyPress.CustomSelectable(element, displayName, element.IsSelected);
+                    print(clickType);
                     if (clickType != MouseClickType::None) {
                         HandleElementSelection(element, clickType);
                     }
