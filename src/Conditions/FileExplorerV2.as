@@ -1102,7 +1102,6 @@ namespace FileExplorer {
                 UI::Text(explorer.IndexingMessage);
             } else if (explorer.tab[0].Elements.Length == 0) {
                 UI::Text("No elements to display.");
-                log("No elements found in the directory.", LogLevel::Warn, 904, "Render_MainAreaBar");
             } else {
                 UI::BeginTable("FilesTable", 6, UI::TableFlags::Resizable | UI::TableFlags::Borders | UI::TableFlags::SizingFixedSame);
                 UI::TableSetupColumn("ico");
@@ -1134,11 +1133,9 @@ namespace FileExplorer {
                             displayName = element.Name;
                     }
 
-                    MouseClickType clickType = explorer.keyPress.CustomSelectable(element, displayName, element.IsSelected);
+                    MouseClickType clickType = explorer.keyPress.CustomSelectable(element, element.Name, element.IsSelected);
                     print(clickType);
-                    if (clickType != MouseClickType::None) {
-                        HandleElementSelection(element, clickType);
-                    }
+                    HandleElementSelection(element, clickType);
 
                     UI::TableSetColumnIndex(2);
                     UI::Text(element.IsFolder ? "Folder" : "File");
@@ -1153,6 +1150,7 @@ namespace FileExplorer {
                 UI::EndTable();
             }
         }
+
 
         bool openContextMenu = false;
 
