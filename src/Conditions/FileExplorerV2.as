@@ -678,6 +678,7 @@ namespace FileExplorer {
         }
 
         void Render_FileExplorer() {
+            print("rendering");
             Render_Rows();
             Render_Columns();
 
@@ -1204,6 +1205,7 @@ namespace FileExplorer {
 
     void RenderFileExplorer() {
         if (showInterface && explorer !is null) {
+            print("about to render");
             UserInterface ui(explorer);
             explorer.ui.Render_FileExplorer();
         }
