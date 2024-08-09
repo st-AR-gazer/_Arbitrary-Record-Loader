@@ -1102,6 +1102,7 @@ namespace FileExplorer {
                 UI::Text(explorer.IndexingMessage);
             } else if (explorer.tab[0].Elements.Length == 0) {
                 UI::Text("No elements to display.");
+                log("No elements found in the directory.", LogLevel::Warn, 904, "Render_MainAreaBar");
             } else {
                 UI::BeginTable("FilesTable", 6, UI::TableFlags::Resizable | UI::TableFlags::Borders | UI::TableFlags::SizingFixedSame);
                 UI::TableSetupColumn("ico");
@@ -1133,11 +1134,7 @@ namespace FileExplorer {
                             displayName = element.Name;
                     }
 
-                    if (explorer.keyPress.SelectableWithClickType(displayName, element.IsSelected, element)) {
-                        print("ClickType: " + explorer.keyPress.GetClickType());
-                        print("LastClickType: " + explorer.keyPress.lastClickType);
-                        HandleElementSelection(element, explorer.keyPress.GetClickType());
-                    }
+                    SelectableWithClickCheck(displayName, element.IsSelected, element);
 
                     UI::TableSetColumnIndex(2);
                     UI::Text(element.IsFolder ? "Folder" : "File");
@@ -1153,40 +1150,55 @@ namespace FileExplorer {
             }
         }
 
+        void SelectableWithClickCheck(const string &in displayName, bool isSelected, ElementInfo@ element) {
+            bool isRMousePressed = UI::IsMouseDown(UI::MouseButton::Right);
+            bool isLMousePressed = UI::IsMouseDown(UI::MouseButton::Left);
+            // bool isControlPressed = UI::IsKeyPressed(UI::Key::Control); // Uncomment when OP 1.27 is released
+            bool isControlPressed = explorer.keyPress.isControlPressed;
+
+            if (UI::Selectable(displayName, isSelected)) {
+                HandleElementSelection(element, isRMousePressed, isLMousePressed, isControlPressed);
+            }
+        }
+
         bool openContextMenu = false;
 
-        void HandleElementSelection(ElementInfo@ element, MouseClickType clickType) {
+        void HandleElementSelection(ElementInfo@ element, bool isRMousePressed, bool isLMousePressed, bool isControlPressed) {
+            uint64 currentTime = Time::Now;
+            const uint64 doubleClickThreshold = 600; // 0.6 seconds
+
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
-            print(clickType);
-            
-            // Check if the element was right-clicked or control-clicked
-            if (clickType == MouseClickType::RightClick || clickType == MouseClickType::ControlClick) {
+
+            // Control- / Right click check
+            if (UI::IsItemHovered() && (isRMousePressed) || (isLMousePressed && isControlPressed)) {
                 openContextMenu = true;
                 explorer.UpdateCurrentSelectedElement();
-            }
-            // Double Click Check
-            else if (clickType == MouseClickType::DoubleClick) {
-                if (element.IsFolder) {
-                    explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
-                } else if (canAddMore) {
-                    if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
-                        explorer.Config.SelectedPaths.InsertLast(element.Path);
-                        explorer.utils.TruncateSelectedPathsIfNeeded();
+            // Double click check
+            } else if (element.IsSelected) {
+                if (currentTime - element.LastClickTime <= doubleClickThreshold) {
+                    if (element.IsFolder) {
+                        explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
+                    } else if (canAddMore) {
+                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
+                            explorer.Config.SelectedPaths.InsertLast(element.Path);
+                            explorer.utils.TruncateSelectedPathsIfNeeded();
+                        }
+                        explorer.UpdateCurrentSelectedElement();
                     }
-                    explorer.UpdateCurrentSelectedElement();
+                } else {
+                    element.LastClickTime = currentTime;
                 }
-            }
-            // Single Left Click Check
-            else if (clickType == MouseClickType::LeftClick) {
+            // Normal click check
+            } else {
                 for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
                     explorer.tab[0].Elements[i].IsSelected = false;
                 }
                 element.IsSelected = true;
-                element.LastSelectedTime = Time::Now;
+                element.LastSelectedTime = currentTime;
+                element.LastClickTime = currentTime;
                 explorer.UpdateCurrentSelectedElement();
             }
         }
-
 
         void Render_ElementContextMenu() {
             if (openContextMenu) {
@@ -1304,48 +1316,13 @@ namespace FileExplorer {
 /* ------------------------ Handle Button Clicks ------------------------ */
 // FIXME: After clicking ctrl it 'sticks' to you, you have to click ctrl again to remove the stickyness...
 //        Some custom functionality needs to be added to avoid this...
-    enum MouseClickType {
-        None,
-        LeftClick,
-        RightClick,
-        ControlClick,
-        DoubleClick
-    };
-    
     class KeyPresses {
         bool isControlPressed = false;
-        MouseClickType lastClickType = MouseClickType::None;
 
         void HandleKeyPress(bool down, VirtualKey key) {
             if (key == VirtualKey::Control) {
                 isControlPressed = down;
             }
-        }
-
-        bool SelectableWithClickType(string displayName, bool isSelected, ElementInfo@ element) {
-            bool selected = UI::Selectable(displayName, isSelected);
-
-            lastClickType = MouseClickType::None;
-
-            // Right click check
-            if (UI::IsMouseReleased(UI::MouseButton::Right)) {
-                lastClickType = MouseClickType::RightClick;
-            // Control and Left click check
-            } else if (UI::IsMouseReleased(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
-                lastClickType = MouseClickType::ControlClick;
-            // Left double click check
-            } else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left)) {
-                lastClickType = MouseClickType::DoubleClick;
-            // Left click check
-            } else if (UI::IsMouseReleased(UI::MouseButton::Left)) {
-                lastClickType = MouseClickType::LeftClick;
-            }
-
-            return selected;
-        }
-
-        MouseClickType GetClickType() {
-            return lastClickType;
         }
     }
 
