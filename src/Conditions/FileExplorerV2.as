@@ -1341,7 +1341,7 @@ namespace FileExplorer {
         }
 
         void MonitorSystem() {
-            startnew(Coro_MonitorSystem);
+            startnew(Coro_MonitorSystem());
         }
 
         void Coro_MonitorSystem() {
