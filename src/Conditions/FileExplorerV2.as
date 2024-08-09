@@ -1155,7 +1155,7 @@ namespace FileExplorer {
 
         void HandleElementSelection(ElementInfo@ element, MouseClickType clickType) {
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
-
+            print(clickType);
             // Check if the element was right-clicked or control-clicked
             if (clickType == MouseClickType::RightClick || clickType == MouseClickType::ControlClick) {
                 openContextMenu = true;
