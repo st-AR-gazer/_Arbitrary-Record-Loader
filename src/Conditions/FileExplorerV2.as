@@ -2,8 +2,10 @@
 
 // IMPORTANT:
 // This file is meant to be used together with "logging.as" as this contains that logging functionality needed to make 
-// custom log messages work properly. If you do not want to include this, please ctrl + h and add ` log\(([^,]+),.*\); `
-// to find, and and ` print($1); ` to replace, this will convert all the fancy log messages to normal print messages.
+// custom log messages work properly. If you do not want to include this, please ctrl + h (or ctrl + f and click the 
+// dropdown) and add ` log\(([^,]+),.*\); ` to find, and and ` print($1); ` to replace, this will convert all the fancy 
+// log messages to normal print messages. You must also enable 'regex search' for this to work. (In vscode this can be 
+// done by pressing ctrl + f and selecting the |.*| icon in the search bar)
 
 /**
  * How to use the FileExplorer:
@@ -98,6 +100,7 @@ namespace FileExplorer {
         int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
         bool RecursiveSearch = false;
 
+        // bool ReturnClicked = false;
         OnSelectionCompleteFunc@ OnSelectionComplete;
 
         Config() {
@@ -588,11 +591,8 @@ namespace FileExplorer {
             @Config = config;
             showInterface = true;
 
-            // Used for testing
-            array<string> selectedPaths = {"file1.txt", "file2.txt"};
-            
             if (Config.OnSelectionComplete !is null) {
-                Config.OnSelectionComplete(selectedPaths);
+                Config.OnSelectionComplete(Config.SelectedPaths);
             }
 
             showInterface = false;
@@ -1227,7 +1227,7 @@ namespace FileExplorer {
 
 
         @config.OnSelectionComplete = OnSelectionCompleteFunc(function(array<string>@ paths) {
-            @selectedPaths = paths;
+            @FILE_EXPLORER_selectedPaths = paths;
         });
 
         if (explorer is null) {
@@ -1239,55 +1239,9 @@ namespace FileExplorer {
 
         while (showInterface) { yield(); }
 
-        return selectedPaths;
+        return FILE_EXPLORER_selectedPaths;
     }
 }
-array<string>@ selectedPaths;
-
-// Sorry, due to limitations in Openplanet the "OnKeyPress" function has to be in the global namespace.
-// If you are using this funciton in you own project please add: ` FILE_EXPLORER_KEYPRESS_HANDLER(down, key); `
-// to your own "OnKeyPress" function. 
-// If this is not done, the File Explorer will not work as intended.
-
-// ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
-void OnKeyPress(bool down, VirtualKey key) {
-    FILE_EXPLORER_KEYPRESS_HANDLER(down, key);
-}
-// ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
-
-void FILE_EXPLORER_KEYPRESS_HANDLER(bool down, VirtualKey key) {
-    FileExplorer::fe_HandleKeyPresses(down, key);
-}
-
-void FILE_EXPLORER_BASE_RENDERER() {
-    FileExplorer::RenderFileExplorer();
-}
-
-void OpenFileExplorerExample() {
-    FileExplorer::FE(
-        true, // _mustReturn
-        vec2(1, 99999), // _minmaxReturnAmount
-        IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
-        "", // searchQuery
-        { "replay" } // filters
-    );
-}
-
-void Render() {
-    FILE_EXPLORER_BASE_RENDERER();
-    FILE_EXPLORER_V1_BASE_RENDERER(); // Used for comparison, should be removed on release
-    
-    if (UI::Begin(Icons::UserPlus + " File Explorer", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
-        if (UI::Button("Open File Explorer")) {
-            OpenFileExplorerExample();
-        }
-        if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isControlPressed));
-        if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isLMouseButtonPressed));
-        if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isRMouseButtonPressed));
-    }
-    UI::End();
-}
-
 
 /* ------------------------ GBX Parsing ------------------------ */
 
@@ -1542,3 +1496,70 @@ string FileCreatedTime(const string &in filePath) {
 
 /* ------------------------ End File Creation Time ------------------------ */
 /* ------------------------ End DLL ------------------------ */
+
+
+/* ------------------------ Functions / Variables that have to be in the global namespace ------------------------ */
+
+// Sorry, but all inline variables have to be in the global namespace.
+array<string>@ FILE_EXPLORER_selectedPaths;
+
+// Sorry, due to limitations in Openplanet the "OnKeyPress" function has to be in the global namespace.
+// If you are using this funciton in you own project please add: ` FILE_EXPLORER_KEYPRESS_HANDLER(down, key); `
+// to your own "OnKeyPress" function. 
+// If this is not done, the File Explorer will not work as intended.
+
+// ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
+void OnKeyPress(bool down, VirtualKey key) {
+    FILE_EXPLORER_KEYPRESS_HANDLER(down, key);
+}
+// ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
+
+void FILE_EXPLORER_KEYPRESS_HANDLER(bool down, VirtualKey key) {
+    FileExplorer::fe_HandleKeyPresses(down, key);
+}
+
+// Sorry, but again, due to limitations in Openplanet the "Render" function has to be in the global namespace.
+// If you are using this function in your own project please add ` FILE_EXPLORER_BASE_RENDERER ` to your own 
+// render pipeline, usually one of the "Render", or "RenderInterface" functions.
+// If this is not done, the File Explorer will not work as intended.
+
+// ----- REMOVE THIS IF YOU HAVE ANY RENDER FUNCTION IN YOUR OWN CODE (also read the comment above) ----- //
+/**
+ * RELEASE:
+ * Currently hidden when testing, please remove the comment when this is done.
+
+void RenderInterface() {
+    FILE_EXPLORER_BASE_RENDERER();
+}
+*/
+// ----- REMOVE THIS IF YOU HAVE ANY RENDER FUNCTION IN YOUR OWN CODE (also read the comment above) ----- //
+
+void FILE_EXPLORER_BASE_RENDERER() {
+    FileExplorer::RenderFileExplorer();
+}
+
+void OpenFileExplorerExample() {
+    FileExplorer::FE(
+        true, // _mustReturn
+        vec2(1, 99999), // _minmaxReturnAmount
+        IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
+        "", // searchQuery
+        { "replay" } // filters
+    );
+}
+
+// Remove after testing
+void Render() {
+    FILE_EXPLORER_BASE_RENDERER();
+    FILE_EXPLORER_V1_BASE_RENDERER(); // Used for comparison, should be removed on release
+    
+    if (UI::Begin(Icons::UserPlus + " File Explorer", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
+        if (UI::Button("Open File Explorer")) {
+            OpenFileExplorerExample();
+        }
+        if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isControlPressed));
+        if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isLMouseButtonPressed));
+        if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isRMouseButtonPressed));
+    }
+    UI::End();
+}
