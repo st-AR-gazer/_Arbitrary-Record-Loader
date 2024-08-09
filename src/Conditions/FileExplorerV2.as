@@ -1135,6 +1135,7 @@ namespace FileExplorer {
                     }
                     
                     if (UI::Selectable(displayName, element.IsSelected)) {
+                        explorer.UpdateCurrentSelectedElement();
                     }
 
                     if (UI::IsMouseDown(UI::MouseButton::Left) && UI::IsItemHovered() && explorer.keyPress.isControlPressed && element.IsSelected) {
