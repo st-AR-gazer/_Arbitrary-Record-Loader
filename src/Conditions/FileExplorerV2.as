@@ -1135,7 +1135,7 @@ namespace FileExplorer {
                     }
 
                     if (UI::Selectable(displayName, element.IsSelected)) {
-                        HandleElementSelection(element);
+                        HandleElementSelection(element, EnterType::None);
                     }
 
                     if (UI::IsMouseDown(UI::MouseButton::Left) && UI::IsItemHovered() && explorer.keyPress.isControlPressed && element.IsSelected) {
@@ -1166,6 +1166,8 @@ namespace FileExplorer {
         bool openContextMenu = false;
 
         void HandleElementSelection(ElementInfo@ element, EnterType enterType) {
+            if (enterType == EnterType::None) { return; }
+
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
