@@ -1352,9 +1352,8 @@ namespace FileExplorer {
             }
         }
 
-        UI::InputBlocking OnMouseButton(bool down, int button, int x, int y) {
+        void OnMouseButton(bool down, int button, int x, int y) {
             HandleMouseButtonPress(down, button);
-            return UI::InputBlocking::DoNothing;
         }
     }
 
@@ -1623,7 +1622,7 @@ array<string>@ FILE_EXPLORER_selectedPaths;
 
 void FILE_EXPLORER_MOUSE_BUTTON_HANDLER(bool down, int button, int x, int y) {
     if (FileExplorer::explorer !is null) {
-        return FileExplorer::explorer.keyPress.OnMouseButton(down, button, x, y);
+        FileExplorer::explorer.keyPress.OnMouseButton(down, button, x, y);
     }
 }
 
