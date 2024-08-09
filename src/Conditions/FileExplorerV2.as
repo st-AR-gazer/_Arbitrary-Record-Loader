@@ -1341,6 +1341,10 @@ namespace FileExplorer {
         }
 
         void MonitorSystem() {
+            startnew(Coro_MonitorSystem);
+        }
+
+        void Coro_MonitorSystem() {
             auto app = GetApp();
             if (isChecking) return;
             isChecking = true;
@@ -1360,7 +1364,7 @@ namespace FileExplorer {
     void fe_HandleKeyPresses(bool down, VirtualKey key) {
         if (explorer !is null) {
             explorer.keyPress.HandleKeyPress(down, key);
-            startnew(explorer.keyPress.MonitorSystem());
+            explorer.keyPress.MonitorSystem();
         }
     }
 
