@@ -1081,8 +1081,8 @@ namespace FileExplorer {
                     }
                 }
 
-                // Handle right-click or control-click to open context menu                                                       // Uncomment when OP 1.27 is released  // Remove when OP 1.27 is released
-                if (UI::IsItemHovered() && (UI::IsMouseDown(UI::MouseButton::Right)) || (UI::IsMouseDown(UI::MouseButton::Left) && /*UI::IsKeyPressed(UI::Key::Control)*/explorer.keyPress.isControlPressed)) {
+                // Handle right-click or control-click to open context menu
+                if (UI::IsItemHovered() && (explorer.keyPress.isRMouseButtonPressed || (explorer.keyPress.isLMouseButtonPressed && explorer.keyPress.isControlPressed))) {
                     if (UI::BeginPopupContextItem("SelectedContextMenu" + i)) {
                         if (UI::MenuItem("Remove from Selected Items")) {
                             if (i < explorer.Config.SelectedPaths.Length) {
@@ -1133,19 +1133,19 @@ namespace FileExplorer {
                         default:
                             displayName = element.Name;
                     }
-                    
+
                     if (UI::Selectable(displayName, element.IsSelected)) {
-                        explorer.UpdateCurrentSelectedElement();
+                        HandleElementSelection(element);
                     }
 
                     if (UI::IsMouseDown(UI::MouseButton::Left) && UI::IsItemHovered() && explorer.keyPress.isControlPressed && element.IsSelected) {
-                        HandleElementSelection(element, MouseClickType::ControlClick);
+                        HandleElementSelection(element, EnterType::ControlClick);
                     } else if (UI::IsMouseDown(UI::MouseButton::Left) && UI::IsItemHovered() && element.IsSelected) {
-                        HandleElementSelection(element, MouseClickType::LeftClick);
+                        HandleElementSelection(element, EnterType::LeftClick);
                     } else if (UI::IsMouseDown(UI::MouseButton::Right) && UI::IsItemHovered() && element.IsSelected) {
-                        HandleElementSelection(element, MouseClickType::RightClick);
+                        HandleElementSelection(element, EnterType::RightClick);
                     } else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left) && UI::IsItemHovered() && element.IsSelected) {
-                        HandleElementSelection(element, MouseClickType::DoubleClick);
+                        HandleElementSelection(element, EnterType::DoubleClick);
                     }
 
 
@@ -1165,14 +1165,14 @@ namespace FileExplorer {
 
         bool openContextMenu = false;
 
-        void HandleElementSelection(ElementInfo@ element, MouseClickType clickType) {
+        void HandleElementSelection(ElementInfo@ element, EnterType enterType) {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
-            // Control- / Right click check                                                                                   // Uncomment when OP 1.27 is released  // Remove when OP 1.27 is released
-            if (UI::IsItemHovered() && (clickType == MouseClickType::RightClick) || (clickType == MouseClickType::ControlClick)) {
+            // Control- / Right click check
+            if (UI::IsItemHovered() && (explorer.keyPress.isRMouseButtonPressed || (explorer.keyPress.isLMouseButtonPressed && explorer.keyPress.isControlPressed))) {
                 openContextMenu = true;
                 explorer.UpdateCurrentSelectedElement();
             // Double click check
@@ -1318,7 +1318,7 @@ namespace FileExplorer {
 /* ------------------------ Handle Button Clicks ------------------------ */
 // FIXME: After clicking ctrl it 'sticks' to you, you have to click ctrl again to remove the stickyness...
 //        Some custom functionality needs to be added to avoid this...
-    enum MouseClickType {
+    enum EnterType {
         None,
         LeftClick,
         RightClick,
@@ -1631,8 +1631,6 @@ void Render() {
             OpenFileExplorerExample();
         }
         if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isControlPressed));
-        UI::Text(tostring(UI::IsMouseDown(UI::MouseButton::Left)));
-        UI::Text(tostring(UI::IsMouseDown(UI::MouseButton::Right)));
     }
     UI::End();
 }
