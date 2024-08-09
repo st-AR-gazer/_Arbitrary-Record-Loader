@@ -582,7 +582,7 @@ namespace FileExplorer {
 
             nav.UpdateHistory(cfg.Path);
         }
-´
+
         void UpdateCurrentSelectedElement() {
             @CurrentSelectedElement = tab[0].GetSelectedElement();
         }
