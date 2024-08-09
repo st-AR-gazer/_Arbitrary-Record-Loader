@@ -987,7 +987,6 @@ namespace FileExplorer {
 
         void Render_ReturnBar() {
             if (explorer.Config.MustReturn) {
-                UI::Separator();
 
                 bool validReturnAmount = explorer.Config.SelectedPaths.Length >= explorer.Config.MinMaxReturnAmount.x &&
                                         (explorer.Config.SelectedPaths.Length <= explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1);
@@ -1001,9 +1000,10 @@ namespace FileExplorer {
                 } else {
                     _UI::DisabledButton("Return Selected Paths");
                 }
+                UI::SameLine();
+                UI::Text("Selected element amount: " + explorer.Config.SelectedPaths.Length);
+                UI::Separator();
             }
-
-            UI::Text("Selected element amount: " + explorer.Config.SelectedPaths.Length);
         }
 
         void Render_LeftSidebar() {
@@ -1058,10 +1058,41 @@ namespace FileExplorer {
         void Render_SelectedItems() {
             for (uint i = 0; i < explorer.Config.SelectedPaths.Length; i++) {
                 string path = explorer.Config.SelectedPaths[i];
+                string displayName;
+                
                 if (_IO::Folder::IsDirectory(path)) {
-                    UI::Text(_IO::Folder::GetFolderName(path));
+                    displayName = _IO::Folder::GetFolderName(path);
                 } else {
-                    UI::Text(_IO::File::GetFileNameWithoutExtension(path));
+                    displayName = _IO::File::GetFileNameWithoutExtension(path);
+                }
+
+                bool isSelected = UI::Selectable(displayName, false);
+                uint64 currentTime = Time::Now;
+                const uint64 doubleClickThreshold = 600; // 0.6 seconds
+
+                // Handle double-click to remove
+                if (isSelected) {
+                    if (currentTime - explorer.tab[0].Elements[i].LastClickTime <= doubleClickThreshold) {
+                        if (i < explorer.Config.SelectedPaths.Length) {
+                            explorer.Config.SelectedPaths.RemoveAt(i);
+                        }
+                    } else {
+                        explorer.tab[0].Elements[i].LastClickTime = currentTime;
+                    }
+                }
+
+                // Handle right-click or control-click to open context menu
+                if (UI::IsItemHovered() && (explorer.keyPress.isRMouseButtonPressed || (explorer.keyPress.isLMouseButtonPressed && explorer.keyPress.isControlPressed))) {
+                    if (UI::BeginPopupContextItem("SelectedContextMenu" + i)) {
+                        if (UI::MenuItem("Remove from Selected Items")) {
+                            if (i < explorer.Config.SelectedPaths.Length) {
+                                explorer.Config.SelectedPaths.RemoveAt(i);
+                            }
+                        }
+                        UI::EndPopup();
+                    } else {
+                        UI::OpenPopup("SelectedContextMenu" + i);
+                    }
                 }
             }
         }
@@ -1126,7 +1157,7 @@ namespace FileExplorer {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
-            explorer.keyPress.isLMouseButtonPressed = true; // Shuold be kept for reason under
+            // explorer.keyPress.isLMouseButtonPressed = true; // Shuold be kept for reason under
 
             // Should be kept til I figure out if VirtualKey::L/RButton is L and R mouse button
             // print("IsItemHovered " + UI::IsItemHovered());
@@ -1286,20 +1317,62 @@ namespace FileExplorer {
     class KeyPresses {
         bool isControlPressed = false;
         bool isLMouseButtonPressed = false;
-        bool isRMouseButtonPressed = false;        
+        bool isRMouseButtonPressed = false;
+
+        void HandleKeyPress(bool down, VirtualKey key) {
+            if (key == VirtualKey::Control) {
+                isControlPressed = down;
+            }
+        }
+
+        void HandleMouseButtonPress(bool down, int button) {
+            if (button == 0) {
+                isLMouseButtonPressed = down;
+            } else if (button == 1) {
+                isRMouseButtonPressed = down;
+            }
+        }
+
+        void Reset() {
+            isControlPressed = false;
+            isLMouseButtonPressed = false;
+            isRMouseButtonPressed = false;
+        }
+
+        UI::InputBlocking OnMouseButton(bool down, int button, int x, int y) {
+            if (explorer !is null) {
+                explorer.keyPress.HandleMouseButtonPress(down, button);
+            }
+            return UI::InputBlocking::DoNothing;
+        }
+
+        void fe_HandleKeyPresses(bool down, VirtualKey key) {
+            if (explorer !is null) {
+                explorer.keyPress.HandleKeyPress(down, key);
+            }
+            MonitorSystem();
+        }
+
+        void ResetState() {
+            if (explorer !is null) {
+                explorer.keyPress.Reset();
+            }
+        }
+        
+        bool isChecking = false;
+        void MonitorSystem() {
+            auto app = GetApp();
+            if (isChecking) return;
+            while (true) {
+                yield();
+                if (!app.InputPort.IsFocused) {
+                    ResetState();
+                }
+                isChecking = true;
+            }
+        }
     }
 
-    void fe_HandleKeyPresses(bool down, VirtualKey key) {
-        if (key == VirtualKey::Control) {
-            explorer.keyPress.isControlPressed = down;
-        }
-        if (key == VirtualKey::LButton) {
-            explorer.keyPress.isLMouseButtonPressed = down;
-        }
-        if (key == VirtualKey::RButton) {
-            explorer.keyPress.isRMouseButtonPressed = down;
-        }
-    }
 /* ------------------------ End Handle Button Clicks ------------------------ */
 
     void RenderFileExplorer() {
@@ -1609,7 +1682,7 @@ void OnKeyPress(bool down, VirtualKey key) {
 // ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
 
 void FILE_EXPLORER_KEYPRESS_HANDLER(bool down, VirtualKey key) {
-    FileExplorer::fe_HandleKeyPresses(down, key);
+    FileExplorer::KeyPresses.fe_HandleKeyPresses(down, key);
 }
 
 // Sorry, but again, due to limitations in Openplanet the "Render" function has to be in the global namespace.
