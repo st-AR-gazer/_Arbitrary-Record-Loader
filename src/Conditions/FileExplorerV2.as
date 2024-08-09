@@ -1158,6 +1158,7 @@ namespace FileExplorer {
         void HandleElementSelection(ElementInfo@ element, MouseClickType clickType) {
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
             print(clickType);
+            
             // Check if the element was right-clicked or control-clicked
             if (clickType == MouseClickType::RightClick || clickType == MouseClickType::ControlClick) {
                 openContextMenu = true;
@@ -1326,23 +1327,17 @@ namespace FileExplorer {
 
             lastClickType = MouseClickType::None;
 
-            // print("isSelected: " + isSelected);
-            // print("isControlPressed: " + isControlPressed);
-            // print("Right click pressed: " + UI::IsMouseClicked(UI::MouseButton::Right));
-            // print("Left click pressed: " + UI::IsMouseClicked(UI::MouseButton::Left));
-            // print("Double click pressed: " + UI::IsMouseDoubleClicked(UI::MouseButton::Left));
-
             // Right click check
-            if (UI::IsMouseClicked(UI::MouseButton::Right)) {
+            if (UI::IsMouseReleased(UI::MouseButton::Right)) {
                 lastClickType = MouseClickType::RightClick;
             // Control and Left click check
-            } else if (UI::IsMouseClicked(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
+            } else if (UI::IsMouseReleased(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
                 lastClickType = MouseClickType::ControlClick;
             // Left double click check
             } else if (UI::IsMouseDoubleClicked(UI::MouseButton::Left)) {
                 lastClickType = MouseClickType::DoubleClick;
             // Left click check
-            } else if (UI::IsMouseClicked(UI::MouseButton::Left)) {
+            } else if (UI::IsMouseReleased(UI::MouseButton::Left)) {
                 lastClickType = MouseClickType::LeftClick;
             }
 
