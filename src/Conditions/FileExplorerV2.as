@@ -1603,6 +1603,7 @@ array<string>@ FILE_EXPLORER_selectedPaths;
 
 // ----- REMOVE THIS IF YOU HANDLE MOUSEPRESSES  IN YOUR OWN CODE (also read the comment above) ----- //
     void OnMouseButton(bool down, int button, int x, int y) {
+        print("a");
         FILE_EXPLORER_MOUSE_BUTTON_HANDLER(down, button, x, y);
     }
 // ----- REMOVE THIS IF YOU HANDLE MOUSEPRESSES  IN YOUR OWN CODE (also read the comment above) ----- //
