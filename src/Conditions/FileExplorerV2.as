@@ -1318,7 +1318,7 @@ namespace FileExplorer {
             }
         }
 
-        MouseClickType CustomSelectable(ElementInfo@ element, const string &in label, bool &inout isSelected) {
+        MouseClickType CustomSelectable(ElementInfo@ element, const string &in label, bool isSelected) {
             MouseClickType clickType = MouseClickType::None;
 
             // Right-click
