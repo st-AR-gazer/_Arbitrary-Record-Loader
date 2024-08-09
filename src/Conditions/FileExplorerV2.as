@@ -1133,7 +1133,9 @@ namespace FileExplorer {
                             displayName = element.Name;
                     }
 
-                    explorer.keyPress.SelectableWithClickType(displayName, element.IsSelected, element);
+                    if (explorer.keyPress.SelectableWithClickType(displayName, element.IsSelected, element)) {
+                        HandleElementSelection(element);
+                    }
 
                     UI::TableSetColumnIndex(2);
                     UI::Text(element.IsFolder ? "Folder" : "File");
