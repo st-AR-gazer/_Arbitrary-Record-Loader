@@ -1318,6 +1318,7 @@ namespace FileExplorer {
         bool isControlPressed = false;
         bool isLMouseButtonPressed = false;
         bool isRMouseButtonPressed = false;
+        bool isChecking = false;
 
         void HandleKeyPress(bool down, VirtualKey key) {
             if (key == VirtualKey::Control) {
@@ -1339,30 +1340,21 @@ namespace FileExplorer {
             isRMouseButtonPressed = false;
         }
 
-        UI::InputBlocking OnMouseButton(bool down, int button, int x, int y) {
-            if (explorer !is null) {
-                explorer.keyPress.HandleMouseButtonPress(down, button);
-            }
-            return UI::InputBlocking::DoNothing;
-        }
-
-        void ResetState() {
-            if (explorer !is null) {
-                explorer.keyPress.Reset();
-            }
-        }
-        
-        bool isChecking = false;
         void MonitorSystem() {
             auto app = GetApp();
             if (isChecking) return;
+            isChecking = true;
             while (true) {
                 yield();
                 if (!app.InputPort.IsFocused) {
-                    ResetState();
+                    Reset();
                 }
-                isChecking = true;
             }
+        }
+
+        UI::InputBlocking OnMouseButton(bool down, int button, int x, int y) {
+            HandleMouseButtonPress(down, button);
+            return UI::InputBlocking::DoNothing;
         }
     }
 
@@ -1605,81 +1597,35 @@ void ParseChallengeMetadata(XML::Node &in headerNode, dictionary &inout metadata
 /* ------------------------ End GBX Parsing ------------------------ */
 
 
-/* ------------------------ DLL ------------------------ */
-/* ------------------------ File Creation Time ------------------------ */
-namespace DLL {
-    Import::Library@ lib;
-    Import::Function@ getFileCreationTimeFunc;
-
-    bool loadLibrary() {
-        if (lib is null) {
-            string dllPath = IO::FromStorageFolder("DLLs/FileCreationTime.dll");
-            @lib = Import::GetLibrary(dllPath);
-            if (lib is null) {
-                log("Failed to load DLL: " + dllPath, LogLevel::Error, 1379, "loadLibrary");
-                return false;
-            }
-        }
-
-        if (getFileCreationTimeFunc is null) {
-            @getFileCreationTimeFunc = lib.GetFunction("GetFileCreationTime");
-            if (getFileCreationTimeFunc is null) {
-                log("Failed to get function from DLL.", LogLevel::Error, 1387, "loadLibrary");
-                return false;
-            }
-            getFileCreationTimeFunc.SetConvention(Import::CallConvention::cdecl);
-        }
-        return true;
-    }
-
-    string FileCreatedTime(const string &in filePath) {
-        if (!loadLibrary()) { return "-301"; }
-        int64 result = getFileCreationTimeFunc.CallInt64(filePath);
-        return tostring(result);
-    }
-
-    void UnloadLibrary() {
-        @lib = null;
-        @getFileCreationTimeFunc = null;
-    }
-}
-
-string FileCreatedTime(const string &in filePath) {
-    log("Attempting to retrieve file creation time for: " + filePath, LogLevel::Info, 1408, "FileCreatedTime");
-
-    if (!DLL::loadLibrary()) {
-        log("Failed to load library for file creation time retrieval.", LogLevel::Error, 1411, "FileCreatedTime");
-        return "-300";
-    }
-
-    string result = DLL::FileCreatedTime(filePath);
-    if (result != "") {
-        log("Error retrieving file creation time. Code: " + result, LogLevel::Warn, 1417, "FileCreatedTime");
-    } else {
-        log("File creation time retrieved successfully: " + result, LogLevel::Info, 1419, "FileCreatedTime");
-    }
-    return result;
-}
-
-/* ------------------------ End File Creation Time ------------------------ */
-/* ------------------------ End DLL ------------------------ */
-
-
 /* ------------------------ Functions / Variables that have to be in the global namespace ------------------------ */
 
 // Sorry, but all inline variables have to be in the global namespace.
 array<string>@ FILE_EXPLORER_selectedPaths;
 
-// Sorry, due to limitations in Openplanet the "OnKeyPress" function has to be in the global namespace.
-// If you are using this funciton in you own project please add: ` FILE_EXPLORER_KEYPRESS_HANDLER(down, key); `
-// to your own "OnKeyPress" function. 
+// Sorry, due to limitations in Openplanet the "OnKeyPress" function, and the OnMouseButton function both have has to 
+// be in the global namespace.
+// If you are using this funciton in you own project please add: ` FILE_EXPLORER_KEYPRESS_HANDLER(down, key); ` to your 
+// own "OnKeyPress" function and add ` FILE_EXPLORER_MOUSE_BUTTON_HANDLER(down, button, x, y); ` to your own 
+// "OnMouseButton" function.
 // If this is not done, the File Explorer will not work as intended.
 
 // ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
-void OnKeyPress(bool down, VirtualKey key) {
-    FILE_EXPLORER_KEYPRESS_HANDLER(down, key);
-}
+    void OnKeyPress(bool down, VirtualKey key) {
+        FILE_EXPLORER_KEYPRESS_HANDLER(down, key);
+    }
 // ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
+
+// ----- REMOVE THIS IF YOU HANDLE MOUSEPRESSES  IN YOUR OWN CODE (also read the comment above) ----- //
+    void OnMouseButton(bool down, int button, int x, int y) {
+        FILE_EXPLORER_MOUSE_BUTTON_HANDLER(down, button, x, y);
+    }
+// ----- REMOVE THIS IF YOU HANDLE MOUSEPRESSES  IN YOUR OWN CODE (also read the comment above) ----- //
+
+void FILE_EXPLORER_MOUSE_BUTTON_HANDLER(bool down, int button, int x, int y) {
+    if (FileExplorer::explorer !is null) {
+        return FileExplorer::explorer.keyPress.OnMouseButton(down, button, x, y);
+    }
+}
 
 void FILE_EXPLORER_KEYPRESS_HANDLER(bool down, VirtualKey key) {
     FileExplorer::fe_HandleKeyPresses(down, key);
@@ -1691,10 +1637,7 @@ void FILE_EXPLORER_KEYPRESS_HANDLER(bool down, VirtualKey key) {
 // If this is not done, the File Explorer will not work as intended.
 
 // ----- REMOVE THIS IF YOU HAVE ANY RENDER FUNCTION IN YOUR OWN CODE (also read the comment above) ----- //
-/**
- * RELEASE:
- * Currently hidden when testing, please remove the comment when this is done.
-
+/*
 void RenderInterface() {
     FILE_EXPLORER_BASE_RENDERER();
 }
