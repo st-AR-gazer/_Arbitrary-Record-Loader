@@ -1360,7 +1360,7 @@ namespace FileExplorer {
     void fe_HandleKeyPresses(bool down, VirtualKey key) {
         if (explorer !is null) {
             explorer.keyPress.HandleKeyPress(down, key);
-            explorer.keyPress.MonitorSystem();
+            startnew(explorer.keyPress.MonitorSystem());
         }
     }
 
