@@ -514,15 +514,26 @@ namespace FileExplorer {
         void RenameSelectedElement(const string &in newFileName) {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null) {
-                log("Renaming element: " + selectedElement.Path, LogLevel::Info, 487, "RenameSelectedElement");
-                
-                string fileName = _IO::File::GetFileName(selectedElement.Path);
-                string fileContent = _IO::File::ReadFileToEnd(selectedElement.Path);
-                string filePath = selectedElement.Path;
+                log("Renaming element: " + selectedElement.Path + " to " + newFileName, LogLevel::Info, 487, "RenameSelectedElement");
 
-                string newFilePath = _IO::Folder::GetFolderPath(filePath) + newFileName;
+                string oldPath = selectedElement.Path;
+                string newFilePath = _IO::Folder::GetFolderPath(oldPath) + newFileName;
 
-                _IO::File::WriteToFile(newFilePath, fileContent);
+                if (selectedElement.IsFolder) {
+                    array<string> folderContents = IO::IndexFolder(oldPath, false);
+                    if (folderContents.Length == 0) {
+                        IO::CreateFolder(newFilePath);
+                        IO::DeleteFolder(oldPath);
+                    } else {
+                        log("Folder is not empty; renaming is not allowed for non-empty folders.", LogLevel::Warn, 494, "RenameSelectedElement");
+                        return;
+                    }
+                } else {
+                    string fileContent = _IO::File::ReadFileToEnd(oldPath);
+                    _IO::File::WriteToFile(newFilePath, fileContent);
+                    IO::Delete(oldPath);
+                }
+                explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
             }
         }
 
@@ -841,17 +852,24 @@ namespace FileExplorer {
             UI::Separator();
         }
 
+        string newFileName = "";
         void Render_RenamePopup() {
             if (explorer.utils.RENDER_RENAME_POPUP_FLAG) {
                 UI::OpenPopup("RenamePopup");
+                explorer.ui.newFileName = explorer.ui.GetSelectedElement().Name;
             }
 
             if (UI::BeginPopupModal("RenamePopup", explorer.utils.RENDER_RENAME_POPUP_FLAG, UI::WindowFlags::AlwaysAutoResize)) {
                 UI::Text("Rename Selected Element");
                 UI::Separator();
-                UI::InputText("New File Name", "NewFileName");
+                explorer.ui.newFileName = UI::InputText("New File Name", explorer.ui.newFileName);
                 if (UI::Button("Rename")) {
-                    explorer.utils.RenameSelectedElement("NewFileName");
+                    explorer.utils.RenameSelectedElement(explorer.ui.newFileName);
+                    explorer.utils.RENDER_RENAME_POPUP_FLAG = false;
+                    UI::CloseCurrentPopup();
+                }
+                UI::SameLine();
+                if (UI::Button("Cancel")) {
                     explorer.utils.RENDER_RENAME_POPUP_FLAG = false;
                     UI::CloseCurrentPopup();
                 }
