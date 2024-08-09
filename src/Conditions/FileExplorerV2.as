@@ -1151,16 +1151,15 @@ namespace FileExplorer {
         }
 
         void SelectableWithClickCheck(const string &in displayName, bool isSelected, ElementInfo@ element) {
-            bool isRMousePressed = UI::IsMouseDown(UI::MouseButton::Right);
-            bool isLMousePressed = UI::IsMouseDown(UI::MouseButton::Left);
-            // bool isControlPressed = UI::IsKeyPressed(UI::Key::Control); // Uncomment when OP 1.27 is released
-            bool isControlPressed = explorer.keyPress.isControlPressed;
-
-
             if (UI::Selectable(displayName, isSelected)) {
                 print(isRMousePressed + " " + isLMousePressed + " " + isControlPressed);
                 HandleElementSelection(element, isRMousePressed, isLMousePressed, isControlPressed);
             }
+
+            bool isRMousePressed = UI::IsMouseDown(UI::MouseButton::Right);
+            bool isLMousePressed = UI::IsMouseDown(UI::MouseButton::Left);
+            // bool isControlPressed = UI::IsKeyPressed(UI::Key::Control); // Uncomment when OP 1.27 is released
+            bool isControlPressed = explorer.keyPress.isControlPressed;
         }
 
         bool openContextMenu = false;
