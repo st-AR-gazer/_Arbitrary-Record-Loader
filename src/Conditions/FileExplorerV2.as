@@ -1225,7 +1225,6 @@ namespace FileExplorer {
         config.SearchQuery = _searchQuery;
         config.Filters = _filters;
 
-        array<string>@ selectedPaths;
 
         @config.OnSelectionComplete = OnSelectionCompleteFunc(function(array<string>@ paths) {
             @selectedPaths = paths;
@@ -1243,6 +1242,7 @@ namespace FileExplorer {
         return selectedPaths;
     }
 }
+array<string>@ selectedPaths;
 
 // Sorry, due to limitations in Openplanet the "OnKeyPress" function has to be in the global namespace.
 // If you are using this funciton in you own project please add: ` FILE_EXPLORER_KEYPRESS_HANDLER(down, key); `
