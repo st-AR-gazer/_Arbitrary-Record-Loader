@@ -517,7 +517,8 @@ namespace FileExplorer {
                 log("Renaming element: " + selectedElement.Path + " to " + newFileName, LogLevel::Info, 487, "RenameSelectedElement");
 
                 string oldPath = selectedElement.Path;
-                string newFilePath = _IO::Folder::GetFolderPath(oldPath) + newFileName;
+                string parentDirectory = _IO::Folder::GetFolderPath(oldPath);
+                string newFilePath = parentDirectory + newFileName;
 
                 if (selectedElement.IsFolder) {
                     array<string> folderContents = IO::IndexFolder(oldPath, false);
