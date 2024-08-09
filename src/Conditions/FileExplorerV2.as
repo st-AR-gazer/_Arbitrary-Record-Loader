@@ -1151,6 +1151,9 @@ namespace FileExplorer {
                     displayName = element.Name;
             }
 
+            if (UI::IsMouseDown(UI::MouseButton::Left)) print("Left mouse button is down");
+            if (UI::IsMouseDown(UI::MouseButton::Right)) print("Right mouse button is down");
+
             if (UI::Selectable(displayName, element.IsSelected)) {
                 HandleElementSelection(element, EnterType::LeftClick);
             }
