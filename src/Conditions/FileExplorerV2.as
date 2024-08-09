@@ -1167,8 +1167,8 @@ namespace FileExplorer {
 
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
-            // Control- / Right click check
-            if (UI::IsItemHovered() && (explorer.keyPress.isRMouseButtonPressed || (explorer.keyPress.isLMouseButtonPressed && explorer.keyPress.isControlPressed))) {
+            // Control- / Right click check                                                                                   // Uncomment when OP 1.27 is released  // Remove when OP 1.27 is released
+            if (UI::IsItemHovered() && (UI::IsMouseDown(UI::MouseButton::Right)) || (UI::IsMouseDown(UI::MouseButton::Left) && /*UI::IsKeyPressed(UI::Key::Control)*/explorer.keyPress.isControlPressed)) {
                 openContextMenu = true;
                 explorer.UpdateCurrentSelectedElement();
             // Double click check
@@ -1316,32 +1316,11 @@ namespace FileExplorer {
 //        Some custom functionality needs to be added to avoid this...
     class KeyPresses {
         bool isControlPressed = false;
-        bool isLMouseButtonPressed = false;
-        bool isRMouseButtonPressed = false;
-        bool isChecking = false;
 
         void HandleKeyPress(bool down, VirtualKey key) {
             if (key == VirtualKey::Control) {
                 isControlPressed = down;
             }
-        }
-
-        void HandleMouseButtonPress(bool down, int button) {
-            if (button == 0) {
-                isLMouseButtonPressed = down;
-            } else if (button == 1) {
-                isRMouseButtonPressed = down;
-            }
-        }
-
-        void Reset() {
-            isControlPressed = false;
-            isLMouseButtonPressed = false;
-            isRMouseButtonPressed = false;
-        }
-
-        void OnMouseButton(bool down, int button, int x, int y) {
-            HandleMouseButtonPress(down, button);
         }
     }
 
@@ -1588,11 +1567,9 @@ void ParseChallengeMetadata(XML::Node &in headerNode, dictionary &inout metadata
 // Sorry, but all inline variables have to be in the global namespace.
 array<string>@ FILE_EXPLORER_selectedPaths;
 
-// Sorry, due to limitations in Openplanet the "OnKeyPress" function, and the OnMouseButton function both have has to 
-// be in the global namespace.
+// Sorry, due to limitations in Openplanet the "OnKeyPress" function has has to be in the global namespace.
 // If you are using this funciton in you own project please add: ` FILE_EXPLORER_KEYPRESS_HANDLER(down, key); ` to your 
-// own "OnKeyPress" function and add ` FILE_EXPLORER_MOUSE_BUTTON_HANDLER(down, button, x, y); ` to your own 
-// "OnMouseButton" function.
+// own "OnKeyPress" function.
 // If this is not done, the File Explorer will not work as intended.
 
 // ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
@@ -1601,18 +1578,6 @@ array<string>@ FILE_EXPLORER_selectedPaths;
     }
 // ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
 
-// ----- REMOVE THIS IF YOU HANDLE MOUSEPRESSES  IN YOUR OWN CODE (also read the comment above) ----- //
-    // UI::InputBlocking OnMouseButton(bool down, int button, int x, int y) {
-    //     if (down) print("a");
-    //     return UI::InputBlocking::DoNothing;
-    //     // FILE_EXPLORER_MOUSE_BUTTON_HANDLER(down, button, x, y);
-    // }
-
-UI::InputBlocking OnMouseButton(bool down, int button, int x, int y) {
-    print("a");
-    if (down) print(button + " a");
-    return UI::InputBlocking::DoNothing;
-}
 // ----- REMOVE THIS IF YOU HANDLE MOUSEPRESSES  IN YOUR OWN CODE (also read the comment above) ----- //
 
 void FILE_EXPLORER_MOUSE_BUTTON_HANDLER(bool down, int button, int x, int y) {
@@ -1662,8 +1627,6 @@ void Render() {
             OpenFileExplorerExample();
         }
         if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isControlPressed));
-        if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isLMouseButtonPressed));
-        if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isRMouseButtonPressed));
     }
     UI::End();
 }
