@@ -1135,7 +1135,7 @@ namespace FileExplorer {
                     }
 
                     if (UI::Selectable(displayName, element.IsSelected)) {
-                        HandleElementSelection(element);
+                        HandleElementSelection(element, UI::IsMouseDown(UI::MouseButton::Right), UI::IsMouseDown(UI::MouseButton::Left));
                     }
                     UI::TableSetColumnIndex(2);
                     UI::Text(element.IsFolder ? "Folder" : "File");
@@ -1153,23 +1153,17 @@ namespace FileExplorer {
 
         bool openContextMenu = false;
 
-        void HandleElementSelection(ElementInfo@ element) {
+        void HandleElementSelection(ElementInfo@ element, bool isRMousePressed, bool isLMousePressed) {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
             // explorer.keyPress.isLMouseButtonPressed = true; // Shuold be kept for reason under
 
-            // Should be kept til I figure out if VirtualKey::L/RButton is L and R mouse button
-            // print("IsItemHovered " + UI::IsItemHovered());
-            // print("is RMouse down " + explorer..isRMouseButtonPressed);
-            // print("is LMouse down " + explorer..isLMouseButtonPressed);
-            // print("is control down " + explorer..isControlPressed);
+            print("IsItemHovered " + UI::IsItemHovered());
+            print("is RMouse down " + isRMousePressed);
+            print("is LMouse down " + isLMousePressed);
 
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
-
-            print("");
-            print(UI::IsMouseDown(UI::MouseButton::Left));
-            print(UI::IsMouseDown(UI::MouseButton::Right));
 
             // Control- / Right click check                                                                                   // Uncomment when OP 1.27 is released  // Remove when OP 1.27 is released
             if (UI::IsItemHovered() && (UI::IsMouseDown(UI::MouseButton::Right)) || (UI::IsMouseDown(UI::MouseButton::Left) && /*UI::IsKeyPressed(UI::Key::Control)*/explorer.keyPress.isControlPressed)) {
