@@ -589,13 +589,15 @@ namespace FileExplorer {
 
         void Open(Config@ config) {
             @Config = config;
+
+            nav.SetPath(Config.Path);
+            StartIndexingFiles(Config.Path);
+            
             showInterface = true;
-            print("Showing interface for FileExplorer " + showInterface);
+            
             if (Config.OnSelectionComplete !is null) {
                 Config.OnSelectionComplete(Config.SelectedPaths);
             }
-            showInterface = false;
-            print("Hiding interface for FileExplorer " + showInterface);
         }
 
         void StartIndexingFiles(const string &in path) {
