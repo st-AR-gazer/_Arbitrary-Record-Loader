@@ -52,6 +52,8 @@
         - Add a custom location for settings so that the user can set custom PINs, and so that they are enabled cross 
           sessions and plugins.
 
+        - Add minmaxreturnamount as somthing that limits the amount of returnable elementes.
+
 
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
@@ -61,18 +63,19 @@
           not working as intended, it needs to be looked into more. Normal search works just fine though.
           (recursive search is also not in a coroutine)
 
-        - Renaming currenly does not work. 
-          - Attempting to rename a file does work. The popup pops up and you can write a new name, but when you press
-            rename, nothing happens.
-          - Attempting to rename a folder does not work. The popup pops up and you can write a new name, but when you 
-            press rename, nothing happens.
-          - The renaming popup does not allow for you to change away from the name NewFileName (the string needs to be 
-            outside of the function)
-
         - KeyPresses for "Left mouse button" and "Right mouse button" do not work, this is needed for the context menu
           to work.
             - As a makeshift solution I have set left mouse button to always be true as a click is still needed for other 
               reasons, but the same cannot be done for right clicking...
+
+    
+    WAIT NEEDED:
+        - Add Renaming functionality
+            - this is 99% done, I just need miss to add IO::Rename(path, name) and IO::RenameFolder(path, name) to Openplanet, 
+              then this can be added to the FileExplorer. (:Prayge: she does)
+
+        - Add FileCreatedTime properly using an OP method.
+
 */
 
 namespace FileExplorer {
@@ -80,7 +83,8 @@ namespace FileExplorer {
     FileExplorer@ explorer;
 
     class Config {
-        bool MustReturn; // Shuold rename: MustReturn
+        bool MustReturn;
+        vec2 MinMaxReturnAmount;
 
         string Path;
         string SearchQuery;
@@ -93,6 +97,8 @@ namespace FileExplorer {
         dictionary columsToShow;
         int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
         bool RecursiveSearch = false;
+
+        OnSelectionCompleteFunc@ OnSelectionComplete;
 
         Config() {
             MustReturn = false;
@@ -150,7 +156,7 @@ namespace FileExplorer {
         string Size;
         string Type;
         int64 LastModifiedDate;
-        int64 CreationDate; // Placeholder, to be replaced
+        int64 CreationDate;
         bool IsFolder;
         Icon Icon;
         bool IsSelected;
@@ -166,7 +172,7 @@ namespace FileExplorer {
             this.Size = size;
             this.Type = type;
             this.LastModifiedDate = lastModifiedDate;
-            this.CreationDate = lastModifiedDate; // Placeholder, to be replaced
+            this.CreationDate = lastModifiedDate; // Placeholder for actual creation date
             this.IsFolder = isFolder;
             this.Icon = icon;
             this.IsSelected = isSelected;
@@ -511,32 +517,25 @@ namespace FileExplorer {
         }
 
         bool RENDER_RENAME_POPUP_FLAG;
-        void RenameSelectedElement(const string &in newFileName) {
-            ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
-            if (selectedElement !is null) {
-                log("Renaming element: " + selectedElement.Path + " to " + newFileName, LogLevel::Info, 487, "RenameSelectedElement");
+            void RenameSelectedElement(const string &in newFileName) {
+                ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+                if (selectedElement !is null) {
+                    log("Renaming element: " + selectedElement.Path + " to " + newFileName, LogLevel::Info, 487, "RenameSelectedElement");
 
-                string oldPath = selectedElement.Path;
-                string parentDirectory = _IO::Folder::GetFolderPath(oldPath);
-                string newFilePath = parentDirectory + newFileName;
+                    string oldPath = selectedElement.Path;
+                    string parentDirectory = _IO::Folder::GetFolderPath(oldPath);
+                    string newFilePath = parentDirectory + newFileName;
 
-                if (selectedElement.IsFolder) {
-                    array<string> folderContents = IO::IndexFolder(oldPath, false);
-                    if (folderContents.Length == 0) {
-                        IO::CreateFolder(newFilePath);
-                        IO::DeleteFolder(oldPath);
+                    if (selectedElement.IsFolder) {
+                        // Waiting for miss to add this to Openplanet
+                        // IO::RenameFolder(oldPath, newFileName);
                     } else {
-                        log("Folder is not empty; renaming is not allowed for non-empty folders.", LogLevel::Warn, 494, "RenameSelectedElement");
-                        return;
+                        // IO::Rename(oldPath, newFileName);
                     }
-                } else {
-                    string fileContent = _IO::File::ReadFileToEnd(oldPath);
-                    _IO::File::WriteToFile(newFilePath, fileContent);
-                    IO::Delete(oldPath);
+
+                    explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                 }
-                explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
             }
-        }
 
         void PinSelectedElement() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
@@ -585,22 +584,18 @@ namespace FileExplorer {
             @CurrentSelectedElement = tab[0].GetSelectedElement();
         }
 
-        void OpenFileExplorer(
-            bool _mustReturn = false,
-            const string &in _path = "",
-            const string &in _searchQuery = "",
-            array<string> _filters = array<string>()
-        ) {
-            Config.MustReturn = _mustReturn;
-            Config.Path = _path;
-            Config.SearchQuery = _searchQuery;
-            Config.Filters = _filters;
-            Config.RenderFlag = true;
-
-            nav.SetPath(Config.Path);
-
-            StartIndexingFiles(Config.Path);
+        void Open(Config@ config) {
+            @Config = config;
             showInterface = true;
+
+            // Used for testing
+            array<string> selectedPaths = {"file1.txt", "file2.txt"};
+            
+            if (Config.OnSelectionComplete !is null) {
+                Config.OnSelectionComplete(selectedPaths);
+            }
+
+            showInterface = false;
         }
 
         void StartIndexingFiles(const string &in path) {
@@ -855,6 +850,8 @@ namespace FileExplorer {
 
         string newFileName = "";
         void Render_RenamePopup() {
+            // TODO: Will wait untill renaming is added to openplanet proper instead of adding a makeshift solution here..
+            /*
             if (explorer.utils.RENDER_RENAME_POPUP_FLAG) {
                 UI::OpenPopup("RenamePopup");
                 explorer.ui.newFileName = explorer.ui.GetSelectedElement().Name;
@@ -876,6 +873,7 @@ namespace FileExplorer {
                 }
                 UI::EndPopup();
             }
+            */
         }
 
         void Render_DeleteConfirmationPopup() {
@@ -912,9 +910,11 @@ namespace FileExplorer {
         void Render_ReturnBar() {
             if (explorer.Config.MustReturn) {
                 UI::Separator();
-                if (UI::Button("Return Selected Path")) {
-                    explorer.exports.ReturnSelectedFilePath();
-
+                if (UI::Button("Return Selected Paths")) {
+                    if (explorer.Config.OnSelectionComplete !is null) {
+                        // Pass the selected paths to the callback
+                        explorer.Config.OnSelectionComplete(explorer.Config.SelectedPaths);
+                    }
                     explorer.Config.MustReturn = false;
                     showInterface = false;
                 }
@@ -1200,8 +1200,6 @@ namespace FileExplorer {
             explorer.keyPress.isRMouseButtonPressed = down;
         }
     }
-    
-
 /* ------------------------ End Handle Button Clicks ------------------------ */
 
     void RenderFileExplorer() {
@@ -1211,17 +1209,38 @@ namespace FileExplorer {
         }
     }
 
-    void OpenFileExplorer(
-        bool _mustReturn = false,
-        const string &in _path = "",
-        const string &in _searchQuery = "",
-        array<string> _filters = array<string>()
+    funcdef void OnSelectionCompleteFunc(array<string>@ paths);
+
+    array<string>@ FE(
+        bool _mustReturn = true,
+        vec2 _minmaxReturnAmount = vec2(1, -1),
+        string _path = "",
+        string _searchQuery = "",
+        string[] _filters = array<string>()
     ) {
+        Config config;
+        config.MustReturn = _mustReturn;
+        config.MinMaxReturnAmount = _minmaxReturnAmount;
+        config.Path = _path;
+        config.SearchQuery = _searchQuery;
+        config.Filters = _filters;
+
+        array<string>@ selectedPaths;
+
+        @config.OnSelectionComplete = OnSelectionCompleteFunc(function(array<string>@ paths) {
+            @selectedPaths = paths;
+        });
+
         if (explorer is null) {
-            Config@ config = Config();
             @explorer = FileExplorer(config);
+        } else {
+            @explorer.Config = config;
         }
-        explorer.OpenFileExplorer(_mustReturn, _path, _searchQuery, _filters);
+        explorer.Open(config);
+
+        while (showInterface) { yield(); }
+
+        return selectedPaths;
     }
 }
 
