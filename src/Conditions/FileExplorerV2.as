@@ -1135,8 +1135,6 @@ namespace FileExplorer {
                     }
                     
                     if (UI::Selectable(displayName, element.IsSelected)) {
-                        element.IsSelected = true;
-                        explorer.UpdateCurrentSelectedElement();
                     }
 
                     if (UI::IsMouseDown(UI::MouseButton::Left) && UI::IsItemHovered() && explorer.keyPress.isControlPressed && element.IsSelected) {
@@ -1173,7 +1171,7 @@ namespace FileExplorer {
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
             // Control- / Right click check                                                                                   // Uncomment when OP 1.27 is released  // Remove when OP 1.27 is released
-            if (UI::IsItemHovered() && (clickType == MouseClickType::RightClick) || (clickType == MouseClickType::LeftClick && /*UI::IsKeyPressed(UI::Key::Control)*/explorer.keyPress.isControlPressed)) {
+            if (UI::IsItemHovered() && (clickType == MouseClickType::RightClick) || (clickType == MouseClickType::ControlClick)) {
                 openContextMenu = true;
                 explorer.UpdateCurrentSelectedElement();
             // Double click check
