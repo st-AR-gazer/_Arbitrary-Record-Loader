@@ -1220,7 +1220,6 @@ namespace FileExplorer {
             }
 
             if (UI::BeginPopup("MainElementContextMenu")) {
-                print("rendering context menu");
                 ElementInfo@ element = explorer.ui.GetSelectedElement();
                 if (element !is null) {
                     bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
