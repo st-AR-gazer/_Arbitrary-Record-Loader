@@ -541,6 +541,22 @@ namespace FileExplorer {
             return false;
         }
 
+        string GetFolderName(const string &in path) {
+            string path = path;
+            
+            while (path.EndsWith("/") || path.EndsWith("\\")) {
+                path = path.SubStr(0, path.Length - 1);
+            }
+            
+            float i = Math::Max(path.LastIndexOf("/"), path.LastIndexOf("\\"));
+
+            if (i == -1) {
+                return path;
+            }
+
+            return path.SubStr(i + 1);
+        }
+
         void RefreshCurrentDirectory() {
             string currentPath = explorer.tab[0].Navigation.GetPath();
             log("Refreshing directory: " + currentPath, LogLevel::Info, 444, "RefreshCurrentDirectory");
@@ -709,7 +725,7 @@ namespace FileExplorer {
 
         ElementInfo@ GetElementInfo(const string &in path) {
             bool isFolder = explorer.utils.IsDirectory(path);
-            string name = isFolder ? Path::GetDirectoryName(path) : Path::GetFileName(path);
+            string name = isFolder ? explorer.utils.GetDirectoryName(path) : Path::GetFileName(path);
             string type = isFolder ? "folder" : Path::GetExtension(path);
             string size = isFolder ? "-" : ConvertFileSizeToString(IO::FileSize(path));
             int64 lastModified = IO::FileModifiedTime(path);
