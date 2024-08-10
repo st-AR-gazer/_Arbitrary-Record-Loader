@@ -1128,7 +1128,7 @@ namespace FileExplorer {
                     UI::Text(explorer.GetElementIconString(element.Icon, element.IsSelected));
                     UI::TableSetColumnIndex(1);
 
-                    SelectableWithClickCheck(element);
+                    SelectableWithClickCheck(element, ContextType::MainArea);
 
                     UI::TableSetColumnIndex(2);
                     UI::Text(element.IsFolder ? "Folder" : "File");
