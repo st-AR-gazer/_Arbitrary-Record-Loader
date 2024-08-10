@@ -610,40 +610,27 @@ namespace FileExplorer {
 
         bool RENDER_RENAME_POPUP_FLAG;
         void RenameSelectedElement(const string &in newName) {
-            /*ElementInfo@ selectedElement = explorer.CurrentSelectedElement;
-            if (selectedElement !is null) {
-                explorer.utils.Rename(selectedElement.Path, newName);
-            }*/
-        }
+            ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+            if (selectedElement is null) return;
 
-        /*
-        void Rename(const string &in path, const string &in newName) {
-            string parentDirectory = _IO::Folder::GetFolderPath(path);
+            string currentPath = selectedElement.Path;
+            string newPath;
 
-            string newFilePath = parentDirectory + newName;
+            string sanitizedNewName = Path::SanitizeFileName(newName);
 
-            if (path == newFilePath) {
-                log("Old path and new path are the same. Renaming skipped.", LogLevel::Warn, 123, "Rename");
-                return;
+            if (selectedElement.IsFolder) {
+                string directoryPath = Path::GetDirectoryName(currentPath);
+                newPath = Path::Join(directoryPath, sanitizedNewName);
+            } else {
+                string directoryPath = Path::GetDirectoryName(currentPath);
+                string extension = Path::GetExtension(currentPath);
+                newPath = Path::Join(directoryPath, sanitizedNewName + extension);
             }
 
-            log("Renaming element: " + path + " to " + newFilePath, LogLevel::Info, 126, "Rename");
-
-            IO::Move(path, newFilePath);
-
-            int pinnedIndex = explorer.PinnedItems.Find(path);
-            if (pinnedIndex != -1) {
-                explorer.PinnedItems[pinnedIndex] = newFilePath;
-            }
-
-            int selectedIndex = explorer.Config.SelectedPaths.Find(path);
-            if (selectedIndex != -1) {
-                explorer.Config.SelectedPaths[selectedIndex] = newFilePath;
-            }
+            IO::Move(currentPath, newPath);
 
             explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
         }
-        */
 
         void PinSelectedElement() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
@@ -977,26 +964,26 @@ namespace FileExplorer {
 
         string newFileName = "";
         void Render_RenamePopup() {
-            /*if (explorer.utils.RENDER_RENAME_POPUP_FLAG) {
+            if (explorer.utils.RENDER_RENAME_POPUP_FLAG) {
                 UI::OpenPopup("RenamePopup");
                 explorer.utils.RENDER_RENAME_POPUP_FLAG = false;
-                explorer.ui.newFileName = explorer.CurrentSelectedElement.Name;
             }
 
-            if (UI::BeginPopupModal("RenamePopup", explorer.utils.RENDER_RENAME_POPUP_FLAG, UI::WindowFlags::AlwaysAutoResize)) {
-                UI::Text("Rename Selected Element");
-                UI::Separator();
-                explorer.ui.newFileName = UI::InputText("New File Name", explorer.ui.newFileName);
+            if (UI::BeginPopupModal("RenamePopup", UI::WindowFlags::AlwaysAutoResize)) {
+                UI::Text("Enter new name:");
+                newFileName = UI::InputText("##RenameInput", newFileName);
                 if (UI::Button("Rename")) {
-                    explorer.utils.RenameSelectedElement(explorer.ui.newFileName);
+                    explorer.utils.RenameSelectedElement(newFileName);
+                    newFileName = "";
                     UI::CloseCurrentPopup();
                 }
                 UI::SameLine();
                 if (UI::Button("Cancel")) {
+                    newFileName = "";
                     UI::CloseCurrentPopup();
                 }
                 UI::EndPopup();
-            }*/
+            }
         }
 
         void Render_DeleteConfirmationPopup() {
