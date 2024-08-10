@@ -747,6 +747,10 @@ namespace FileExplorer {
         }
     }
 
+    enum ContextType {
+        MainArea,
+        SelectedItems
+    }
 
     class UserInterface {
         FileExplorer@ explorer;
@@ -764,8 +768,19 @@ namespace FileExplorer {
 
         void Render_Misc() {
             Render_RenamePopup();
-            Render_ElementContextMenu();
             Render_DeleteConfirmationPopup();
+
+            if (openContextMenu) {
+                openContextMenu = false;
+                switch (currentContextType) {
+                    case ContextType::MainArea:
+                        Render_Context_MainArea();
+                        break;
+                    case ContextType::SelectedItems:
+                        Render_Context_SelectedItems();
+                        break;
+                }
+            }
         }
 
         void Render_Rows() {
@@ -1058,38 +1073,9 @@ namespace FileExplorer {
         void Render_SelectedItems() {
             for (uint i = 0; i < explorer.Config.SelectedPaths.Length; i++) {
                 string path = explorer.Config.SelectedPaths[i];
-                string displayName;
+                ElementInfo@ element = explorer.GetElementInfo(path);
 
-                if (_IO::Folder::IsDirectory(path)) {
-                    displayName = _IO::Folder::GetFolderName(path);
-                } else {
-                    displayName = _IO::File::GetFileNameWithoutExtension(path);
-                }
-
-                bool isSelected = UI::Selectable(displayName, false);
-                uint64 currentTime = Time::Now;
-                const uint64 doubleClickThreshold = 600; // 0.6 seconds
-
-                // Handle double-click to remove
-                if (isSelected) {
-                    if (currentTime - explorer.tab[0].Elements[i].LastClickTime <= doubleClickThreshold) {
-                        if (i < explorer.Config.SelectedPaths.Length) {
-                            explorer.Config.SelectedPaths.RemoveAt(i);
-                        }
-                    } else {
-                        explorer.tab[0].Elements[i].LastClickTime = currentTime;
-                    }
-                }
-
-                // Handle right-click or control-click to open context menu
-                if (UI::IsItemHovered() && (UI::IsMouseDown(UI::MouseButton::Right) || (UI::IsMouseDown(UI::MouseButton::Left) && explorer.keyPress.isControlPressed))) {
-                    if (UI::BeginPopupContextItem("SelectedContextMenu" + i)) {
-                        Render_SelectedContextMenu(i);
-                        UI::EndPopup();
-                    } else {
-                        UI::OpenPopup("SelectedContextMenu" + i);
-                    }
-                }
+                SelectableWithClickCheck(element, ContextType::SelectedItems);
             }
         }
 
@@ -1158,7 +1144,7 @@ namespace FileExplorer {
             }
         }
 
-        void SelectableWithClickCheck(ElementInfo@ element) {
+        void SelectableWithClickCheck(ElementInfo@ element, ContextType contextType) {
             string displayName;
             switch (explorer.Config.FileNameDisplayOption) {
                 case 1:
@@ -1172,20 +1158,25 @@ namespace FileExplorer {
             }
 
             UI::Selectable(displayName, element.IsSelected);
-            if (UI::IsItemClicked() && UI::IsMouseDown(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) { HandleElementSelection(element, EnterType::ControlClick); print("Control click"); }
-            else if (UI::IsItemHovered() && UI::IsMouseDown(UI::MouseButton::Right)) { HandleElementSelection(element, EnterType::RightClick); print("Right click"); }
-            else if (UI::IsItemClicked() && UI::IsMouseDown(UI::MouseButton::Left)) { HandleElementSelection(element, EnterType::LeftClick); print("Left click"); }
+            if (UI::IsItemClicked() && UI::IsMouseDown(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
+                HandleElementSelection(element, EnterType::ControlClick, contextType);
+            } else if (UI::IsItemHovered() && UI::IsMouseDown(UI::MouseButton::Right)) {
+                HandleElementSelection(element, EnterType::RightClick, contextType);
+            } else if (UI::IsItemClicked() && UI::IsMouseDown(UI::MouseButton::Left)) {
+                HandleElementSelection(element, EnterType::LeftClick, contextType);
+            }
         }
 
-        void HandleElementSelection(ElementInfo@ element, EnterType enterType) {
+        void HandleElementSelection(ElementInfo@ element, EnterType enterType, ContextType contextType) {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
-            // Control- / Right click check
-            if (UI::IsItemHovered() && (enterType == EnterType::RightClick || enterType == EnterType::ControlClick)) {
+            // Right click, and control click check
+            if (enterType == EnterType::RightClick || enterType == EnterType::ControlClick) {
                 openContextMenu = true;
+                currentContextType = contextType;
                 explorer.UpdateCurrentSelectedElement();
             // Double click check
             } else if (element.IsSelected) {
@@ -1213,14 +1204,14 @@ namespace FileExplorer {
                 explorer.UpdateCurrentSelectedElement();
             }
         }
-        
-        bool openContextMenu = false;
-        void Render_ElementContextMenu() {
-            if (openContextMenu) {
-                UI::OpenPopup("ElementContextMenu");
-                openContextMenu = false;
-            }
 
+        ContextType currentContextType;
+        bool openContextMenu = false;
+
+        bool openMainAreaContextMenu = false;
+
+
+        void Render_Context_MainArea() {
             if (UI::BeginPopup("ElementContextMenu")) {
                 ElementInfo@ element = explorer.ui.GetSelectedElement();
                 if (element !is null) {
@@ -1263,6 +1254,30 @@ namespace FileExplorer {
             }
         }
 
+        void Render_Context_SelectedItems() {
+            if (UI::BeginPopup("ElementContextMenu")) {
+                ElementInfo@ element = explorer.ui.GetSelectedElement();
+                if (element !is null) {
+                    if (UI::MenuItem("Remove from Selected Items")) {
+                        int index = explorer.Config.SelectedPaths.Find(element.Path);
+                        if (index != -1) {
+                            explorer.Config.SelectedPaths.RemoveAt(index);
+                        }
+                    }
+
+                    if (UI::MenuItem("Pin Item")) {
+                        explorer.utils.PinSelectedElement();
+                    }
+
+                    if (UI::MenuItem("Delete Item")) {
+                        explorer.utils.DeleteSelectedElement();
+                    }
+
+                    explorer.keyPress.isControlPressed = false;
+                }
+                UI::EndPopup();
+            }
+        }
 
         void Render_DetailBar() {
             ElementInfo@ selectedElement = GetSelectedElement();
@@ -1282,6 +1297,12 @@ namespace FileExplorer {
                     UI::Text("GBX File Detected - Displaying GBX Info");
 
                     dictionary gbxMetadata = selectedElement.GbxMetadata;
+
+                    if (gbxMetadata.IsEmpty()) {
+                        UI::Text("No metadata found.");
+                    }
+
+                    if (true) UI::Text("Selected element " + selectedElement.Path);
 
                     string value;
                     if (gbxMetadata.Get("type", value)) UI::Text("Type: " + value);
@@ -1429,7 +1450,7 @@ dictionary ReadGbxHeader(const string &in path) {
 
     for (uint i = 0; i < chunks.Length; i++) {
         MemoryBuffer chunkBuffer = mapFile.Read(chunks[i].ChunkSize);
-        if (    chunks[i].ChunkId == 50606082 // Maps /*50933761*/
+        if (    chunks[i].ChunkId == 50933761 // Maps /*50933761*/ (Some times "50606082"??)
              || chunks[i].ChunkId == 50606082 // Replays
              || chunks[i].ChunkId == 50606082 // Challenges
             ) {
