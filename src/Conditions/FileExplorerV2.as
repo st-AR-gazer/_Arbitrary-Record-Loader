@@ -542,18 +542,20 @@ namespace FileExplorer {
         }
 
         string GetDirectoryName(const string &in path) {
+            string newPath;
+            
             while (path.EndsWith("/") || path.EndsWith("\\")) {
-                path = path.SubStr(0, path.Length - 1);
+                newPath = path.SubStr(0, path.Length - 1);
             }
             
-            int index = path.LastIndexOf("/");
-            int index2 = path.LastIndexOf("\\");
+            int index = newPath.LastIndexOf("/");
+            int index2 = newPath.LastIndexOf("\\");
 
             index = Math::Max(index, index2);
 
-            if (index == -1) { return path; }
+            if (index == -1) { return newPath; }
 
-            return path.SubStr(index + 1);
+            return newPath.SubStr(index + 1);
         }
 
         void RefreshCurrentDirectory() {
