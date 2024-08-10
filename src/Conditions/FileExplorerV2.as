@@ -1151,6 +1151,8 @@ namespace FileExplorer {
                     displayName = element.Name;
             }
 
+            if (UI::IsItemClicked()) print("Item: " + element.Name + " was clicked");
+
             if (UI::Selectable(displayName, element.IsSelected)) {
                 HandleElementSelection(element, enterType);
             }
