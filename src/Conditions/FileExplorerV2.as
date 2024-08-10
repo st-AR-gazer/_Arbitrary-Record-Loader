@@ -139,10 +139,6 @@
             - UPDATE: Renaming will probably not be added, but Move() can be used as a rename, Move can take a path and a target
               so 'renaming' should be possible by moving the file/folder to the same locatoin, but changing the name.
 
-    
-    WAIT NEEDED:
-        - Add FileCreatedTime properly using an OP method.
-
 */
 namespace FileExplorer {
     bool showInterface = false;
@@ -290,7 +286,7 @@ namespace FileExplorer {
                 path = path.SubStr(0, path.Length - 1);
             }
             
-            int lastSlash = Math::Max(_Text::LastIndexOf(path, "/"), _Text::LastIndexOf(path, "\\"));
+            int lastSlash = Math::Max(path.LastIndexOf("/"), path.LastIndexOf("\\"));
             if (lastSlash > 0) {
                 path = path.SubStr(0, lastSlash);
             } else {
@@ -540,6 +536,11 @@ namespace FileExplorer {
             @explorer = fe;
         }
 
+        bool IsDirectory(const string &in path) {
+            if (path.EndsWith("/") || path.EndsWith("\\")) return true;
+            return false;
+        }
+
         void RefreshCurrentDirectory() {
             string currentPath = explorer.tab[0].Navigation.GetPath();
             log("Refreshing directory: " + currentPath, LogLevel::Info, 444, "RefreshCurrentDirectory");
@@ -550,7 +551,7 @@ namespace FileExplorer {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null && selectedElement.IsFolder) {
                 log("Opening folder: " + selectedElement.Path, LogLevel::Info, 451, "OpenSelectedFolderInNativeFileExplorer");
-                _IO::OpenFolder(selectedElement.Path);
+                OpenExplorerPath(selectedElement.Path);
             } else {
                 log("No folder selected or selected element is not a folder.", LogLevel::Error, 454, "OpenSelectedFolderInNativeFileExplorer");
             }
@@ -559,7 +560,7 @@ namespace FileExplorer {
         void OpenCurrentFolderInNativeFileExplorer() {
             string currentPath = explorer.tab[0].Navigation.GetPath();
             log("Opening folder: " + currentPath, LogLevel::Info, 460, "OpenCurrentFolderInNativeFileExplorer");
-            _IO::OpenFolder(currentPath);
+            OpenExplorerPath(currentPath);
         }
 
         bool IsItemSelected() {
@@ -589,29 +590,47 @@ namespace FileExplorer {
         }
 
         bool RENDER_RENAME_POPUP_FLAG;
-            void RenameSelectedElement(const string &in newFileName) {
-                ElementInfo@ selectedElement = explorer.CurrentSelectedElement;
-                if (selectedElement !is null) {
-                    log("Renaming element: " + selectedElement.Path + " to " + newFileName, LogLevel::Info, 487, "RenameSelectedElement");
-
-                    string oldPath = selectedElement.Path;
-                    string parentDirectory = _IO::Folder::GetFolderPath(oldPath);
-                    string newFilePath = parentDirectory + newFileName;
-
-                    if (selectedElement.IsFolder) {
-                        // IO::RenameFolder(oldPath, newFileName);
-                    } else {
-                        // IO::Rename(oldPath, newFileName);
-                    }
-
-                    int index = explorer.PinnedItems.Find(selectedElement.Path);
-                    if (index != -1) {
-                        explorer.PinnedItems[index] = newFilePath;
-                    }
-
-                    explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
-                }
+        void RenameSelectedElement(const string &in newName) {
+            ElementInfo@ selectedElement = explorer.CurrentSelectedElement;
+            if (selectedElement !is null) {
+                explorer.utils.Rename(selectedElement.Path, newName);
             }
+        }
+
+
+        void Rename(const string &in path, const string &in newName) {
+            string sanitizedNewName = Path::SanitizeFileName(newName);
+
+            string parentDirectory = Path::GetDirectoryName(path);
+
+            string newFilePath = Path::Join(parentDirectory, sanitizedNewName);
+
+            if (!Path::HasExtension(sanitizedNewName) && Path::HasExtension(path)) {
+                string extension = Path::GetExtension(path);
+                newFilePath = Path::ChangeExtension(newFilePath, extension);
+            }
+
+            if (Path::Equals(path, newFilePath)) {
+                log("Old path and new path are the same. Renaming skipped.", LogLevel::Warn, 123, "Rename");
+                return;
+            }
+
+            log("Renaming element: " + path + " to " + newFilePath, LogLevel::Info, 126, "Rename");
+
+            IO::Move(path, newFilePath);
+
+            int pinnedIndex = explorer.PinnedItems.Find(path);
+            if (pinnedIndex != -1) {
+                explorer.PinnedItems[pinnedIndex] = newFilePath;
+            }
+
+            int selectedIndex = explorer.Config.SelectedPaths.Find(path);
+            if (selectedIndex != -1) {
+                explorer.Config.SelectedPaths[selectedIndex] = newFilePath;
+            }
+
+            explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+        }
 
         void PinSelectedElement() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
@@ -689,12 +708,12 @@ namespace FileExplorer {
         }
 
         ElementInfo@ GetElementInfo(const string &in path) {
-            bool isFolder = _IO::Folder::IsDirectory(path);
-            string name = isFolder ? _IO::Folder::GetFolderName(path) : _IO::File::GetFileName(path);
-            string type = isFolder ? "folder" : _IO::File::GetFileExtension(path);
+            bool isFolder = explorer.utils.IsDirectory(path);
+            string name = isFolder ? Path::GetDirectoryName(path) : Path::GetFileName(path);
+            string type = isFolder ? "folder" : Path::GetExtension(path);
             string size = isFolder ? "-" : ConvertFileSizeToString(IO::FileSize(path));
             int64 lastModified = IO::FileModifiedTime(path);
-            int64 creationDate = lastModified; // Placeholder for actual creation date
+            int64 creationDate = IO::FileCreatedTime(path);
             Icon icon = GetElementIcon(isFolder, type);
             ElementInfo@ elementInfo = ElementInfo(name, path, size, type, lastModified, creationDate, isFolder, icon, false);
 
@@ -945,10 +964,10 @@ namespace FileExplorer {
 
         string newFileName = "";
         void Render_RenamePopup() {
-            // TODO: Will wait untill renaming is added to openplanet proper instead of adding a makeshift solution here..
             if (explorer.utils.RENDER_RENAME_POPUP_FLAG) {
                 UI::OpenPopup("RenamePopup");
-                explorer.ui.newFileName = explorer.ui.GetSelectedElement().Name;
+                explorer.utils.RENDER_RENAME_POPUP_FLAG = false;
+                explorer.ui.newFileName = explorer.CurrentSelectedElement.Name;
             }
 
             if (UI::BeginPopupModal("RenamePopup", explorer.utils.RENDER_RENAME_POPUP_FLAG, UI::WindowFlags::AlwaysAutoResize)) {
@@ -957,17 +976,14 @@ namespace FileExplorer {
                 explorer.ui.newFileName = UI::InputText("New File Name", explorer.ui.newFileName);
                 if (UI::Button("Rename")) {
                     explorer.utils.RenameSelectedElement(explorer.ui.newFileName);
-                    explorer.utils.RENDER_RENAME_POPUP_FLAG = false;
                     UI::CloseCurrentPopup();
                 }
                 UI::SameLine();
                 if (UI::Button("Cancel")) {
-                    explorer.utils.RENDER_RENAME_POPUP_FLAG = false;
                     UI::CloseCurrentPopup();
                 }
                 UI::EndPopup();
             }
-            
         }
 
         void Render_DeleteConfirmationPopup() {
