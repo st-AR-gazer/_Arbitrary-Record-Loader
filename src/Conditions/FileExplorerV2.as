@@ -618,18 +618,11 @@ namespace FileExplorer {
 
 
         void Rename(const string &in path, const string &in newName) {
-            string sanitizedNewName = Path::SanitizeFileName(newName);
+            string parentDirectory = _IO::Folder::GetFolderPath(path);
 
-            string parentDirectory = Path::GetDirectoryName(path);
+            string newFilePath = parentDirectory + newName;
 
-            string newFilePath = Path::Join(parentDirectory, sanitizedNewName);
-
-            if (!Path::HasExtension(sanitizedNewName) && Path::HasExtension(path)) {
-                string extension = Path::GetExtension(path);
-                newFilePath = Path::ChangeExtension(newFilePath, extension);
-            }
-
-            if (Path::Equals(path, newFilePath)) {
+            if (path == newFilePath) {
                 log("Old path and new path are the same. Renaming skipped.", LogLevel::Warn, 123, "Rename");
                 return;
             }
@@ -1177,7 +1170,6 @@ namespace FileExplorer {
                 UI::Text(explorer.IndexingMessage);
             } else if (explorer.tab[0].Elements.Length == 0) {
                 UI::Text("No elements to display.");
-                log("No elements found in the directory.", LogLevel::Warn, 904, "Render_MainAreaBar");
             } else {
                 UI::BeginTable("FilesTable", 6, UI::TableFlags::Resizable | UI::TableFlags::Borders | UI::TableFlags::SizingFixedSame);
                 UI::TableSetupColumn("ico");
