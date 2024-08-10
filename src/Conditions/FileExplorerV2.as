@@ -1156,9 +1156,9 @@ namespace FileExplorer {
 
             EnterType enterType = EnterType::None;
 
-            if (UI::IsItemHovered(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
+            if (UI::IsItemHovered() && UI::IsMouseDown(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
                 enterType = EnterType::ControlClick;
-            } else if (UI::IsItemHovered(UI::MouseButton::Left)) {
+            } else if (UI::IsItemHovered() && UI::IsMouseDown(UI::MouseButton::Left)) {
                 enterType = EnterType::LeftClick;
             } else if (UI::IsItemHovered() && UI::IsMouseDown(UI::MouseButton::Right)) {
                 enterType = EnterType::RightClick;
