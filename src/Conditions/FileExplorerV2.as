@@ -542,8 +542,6 @@ namespace FileExplorer {
         }
 
         string GetDirectoryName(const string &in path) {
-            string path = path;
-            
             while (path.EndsWith("/") || path.EndsWith("\\")) {
                 path = path.SubStr(0, path.Length - 1);
             }
