@@ -541,20 +541,21 @@ namespace FileExplorer {
             return false;
         }
 
-        string GetFolderName(const string &in path) {
+        string GetDirectoryName(const string &in path) {
             string path = path;
             
             while (path.EndsWith("/") || path.EndsWith("\\")) {
                 path = path.SubStr(0, path.Length - 1);
             }
             
-            float i = Math::Max(path.LastIndexOf("/"), path.LastIndexOf("\\"));
+            int index = path.LastIndexOf("/");
+            int index2 = path.LastIndexOf("\\");
 
-            if (i == -1) {
-                return path;
-            }
+            index = Math::Max(index, index2);
 
-            return path.SubStr(i + 1);
+            if (index == -1) { return path; }
+
+            return path.SubStr(index + 1);
         }
 
         void RefreshCurrentDirectory() {
