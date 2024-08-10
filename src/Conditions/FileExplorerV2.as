@@ -590,7 +590,7 @@ namespace FileExplorer {
 
         bool RENDER_RENAME_POPUP_FLAG;
             void RenameSelectedElement(const string &in newFileName) {
-                ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+                ElementInfo@ selectedElement = explorer.CurrentSelectedElement;
                 if (selectedElement !is null) {
                     log("Renaming element: " + selectedElement.Path + " to " + newFileName, LogLevel::Info, 487, "RenameSelectedElement");
 
@@ -599,10 +599,14 @@ namespace FileExplorer {
                     string newFilePath = parentDirectory + newFileName;
 
                     if (selectedElement.IsFolder) {
-                        // Waiting for miss to add this to Openplanet
                         // IO::RenameFolder(oldPath, newFileName);
                     } else {
                         // IO::Rename(oldPath, newFileName);
+                    }
+
+                    int index = explorer.PinnedItems.Find(selectedElement.Path);
+                    if (index != -1) {
+                        explorer.PinnedItems[index] = newFilePath;
                     }
 
                     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
@@ -746,7 +750,8 @@ namespace FileExplorer {
 
     enum ContextType {
         MainArea,
-        SelectedItems
+        SelectedItems,
+        PinnedItems
     }
 
     class UserInterface {
@@ -773,6 +778,9 @@ namespace FileExplorer {
                     break;
                 case ContextType::SelectedItems:
                     Render_Context_SelectedItems();
+                    break;
+                case ContextType::PinnedItems:
+                    Render_Context_PinnedItems();
                     break;
             }
         }
@@ -938,7 +946,6 @@ namespace FileExplorer {
         string newFileName = "";
         void Render_RenamePopup() {
             // TODO: Will wait untill renaming is added to openplanet proper instead of adding a makeshift solution here..
-            /*
             if (explorer.utils.RENDER_RENAME_POPUP_FLAG) {
                 UI::OpenPopup("RenamePopup");
                 explorer.ui.newFileName = explorer.ui.GetSelectedElement().Name;
@@ -960,7 +967,7 @@ namespace FileExplorer {
                 }
                 UI::EndPopup();
             }
-            */
+            
         }
 
         void Render_DeleteConfirmationPopup() {
@@ -1058,9 +1065,36 @@ namespace FileExplorer {
 
         void Render_PinnedItems() {
             for (uint i = 0; i < explorer.PinnedItems.Length; i++) {
-                if (UI::Selectable(explorer.PinnedItems[i], false)) {
-                    explorer.tab[0].LoadDirectory(explorer.PinnedItems[i]);
+                string path = explorer.PinnedItems[i];
+                ElementInfo@ element = explorer.GetElementInfo(path);
+
+                SelectableWithClickCheck(element, ContextType::PinnedItems);
+            }
+        }
+
+        void Render_Context_PinnedItems() {
+            if (openContextMenu) {
+                UI::OpenPopup("PinnedElementContextMenu");
+                openContextMenu = false;
+            }
+
+            if (UI::BeginPopup("PinnedElementContextMenu")) {
+                ElementInfo@ element = explorer.CurrentSelectedElement;
+                if (element !is null) {
+                    if (UI::MenuItem("Remove from Pinned Items")) {
+                        int index = explorer.PinnedItems.Find(element.Path);
+                        if (index != -1) {
+                            explorer.PinnedItems.RemoveAt(index);
+                        }
+                    }
+
+                    if (UI::MenuItem("Rename Pinned Item")) {
+                        explorer.utils.RENDER_RENAME_POPUP_FLAG = true;
+                    }
+
+                    explorer.keyPress.isControlPressed = false;
                 }
+                UI::EndPopup();
             }
         }
 
@@ -1070,6 +1104,36 @@ namespace FileExplorer {
                 ElementInfo@ element = explorer.GetElementInfo(path);
 
                 SelectableWithClickCheck(element, ContextType::SelectedItems);
+            }
+        }
+
+        void Render_Context_SelectedItems() {
+            if (openContextMenu) {
+                UI::OpenPopup("SelectedElementContextMenu");
+                openContextMenu = false;
+            }
+
+            if (UI::BeginPopup("SelectedElementContextMenu")) {
+                ElementInfo@ element = explorer.ui.GetSelectedElement();
+                if (element !is null) {
+                    if (UI::MenuItem("Remove from Selected Items")) {
+                        int index = explorer.Config.SelectedPaths.Find(element.Path);
+                        if (index != -1) {
+                            explorer.Config.SelectedPaths.RemoveAt(index);
+                        }
+                    }
+
+                    if (UI::MenuItem("Pin Item")) {
+                        explorer.utils.PinSelectedElement();
+                    }
+
+                    if (UI::MenuItem("Delete Item")) {
+                        explorer.utils.DeleteSelectedElement();
+                    }
+
+                    explorer.keyPress.isControlPressed = false;
+                }
+                UI::EndPopup();
             }
         }
 
@@ -1113,77 +1177,6 @@ namespace FileExplorer {
                 UI::EndTable();
             }
         }
-
-        void SelectableWithClickCheck(ElementInfo@ element, ContextType contextType) {
-            string displayName;
-            switch (explorer.Config.FileNameDisplayOption) {
-                case 1:
-                    displayName = Text::StripFormatCodes(element.Name);
-                    break;
-                case 2:
-                    displayName = element.Name.Replace("$", "\\$");
-                    break;
-                default:
-                    displayName = element.Name;
-            }
-
-            UI::Selectable(displayName, element.IsSelected);
-            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
-                HandleElementSelection(element, EnterType::ControlClick, contextType);
-            } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Right)) {
-                HandleElementSelection(element, EnterType::RightClick, contextType);
-            } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left)) {
-                HandleElementSelection(element, EnterType::LeftClick, contextType);
-            }
-        }
-
-        void HandleElementSelection(ElementInfo@ element, EnterType enterType, ContextType contextType) {
-            print("Element selection: " + element.Name + ", EnterType: " + tostring(enterType) + ", ContextType: " + tostring(contextType));
-
-            uint64 currentTime = Time::Now;
-            const uint64 doubleClickThreshold = 600; // 0.6 seconds
-
-            bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
-
-            // Right-click or Control-click to open context menu
-            if (enterType == EnterType::RightClick || enterType == EnterType::ControlClick) {
-                openContextMenu = true;
-                currentContextType = contextType;
-                @explorer.CurrentSelectedElement = element; // Update the selected element globally
-            } 
-            // Handle double-click
-            else if (element.IsSelected) {
-                if (currentTime - element.LastClickTime <= doubleClickThreshold) {
-                    if (element.IsFolder) {
-                        explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
-                    } else if (canAddMore) {
-                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
-                            explorer.Config.SelectedPaths.InsertLast(element.Path);
-                            explorer.utils.TruncateSelectedPathsIfNeeded();
-                        }
-                        @explorer.CurrentSelectedElement = element; // Update the selected element globally
-                    }
-                } else {
-                    element.LastClickTime = currentTime;
-                }
-            } 
-            // Normal left-click to select an element
-            else if (enterType == EnterType::LeftClick) {
-                for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
-                    explorer.tab[0].Elements[i].IsSelected = false;
-                }
-                element.IsSelected = true;
-                element.LastSelectedTime = currentTime;
-                element.LastClickTime = currentTime;
-                @explorer.CurrentSelectedElement = element; // Update the selected element globally
-            }
-        }
-
-        ContextType currentContextType;
-        bool openContextMenu = false;
-
-        bool openMainAreaContextMenu = false;
-
 
         void Render_Context_MainArea() {
             if (openContextMenu) {
@@ -1234,35 +1227,73 @@ namespace FileExplorer {
             }
         }
 
-        void Render_Context_SelectedItems() {
-            if (openContextMenu) {
-                UI::OpenPopup("SelectedElementContextMenu");
-                openContextMenu = false;
+        void SelectableWithClickCheck(ElementInfo@ element, ContextType contextType) {
+            string displayName;
+            switch (explorer.Config.FileNameDisplayOption) {
+                case 1:
+                    displayName = Text::StripFormatCodes(element.Name);
+                    break;
+                case 2:
+                    displayName = element.Name.Replace("$", "\\$");
+                    break;
+                default:
+                    displayName = element.Name;
             }
 
-            if (UI::BeginPopup("SelectedElementContextMenu")) {
-                ElementInfo@ element = explorer.ui.GetSelectedElement();
-                if (element !is null) {
-                    if (UI::MenuItem("Remove from Selected Items")) {
-                        int index = explorer.Config.SelectedPaths.Find(element.Path);
-                        if (index != -1) {
-                            explorer.Config.SelectedPaths.RemoveAt(index);
-                        }
-                    }
-
-                    if (UI::MenuItem("Pin Item")) {
-                        explorer.utils.PinSelectedElement();
-                    }
-
-                    if (UI::MenuItem("Delete Item")) {
-                        explorer.utils.DeleteSelectedElement();
-                    }
-
-                    explorer.keyPress.isControlPressed = false;
-                }
-                UI::EndPopup();
+            UI::Selectable(displayName, element.IsSelected);
+            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
+                HandleElementSelection(element, EnterType::ControlClick, contextType);
+            } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Right)) {
+                HandleElementSelection(element, EnterType::RightClick, contextType);
+            } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left)) {
+                HandleElementSelection(element, EnterType::LeftClick, contextType);
             }
         }
+
+        void HandleElementSelection(ElementInfo@ element, EnterType enterType, ContextType contextType) {
+            print("Element selection: " + element.Name + ", EnterType: " + tostring(enterType) + ", ContextType: " + tostring(contextType));
+
+            uint64 currentTime = Time::Now;
+            const uint64 doubleClickThreshold = 600; // 0.6 seconds
+
+            bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
+
+            // Right-click or Control-click to open context menu
+            if (enterType == EnterType::RightClick || enterType == EnterType::ControlClick) {
+                openContextMenu = true;
+                currentContextType = contextType;
+                @explorer.CurrentSelectedElement = element;
+            } 
+            // Handle double-click
+            else if (element.IsSelected) {
+                if (currentTime - element.LastClickTime <= doubleClickThreshold) {
+                    if (element.IsFolder) {
+                        explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
+                    } else if (canAddMore) {
+                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
+                            explorer.Config.SelectedPaths.InsertLast(element.Path);
+                            explorer.utils.TruncateSelectedPathsIfNeeded();
+                        }
+                        @explorer.CurrentSelectedElement = element;
+                    }
+                } else {
+                    element.LastClickTime = currentTime;
+                }
+            } 
+            // Normal left-click to select an element
+            else if (enterType == EnterType::LeftClick) {
+                for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
+                    explorer.tab[0].Elements[i].IsSelected = false;
+                }
+                element.IsSelected = true;
+                element.LastSelectedTime = currentTime;
+                element.LastClickTime = currentTime;
+                @explorer.CurrentSelectedElement = element;
+            }
+        }
+
+        ContextType currentContextType;
+        bool openContextMenu = false;
 
         void Render_DetailBar() {
             ElementInfo@ selectedElement = GetSelectedElement();
@@ -1326,7 +1357,6 @@ namespace FileExplorer {
 
 
         ElementInfo@ GetSelectedElement() {
-            // Directly return the currently selected element.
             return explorer.CurrentSelectedElement;
         }
     }
