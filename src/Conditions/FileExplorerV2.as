@@ -1157,12 +1157,12 @@ namespace FileExplorer {
                     displayName = element.Name;
             }
 
-            bool clicked = UI::Selectable(displayName, element.IsSelected);
-            if (clicked && UI::IsMouseDown(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
+            UI::Selectable(displayName, element.IsSelected);
+            if (UI::IsItemHovered() && UI::IsMouseDown(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
                 HandleElementSelection(element, EnterType::ControlClick, contextType);
             } else if (UI::IsItemHovered() && UI::IsMouseDown(UI::MouseButton::Right)) {
                 HandleElementSelection(element, EnterType::RightClick, contextType);
-            } else if (clicked && UI::IsMouseDown(UI::MouseButton::Left)) {
+            } else if (UI::IsItemHovered() && UI::IsMouseDown(UI::MouseButton::Left)) {
                 HandleElementSelection(element, EnterType::LeftClick, contextType);
             }
         }
