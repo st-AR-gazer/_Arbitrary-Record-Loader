@@ -770,16 +770,13 @@ namespace FileExplorer {
             Render_RenamePopup();
             Render_DeleteConfirmationPopup();
 
-            if (openContextMenu) {
-                openContextMenu = false;
-                switch (currentContextType) {
-                    case ContextType::MainArea:
-                        Render_Context_MainArea();
-                        break;
-                    case ContextType::SelectedItems:
-                        Render_Context_SelectedItems();
-                        break;
-                }
+            switch (currentContextType) {
+                case ContextType::MainArea:
+                    Render_Context_MainArea();
+                    break;
+                case ContextType::SelectedItems:
+                    Render_Context_SelectedItems();
+                    break;
             }
         }
 
@@ -1079,30 +1076,6 @@ namespace FileExplorer {
             }
         }
 
-        void Render_SelectedContextMenu(int index) {
-            string path = explorer.Config.SelectedPaths[index];
-            if (path.Length == 0) return;
-
-            if (UI::MenuItem("Remove from Selected Items")) {
-                explorer.Config.SelectedPaths.RemoveAt(index);
-            }
-
-            if (UI::MenuItem("Pin Item")) {
-                explorer.utils.PinSelectedElement();
-            }
-
-            if (UI::MenuItem("Delete Item")) {
-                explorer.utils.DeleteSelectedElement();
-            }
-            
-            // this will lokely be fixed in OP 1.27 with the new UI::Key dings
-            explorer.keyPress.isControlPressed = false; 
-            // I hate this solution so fucking much, but I've been going crazy over the 'sticky'
-            // ctrl issue, and I can't take it anymore...
-            // This doesn't even fix the issue properly, but I'm just over it as this point...
-            // Hours wasted: 4
-        }
-
         void Render_MainAreaBar() {
             if (explorer.IsIndexing) {
                 UI::Text(explorer.IndexingMessage);
@@ -1216,7 +1189,13 @@ namespace FileExplorer {
 
 
         void Render_Context_MainArea() {
-            if (UI::BeginPopup("ElementContextMenu")) {
+            if (openContextMenu) {
+                UI::OpenPopup("MainElementContextMenu");
+                openContextMenu = false;
+            }
+
+            if (UI::BeginPopup("MainElementContextMenu")) {
+                print("rendering context menu");
                 ElementInfo@ element = explorer.ui.GetSelectedElement();
                 if (element !is null) {
                     bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
@@ -1259,7 +1238,12 @@ namespace FileExplorer {
         }
 
         void Render_Context_SelectedItems() {
-            if (UI::BeginPopup("ElementContextMenu")) {
+            if (openContextMenu) {
+                UI::OpenPopup("SelectedElementContextMenu");
+                openContextMenu = false;
+            }
+
+            if (UI::BeginPopup("SelectedElementContextMenu")) {
                 ElementInfo@ element = explorer.ui.GetSelectedElement();
                 if (element !is null) {
                     if (UI::MenuItem("Remove from Selected Items")) {
