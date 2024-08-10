@@ -234,16 +234,16 @@ namespace FileExplorer {
 
         uint64 LastClickTime;
 
-        ElementInfo(const string &in name, const string &in path, string size, const string &in type, int64 lastModifiedDate, int64 creationDate, bool isFolder, Icon icon, bool isSelected) {
-            this.Name = name;
-            this.Path = path;
-            this.Size = size;
-            this.Type = type;
-            this.LastModifiedDate = lastModifiedDate;
-            this.CreationDate = lastModifiedDate; // Placeholder for actual creation date
-            this.IsFolder = isFolder;
-            this.Icon = icon;
-            this.IsSelected = isSelected;
+        ElementInfo(const string &in _name, const string &in _path, const string &in _size, const string &in _type, int64 _lastModifiedDate, int64 _creationDate, bool _isFolder, Icon _icon, bool _isSelected) {
+            this.Name = _name;
+            this.Path = _path;
+            this.Size = _size;
+            this.Type = _type;
+            this.LastModifiedDate = _lastModifiedDate;
+            this.CreationDate = _creationDate;
+            this.IsFolder = _isFolder;
+            this.Icon = _icon;
+            this.IsSelected = _isSelected;
             this.LastSelectedTime = 0;
             this.shouldShow = true;
             this.LastClickTime = 0;
@@ -610,13 +610,13 @@ namespace FileExplorer {
 
         bool RENDER_RENAME_POPUP_FLAG;
         void RenameSelectedElement(const string &in newName) {
-            ElementInfo@ selectedElement = explorer.CurrentSelectedElement;
+            /*ElementInfo@ selectedElement = explorer.CurrentSelectedElement;
             if (selectedElement !is null) {
                 explorer.utils.Rename(selectedElement.Path, newName);
-            }
+            }*/
         }
 
-
+        /*
         void Rename(const string &in path, const string &in newName) {
             string parentDirectory = _IO::Folder::GetFolderPath(path);
 
@@ -643,6 +643,7 @@ namespace FileExplorer {
 
             explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
         }
+        */
 
         void PinSelectedElement() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
@@ -976,7 +977,7 @@ namespace FileExplorer {
 
         string newFileName = "";
         void Render_RenamePopup() {
-            if (explorer.utils.RENDER_RENAME_POPUP_FLAG) {
+            /*if (explorer.utils.RENDER_RENAME_POPUP_FLAG) {
                 UI::OpenPopup("RenamePopup");
                 explorer.utils.RENDER_RENAME_POPUP_FLAG = false;
                 explorer.ui.newFileName = explorer.CurrentSelectedElement.Name;
@@ -995,7 +996,7 @@ namespace FileExplorer {
                     UI::CloseCurrentPopup();
                 }
                 UI::EndPopup();
-            }
+            }*/
         }
 
         void Render_DeleteConfirmationPopup() {
