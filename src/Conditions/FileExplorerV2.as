@@ -1059,7 +1059,7 @@ namespace FileExplorer {
             for (uint i = 0; i < explorer.Config.SelectedPaths.Length; i++) {
                 string path = explorer.Config.SelectedPaths[i];
                 string displayName;
-                
+
                 if (_IO::Folder::IsDirectory(path)) {
                     displayName = _IO::Folder::GetFolderName(path);
                 } else {
@@ -1084,17 +1084,37 @@ namespace FileExplorer {
                 // Handle right-click or control-click to open context menu
                 if (UI::IsItemHovered() && (UI::IsMouseDown(UI::MouseButton::Right) || (UI::IsMouseDown(UI::MouseButton::Left) && explorer.keyPress.isControlPressed))) {
                     if (UI::BeginPopupContextItem("SelectedContextMenu" + i)) {
-                        if (UI::MenuItem("Remove from Selected Items")) {
-                            if (i < explorer.Config.SelectedPaths.Length) {
-                                explorer.Config.SelectedPaths.RemoveAt(i);
-                            }
-                        }
+                        Render_SelectedContextMenu(i);
                         UI::EndPopup();
                     } else {
                         UI::OpenPopup("SelectedContextMenu" + i);
                     }
                 }
             }
+        }
+
+        void Render_SelectedContextMenu(int index) {
+            string path = explorer.Config.SelectedPaths[index];
+            if (path.Length == 0) return;
+
+            if (UI::MenuItem("Remove from Selected Items")) {
+                explorer.Config.SelectedPaths.RemoveAt(index);
+            }
+
+            if (UI::MenuItem("Pin Item")) {
+                explorer.utils.PinSelectedElement();
+            }
+
+            if (UI::MenuItem("Delete Item")) {
+                explorer.utils.DeleteSelectedElement();
+            }
+            
+            // this will lokely be fixed in OP 1.27 with the new UI::Key dings
+            explorer.keyPress.isControlPressed = false; 
+            // I hate this solution so fucking much, but I've been going crazy over the 'sticky'
+            // ctrl issue, and I can't take it anymore...
+            // This doesn't even fix the issue properly, but I'm just over it as this point...
+            // Hours wasted: 4
         }
 
         void Render_MainAreaBar() {
@@ -1157,8 +1177,6 @@ namespace FileExplorer {
             else if (UI::IsItemClicked() && UI::IsMouseDown(UI::MouseButton::Left)) { HandleElementSelection(element, EnterType::LeftClick); print("Left click"); }
         }
 
-        bool openContextMenu = false;
-
         void HandleElementSelection(ElementInfo@ element, EnterType enterType) {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
@@ -1195,7 +1213,8 @@ namespace FileExplorer {
                 explorer.UpdateCurrentSelectedElement();
             }
         }
-
+        
+        bool openContextMenu = false;
         void Render_ElementContextMenu() {
             if (openContextMenu) {
                 UI::OpenPopup("ElementContextMenu");
