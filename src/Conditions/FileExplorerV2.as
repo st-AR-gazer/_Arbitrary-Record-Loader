@@ -1151,11 +1151,10 @@ namespace FileExplorer {
                     displayName = element.Name;
             }
 
-            if (UI::IsItemClicked()) print("Item: " + element.Name + " was clicked");
-
-            if (UI::Selectable(displayName, element.IsSelected)) {
-                HandleElementSelection(element, enterType);
-            }
+            UI::Selectable(displayName, element.IsSelected);
+            if (UI::IsItemClicked() && UI::IsMouseDown(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) { HandleElementSelection(element, EnterType::ControlClick); print("Control click"); }
+            else if (UI::IsItemHovered() && UI::IsMouseDown(UI::MouseButton::Right)) { HandleElementSelection(element, EnterType::RightClick); print("Right click"); }
+            else if (UI::IsItemClicked() && UI::IsMouseDown(UI::MouseButton::Left)) { HandleElementSelection(element, EnterType::LeftClick); print("Left click"); }
         }
 
         bool openContextMenu = false;
@@ -1234,6 +1233,7 @@ namespace FileExplorer {
                         explorer.utils.DeleteSelectedElement();
                     }
 
+                    // this will lokely be fixed in OP 1.27 with the new UI::Key dings
                     explorer.keyPress.isControlPressed = false; 
                     // I hate this solution so fucking much, but I've been going crazy over the 'sticky'
                     // ctrl issue, and I can't take it anymore...
