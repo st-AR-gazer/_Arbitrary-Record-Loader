@@ -1157,29 +1157,32 @@ namespace FileExplorer {
                     displayName = element.Name;
             }
 
-            UI::Selectable(displayName, element.IsSelected);
-            if (UI::IsItemClicked() && UI::IsMouseDown(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
+            bool clicked = UI::Selectable(displayName, element.IsSelected);
+            if (clicked && UI::IsMouseDown(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
                 HandleElementSelection(element, EnterType::ControlClick, contextType);
             } else if (UI::IsItemHovered() && UI::IsMouseDown(UI::MouseButton::Right)) {
                 HandleElementSelection(element, EnterType::RightClick, contextType);
-            } else if (UI::IsItemClicked() && UI::IsMouseDown(UI::MouseButton::Left)) {
+            } else if (clicked && UI::IsMouseDown(UI::MouseButton::Left)) {
                 HandleElementSelection(element, EnterType::LeftClick, contextType);
             }
         }
 
         void HandleElementSelection(ElementInfo@ element, EnterType enterType, ContextType contextType) {
+            print("Element selection: " + element.Name + ", EnterType: " + tostring(enterType) + ", ContextType: " + tostring(contextType));
+
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
-            // Right click, and control click check
+            // Right-click or Control-click to open context menu
             if (enterType == EnterType::RightClick || enterType == EnterType::ControlClick) {
                 openContextMenu = true;
                 currentContextType = contextType;
                 explorer.UpdateCurrentSelectedElement();
-            // Double click check
-            } else if (element.IsSelected) {
+            } 
+            // Handle double-click
+            else if (element.IsSelected) {
                 if (currentTime - element.LastClickTime <= doubleClickThreshold) {
                     if (element.IsFolder) {
                         explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
@@ -1193,8 +1196,9 @@ namespace FileExplorer {
                 } else {
                     element.LastClickTime = currentTime;
                 }
-            // Normal click check
-            } else {
+            } 
+            // Normal left-click to select an element
+            else if (enterType == EnterType::LeftClick) {
                 for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
                     explorer.tab[0].Elements[i].IsSelected = false;
                 }
