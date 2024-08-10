@@ -120,9 +120,6 @@
         - Add a custom location for settings so that the user can set custom PINs, and so that they are enabled cross 
           sessions and plugins.
 
-        - Add minmaxreturnamount as somthing that limits the amount of returnable elementes.
-
-
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
@@ -1152,7 +1149,7 @@ namespace FileExplorer {
             if (enterType == EnterType::RightClick || enterType == EnterType::ControlClick) {
                 openContextMenu = true;
                 currentContextType = contextType;
-                explorer.UpdateCurrentSelectedElement();
+                @explorer.CurrentSelectedElement = element; // Update the selected element globally
             } 
             // Handle double-click
             else if (element.IsSelected) {
@@ -1164,7 +1161,7 @@ namespace FileExplorer {
                             explorer.Config.SelectedPaths.InsertLast(element.Path);
                             explorer.utils.TruncateSelectedPathsIfNeeded();
                         }
-                        explorer.UpdateCurrentSelectedElement();
+                        @explorer.CurrentSelectedElement = element; // Update the selected element globally
                     }
                 } else {
                     element.LastClickTime = currentTime;
@@ -1178,7 +1175,7 @@ namespace FileExplorer {
                 element.IsSelected = true;
                 element.LastSelectedTime = currentTime;
                 element.LastClickTime = currentTime;
-                explorer.UpdateCurrentSelectedElement();
+                @explorer.CurrentSelectedElement = element; // Update the selected element globally
             }
         }
 
@@ -1329,12 +1326,8 @@ namespace FileExplorer {
 
 
         ElementInfo@ GetSelectedElement() {
-            for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
-                if (explorer.tab[0].Elements[i].IsSelected) {
-                    return explorer.tab[0].Elements[i];
-                }
-            }
-            return null;
+            // Directly return the currently selected element.
+            return explorer.CurrentSelectedElement;
         }
     }
 
