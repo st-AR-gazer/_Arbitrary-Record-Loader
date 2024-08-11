@@ -384,7 +384,7 @@ namespace FileExplorer {
         // FIXME: Recursive is also a bit weird, will need to look into this tomorrow...
         // TODO: Integrate this coroutine loading into the main explorer coroutine loading to avoid duplicate code (this works for now tho)
 
-                void IndexFilesCoroutine(ref@ r) {
+        void IndexFilesCoroutine(ref@ r) {
             FileTab@ tab = cast<FileTab@>(r);
             if (tab is null) return;
 
@@ -1454,9 +1454,6 @@ namespace FileExplorer {
 
 /* ------------------------ GBX Parsing ------------------------ */
 
-// TODO:
-// 
-
 // Fixme:
 // - Currently only Replay type is accounted for, need to add Map (and more) types as well 
 // (but it's proving to be a bit tricky) (Reason: nothing is being added to the xmlString)
@@ -1473,7 +1470,10 @@ dictionary ReadGbxHeader(const string &in path) {
     string xmlString = "";
 
     IO::File mapFile(path);
-    mapFile.Open(IO::FileMode::Read);
+    if (!mapFile.Open(IO::FileMode::Read)) {
+        log("Error: Unable to open file: " + path, LogLevel::Error);
+        return metadata;
+    }
 
     mapFile.SetPos(17);
     int headerChunkCount = mapFile.Read(4).ReadInt32();
@@ -1486,15 +1486,23 @@ dictionary ReadGbxHeader(const string &in path) {
         chunks.InsertLast(newChunk);
     }
 
+    int64 startTime = Time::Now;
+
     for (uint i = 0; i < chunks.Length; i++) {
         MemoryBuffer chunkBuffer = mapFile.Read(chunks[i].ChunkSize);
-        if (    chunks[i].ChunkId == 50933761 // Maps /*50933761*/ (Some times "50606082"??)
-             || chunks[i].ChunkId == 50606082 // Replays
-             || chunks[i].ChunkId == 50606082 // Challenges
+        if (   chunks[i].ChunkId == 50933761 // Maps /*50933761*/ (Sometimes "50606082"??)
+            || chunks[i].ChunkId == 50606082 // Replays
+            || chunks[i].ChunkId == 50606082 // Challenges
             ) {
             int stringLength = chunkBuffer.ReadInt32();
             xmlString = chunkBuffer.ReadString(stringLength);
             break;
+        }
+
+        if (Time::Now - startTime > 300) {
+            log("Error: Timeout while reading GBX header for file: " + path, LogLevel::Error);
+            mapFile.Close();
+            return metadata;
         }
     }
 
@@ -1524,6 +1532,8 @@ dictionary ReadGbxHeader(const string &in path) {
             if (playermodelNode) {
                 metadata["playermodel_id"] = playermodelNode.Attribute("id");
             }
+        } else {
+            log("Error: Missing header node in GBX file: " + path, LogLevel::Error);
         }
     }
 
