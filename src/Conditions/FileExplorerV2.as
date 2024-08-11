@@ -614,22 +614,17 @@ namespace FileExplorer {
             if (selectedElement is null) return;
 
             string currentPath = selectedElement.Path;
-            string newPath;
 
             string sanitizedNewName = Path::SanitizeFileName(newName);
 
-            if (selectedElement.IsFolder) {
-                string parentDirectory = Path::GetDirectoryName(currentPath);
-                newPath = Path::Join(parentDirectory, sanitizedNewName);
-            } else {
-                string directoryPath = Path::GetDirectoryName(currentPath);
-                string extension = Path::GetExtension(currentPath);
-                newPath = Path::Join(directoryPath, sanitizedNewName + extension);
-            }
+            string parentDirectory = Path::GetDirectoryName(currentPath);
+            if (selectedElement.IsFolder) print(parentDirectory);
+
+            string newPath = Path::Join(parentDirectory, sanitizedNewName);
 
             IO::Move(currentPath, newPath);
 
-            explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+            explorer.tab[0].LoadDirectory(parentDirectory);
         }
 
         void PinSelectedElement() {
