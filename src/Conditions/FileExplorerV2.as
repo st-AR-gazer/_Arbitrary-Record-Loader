@@ -120,6 +120,8 @@
         - Add a custom location for settings so that the user can set custom PINs, and so that they are enabled cross 
           sessions and plugins.
 
+        - Add renaming to context menu
+
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
@@ -132,13 +134,6 @@
           to work.
             - As a makeshift solution I have set left mouse button to always be true as a click is still needed for other 
               reasons, but the same cannot be done for right clicking...
-
-        - Add Renaming functionality
-            - this is 99% done, I just need miss to add IO::Rename(path, name) and IO::RenameFolder(path, name) to Openplanet, 
-              then this can be added to the FileExplorer. (:Prayge: she does)
-            - UPDATE: Renaming will probably not be added, but Move() can be used as a rename, Move can take a path and a target
-              so 'renaming' should be possible by moving the file/folder to the same locatoin, but changing the name.
-
 */
 namespace FileExplorer {
     bool showInterface = false;
