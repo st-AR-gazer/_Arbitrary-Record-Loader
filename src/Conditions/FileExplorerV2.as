@@ -614,17 +614,26 @@ namespace FileExplorer {
             if (selectedElement is null) return;
 
             string currentPath = selectedElement.Path;
+            string newPath;
 
             string sanitizedNewName = Path::SanitizeFileName(newName);
 
-            string parentDirectory = Path::GetDirectoryName(currentPath);
-            if (selectedElement.IsFolder) print(parentDirectory);
+            if (selectedElement.IsFolder) {
+                while (currentPath.EndsWith("/") || currentPath.EndsWith("\\")) {
+                    currentPath = currentPath.SubStr(0, currentPath.Length - 1);
+                }
 
-            string newPath = Path::Join(parentDirectory, sanitizedNewName);
+                string parentDirectory = Path::GetDirectoryName(currentPath);
+                newPath = Path::Join(parentDirectory, sanitizedNewName);
+            } else {
+                string directoryPath = Path::GetDirectoryName(currentPath);
+                string extension = Path::GetExtension(currentPath);
+                newPath = Path::Join(directoryPath, sanitizedNewName + extension);
+            }
 
             IO::Move(currentPath, newPath);
 
-            explorer.tab[0].LoadDirectory(parentDirectory);
+            explorer.tab[0].LoadDirectory(Path::GetDirectoryName(currentPath));
         }
 
         void PinSelectedElement() {
