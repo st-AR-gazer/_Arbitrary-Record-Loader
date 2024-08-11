@@ -872,17 +872,15 @@ namespace FileExplorer {
 
             // Search Bar with Search Icon
             UI::PushItemWidth(searchWidth);
-            UI::BeginChild("SearchBarContainer", vec2(searchWidth, 0), false, UI::WindowFlags::NoScrollbar);
-            {
-                UI::Text(Icons::Search + " ");
-                UI::SameLine();
-                string newSearchQuery = UI::InputText("##SearchInput", explorer.Config.SearchQuery);
-                if (UI::IsKeyPressed(UI::Key::Enter) && newSearchQuery != explorer.Config.SearchQuery) {
-                    explorer.Config.SearchQuery = newSearchQuery;
-                    explorer.tab[0].ApplyFiltersAndSearch();
-                }
+
+            UI::Text(Icons::Search + " ");
+            UI::SameLine();
+            string newSearchQuery = UI::InputText("##SearchInput", explorer.Config.SearchQuery);
+            if (UI::IsKeyPressed(UI::Key::Enter) && newSearchQuery != explorer.Config.SearchQuery) {
+                explorer.Config.SearchQuery = newSearchQuery;
+                explorer.tab[0].ApplyFiltersAndSearch();
             }
-            UI::EndChild();
+
             UI::PopItemWidth();
             UI::Separator();
         }
