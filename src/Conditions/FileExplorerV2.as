@@ -120,8 +120,6 @@
         - Add a custom location for settings so that the user can set custom PINs, and so that they are enabled cross 
           sessions and plugins.
 
-        - Add renaming to context menu
-
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
