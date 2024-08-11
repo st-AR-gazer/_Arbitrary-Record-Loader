@@ -619,8 +619,8 @@ namespace FileExplorer {
             string sanitizedNewName = Path::SanitizeFileName(newName);
 
             if (selectedElement.IsFolder) {
-                string directoryPath = Path::GetDirectoryName(currentPath);
-                newPath = Path::Join(directoryPath, sanitizedNewName);
+                string parentDirectory = Path::GetDirectoryName(Path::RemoveExtension(currentPath));
+                newPath = Path::Join(parentDirectory, sanitizedNewName);
             } else {
                 string directoryPath = Path::GetDirectoryName(currentPath);
                 string extension = Path::GetExtension(currentPath);
