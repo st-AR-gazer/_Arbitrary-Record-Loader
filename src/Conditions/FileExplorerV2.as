@@ -1467,6 +1467,14 @@ class GbxHeaderChunkInfo
 dictionary ReadGbxHeader(const string &in path) {
     dictionary metadata;
 
+    startnew(CoroutineFuncUserdata(ReadGbxHeaderCoroutine), metadata, path);
+    return metadata;
+}
+
+void ReadGbxHeaderCoroutine(ref@ refMetadata, const string &in path) {
+    dictionary@ metadata = cast<dictionary@>(refMetadata);
+    if (metadata is null) return;
+
     string xmlString = "";
 
     IO::File mapFile(path);
@@ -1485,7 +1493,7 @@ dictionary ReadGbxHeader(const string &in path) {
 
     for (uint i = 0; i < chunks.Length; i++) {
         MemoryBuffer chunkBuffer = mapFile.Read(chunks[i].ChunkSize);
-        if (    chunks[i].ChunkId == 50933761 // Maps /*50933761*/ (Some times "50606082"??)
+        if (    chunks[i].ChunkId == 50933761 // Maps /*50933761*/ (Sometimes "50606082"??)
              || chunks[i].ChunkId == 50606082 // Replays
              || chunks[i].ChunkId == 50606082 // Challenges
             ) {
@@ -1493,38 +1501,42 @@ dictionary ReadGbxHeader(const string &in path) {
             xmlString = chunkBuffer.ReadString(stringLength);
             break;
         }
+
+        yield();
     }
 
     mapFile.Close();
 
     if (xmlString != "") {
-        XML::Document doc;
-        doc.LoadString(xmlString);
-        XML::Node headerNode = doc.Root().FirstChild();
+        ParseGbxMetadata(xmlString, metadata);
+    }
+}
 
-        if (headerNode) {
-            string gbxType = headerNode.Attribute("type");
-            metadata["type"] = gbxType;
-            metadata["exever"] = headerNode.Attribute("exever");
-            metadata["exebuild"] = headerNode.Attribute("exebuild");
-            metadata["title"] = headerNode.Attribute("title");
+void ParseGbxMetadata(const string &in xmlString, dictionary &inout metadata) {
+    XML::Document doc;
+    doc.LoadString(xmlString);
+    XML::Node headerNode = doc.Root().FirstChild();
 
-            if (gbxType == "map") {
-                ParseMapMetadata(headerNode, metadata);
-            } else if (gbxType == "replay") {
-                ParseReplayMetadata(headerNode, metadata);
-            } else if (gbxType == "challenge") {
-                ParseChallengeMetadata(headerNode, metadata);
-            }
+    if (headerNode) {
+        string gbxType = headerNode.Attribute("type");
+        metadata["type"] = gbxType;
+        metadata["exever"] = headerNode.Attribute("exever");
+        metadata["exebuild"] = headerNode.Attribute("exebuild");
+        metadata["title"] = headerNode.Attribute("title");
 
-            XML::Node playermodelNode = headerNode.Child("playermodel");
-            if (playermodelNode) {
-                metadata["playermodel_id"] = playermodelNode.Attribute("id");
-            }
+        if (gbxType == "map") {
+            ParseMapMetadata(headerNode, metadata);
+        } else if (gbxType == "replay") {
+            ParseReplayMetadata(headerNode, metadata);
+        } else if (gbxType == "challenge") {
+            ParseChallengeMetadata(headerNode, metadata);
+        }
+
+        XML::Node playermodelNode = headerNode.Child("playermodel");
+        if (playermodelNode) {
+            metadata["playermodel_id"] = playermodelNode.Attribute("id");
         }
     }
-
-    return metadata;
 }
 
 void ParseMapMetadata(XML::Node &in headerNode, dictionary &inout metadata) {
