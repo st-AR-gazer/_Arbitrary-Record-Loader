@@ -109,14 +109,6 @@
         
         - Add support for returning paths in general
 
-        - Add three main areas to the left UI.
-            1. Hardcoded paths, e.g same as home, desktop, documents, downloads, etc, but TM related so it would be
-               like Maps, Replays, Openplanet, StorageFolder, GameFolder etc.
-            2. Pinned elements, elements that the user has have pinned from the main area, should be displayed in the second 
-               area in the left UI.
-            3. Selected elements, elements that the user has selected from the main area, should be displayed in the third
-               area in the left UI.
-
         - Add a custom location for settings so that the user can set custom PINs, and so that they are enabled cross 
           sessions and plugins.
 
@@ -620,7 +612,7 @@ namespace FileExplorer {
                 newPath = Path::Join(parentDirectory, sanitizedNewName);
             } else {
                 string directoryPath = Path::GetDirectoryName(currentPath);
-                string extension = Path::GetExtension(currentPath);
+                string extension = Path::GetExtension(currentPath).SubStr(1);
                 newPath = Path::Join(directoryPath, sanitizedNewName + extension);
             }
 
