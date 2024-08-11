@@ -1494,7 +1494,7 @@ void ReadGbxHeaderCoroutine(ref@ refData) {
     string xmlString = "";
 
     IO::File mapFile(path);
-    mapFile.Open(IO::FileMode::Read);
+    if (!mapFile.Open(IO::FileMode::Read)) return;
 
     mapFile.SetPos(17);
     int headerChunkCount = mapFile.Read(4).ReadInt32();
@@ -1505,6 +1505,10 @@ void ReadGbxHeaderCoroutine(ref@ refData) {
         newChunk.ChunkId = mapFile.Read(4).ReadInt32();
         newChunk.ChunkSize = mapFile.Read(4).ReadInt32() & 0x7FFFFFFF;
         chunks.InsertLast(newChunk);
+
+        if (i % 10 == 0) {
+            yield();
+        }
     }
 
     for (uint i = 0; i < chunks.Length; i++) {
@@ -1518,6 +1522,7 @@ void ReadGbxHeaderCoroutine(ref@ refData) {
             break;
         }
 
+        // Yield after reading each chunk to avoid locking up the game
         yield();
     }
 
