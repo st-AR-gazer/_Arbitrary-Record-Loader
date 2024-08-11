@@ -1221,6 +1221,10 @@ namespace FileExplorer {
                         }
                     }
 
+                    if (UI::MenuItem("Rename Item")) {
+                        explorer.utils.RENDER_RENAME_POPUP_FLAG = true;
+                    }
+
                     if (UI::MenuItem("Pin Item")) {
                         explorer.utils.PinSelectedElement();
                     }
