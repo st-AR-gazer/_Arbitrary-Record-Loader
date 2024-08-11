@@ -1308,8 +1308,6 @@ namespace FileExplorer {
         }
 
         void HandleElementSelection(ElementInfo@ element, EnterType enterType, ContextType contextType) {
-            print("Element selection: " + element.Name + ", EnterType: " + tostring(enterType) + ", ContextType: " + tostring(contextType));
-
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
