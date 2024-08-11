@@ -1494,6 +1494,7 @@ void ReadGbxHeaderCoroutine(ref@ refData) {
     string xmlString = "";
 
     IO::File mapFile(path);
+    mapFile.Open(IO::FileMode::Read);
 
     mapFile.SetPos(17);
     int headerChunkCount = mapFile.Read(4).ReadInt32();
