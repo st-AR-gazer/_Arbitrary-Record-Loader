@@ -1720,6 +1720,8 @@ void Render() {
             OpenFileExplorerExample();
         }
         if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isControlPressed));
+        if (FileExplorer::explorer !is null) UI::Text("Control proper: " + tostring(UI::IsKeyPressed(UI::Key::LeftCtrl)));
+        if (FileExplorer::explorer !is null) UI::Text("Control proper: " + tostring(UI::IsKeyPressed(UI::Key::RightCtrl)));
     }
     UI::End();
 }
