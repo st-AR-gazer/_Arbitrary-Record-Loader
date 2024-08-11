@@ -120,10 +120,6 @@
           not working as intended, it needs to be looked into more. Normal search works just fine though.
           (recursive search is also not in a coroutine)
 
-        - KeyPresses for "Left mouse button" and "Right mouse button" do not work, this is needed for the context menu
-          to work.
-            - As a makeshift solution I have set left mouse button to always be true as a click is still needed for other 
-              reasons, but the same cannot be done for right clicking...
 
 */
 namespace FileExplorer {
