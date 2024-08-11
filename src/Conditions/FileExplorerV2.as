@@ -1470,10 +1470,7 @@ dictionary ReadGbxHeader(const string &in path) {
     string xmlString = "";
 
     IO::File mapFile(path);
-    if (!mapFile.Open(IO::FileMode::Read)) {
-        log("Error: Unable to open file: " + path, LogLevel::Error);
-        return metadata;
-    }
+    mapFile.Open(IO::FileMode::Read)
 
     mapFile.SetPos(17);
     int headerChunkCount = mapFile.Read(4).ReadInt32();
