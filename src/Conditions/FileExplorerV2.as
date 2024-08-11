@@ -399,30 +399,31 @@ namespace FileExplorer {
                 log("No files found in directory: " + tab.Navigation.GetPath(), LogLevel::Info, 308, "IndexFilesCoroutine");
             }
 
-            const uint batchSize = 2000;
+            const uint batchSize = 500;
             uint totalFiles = elements.Length;
             uint processedFiles = 0;
 
-            for (uint i = 0; i < totalFiles; i += batchSize) {
-                uint end = Math::Min(i + batchSize, totalFiles);
-                for (uint j = i; j < end; j++) {
-                    string path = elements[j];
-                    if (path.Contains("\\/")) {
-                        path = path.Replace("\\/", "/");
-                    }
+            for (uint i = 0; i < totalFiles; i++) {
+                string path = elements[i];
+                if (path.Contains("\\/")) {
+                    path = path.Replace("\\/", "/");
+                }
 
-                    ElementInfo@ elementInfo = tab.explorer.GetElementInfo(path);
-                    if (elementInfo !is null) {
-                        tab.Elements.InsertLast(elementInfo);
-                    }
+                ElementInfo@ elementInfo = tab.explorer.GetElementInfo(path);
+                if (elementInfo !is null) {
+                    tab.Elements.InsertLast(elementInfo);
+                }
 
-                    processedFiles++;
+                processedFiles++;
+
+                if (processedFiles % batchSize == 0) {
                     tab.explorer.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
                     yield();
                 }
-
-                log(tab.explorer.IndexingMessage, LogLevel::Info, 331, "IndexFilesCoroutine");
             }
+
+            tab.explorer.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
+            yield();
 
             tab.ApplyFiltersAndSearch();
             tab.ApplyVisibilitySettings();
