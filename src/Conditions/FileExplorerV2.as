@@ -125,13 +125,6 @@
             - As a makeshift solution I have set left mouse button to always be true as a click is still needed for other 
               reasons, but the same cannot be done for right clicking...
 
-        - Parsing the GBX header can cause a script timeout 
-            [   ScriptRuntime] [ERROR] [16:07:46] [_Arbitrary-Record-Loader]  Script execution timeout exceeded! (1000 milliseconds)
-            [   ScriptRuntime] [ERROR] [16:07:46] [_Arbitrary-Record-Loader]      #0  dictionary ReadGbxHeader(const string&in path) (C:/Users/AR_/OpenplanetNext/Plugins/_Arbitrary-Record-Loader/src/Conditions/FileExplorerV2.as line 1471)
-            [   ScriptRuntime] [ERROR] [16:07:46] [_Arbitrary-Record-Loader]      #1  FileExplorer::ElementInfo@ FileExplorer::FileExplorer::GetElementInfo(const string&in path) (C:/Users/AR_/OpenplanetNext/Plugins/_Arbitrary-Record-Loader/src/Conditions/FileExplorerV2.as line 710)
-            [   ScriptRuntime] [ERROR] [16:07:46] [_Arbitrary-Record-Loader]      #2  void FileExplorer::FileTab::IndexFilesCoroutine(ref r) (C:/Users/AR_/OpenplanetNext/Plugins/_Arbitrary-Record-Loader/src/Conditions/FileExplorerV2.as line 405)
-            [   ScriptRuntime] [  LOG] [16:07:46] [_Arbitrary-Record-Loader]  Execution aborted.
-
 */
 namespace FileExplorer {
     bool showInterface = false;
