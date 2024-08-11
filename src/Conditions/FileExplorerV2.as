@@ -860,6 +860,16 @@ namespace FileExplorer {
                 _UI::DisabledButton(Icons::ArrowUp, vec2(buttonWidth, 0));
             }
             UI::SameLine();
+            if (explorer.tab[0].Elements.Length > 0 && !explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
+                _UI::DisabledButton(Icons::ArrowDown); 
+            } else if (explorer.tab[0].Elements.Length > 0) {
+                if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
+                UI::SameLine();
+            } else {
+                _UI::DisabledButton(Icons::ArrowDown);
+            }
+
+            UI::SameLine();
 
             // Interactive Path Input
             UI::PushItemWidth(pathWidth);
