@@ -1464,16 +1464,29 @@ class GbxHeaderChunkInfo
     int ChunkSize;
 }
 
+class GbxHeaderProcessingData {
+    dictionary@ metadata;
+    string path;
+
+    GbxHeaderProcessingData(dictionary@ _metadata, const string &in _path) {
+        @metadata = _metadata;
+        path = _path;
+    }
+}
+
 dictionary ReadGbxHeader(const string &in path) {
     dictionary metadata;
-
-    startnew(CoroutineFuncUserdata(ReadGbxHeaderCoroutine), metadata, path);
+    GbxHeaderProcessingData data(metadata, path);
+    startnew(CoroutineFuncUserdata(ReadGbxHeaderCoroutine), data);
     return metadata;
 }
 
-void ReadGbxHeaderCoroutine(ref@ refMetadata, const string &in path) {
-    dictionary@ metadata = cast<dictionary@>(refMetadata);
-    if (metadata is null) return;
+void ReadGbxHeaderCoroutine(ref@ refData) {
+    GbxHeaderProcessingData@ data = cast<GbxHeaderProcessingData@>(refData);
+    if (data is null) return;
+
+    dictionary@ metadata = data.metadata;
+    string path = data.path;
 
     string xmlString = "";
 
@@ -1493,9 +1506,9 @@ void ReadGbxHeaderCoroutine(ref@ refMetadata, const string &in path) {
 
     for (uint i = 0; i < chunks.Length; i++) {
         MemoryBuffer chunkBuffer = mapFile.Read(chunks[i].ChunkSize);
-        if (    chunks[i].ChunkId == 50933761 // Maps /*50933761*/ (Sometimes "50606082"??)
-             || chunks[i].ChunkId == 50606082 // Replays
-             || chunks[i].ChunkId == 50606082 // Challenges
+        if (   chunks[i].ChunkId == 50933761 // Maps /*50933761*/ (Sometimes "50606082"??)
+            || chunks[i].ChunkId == 50606082 // Replays
+            || chunks[i].ChunkId == 50606082 // Challenges
             ) {
             int stringLength = chunkBuffer.ReadInt32();
             xmlString = chunkBuffer.ReadString(stringLength);
