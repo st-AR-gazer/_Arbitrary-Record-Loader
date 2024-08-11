@@ -112,9 +112,9 @@
         - Add three main areas to the left UI.
             1. Hardcoded paths, e.g same as home, desktop, documents, downloads, etc, but TM related so it would be
                like Maps, Replays, Openplanet, StorageFolder, GameFolder etc.
-            2. Pinned items, items that the user has have pinned from the main area, should be displayed in the second 
+            2. Pinned elements, elements that the user has have pinned from the main area, should be displayed in the second 
                area in the left UI.
-            3. Selected items, items that the user has selected from the main area, should be displayed in the third
+            3. Selected elements, elements that the user has selected from the main area, should be displayed in the third
                area in the left UI.
 
         - Add a custom location for settings so that the user can set custom PINs, and so that they are enabled cross 
@@ -575,7 +575,7 @@ namespace FileExplorer {
             OpenExplorerPath(currentPath);
         }
 
-        bool IsItemSelected() {
+        bool IsElementSelected() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             return selectedElement !is null;
         }
@@ -633,7 +633,7 @@ namespace FileExplorer {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null) {
                 log("Pinning element: " + selectedElement.Path, LogLevel::Info, 502, "PinSelectedElement");
-                explorer.PinnedItems.InsertLast(selectedElement.Path);
+                explorer.PinnedElements.InsertLast(selectedElement.Path);
             }
         }
 
@@ -650,7 +650,7 @@ namespace FileExplorer {
 
         array<FileTab@> tab;
         Config@ Config;
-        array<string> PinnedItems;
+        array<string> PinnedElements;
         UserInterface@ ui;
         Utils@ utils;
         Exports@ exports;
@@ -766,8 +766,8 @@ namespace FileExplorer {
 
     enum ContextType {
         MainArea,
-        SelectedItems,
-        PinnedItems
+        SelectedElements,
+        PinnedElements
     }
 
     class UserInterface {
@@ -792,11 +792,11 @@ namespace FileExplorer {
                 case ContextType::MainArea:
                     Render_Context_MainArea();
                     break;
-                case ContextType::SelectedItems:
-                    Render_Context_SelectedItems();
+                case ContextType::SelectedElements:
+                    Render_Context_SelectedElements();
                     break;
-                case ContextType::PinnedItems:
-                    Render_Context_PinnedItems();
+                case ContextType::PinnedElements:
+                    Render_Context_PinnedElements();
                     break;
             }
         }
@@ -863,7 +863,7 @@ namespace FileExplorer {
             UI::SameLine();
             if (UI::Button(Icons::FolderOpen)) { explorer.utils.OpenCurrentFolderInNativeFileExplorer(); }
             UI::SameLine();
-            if (!explorer.utils.IsItemSelected()) {
+            if (!explorer.utils.IsElementSelected()) {
                 _UI::DisabledButton(Icons::Trash); 
                 UI::SameLine();
                 _UI::DisabledButton(Icons::Pencil);
@@ -1041,14 +1041,14 @@ namespace FileExplorer {
             Render_HardcodedPaths();
             UI::Separator();
 
-            UI::Text("Pinned Items");
+            UI::Text("Pinned Elements");
             UI::Separator();
-            Render_PinnedItems();
+            Render_PinnedElements();
             UI::Separator();
 
-            UI::Text("Selected Items");
+            UI::Text("Selected Elements");
             UI::Separator();
-            Render_SelectedItems();
+            Render_SelectedElements();
             UI::Separator();
         }
 
@@ -1076,16 +1076,16 @@ namespace FileExplorer {
             // }
         }
 
-        void Render_PinnedItems() {
-            for (uint i = 0; i < explorer.PinnedItems.Length; i++) {
-                string path = explorer.PinnedItems[i];
+        void Render_PinnedElements() {
+            for (uint i = 0; i < explorer.PinnedElements.Length; i++) {
+                string path = explorer.PinnedElements[i];
                 ElementInfo@ element = explorer.GetElementInfo(path);
 
-                SelectableWithClickCheck(element, ContextType::PinnedItems);
+                SelectableWithClickCheck(element, ContextType::PinnedElements);
             }
         }
 
-        void Render_Context_PinnedItems() {
+        void Render_Context_PinnedElements() {
             if (openContextMenu) {
                 UI::OpenPopup("PinnedElementContextMenu");
                 openContextMenu = false;
@@ -1094,14 +1094,14 @@ namespace FileExplorer {
             if (UI::BeginPopup("PinnedElementContextMenu")) {
                 ElementInfo@ element = explorer.CurrentSelectedElement;
                 if (element !is null) {
-                    if (UI::MenuItem("Remove from Pinned Items")) {
-                        int index = explorer.PinnedItems.Find(element.Path);
+                    if (UI::MenuItem("Remove from Pinned Elements")) {
+                        int index = explorer.PinnedElements.Find(element.Path);
                         if (index != -1) {
-                            explorer.PinnedItems.RemoveAt(index);
+                            explorer.PinnedElements.RemoveAt(index);
                         }
                     }
 
-                    if (UI::MenuItem("Rename Pinned Item")) {
+                    if (UI::MenuItem("Rename Pinned Element")) {
                         explorer.utils.RENDER_RENAME_POPUP_FLAG = true;
                     }
 
@@ -1111,16 +1111,16 @@ namespace FileExplorer {
             }
         }
 
-        void Render_SelectedItems() {
+        void Render_SelectedElements() {
             for (uint i = 0; i < explorer.Config.SelectedPaths.Length; i++) {
                 string path = explorer.Config.SelectedPaths[i];
                 ElementInfo@ element = explorer.GetElementInfo(path);
 
-                SelectableWithClickCheck(element, ContextType::SelectedItems);
+                SelectableWithClickCheck(element, ContextType::SelectedElements);
             }
         }
 
-        void Render_Context_SelectedItems() {
+        void Render_Context_SelectedElements() {
             if (openContextMenu) {
                 UI::OpenPopup("SelectedElementContextMenu");
                 openContextMenu = false;
@@ -1129,18 +1129,18 @@ namespace FileExplorer {
             if (UI::BeginPopup("SelectedElementContextMenu")) {
                 ElementInfo@ element = explorer.ui.GetSelectedElement();
                 if (element !is null) {
-                    if (UI::MenuItem("Remove from Selected Items")) {
+                    if (UI::MenuItem("Remove from Selected Elements")) {
                         int index = explorer.Config.SelectedPaths.Find(element.Path);
                         if (index != -1) {
                             explorer.Config.SelectedPaths.RemoveAt(index);
                         }
                     }
 
-                    if (UI::MenuItem("Pin Item")) {
+                    if (UI::MenuItem("Pin Element")) {
                         explorer.utils.PinSelectedElement();
                     }
 
-                    if (UI::MenuItem("Delete Item")) {
+                    if (UI::MenuItem("Delete Element")) {
                         explorer.utils.DeleteSelectedElement();
                     }
 
@@ -1202,32 +1202,32 @@ namespace FileExplorer {
                     bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
                     if (canAddMore) {
-                        if (UI::MenuItem("Add to Selected Items")) {
+                        if (UI::MenuItem("Add to Selected Elements")) {
                             if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
                                 explorer.Config.SelectedPaths.InsertLast(element.Path);
                                 explorer.utils.TruncateSelectedPathsIfNeeded();
                             }
                         }
                     } else {
-                        UI::MenuItem("Add to Selected Items", "", false, false);
+                        UI::MenuItem("Add to Selected Elements", "", false, false);
                     }
 
-                    if (UI::MenuItem("Remove from Selected Items")) {
+                    if (UI::MenuItem("Remove from Selected Elements")) {
                         int index = explorer.Config.SelectedPaths.Find(element.Path);
                         if (index != -1) {
                             explorer.Config.SelectedPaths.RemoveAt(index);
                         }
                     }
 
-                    if (UI::MenuItem("Rename Item")) {
+                    if (UI::MenuItem("Rename Element")) {
                         explorer.utils.RENDER_RENAME_POPUP_FLAG = true;
                     }
 
-                    if (UI::MenuItem("Pin Item")) {
+                    if (UI::MenuItem("Pin Element")) {
                         explorer.utils.PinSelectedElement();
                     }
 
-                    if (UI::MenuItem("Delete Item")) {
+                    if (UI::MenuItem("Delete Element")) {
                         explorer.utils.DeleteSelectedElement();
                     }
 
