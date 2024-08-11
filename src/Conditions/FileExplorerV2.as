@@ -1276,7 +1276,7 @@ namespace FileExplorer {
             }
 
             UI::Selectable(displayName, element.IsSelected);
-            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && (UI::IsKeyPressed(UI::Key::LControl) || UI::IsKeyPressed(UI::Key::RControl))) {
+            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && (UI::IsKeyPressed(UI::Key::LeftCtrl) || UI::IsKeyPressed(UI::Key::RightCtrl))) {
                 HandleElementSelection(element, EnterType::ControlClick, contextType);
             } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Right)) {
                 HandleElementSelection(element, EnterType::RightClick, contextType);
