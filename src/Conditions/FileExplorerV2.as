@@ -715,7 +715,7 @@ namespace FileExplorer {
             ElementInfo@ elementInfo = ElementInfo(name, path, size, type, lastModified, creationDate, isFolder, icon, false);
 
             if (type.ToLower() == "gbx") {
-                startnew(CoroutineFunc(ReadGbxMetadataCoroutine), elementInfo);
+                startnew(CoroutineFuncUserdata(ReadGbxMetadataCoroutine), elementInfo);
             }
 
             return elementInfo;
