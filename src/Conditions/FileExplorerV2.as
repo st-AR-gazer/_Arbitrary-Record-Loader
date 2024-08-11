@@ -389,6 +389,7 @@ namespace FileExplorer {
             if (tab is null) return;
 
             tab.Elements.Resize(0);
+            tab.explorer.IsIndexing = true;
             tab.explorer.IndexingMessage = "Folder is being indexed...";
             log("Indexing started for path: " + tab.Navigation.GetPath(), LogLevel::Info, 303, "IndexFilesCoroutine");
 
@@ -414,12 +415,13 @@ namespace FileExplorer {
                     if (elementInfo !is null) {
                         tab.Elements.InsertLast(elementInfo);
                     }
+
+                    processedFiles++;
+                    tab.explorer.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
+                    yield();
                 }
 
-                processedFiles = end;
-                tab.explorer.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
                 log(tab.explorer.IndexingMessage, LogLevel::Info, 331, "IndexFilesCoroutine");
-                yield();
             }
 
             tab.ApplyFiltersAndSearch();
