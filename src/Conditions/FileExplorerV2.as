@@ -612,8 +612,7 @@ namespace FileExplorer {
                 newPath = Path::Join(parentDirectory, sanitizedNewName);
             } else {
                 string directoryPath = Path::GetDirectoryName(currentPath);
-                string extension = Path::GetExtension(currentPath).SubStr(1);
-                print(extension);
+                string extension = Path::GetExtension(currentPath);
                 newPath = Path::Join(directoryPath, sanitizedNewName + extension);
             }
 
@@ -700,7 +699,7 @@ namespace FileExplorer {
         ElementInfo@ GetElementInfo(const string &in path) {
             bool isFolder = explorer.utils.IsDirectory(path);
             string name = isFolder ? explorer.utils.GetDirectoryName(path) : Path::GetFileName(path);
-            string type = isFolder ? "folder" : Path::GetExtension(path);
+            string type = isFolder ? "folder" : Path::GetExtension(path).SubStr(1);
             string size = isFolder ? "-" : ConvertFileSizeToString(IO::FileSize(path));
             int64 lastModified = IO::FileModifiedTime(path);
             int64 creationDate = IO::FileCreatedTime(path);
