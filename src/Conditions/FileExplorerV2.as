@@ -382,7 +382,6 @@ namespace FileExplorer {
 
         // FIXME: Search currently only updates if you refresh the directory, it should update on the fly
         // FIXME: Recursive is also a bit weird, will need to look into this tomorrow...
-        // TODO: Integrate this coroutine loading into the main explorer coroutine loading to avoid duplicate code (this works for now tho)
 
         void IndexFilesCoroutine(ref@ r) {
             FileTab@ tab = cast<FileTab@>(r);
@@ -831,37 +830,60 @@ namespace FileExplorer {
         }
 
         void Render_NavigationBar() {
+            float buttonWidth = 30.0;
+            float totalWidth = UI::GetContentRegionAvail().x;
+            float pathWidth = totalWidth * 0.8f - buttonWidth * 3;
+            float searchWidth = totalWidth - pathWidth - buttonWidth * 3;
+
+            // Navigation Buttons
             if (explorer.tab[0].Navigation.HistoryIndex > 0) {
-                if (UI::Button(Icons::ArrowLeft)) { explorer.tab[0].Navigation.NavigateBack(); }
+                if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) {
+                    explorer.tab[0].Navigation.NavigateBack();
+                }
             } else {
-                _UI::DisabledButton(Icons::ArrowLeft);
+                _UI::DisabledButton(Icons::ArrowLeft, vec2(buttonWidth, 0));
             }
             UI::SameLine();
             if (explorer.tab[0].Navigation.HistoryIndex < int(explorer.tab[0].Navigation.History.Length) - 1) {
-                if (UI::Button(Icons::ArrowRight)) { explorer.tab[0].Navigation.NavigateForward(); }
+                if (UI::Button(Icons::ArrowRight, vec2(buttonWidth, 0))) {
+                    explorer.tab[0].Navigation.NavigateForward();
+                }
             } else {
-                _UI::DisabledButton(Icons::ArrowRight);
+                _UI::DisabledButton(Icons::ArrowRight, vec2(buttonWidth, 0));
             }
             UI::SameLine();
             if (explorer.tab[0].Navigation.CanMoveUpDirectory()) {
-                if (UI::Button(Icons::ArrowUp)) { explorer.tab[0].Navigation.MoveUpOneDirectory(); }
+                if (UI::Button(Icons::ArrowUp, vec2(buttonWidth, 0))) {
+                    explorer.tab[0].Navigation.MoveUpOneDirectory();
+                }
             } else {
-                _UI::DisabledButton(Icons::ArrowUp);
+                _UI::DisabledButton(Icons::ArrowUp, vec2(buttonWidth, 0));
             }
             UI::SameLine();
 
-            if (explorer.tab[0].Elements.Length > 0 && !explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
-                _UI::DisabledButton(Icons::ArrowDown); 
-            } else if (explorer.tab[0].Elements.Length > 0) {
-                if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
+            // Interactive Path Input
+            UI::PushItemWidth(pathWidth);
+            string newPath = UI::InputText("##PathInput", explorer.tab[0].Navigation.GetPath());
+            if (UI::IsKeyPressed(UI::Key::Enter)) {
+                explorer.tab[0].LoadDirectory(newPath);
+            }
+            UI::PopItemWidth();
+            UI::SameLine();
+
+            // Search Bar with Search Icon
+            UI::PushItemWidth(searchWidth);
+            UI::BeginChild("SearchBarContainer", vec2(searchWidth, 0), false, UI::WindowFlags::NoScrollbar);
+            {
+                UI::Text(Icons::Search + " ");
                 UI::SameLine();
-            } else {
-                _UI::DisabledButton(Icons::ArrowDown);
+                string newSearchQuery = UI::InputText("##SearchInput", explorer.Config.SearchQuery);
+                if (UI::IsKeyPressed(UI::Key::Enter) && newSearchQuery != explorer.Config.SearchQuery) {
+                    explorer.Config.SearchQuery = newSearchQuery;
+                    explorer.tab[0].ApplyFiltersAndSearch();
+                }
             }
-
-            UI::Text(explorer.tab[0].Navigation.GetPath());
-            UI::SameLine();
-            explorer.Config.SearchQuery = UI::InputText("Search", explorer.Config.SearchQuery);
+            UI::EndChild();
+            UI::PopItemWidth();
             UI::Separator();
         }
 
