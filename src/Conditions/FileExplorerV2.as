@@ -1135,8 +1135,6 @@ namespace FileExplorer {
                     if (UI::MenuItem("Rename Pinned Element")) {
                         explorer.utils.RENDER_RENAME_POPUP_FLAG = true;
                     }
-
-                    explorer.keyPress.isControlPressed = false;
                 }
                 UI::EndPopup();
             }
@@ -1174,8 +1172,6 @@ namespace FileExplorer {
                     if (UI::MenuItem("Delete Element")) {
                         explorer.utils.DeleteSelectedElement();
                     }
-
-                    explorer.keyPress.isControlPressed = false;
                 }
                 UI::EndPopup();
             }
@@ -1261,13 +1257,6 @@ namespace FileExplorer {
                     if (UI::MenuItem("Delete Element")) {
                         explorer.utils.DeleteSelectedElement();
                     }
-
-                    // this will lokely be fixed in OP 1.27 with the new UI::Key dings
-                    explorer.keyPress.isControlPressed = false; 
-                    // I hate this solution so fucking much, but I've been going crazy over the 'sticky'
-                    // ctrl issue, and I can't take it anymore...
-                    // This doesn't even fix the issue properly, but I'm just over it as this point...
-                    // Hours wasted: 4
                 }
                 UI::EndPopup();
             }
@@ -1287,7 +1276,7 @@ namespace FileExplorer {
             }
 
             UI::Selectable(displayName, element.IsSelected);
-            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && explorer.keyPress.isControlPressed) {
+            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && (UI::IsKeyPressed(UI::Key::LControl) || UI::IsKeyPressed(UI::Key::RControl))) {
                 HandleElementSelection(element, EnterType::ControlClick, contextType);
             } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Right)) {
                 HandleElementSelection(element, EnterType::RightClick, contextType);
@@ -1673,25 +1662,28 @@ void ParseChallengeMetadata(XML::Node &in headerNode, dictionary &inout metadata
 
 /* ------------------------ Functions / Variables that have to be in the global namespace ------------------------ */
 
-// Sorry, but all inline variables have to be in the global namespace.
-array<string>@ FILE_EXPLORER_selectedPaths;
+// Should be possible to remove this.
+// // Sorry, but all inline variables have to be in the global namespace.
+// array<string>@ FILE_EXPLORER_selectedPaths;
 
-// Sorry, due to limitations in Openplanet the "OnKeyPress" function has has to be in the global namespace.
-// If you are using this funciton in you own project please add: ` FILE_EXPLORER_KEYPRESS_HANDLER(down, key); ` to your 
-// own "OnKeyPress" function.
-// If this is not done, the File Explorer will not work as intended.
+// // Sorry, due to limitations in Openplanet the "OnKeyPress" function has has to be in the global namespace.
+// // If you are using this funciton in you own project please add: ` FILE_EXPLORER_KEYPRESS_HANDLER(down, key); ` to your 
+// // own "OnKeyPress" function.
+// // If this is not done, the File Explorer will not work as intended.
 
-// ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
-    void OnKeyPress(bool down, VirtualKey key) {
-        FILE_EXPLORER_KEYPRESS_HANDLER(down, key);
-    }
-// ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
+// // ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
+//     void OnKeyPress(bool down, VirtualKey key) {
+//         FILE_EXPLORER_KEYPRESS_HANDLER(down, key);
+//     }
+// // ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
 
-void FILE_EXPLORER_KEYPRESS_HANDLER(bool down, VirtualKey key) {
-    FileExplorer::fe_HandleKeyPresses(down, key);
-}
+// void FILE_EXPLORER_KEYPRESS_HANDLER(bool down, VirtualKey key) {
+//     FileExplorer::fe_HandleKeyPresses(down, key);
+// }
 
-// Sorry, but again, due to limitations in Openplanet the "Render" function has to be in the global namespace.
+// _______________
+
+// Sorry, but due to limitations in Openplanet the "Render" function has to be in the global namespace.
 // If you are using this function in your own project please add ` FILE_EXPLORER_BASE_RENDERER ` to your own 
 // render pipeline, usually one of the "Render", or "RenderInterface" functions.
 // If this is not done, the File Explorer will not work as intended.
