@@ -613,6 +613,7 @@ namespace FileExplorer {
             } else {
                 string directoryPath = Path::GetDirectoryName(currentPath);
                 string extension = Path::GetExtension(currentPath).SubStr(1);
+                print(extension);
                 newPath = Path::Join(directoryPath, sanitizedNewName + extension);
             }
 
