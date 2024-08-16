@@ -1,4 +1,5 @@
 // :Yayy: FileExplorerV2 go brrrrr
+// Required version 1.26.31
 
 /** 
  * IMPORTANT:
