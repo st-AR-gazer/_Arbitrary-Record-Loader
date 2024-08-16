@@ -81,6 +81,9 @@
  *    }
  *    ```
  *    This function checks if the selection process is complete and then processes the selected file paths.
+ *  
+ *    For a full example implementation see NOTE 1.
+ * 
  * 
  * **Summary:**
  * - **Rendering:** Add `FILE_EXPLORER_BASE_RENDERER()` to your `Render()` or `RenderInterface()` method.
@@ -91,10 +94,49 @@
  * 
  * With these steps, the FileExplorer will be fully integrated into your plugin, and it should allow users easily 
  * navigate directories and select and return different paths with relative ease files.
+ * 
+ * 
+ * **NOTE 1:**
+ *
+ * This is a full example implementation of how to use the FileExplorer in your plugin. This example includes all the
+ * necessary steps to integrate the FileExplorer and handle the selected file paths.
+ * 
+ *  ```angelscript
+    string[] selectedFiles;
+
+    void RenderInterface() {
+        FILE_EXPLORER_BASE_RENDERER();  // This ensures the FileExplorer is rendered properly.
+
+        if (UI::Begin("Path explorer", true, UI::WindowFlags::AlwaysAutoResize)) {
+            if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
+                FileExplorer::fe_Start(                                                                             // Required for the file explorer to work 
+                    true,                                   // Require the user to select and return files          // Required for the file explorer to work
+                    vec2(1, 14),                            // Minimum 1, no effective upper limit on files         // Optional requirement for the file explorer
+                    IO::FromUserGameFolder("Replays/"),     // Initial folder path to open                          // Optional requirement for the file explorer
+                    "",                                     // Optional search query                                // Optional requirement for the file explorer
+                    { "replay", "ghost" }                   // File type filters                                    // Optional requirement for the file explorer
+                );                                                                                                  // Required for the file explorer to work
+            }                                                                                                       // Required for the file explorer to work
+
+            if (FileExplorer::explorer !is null && FileExplorer::explorer.exports.IsSelectionComplete()) {          // Required for checking the file explorer selection
+                array<string> paths = FileExplorer::explorer.exports.GetSelectedPaths();                            // Required for getting the selected paths
+                selectedFiles = paths;                                                                              // Optional requirement for handling the selected paths
+            }                                                                                                       // Required for checking the file explorer selection
+
+            
+            // This is just an example, you can use the selected files in any way you want
+            // Here I just display them in the UI
+            UI::Text("Selected Files: " + selectedFiles.Length);                            
+            for (uint i = 0; i < selectedFiles.Length; i++) {                               
+                selectedFiles[i] = UI::InputText("File Path " + (i + 1), selectedFiles[i]);
+            }
+        }
+ *  ```
  */
 
 
 /*
+
     TODO: 
         - Add support for multiple tabs (not planned)
 
@@ -112,6 +154,8 @@
         - Add a custom location for settings so that the user can set custom PINs, and so that they are enabled cross 
           sessions and plugins.
 
+        - Add support for hiding specific columns (should be from the burger menu)
+
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
@@ -119,7 +163,6 @@
         - Recursive search is not fully working as intended, it is very hard to explain what is wrong, but it's just 
           not working as intended, it needs to be looked into more. Normal search works just fine though.
           (recursive search is also not in a coroutine)
-
 
 */
 namespace FileExplorer {

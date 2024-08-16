@@ -54,20 +54,48 @@ void RenderInterface() {
 
 //////////////////// Render Loacal Files Tab /////////////////////
 
+array<string> selectedFiles;
+
 void RenderTab_LocalFiles() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
 
     if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
-        _IO::FileExplorer::OpenFileExplorer(true, IO::FromUserGameFolder("Replays/"), "", { "replay", "ghost" });
+        FileExplorer::fe_Start(
+            true,
+            vec2(1, -1),
+            IO::FromUserGameFolder("Replays/"),
+            "",
+            { "replay", "ghost" }
+        );
+    }
+    if (FileExplorer::explorer !is null && FileExplorer::explorer.exports.IsSelectionComplete()) {
+        array<string> paths = FileExplorer::explorer.exports.GetSelectedPaths();
+        selectedFiles = paths;
     }
 
-    string filePath = _IO::FileExplorer::Exports::GetExportPath();
-    UI::Text("Selected File: " + filePath);
-    filePath = UI::InputText("File Path", filePath);
+    UI::SameLine();
+    UI::Text("Selected Files: " + selectedFiles.Length);
+    for (uint i = 0; i < selectedFiles.Length; i++) {
+        UI::PushItemWidth(1100);
+        selectedFiles[i] = UI::InputText("File Path " + (i + 1), selectedFiles[i]);
+        UI::PopItemWidth();
+    }
 
-    if (UI::Button(Icons::Download + Icons::SnapchatGhost + " Load Ghost or Replay")) {
-        ProcessSelectedFile(filePath);
+    UI::Separator();
+
+    bool hasValidFile = selectedFiles.Length > 0;
+
+    if (hasValidFile) {
+        if (UI::Button(Icons::Download + Icons::SnapchatGhost + " Load Ghost or Replay")) {
+            for (uint i = 0; i < selectedFiles.Length; i++) {
+                if (selectedFiles[i] != "") {
+                    ProcessSelectedFile(selectedFiles[i]);
+                }
+            }
+        }
+    } else {
+        _UI::DisabledButton(Icons::Download + Icons::SnapchatGhost + " Load Ghost or Replay");
     }
 
     if (UI::Button(Icons::Users + Icons::EyeSlash + " Remove All Ghosts")) {
