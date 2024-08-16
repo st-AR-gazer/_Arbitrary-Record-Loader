@@ -143,15 +143,6 @@
 
         - Add pagination
 
-        - Add support for multiple file return
-            - Add support for multiple file selection (should maybe be it's own point?)
-            - Keep track of selected files in a UI element (maybe on the left side under the pin bar)
-            - Add a button to return all selected files (shuold be optional from the OpenFileExplorer function)
-            - Returning should happen in the 3rd row of the UI. (this should open based on the inputs in 
-              OpenFileExplorer function)
-        
-        - Add support for returning paths in general
-
         - Add a custom location for settings so that the user can set custom PINs, and so that they are enabled cross 
           sessions and plugins.
 
