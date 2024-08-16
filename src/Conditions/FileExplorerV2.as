@@ -1283,6 +1283,16 @@ namespace FileExplorer {
                         UI::MenuItem("Add to Selected Elements", "", false, false);
                     }
 
+                    if (canAddMore) {
+                        if (UI::MenuItem("Quick return")) {
+                            explorer.exports.SetSelectionComplete( { element.Path } );
+                            explorer.exports.selectionComplete = true;
+                            showInterface = false;
+                        }
+                    } else {
+                        UI::MenuItem("Quick return", "", false, false);
+                    }
+
                     if (UI::MenuItem("Remove from Selected Elements")) {
                         int index = explorer.Config.SelectedPaths.Find(element.Path);
                         if (index != -1) {
