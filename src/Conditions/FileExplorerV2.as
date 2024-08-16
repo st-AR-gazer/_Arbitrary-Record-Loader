@@ -1319,7 +1319,7 @@ namespace FileExplorer {
             }
 
             UI::Selectable(displayName, element.IsSelected);
-            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && (UI::IsKeyPressed(UI::Key::LeftCtrl) || UI::IsKeyPressed(UI::Key::RightCtrl))) {
+            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && (UI::IsKeyDown(UI::Key::LeftCtrl) || UI::IsKeyDown(UI::Key::RightCtrl))) {
                 HandleElementSelection(element, EnterType::ControlClick, contextType);
             } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Right)) {
                 HandleElementSelection(element, EnterType::RightClick, contextType);
@@ -1763,8 +1763,8 @@ void Render() {
             OpenFileExplorerExample();
         }
         if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isControlPressed));
-        UI::Text("Control proper: " + tostring(UI::IsKeyPressed(UI::Key::LeftCtrl)));
-        UI::Text("Control proper: " + tostring(UI::IsKeyPressed(UI::Key::RightCtrl)));
+        UI::Text("Control proper: " + tostring(UI::IsKeyDown(UI::Key::LeftCtrl)));
+        UI::Text("Control proper: " + tostring(UI::IsKeyDown(UI::Key::RightCtrl)));
     }
     UI::End();
 }
