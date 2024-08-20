@@ -146,11 +146,6 @@
         - Change all scrollable element location to use child regions so that the scrollbars are only applied to the 
           specific relevant region.
 
-        - Add a custom location for settings so that the user can set custom PINs, and so that they are enabled cross 
-          sessions and plugins.
-
-        - Add support for hiding specific columns (should be from the burger menu)
-
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
