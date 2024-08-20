@@ -175,6 +175,7 @@ namespace FileExplorer {
         bool EnablePagination = false;
         bool UseExtraWarningWhenDeleting = true;
         bool RecursiveSearch = false;
+        int MaxElementsPerPage = 30;
         dictionary ColumnsToShow;
         int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
 
@@ -240,6 +241,10 @@ namespace FileExplorer {
                         ColumnsToShow.Set(col, bool(cols[col]));
                     }
                 }
+
+                if (settings.HasKey("MaxElementsPerPage")) {
+                    MaxElementsPerPage = settings["MaxElementsPerPage"];
+                }
             }
         }
 
@@ -272,6 +277,7 @@ namespace FileExplorer {
                 cols[col] = value;
             }
             settings["ColumnsToShow"] = cols;
+            settings["MaxElementsPerPage"] = MaxElementsPerPage;
 
             explorer.utils.WriteFile(settingsFilePath, Json::Write(settings));
 
@@ -484,6 +490,10 @@ namespace FileExplorer {
         FileExplorer@ explorer;
         uint SelectedElementIndex;
 
+        uint CurrentPage = 0;
+        uint TotalPages = 1;
+
+
         FileTab(Config@ cfg, FileExplorer@ fe) {
             @Config = cfg;
             @explorer = fe;
@@ -497,6 +507,8 @@ namespace FileExplorer {
             explorer.nav.SetPath(path);
 
             StartIndexingFiles(path);
+            CurrentPage = 0;
+            UpdatePagination();
         }
 
         void StartIndexingFiles(const string &in path) {
@@ -565,6 +577,12 @@ namespace FileExplorer {
             }
 
             ApplyFilters();
+            if (explorer.Config.EnablePagination) {
+                UpdatePagination();
+            } else {
+                explorer.tab[0].TotalPages = 1;
+                explorer.tab[0].CurrentPage = 0;
+            }
         }
 
         void ApplyNonRecursiveSearch() {
@@ -647,6 +665,14 @@ namespace FileExplorer {
                 }
             }
             return null;
+        }
+
+        void UpdatePagination() {
+            uint totalElements = Elements.Length;
+            TotalPages = uint(Math::Ceil(float(totalElements) / Config.MaxElementsPerPage));
+            if (CurrentPage >= TotalPages) {
+                CurrentPage = Math::Max(TotalPages - 1, 0);
+            }
         }
     }
 
@@ -749,8 +775,8 @@ namespace FileExplorer {
             originalSize = UI::GetWindowSize();
             isMaximized = false;
 
-            vec2 minimizedPos = vec2(30, Draw::GetHeight() - 80);
-            vec2 minimizedSize = vec2(350, 63);
+            vec2 minimizedPos = vec2(30, Draw::GetHeight() - 70);
+            vec2 minimizedSize = vec2(325, 40);
 
             UI::SetWindowPos(minimizedPos);
             UI::SetWindowSize(minimizedSize);
@@ -1019,12 +1045,36 @@ namespace FileExplorer {
         }
 
         void Render_TopBar() {
-            UI::Text("File Explorer");
+            UI::PushStyleColor(UI::Col::Button, vec4(0, 0, 0, 0));
+            UI::PushStyleColor(UI::Col::ButtonHovered, vec4(0, 0, 0, 0));
+            UI::PushStyleColor(UI::Col::ButtonActive, vec4(0, 0, 0, 0));
+
+            if (UI::Button("File Explorer", vec2(90, 0))) {}
             
+            UI::PopStyleColor(3);
+
             UI::SameLine();
 
             float availWidth = UI::GetContentRegionAvail().x;
-            UI::Dummy(vec2(availWidth - 170, 0));
+            UI::Dummy(vec2(availWidth - 240, 0));
+            UI::SameLine();
+
+            vec2 buttonSize = vec2(60, 0);
+            UI::PushStyleColor(UI::Col::Button, vec4(0, 0, 0, 0));
+            UI::PushStyleColor(UI::Col::ButtonHovered, vec4(0, 0, 0, 0));
+            UI::PushStyleColor(UI::Col::ButtonActive, vec4(0, 0, 0, 0));
+            uint currentPage = explorer.tab[0].CurrentPage + 1;
+            uint totalPages = explorer.tab[0].TotalPages;
+            string text = ("\\$AAA" + currentPage + "/" + totalPages + "\\$g");
+
+            if (explorer.Config.EnablePagination) {
+                if (UI::Button(text, buttonSize)) {}
+            } else {
+                if (UI::Button("##", buttonSize)) {}
+            }
+            
+            UI::PopStyleColor(3);
+
             UI::SameLine();
 
             if (UI::Button(Icons::WindowMinimize)) {
@@ -1114,10 +1164,31 @@ namespace FileExplorer {
 
         string newFilter = "";
         void Render_ActionBar() {
-            if (UI::Button(Icons::ChevronLeft)) { /* Handle back navigation */ }
-            UI::SameLine();
-            if (UI::Button(Icons::ChevronRight)) { /* Handle forward navigation */ }
-            UI::SameLine();
+            if (!explorer.Config.EnablePagination) {
+                _UI::DisabledButton(Icons::ChevronLeft);
+                UI::SameLine();
+                _UI::DisabledButton(Icons::ChevronRight);
+                UI::SameLine();
+            } else {
+                if (explorer.tab[0].CurrentPage > 0) {
+                    if (UI::Button(Icons::ChevronLeft)) {
+                        explorer.tab[0].CurrentPage--;
+                    }
+                } else {
+                    _UI::DisabledButton(Icons::ChevronLeft);
+                }
+                UI::SameLine();
+
+                if (explorer.tab[0].CurrentPage < explorer.tab[0].TotalPages - 1) {
+                    if (UI::Button(Icons::ChevronRight)) {
+                        explorer.tab[0].CurrentPage++;
+                    }
+                } else {
+                    _UI::DisabledButton(Icons::ChevronRight);
+                }
+                UI::SameLine();
+            }
+
             if (UI::Button(Icons::Refresh)) { explorer.utils.RefreshCurrentDirectory(); }
             UI::SameLine();
             if (UI::Button(Icons::FolderOpen)) { explorer.utils.OpenCurrentFolderInNativeFileExplorer(); }
@@ -1192,9 +1263,18 @@ namespace FileExplorer {
                     explorer.tab[0].ApplyVisibilitySettings();
                     explorer.utils.RefreshCurrentDirectory();
                 }
-                if (UI::MenuItem("Enable Pagination", "", explorer.Config.EnablePagination)) {
-                    explorer.Config.EnablePagination = !explorer.Config.EnablePagination;
-                    explorer.utils.RefreshCurrentDirectory();
+
+                if (UI::BeginMenu("Pagination")) {
+                    if (UI::MenuItem("Enable Pagination", "", explorer.Config.EnablePagination)) {
+                        explorer.Config.EnablePagination = !explorer.Config.EnablePagination;
+                        explorer.utils.RefreshCurrentDirectory();
+                    }
+
+                    if (explorer.Config.EnablePagination) {
+                        explorer.Config.MaxElementsPerPage = UI::SliderInt("Max Elements Per Page", explorer.Config.MaxElementsPerPage, 1, 100);
+                    }
+
+                    UI::EndMenu();
                 }
 
                 if (UI::MenuItem("Use Extra Warning When Deleting", "", explorer.Config.UseExtraWarningWhenDeleting)) {
@@ -1224,15 +1304,15 @@ namespace FileExplorer {
                 if (UI::BeginMenu("File Name Display Options")) {
                     if (UI::MenuItem("Default File Name", "", explorer.Config.FileNameDisplayOption == 0)) {
                         explorer.Config.FileNameDisplayOption = 0;
-                        explorer.utils.RefreshCurrentDirectory(); // Refresh the UI to apply changes
+                        explorer.utils.RefreshCurrentDirectory();
                     }
                     if (UI::MenuItem("No Formatting", "", explorer.Config.FileNameDisplayOption == 1)) {
                         explorer.Config.FileNameDisplayOption = 1;
-                        explorer.utils.RefreshCurrentDirectory(); // Refresh the UI to apply changes
+                        explorer.utils.RefreshCurrentDirectory();
                     }
                     if (UI::MenuItem("ManiaPlanet Formatting", "", explorer.Config.FileNameDisplayOption == 2)) {
                         explorer.Config.FileNameDisplayOption = 2;
-                        explorer.utils.RefreshCurrentDirectory(); // Refresh the UI to apply changes
+                        explorer.utils.RefreshCurrentDirectory();
                     }
                     UI::EndMenu();
                 }
@@ -1435,7 +1515,7 @@ namespace FileExplorer {
             }
         }
 
-        void Render_MainAreaBar() {
+                void Render_MainAreaBar() {
             if (explorer.IsIndexing) {
                 UI::Text(explorer.IndexingMessage);
             } else if (explorer.tab[0].Elements.Length == 0) {
@@ -1466,7 +1546,10 @@ namespace FileExplorer {
 
                     UI::TableHeadersRow();
 
-                    for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
+                    uint startIndex = explorer.Config.EnablePagination ? explorer.tab[0].CurrentPage * explorer.Config.MaxElementsPerPage : 0;
+                    uint endIndex = explorer.Config.EnablePagination ? Math::Min(startIndex + explorer.Config.MaxElementsPerPage, explorer.tab[0].Elements.Length) : explorer.tab[0].Elements.Length;
+
+                    for (uint i = startIndex; i < endIndex; i++) {
                         ElementInfo@ element = explorer.tab[0].Elements[i];
                         if (!element.shouldShow) continue;
 
