@@ -221,7 +221,7 @@ namespace _IO {
         }
         
         string ReadSourceFileToEnd(const string &in path, bool verbose = false) {
-            // if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 224, "ReadSourceFileToEnd"); return ""; }
+            if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 224, "ReadSourceFileToEnd"); return ""; }
             // FileSource assumes the top dir is _PLUGINNAME_.op, not C:\ so this has to be assumed to be an existing path...
 
             IO::FileSource f(path);

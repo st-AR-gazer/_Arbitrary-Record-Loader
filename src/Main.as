@@ -2,13 +2,10 @@ void Main() {
     startnew(Server::StartHttpServer);
     InitApi();
     InitFolders();
-    InitMoveDummy();
+    // InitMoveDummy();
     OfficialManager::DownloadingFiles::Init();
     OfficialManager::UI::Init();
     OtherManager::CDN::Init();
-
-    string dllPath = IO::FromStorageFolder("DLLs/FileCreationTime.dll");
-    _IO::File::SafeMoveSourceFileToNonSource("src/Conditions/CompanionDLLs/FileCreationTime.dll", dllPath);
 
     startnew(MapCoro);
 }
@@ -42,7 +39,7 @@ void InitFolders() {
     _IO::Folder::SafeCreateFolder(Server::officialJsonFilesDirectory);
 }
 
-void InitMoveDummy() {
-    string storagePath = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Dummy/CTmRaceResult_VTable_Ptr.Replay.Gbx");
-    _IO::File::SafeMoveSourceFileToNonSource("src/Dummy/CTmRaceResult_VTable_Ptr.Replay.Gbx", storagePath);
-}
+// void InitMoveDummy() {
+//     string storagePath = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Dummy/CTmRaceResult_VTable_Ptr.Replay.Gbx");
+//     _IO::File::SafeMoveSourceFileToNonSource("src/Dummy/CTmRaceResult_VTable_Ptr.Replay.Gbx", storagePath);
+// }

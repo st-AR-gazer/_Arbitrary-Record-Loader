@@ -173,16 +173,18 @@ namespace FileExplorer {
         array<string> Filters;
         array<string> SelectedPaths;
         array<string> PinnedElements;
-        
+
+        // UI-related settings
         bool HideFiles = false;
         bool HideFolders = false;
         bool EnablePagination = false;
-        dictionary columsToShow;
-        int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
+        bool UseExtraWarningWhenDeleting = true;
         bool RecursiveSearch = false;
+        dictionary ColumnsToShow;
+        int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
 
-        const string settingsDirectory = IO::FromDataFolder("Plugin_FileExplorer_Settings");
-        const string settingsFilePath = Path::Join(settingsDirectory, "FileExplorerSettings.json");
+        /*const*/ string settingsDirectory = IO::FromDataFolder("Plugin_FileExplorer_Settings");
+        /*const*/ string settingsFilePath = Path::Join(settingsDirectory, "FileExplorerSettings.json");
 
         Config() {
             MustReturn = false;
@@ -192,12 +194,12 @@ namespace FileExplorer {
             SelectedPaths = array<string>();
             PinnedElements = array<string>();
 
-            columsToShow.Set("ico", true);
-            columsToShow.Set("name", true);
-            columsToShow.Set("type", true);
-            columsToShow.Set("size", true);
-            columsToShow.Set("lastModified", true);
-            columsToShow.Set("createdDate", true);
+            ColumnsToShow.Set("ico", true);
+            ColumnsToShow.Set("name", true);
+            ColumnsToShow.Set("type", true);
+            ColumnsToShow.Set("size", true);
+            ColumnsToShow.Set("lastModified", true);
+            ColumnsToShow.Set("createdDate", true);
         }
 
         void LoadSettings() {
@@ -206,7 +208,7 @@ namespace FileExplorer {
             }
 
             if (IO::FileExists(settingsFilePath)) {
-                string jsonString = IO::FileRead(settingsFilePath);
+                string jsonString = explorer.utils.ReadFileToEnd(settingsFilePath);
                 Json::Value settings = Json::Parse(jsonString);
                 
                 if (settings.HasKey("PinnedElements")) {
@@ -226,11 +228,22 @@ namespace FileExplorer {
                 if (settings.HasKey("EnablePagination")) {
                     EnablePagination = settings["EnablePagination"];
                 }
+                if (settings.HasKey("UseExtraWarningWhenDeleting")) {
+                    UseExtraWarningWhenDeleting = settings["UseExtraWarningWhenDeleting"];
+                }
                 if (settings.HasKey("RecursiveSearch")) {
                     RecursiveSearch = settings["RecursiveSearch"];
                 }
                 if (settings.HasKey("FileNameDisplayOption")) {
                     FileNameDisplayOption = settings["FileNameDisplayOption"];
+                }
+
+                if (settings.HasKey("ColumnsToShow")) {
+                    Json::Value cols = settings["ColumnsToShow"];
+                    for (uint i = 0; i < cols.GetKeys().Length; i++) {
+                        string col = cols.GetKeys()[i];
+                        ColumnsToShow.Set(col, bool(cols[col]));
+                    }
                 }
             }
         }
@@ -241,21 +254,50 @@ namespace FileExplorer {
             }
 
             Json::Value settings = Json::Object();
-            Json::Value pins = Json::Array();
             
+            Json::Value pins = Json::Array();
             for (uint i = 0; i < PinnedElements.Length; i++) {
                 pins.Add(PinnedElements[i]);
             }
-            
             settings["PinnedElements"] = pins;
 
             settings["HideFiles"] = HideFiles;
             settings["HideFolders"] = HideFolders;
             settings["EnablePagination"] = EnablePagination;
+            settings["UseExtraWarningWhenDeleting"] = UseExtraWarningWhenDeleting;
             settings["RecursiveSearch"] = RecursiveSearch;
             settings["FileNameDisplayOption"] = FileNameDisplayOption;
-            
-            IO::FileWrite(settingsFilePath, Json::Write(settings));
+
+            Json::Value cols = Json::Object();
+            array<string> colKeys = ColumnsToShow.GetKeys();
+            for (uint i = 0; i < colKeys.Length; i++) {
+                string col = colKeys[i];
+                bool value = false;
+                ColumnsToShow.Get(col, value);
+                cols[col] = value;
+            }
+            settings["ColumnsToShow"] = cols;
+
+            explorer.utils.WriteFile(settingsFilePath, Json::Write(settings));
+
+            // log("Settings saved to: " + settingsFilePath, LogLevel::Info, 174, "SaveSettings");
+        }
+
+        void ToggleColumnVisibility(const string &in columnName) {
+            if (ColumnsToShow.Exists(columnName)) {
+                bool isVisible;
+                ColumnsToShow.Get(columnName, isVisible);
+                ColumnsToShow.Set(columnName, !isVisible);
+            }
+        }
+
+        bool IsColumnVisible(const string &in columnName) const {
+            if (ColumnsToShow.Exists(columnName)) {
+                bool isVisible;
+                ColumnsToShow.Get(columnName, isVisible);
+                return isVisible;
+            }
+            return false;
         }
     }
 
@@ -671,6 +713,59 @@ namespace FileExplorer {
             return selectedElement !is null;
         }
 
+        string ReadFileToEnd(const string &in path) {
+            IO::File file(path, IO::FileMode::Read);
+            string content = file.ReadToEnd();
+            file.Close();
+            return content;
+        }
+
+        void WriteFile(const string &in path, const string &in content) {
+            IO::File file;
+            file.Open(path, IO::FileMode::Write);
+            file.Write(content);
+            file.Close();
+        }
+
+        vec2 originalPos;
+        vec2 originalSize;
+        bool isMaximized = false;
+        void MaximizeWindow() {
+            vec2 screenSize = vec2(Draw::GetWidth(), Draw::GetHeight());
+            if (isMaximized) {
+                UI::SetWindowPos(originalPos);
+                UI::SetWindowSize(originalSize);
+                isMaximized = false;
+            } else {
+                originalPos = UI::GetWindowPos();
+                originalSize = UI::GetWindowSize();
+                
+                vec2 maximizedSize = vec2(screenSize.x * 0.97, screenSize.y * 0.97);
+                vec2 maximizedPos = vec2(screenSize.x * 0.015, screenSize.y * 0.015);
+
+                UI::SetWindowPos(maximizedPos);
+                UI::SetWindowSize(maximizedSize);
+                isMaximized = true;
+            }
+        }
+
+        void MinimizeWindow() {
+            originalPos = UI::GetWindowPos();
+            originalSize = UI::GetWindowSize();
+            isMaximized = false;
+
+            vec2 minimizedPos = vec2(30, Draw::GetHeight() - 80);
+            vec2 minimizedSize = vec2(350, 63);
+
+            UI::SetWindowPos(minimizedPos);
+            UI::SetWindowSize(minimizedSize);
+        }
+
+        void BaseWindow() {
+            UI::SetWindowPos(vec2(150, 200));
+            UI::SetWindowSize(vec2(1650, 800));
+        }
+
         bool RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
         void DeleteSelectedElement() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
@@ -770,10 +865,6 @@ namespace FileExplorer {
             nav.UpdateHistory(cfg.Path);
         }
 
-        ~FileExplorer() {
-            Config.SaveSettings();
-        }
-
         void UpdateCurrentSelectedElement() {
             @CurrentSelectedElement = tab[0].GetSelectedElement();
         }
@@ -782,10 +873,17 @@ namespace FileExplorer {
             @Config = config;
 
             nav.SetPath(Config.Path);
-            StartIndexingFiles(Config.Path);
-            
-            showInterface = true;
+            // StartIndexingFiles(Config.Path);
+            explorer.Config.LoadSettings();
             explorer.exports.selectionComplete = false;
+            showInterface = true;
+        }
+
+        void Close() {
+            Config.SaveSettings();
+            showInterface = false;
+
+            // @explorer = null;
         }
 
         void StartIndexingFiles(const string &in path) {
@@ -882,6 +980,8 @@ namespace FileExplorer {
         }
 
         void Render_FileExplorer() {
+            if (!showInterface) return;
+
             Render_Rows();
             Render_Columns();
 
@@ -906,6 +1006,7 @@ namespace FileExplorer {
         }
 
         void Render_Rows() {
+            Render_TopBar();
             Render_NavigationBar();
             Render_ActionBar();
             Render_ReturnBar();
@@ -920,6 +1021,34 @@ namespace FileExplorer {
             UI::TableNextColumn();
             Render_DetailBar();
             UI::EndTable();
+        }
+
+        void Render_TopBar() {
+            UI::Text("File Explorer");
+            
+            UI::SameLine();
+
+            float availWidth = UI::GetContentRegionAvail().x;
+            UI::Dummy(vec2(availWidth - 170, 0));
+            UI::SameLine();
+
+            if (UI::Button(Icons::WindowMinimize)) {
+                explorer.utils.MinimizeWindow();
+            }
+            UI::SameLine();
+            if (UI::Button(Icons::WindowMaximize)) {
+                explorer.utils.MaximizeWindow();
+            }
+            UI::SameLine();
+            if (UI::Button(Icons::WindowClose)) {
+                explorer.Close();
+            }
+            UI::SameLine();
+            if (UI::Button(Icons::WindowRestore)) {
+                explorer.utils.BaseWindow();
+            }
+
+            UI::Separator();
         }
 
         void Render_NavigationBar() {
@@ -1061,36 +1190,65 @@ namespace FileExplorer {
                 if (UI::MenuItem("Hide Files", "", explorer.Config.HideFiles)) {
                     explorer.Config.HideFiles = !explorer.Config.HideFiles;
                     explorer.tab[0].ApplyVisibilitySettings();
+                    explorer.utils.RefreshCurrentDirectory();
                 }
                 if (UI::MenuItem("Hide Folders", "", explorer.Config.HideFolders)) {
                     explorer.Config.HideFolders = !explorer.Config.HideFolders;
                     explorer.tab[0].ApplyVisibilitySettings();
+                    explorer.utils.RefreshCurrentDirectory();
                 }
                 if (UI::MenuItem("Enable Pagination", "", explorer.Config.EnablePagination)) {
                     explorer.Config.EnablePagination = !explorer.Config.EnablePagination;
                     explorer.utils.RefreshCurrentDirectory();
                 }
-                if (UI::MenuItem("Recursive Search", "", explorer.Config.RecursiveSearch)) {
+
+                if (UI::MenuItem("Use Extra Warning When Deleting", "", explorer.Config.UseExtraWarningWhenDeleting)) {
+                    explorer.Config.UseExtraWarningWhenDeleting = !explorer.Config.UseExtraWarningWhenDeleting;
+                }
+
+                if (UI::MenuItem("Enable Recursive Search", "", explorer.Config.RecursiveSearch)) {
                     explorer.Config.RecursiveSearch = !explorer.Config.RecursiveSearch;
                     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                 }
+
                 UI::Separator();
-                
-                if (UI::BeginMenu("File Name Display Options")) {
-                    if (UI::MenuItem("Default File Name", "", explorer.Config.FileNameDisplayOption == 0)) {
-                        explorer.Config.FileNameDisplayOption = 0;
-                    }
-                    if (UI::MenuItem("No Formatting", "", explorer.Config.FileNameDisplayOption == 1)) {
-                        explorer.Config.FileNameDisplayOption = 1;
-                    }
-                    if (UI::MenuItem("ManiaPlanet Formatting", "", explorer.Config.FileNameDisplayOption == 2)) {
-                        explorer.Config.FileNameDisplayOption = 2;
+
+                if (UI::BeginMenu("Visible Columns")) {
+                    array<string> orderedColumns = { "ico", "name", "type", "size", "lastModified", "createdDate" };
+                    for (uint i = 0; i < orderedColumns.Length; i++) {
+                        string col = orderedColumns[i];
+                        bool isVisible = explorer.Config.IsColumnVisible(col);
+                        if (UI::MenuItem(col, "", isVisible, true)) {
+                            explorer.Config.ToggleColumnVisibility(col);
+                            explorer.utils.RefreshCurrentDirectory();
+                        }
                     }
                     UI::EndMenu();
                 }
-                
+
+                if (UI::BeginMenu("File Name Display Options")) {
+                    if (UI::MenuItem("Default File Name", "", explorer.Config.FileNameDisplayOption == 0)) {
+                        explorer.Config.FileNameDisplayOption = 0;
+                        explorer.utils.RefreshCurrentDirectory(); // Refresh the UI to apply changes
+                    }
+                    if (UI::MenuItem("No Formatting", "", explorer.Config.FileNameDisplayOption == 1)) {
+                        explorer.Config.FileNameDisplayOption = 1;
+                        explorer.utils.RefreshCurrentDirectory(); // Refresh the UI to apply changes
+                    }
+                    if (UI::MenuItem("ManiaPlanet Formatting", "", explorer.Config.FileNameDisplayOption == 2)) {
+                        explorer.Config.FileNameDisplayOption = 2;
+                        explorer.utils.RefreshCurrentDirectory(); // Refresh the UI to apply changes
+                    }
+                    UI::EndMenu();
+                }
+
+                UI::Separator();
+
+                explorer.Config.SaveSettings();
+
                 UI::EndPopup();
             }
+
             UI::Separator();
         }
 
@@ -1151,7 +1309,6 @@ namespace FileExplorer {
 
         void Render_ReturnBar() {
             if (explorer.Config.MustReturn) {
-
                 bool validReturnAmount = explorer.Config.SelectedPaths.Length >= explorer.Config.MinMaxReturnAmount.x &&
                                         (explorer.Config.SelectedPaths.Length <= explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1);
 
@@ -1159,7 +1316,7 @@ namespace FileExplorer {
                     if (UI::Button("Return Selected Paths")) {
                         explorer.exports.SetSelectionComplete(explorer.Config.SelectedPaths);
                         explorer.exports.selectionComplete = true;
-                        showInterface = false;
+                        explorer.Close();
                     }
                 } else {
                     _UI::DisabledButton("Return Selected Paths");
@@ -1213,7 +1370,7 @@ namespace FileExplorer {
 
         void Render_PinnedElements() {
             if (explorer.Config.PinnedElements.Length == 0) {
-                UI::Text("No pinned elements.");
+                // UI::Text("No pinned elements.");
             } else {
                 for (uint i = 0; i < explorer.Config.PinnedElements.Length; i++) {
                     string path = explorer.Config.PinnedElements[i];
@@ -1278,10 +1435,6 @@ namespace FileExplorer {
                     if (UI::MenuItem("Pin Element")) {
                         explorer.utils.PinSelectedElement();
                     }
-
-                    if (UI::MenuItem("Delete Element")) {
-                        explorer.utils.DeleteSelectedElement();
-                    }
                 }
                 UI::EndPopup();
             }
@@ -1293,37 +1446,62 @@ namespace FileExplorer {
             } else if (explorer.tab[0].Elements.Length == 0) {
                 UI::Text("No elements to display.");
             } else {
-                UI::BeginTable("FilesTable", 6, UI::TableFlags::Resizable | UI::TableFlags::Borders | UI::TableFlags::SizingFixedSame);
-                UI::TableSetupColumn("ico");
-                UI::TableSetupColumn("Name");
-                UI::TableSetupColumn("Type");
-                UI::TableSetupColumn("Size");
-                UI::TableSetupColumn("Last Modified");
-                UI::TableSetupColumn("Created Date");
-                UI::TableHeadersRow();
+                array<string> orderedColumns = { "ico", "name", "type", "size", "lastModified", "createdDate" };
+                uint columnCount = 0;
 
-                for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
-                    ElementInfo@ element = explorer.tab[0].Elements[i];
-                    if (!element.shouldShow) continue;
-
-                    UI::TableNextRow();
-                    UI::TableSetColumnIndex(0);
-                    UI::Text(explorer.GetElementIconString(element.Icon, element.IsSelected));
-                    UI::TableSetColumnIndex(1);
-
-                    SelectableWithClickCheck(element, ContextType::MainArea);
-
-                    UI::TableSetColumnIndex(2);
-                    UI::Text(element.IsFolder ? "Folder" : "File");
-                    UI::TableSetColumnIndex(3);
-                    UI::Text(element.IsFolder ? "-" : "" + element.Size);
-                    UI::TableSetColumnIndex(4);
-                    UI::Text("" + Time::FormatString("%Y-%m-%d %H:%M:%S", element.LastModifiedDate));
-                    UI::TableSetColumnIndex(5);
-                    UI::Text(Time::FormatString("%Y-%m-%d %H:%M:%S", element.CreationDate));
+                for (uint i = 0; i < orderedColumns.Length; i++) {
+                    bool isVisible = explorer.Config.IsColumnVisible(orderedColumns[i]);
+                    if (isVisible) {
+                        columnCount++;
+                    }
                 }
 
-                UI::EndTable();
+                if (columnCount > 0) {
+                    UI::BeginTable("FilesTable", columnCount, UI::TableFlags::Resizable | UI::TableFlags::Borders | UI::TableFlags::SizingFixedSame);
+
+                    for (uint i = 0; i < orderedColumns.Length; i++) {
+                        if (explorer.Config.IsColumnVisible(orderedColumns[i])) {
+                            if (orderedColumns[i] == "ico") {
+                                UI::TableSetupColumn(orderedColumns[i], UI::TableColumnFlags::None, 30.0f);
+                            } else {
+                                UI::TableSetupColumn(orderedColumns[i]);
+                            }
+                        }
+                    }
+
+                    UI::TableHeadersRow();
+
+                    for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
+                        ElementInfo@ element = explorer.tab[0].Elements[i];
+                        if (!element.shouldShow) continue;
+
+                        UI::TableNextRow();
+                        uint colIndex = 0;
+                        for (uint j = 0; j < orderedColumns.Length; j++) {
+                            if (explorer.Config.IsColumnVisible(orderedColumns[j])) {
+                                UI::TableSetColumnIndex(colIndex++);
+                                string col = orderedColumns[j];
+                                if (col == "ico") {
+                                    UI::Text(explorer.GetElementIconString(element.Icon, element.IsSelected));
+                                } else if (col == "name") {
+                                    SelectableWithClickCheck(element, ContextType::MainArea);
+                                } else if (col == "type") {
+                                    UI::Text(element.Type);
+                                } else if (col == "size") {
+                                    UI::Text(element.IsFolder ? "-" : element.Size);
+                                } else if (col == "lastModified") {
+                                    UI::Text(Time::FormatString("%Y-%m-%d %H:%M:%S", element.LastModifiedDate));
+                                } else if (col == "createdDate") {
+                                    UI::Text(Time::FormatString("%Y-%m-%d %H:%M:%S", element.CreationDate));
+                                }
+                            }
+                        }
+                    }
+
+                    UI::EndTable();
+                } else {
+                    UI::Text("No columns selected to display.");
+                }
             }
         }
 
@@ -1339,7 +1517,7 @@ namespace FileExplorer {
                     bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
                     if (canAddMore) {
-                        if (UI::MenuItem("Add to Selected Elements")) {
+                        if (UI::MenuItem("Add to Selected Elements", "", false)) {
                             if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
                                 explorer.Config.SelectedPaths.InsertLast(element.Path);
                                 explorer.utils.TruncateSelectedPathsIfNeeded();
@@ -1353,7 +1531,7 @@ namespace FileExplorer {
                         if (UI::MenuItem("Quick return")) {
                             explorer.exports.SetSelectionComplete( { element.Path } );
                             explorer.exports.selectionComplete = true;
-                            showInterface = false;
+                            explorer.Close();
                         }
                     } else {
                         UI::MenuItem("Quick return", "", false, false);
@@ -1411,7 +1589,7 @@ namespace FileExplorer {
 
             bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
-            // Right-click or Control-click to open context menu
+            // Handle control-click (for multi-selection) or right-click (for context menu)
             if (enterType == EnterType::RightClick || enterType == EnterType::ControlClick) {
                 openContextMenu = true;
                 currentContextType = contextType;
@@ -1545,8 +1723,11 @@ namespace FileExplorer {
 
     void RenderFileExplorer() {
         if (showInterface && explorer !is null) {
-            UserInterface ui(explorer);
-            explorer.ui.Render_FileExplorer();
+            // UserInterface ui(explorer);
+            if (UI::Begin("File Explorer", showInterface, UI::WindowFlags::NoTitleBar)) {
+                explorer.ui.Render_FileExplorer();
+            }
+            UI::End();
         }
     }
 
@@ -1574,7 +1755,11 @@ namespace FileExplorer {
     }
 
     void fe_ForceClose() {
-        showInterface = false;
+        if (explorer !is null) {
+            explorer.Close();
+        } else {
+            showInterface = false;
+        }
     }
 }
 
@@ -1833,7 +2018,8 @@ void OpenFileExplorerExample() {
 // Remove after testing
 void Render() {
     FILE_EXPLORER_BASE_RENDERER();
-    FILE_EXPLORER_V1_BASE_RENDERER(); // Used for comparison, should be removed on release
+    // FILE_EXPLORER_V1_BASE_RENDERER(); // Used for comparison, should be removed on release
+
     
     if (UI::Begin(Icons::UserPlus + " File Explorer", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
         if (UI::Button("Open File Explorer")) {
