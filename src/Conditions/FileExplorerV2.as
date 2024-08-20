@@ -160,7 +160,7 @@
 namespace FileExplorer {
     bool showInterface = false;
     FileExplorer@ explorer;
-
+    
     class Config {
         bool MustReturn;
         vec2 MinMaxReturnAmount;
@@ -168,8 +168,9 @@ namespace FileExplorer {
         string Path;
         string SearchQuery;
         array<string> Filters;
-        bool RenderFlag;
         array<string> SelectedPaths;
+        array<string> PinnedElements;
+        
         bool HideFiles = false;
         bool HideFolders = false;
         bool EnablePagination = false;
@@ -177,13 +178,16 @@ namespace FileExplorer {
         int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
         bool RecursiveSearch = false;
 
+        const string settingsDirectory = IO::FromDataFolder("Plugin_FileExplorer_Settings");
+        const string settingsFilePath = Path::Join(settingsDirectory, "FileExplorerSettings.json");
+
         Config() {
             MustReturn = false;
             Path = "";
             SearchQuery = "";
             Filters = array<string>();
-            RenderFlag = false;
             SelectedPaths = array<string>();
+            PinnedElements = array<string>();
 
             columsToShow.Set("ico", true);
             columsToShow.Set("name", true);
@@ -191,6 +195,64 @@ namespace FileExplorer {
             columsToShow.Set("size", true);
             columsToShow.Set("lastModified", true);
             columsToShow.Set("createdDate", true);
+        }
+
+        void LoadSettings() {
+            if (!IO::FolderExists(settingsDirectory)) {
+                IO::CreateFolder(settingsDirectory);
+            }
+
+            if (IO::FileExists(settingsFilePath)) {
+                string jsonString = IO::FileRead(settingsFilePath);
+                Json::Value settings = Json::Parse(jsonString);
+                
+                if (settings.HasKey("PinnedElements")) {
+                    Json::Value pins = settings["PinnedElements"];
+                    PinnedElements.Resize(pins.Length);
+                    for (uint i = 0; i < pins.Length; i++) {
+                        PinnedElements[i] = pins[i];
+                    }
+                }
+
+                if (settings.HasKey("HideFiles")) {
+                    HideFiles = settings["HideFiles"];
+                }
+                if (settings.HasKey("HideFolders")) {
+                    HideFolders = settings["HideFolders"];
+                }
+                if (settings.HasKey("EnablePagination")) {
+                    EnablePagination = settings["EnablePagination"];
+                }
+                if (settings.HasKey("RecursiveSearch")) {
+                    RecursiveSearch = settings["RecursiveSearch"];
+                }
+                if (settings.HasKey("FileNameDisplayOption")) {
+                    FileNameDisplayOption = settings["FileNameDisplayOption"];
+                }
+            }
+        }
+
+        void SaveSettings() {
+            if (!IO::FolderExists(settingsDirectory)) {
+                IO::CreateFolder(settingsDirectory);
+            }
+
+            Json::Value settings = Json::Object();
+            Json::Value pins = Json::Array();
+            
+            for (uint i = 0; i < PinnedElements.Length; i++) {
+                pins.Add(PinnedElements[i]);
+            }
+            
+            settings["PinnedElements"] = pins;
+
+            settings["HideFiles"] = HideFiles;
+            settings["HideFolders"] = HideFolders;
+            settings["EnablePagination"] = EnablePagination;
+            settings["RecursiveSearch"] = RecursiveSearch;
+            settings["FileNameDisplayOption"] = FileNameDisplayOption;
+            
+            IO::FileWrite(settingsFilePath, Json::Write(settings));
         }
     }
 
@@ -705,6 +767,10 @@ namespace FileExplorer {
             nav.UpdateHistory(cfg.Path);
         }
 
+        ~FileExplorer() {
+            Config.SaveSettings();
+        }
+
         void UpdateCurrentSelectedElement() {
             @CurrentSelectedElement = tab[0].GetSelectedElement();
         }
@@ -1143,11 +1209,17 @@ namespace FileExplorer {
         }
 
         void Render_PinnedElements() {
-            for (uint i = 0; i < explorer.PinnedElements.Length; i++) {
-                string path = explorer.PinnedElements[i];
-                ElementInfo@ element = explorer.GetElementInfo(path);
+            if (explorer.Config.PinnedElements.Length == 0) {
+                UI::Text("No pinned elements.");
+            } else {
+                for (uint i = 0; i < explorer.Config.PinnedElements.Length; i++) {
+                    string path = explorer.Config.PinnedElements[i];
+                    ElementInfo@ element = explorer.GetElementInfo(path);
 
-                SelectableWithClickCheck(element, ContextType::PinnedElements);
+                    if (UI::Selectable(path, false)) {
+                        explorer.tab[0].LoadDirectory(path);
+                    }
+                }
             }
         }
 
