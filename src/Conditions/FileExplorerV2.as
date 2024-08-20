@@ -176,6 +176,8 @@ namespace FileExplorer {
         int MaxElementsPerPage = 30;
         dictionary ColumnsToShow;
         int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
+        bool EnableSearchBar = true;
+        int SearchBarPadding = 0;
 
         /*const*/ string settingsDirectory = IO::FromDataFolder("Plugin_FileExplorer_Settings");
         /*const*/ string settingsFilePath = Path::Join(settingsDirectory, "FileExplorerSettings.json");
@@ -231,7 +233,6 @@ namespace FileExplorer {
                 if (settings.HasKey("FileNameDisplayOption")) {
                     FileNameDisplayOption = settings["FileNameDisplayOption"];
                 }
-
                 if (settings.HasKey("ColumnsToShow")) {
                     Json::Value cols = settings["ColumnsToShow"];
                     for (uint i = 0; i < cols.GetKeys().Length; i++) {
@@ -239,9 +240,17 @@ namespace FileExplorer {
                         ColumnsToShow.Set(col, bool(cols[col]));
                     }
                 }
-
                 if (settings.HasKey("MaxElementsPerPage")) {
                     MaxElementsPerPage = settings["MaxElementsPerPage"];
+                }
+                if (settings.HasKey("SearchBarPadding")) {
+                    SearchBarPadding = settings["SearchBarPadding"];
+                }
+                if (settings.HasKey("EnableSearchBar")) {
+                    EnableSearchBar = settings["EnableSearchBar"];
+                }
+                if (settings.HasKey("SearchBarPadding")) {
+                    SearchBarPadding = settings["SearchBarPadding"];
                 }
             }
         }
@@ -276,6 +285,9 @@ namespace FileExplorer {
             }
             settings["ColumnsToShow"] = cols;
             settings["MaxElementsPerPage"] = MaxElementsPerPage;
+            settings["SearchBarPadding"] = SearchBarPadding;
+            settings["EnableSearchBar"] = EnableSearchBar;
+            settings["SearchBarPadding"] = SearchBarPadding;
 
             explorer.utils.WriteFile(settingsFilePath, Json::Write(settings));
 
@@ -1097,7 +1109,12 @@ namespace FileExplorer {
         void Render_NavigationBar() {
             float buttonWidth = 30.0;
             float totalWidth = UI::GetContentRegionAvail().x;
-            float pathWidth = totalWidth * 0.8f - buttonWidth * 3;
+            float pathWidth = (totalWidth * 0.8f - buttonWidth * 3);
+    
+            if (explorer.Config.EnableSearchBar) {
+                pathWidth += explorer.Config.SearchBarPadding;
+            }
+
             float searchWidth = totalWidth - pathWidth - buttonWidth * 3;
 
             // Navigation Buttons
@@ -1136,27 +1153,28 @@ namespace FileExplorer {
 
             UI::SameLine();
 
-            // Interactive Path Input
             UI::PushItemWidth(pathWidth);
             string newPath = UI::InputText("##PathInput", explorer.tab[0].Navigation.GetPath());
             if (UI::IsKeyPressed(UI::Key::Enter)) {
                 explorer.tab[0].LoadDirectory(newPath);
             }
             UI::PopItemWidth();
-            UI::SameLine();
 
-            // Search Bar with Search Icon
-            UI::PushItemWidth(-1);
+            if (explorer.Config.EnableSearchBar) {
+                UI::SameLine();
+                UI::PushItemWidth(searchWidth - 110);
 
-            UI::Text(Icons::Search + "");
-            UI::SameLine();
-            string newSearchQuery = UI::InputText("##SearchInput", explorer.Config.SearchQuery);
-            if (UI::IsKeyPressed(UI::Key::Enter) && newSearchQuery != explorer.Config.SearchQuery) {
-                explorer.Config.SearchQuery = newSearchQuery;
-                explorer.tab[0].ApplyFiltersAndSearch();
+                UI::Text(Icons::Search + "");
+                UI::SameLine();
+                string newSearchQuery = UI::InputText("##SearchInput", explorer.Config.SearchQuery);
+                if (UI::IsKeyPressed(UI::Key::Enter) && newSearchQuery != explorer.Config.SearchQuery) {
+                    explorer.Config.SearchQuery = newSearchQuery;
+                    explorer.tab[0].ApplyFiltersAndSearch();
+                }
+
+                UI::PopItemWidth();
             }
 
-            UI::PopItemWidth();
             UI::Separator();
         }
 
@@ -1275,15 +1293,28 @@ namespace FileExplorer {
                     UI::EndMenu();
                 }
 
+                if (UI::BeginMenu("Search Bar")) {
+                    if (UI::MenuItem("Enable Search Bar", "", explorer.Config.EnableSearchBar)) {
+                        explorer.Config.EnableSearchBar = !explorer.Config.EnableSearchBar;
+                        explorer.utils.RefreshCurrentDirectory();
+                    }
+
+                    if (explorer.Config.EnableSearchBar) {
+                        explorer.Config.SearchBarPadding = UI::SliderInt("Search Bar Padding", explorer.Config.SearchBarPadding, -200, 100);
+                    }
+
+                    if (UI::MenuItem("Enable Recursive Search", "", explorer.Config.RecursiveSearch)) {
+                        explorer.Config.RecursiveSearch = !explorer.Config.RecursiveSearch;
+                        explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+                    }
+
+                    UI::EndMenu();
+                }
+
                 if (UI::MenuItem("Use Extra Warning When Deleting", "", explorer.Config.UseExtraWarningWhenDeleting)) {
                     explorer.Config.UseExtraWarningWhenDeleting = !explorer.Config.UseExtraWarningWhenDeleting;
                 }
-
-                if (UI::MenuItem("Enable Recursive Search", "", explorer.Config.RecursiveSearch)) {
-                    explorer.Config.RecursiveSearch = !explorer.Config.RecursiveSearch;
-                    explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
-                }
-
+                
                 UI::Separator();
 
                 if (UI::BeginMenu("Visible Columns")) {
