@@ -143,6 +143,9 @@
 
         - Add pagination
 
+        - Change all scrollable element location to use child regions so that the scrollbars are only applied to the 
+          specific relevant region.
+
         - Add a custom location for settings so that the user can set custom PINs, and so that they are enabled cross 
           sessions and plugins.
 
@@ -971,9 +974,9 @@ namespace FileExplorer {
             UI::SameLine();
 
             // Search Bar with Search Icon
-            UI::PushItemWidth(searchWidth);
+            UI::PushItemWidth(-1);
 
-            UI::Text(Icons::Search + " ");
+            UI::Text(Icons::Search + "");
             UI::SameLine();
             string newSearchQuery = UI::InputText("##SearchInput", explorer.Config.SearchQuery);
             if (UI::IsKeyPressed(UI::Key::Enter) && newSearchQuery != explorer.Config.SearchQuery) {
