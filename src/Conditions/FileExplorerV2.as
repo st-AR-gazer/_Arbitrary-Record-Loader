@@ -141,8 +141,6 @@
     TODO: 
         - Add support for multiple tabs (not planned)
 
-        - Add pagination
-
         - Change all scrollable element location to use child regions so that the scrollbars are only applied to the 
           specific relevant region.
 
