@@ -152,6 +152,11 @@
           not working as intended, it needs to be looked into more. Normal search works just fine though.
           (recursive search is also not in a coroutine)
 
+        - The UI seems to continue to reference only selected elements, even after there has been a direcotry change, 
+          this is not intended and should be fixed.
+
+        - Pinning any element does not work.
+
 */
 namespace FileExplorer {
     bool showInterface = false;
@@ -454,8 +459,12 @@ namespace FileExplorer {
         void MoveIntoSelectedDirectory() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null && selectedElement.IsFolder) {
-                UpdateHistory(selectedElement.Path);
-                explorer.tab[0].LoadDirectory(selectedElement.Path);
+                if (!selectedElement.Path.StartsWith(explorer.tab[0].Navigation.GetPath())) {
+                    log("Folder is not in the current folder, cannot move into it.", LogLevel::Warn, 0, "MoveIntoSelectedDirectory");
+                } else {
+                    UpdateHistory(selectedElement.Path);
+                    explorer.tab[0].LoadDirectory(selectedElement.Path);
+                }
             } else {
                 log("No folder selected or selected element is not a folder.", LogLevel::Warn, 304, "MoveIntoSelectedDirectory");
             }
@@ -1414,8 +1423,17 @@ namespace FileExplorer {
         }
 
         void Render_DeleteConfirmationPopup() {
-            if (explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG) {
+            if (explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG && explorer.Config.UseExtraWarningWhenDeleting) {
                 UI::OpenPopup("DeleteConfirmationPopup");
+            } else if (explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG && !explorer.Config.UseExtraWarningWhenDeleting) {
+                ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+
+                if (selectedElement !is null && selectedElement.IsFolder) {
+                    log("Deleting folder with contents: " + selectedElement.Path, LogLevel::Info, 1040, "Render_DeleteConfirmationPopup");
+                    IO::DeleteFolder(selectedElement.Path, true);
+                    explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
+                    explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+                }
             }
 
             if (UI::BeginPopupModal("DeleteConfirmationPopup", explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG, UI::WindowFlags::AlwaysAutoResize)) {
