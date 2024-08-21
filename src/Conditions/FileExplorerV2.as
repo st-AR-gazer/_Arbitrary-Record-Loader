@@ -1677,13 +1677,6 @@ namespace FileExplorer {
                         UI::MenuItem("Quick return", "", false, false);
                     }
 
-                    if (UI::MenuItem("Remove from Selected Elements")) {
-                        int index = explorer.Config.SelectedPaths.Find(element.Path);
-                        if (index != -1) {
-                            explorer.Config.SelectedPaths.RemoveAt(index);
-                        }
-                    }
-
                     if (UI::MenuItem("Rename Element")) {
                         explorer.utils.RENDER_RENAME_POPUP_FLAG = true;
                     }
