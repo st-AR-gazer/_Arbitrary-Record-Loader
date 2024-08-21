@@ -164,6 +164,7 @@ namespace FileExplorer {
         string Path;
         string SearchQuery;
         array<string> Filters;
+        dictionary ActiveFilters;
         array<string> SelectedPaths;
         array<string> PinnedElements;
 
@@ -309,6 +310,19 @@ namespace FileExplorer {
                 return isVisible;
             }
             return false;
+        }
+
+        bool IsFilterActive(const string &in filter) const {
+            bool isActive = true;
+            if (ActiveFilters.Exists(filter)) {
+                ActiveFilters.Get(filter, isActive);
+            }
+            return isActive;
+        }
+
+        void ToggleFilterActive(const string &in filter) {
+            bool isActive = IsFilterActive(filter);
+            ActiveFilters.Set(filter, !isActive);
         }
     }
 
@@ -528,9 +542,6 @@ namespace FileExplorer {
             startnew(CoroutineFuncUserdata(IndexFilesCoroutine), this);
         }
 
-        // FIXME: Search currently only updates if you refresh the directory, it should update on the fly
-        // FIXME: Recursive is also a bit weird, will need to look into this tomorrow...
-
         void IndexFilesCoroutine(ref@ r) {
             FileTab@ tab = cast<FileTab@>(r);
             if (tab is null) return;
@@ -636,19 +647,30 @@ namespace FileExplorer {
         }
 
         void ApplyFilters() {
+            bool anyActiveFilters = false;
+            for (uint i = 0; i < Config.Filters.Length; i++) {
+                if (Config.IsFilterActive(Config.Filters[i])) {
+                    anyActiveFilters = true;
+                    break;
+                }
+            }
+
             for (uint i = 0; i < Elements.Length; i++) {
                 ElementInfo@ element = Elements[i];
                 element.shouldShow = true;
 
-                if (Config.Filters.Length > 0 && !element.IsFolder) {
+                if (anyActiveFilters && !element.IsFolder) {
                     bool found = false;
                     for (uint j = 0; j < Config.Filters.Length; j++) {
-                        if (element.Type.ToLower() == Config.Filters[j].ToLower()) {
-                            found = true;
-                            break;
-                        } else if (Config.Filters[j].ToLower() == "replay" && element.Path.ToLower().Contains(".replay.gbx")) {
-                            found = true;
-                            break;
+                        string filter = Config.Filters[j];
+                        if (Config.IsFilterActive(filter)) {
+                            if (element.Type.ToLower() == filter.ToLower()) {
+                                found = true;
+                                break;
+                            } else if (filter.ToLower() == "replay" && element.Path.ToLower().Contains(".replay.gbx")) {
+                                found = true;
+                                break;
+                            }
                         }
                     }
                     element.shouldShow = found;
@@ -1228,8 +1250,18 @@ namespace FileExplorer {
             if (UI::BeginPopup("filterMenu")) {
                 UI::Text("All filters");
                 UI::Separator();
-                UI::Text("Add filter");
-                newFilter = UI::InputText("New Filter", newFilter);
+
+                UI::PushStyleColor(UI::Col::Button, vec4(0, 0, 0, 0));
+                UI::PushStyleColor(UI::Col::ButtonHovered, vec4(0, 0, 0, 0));
+                UI::PushStyleColor(UI::Col::ButtonActive, vec4(0, 0, 0, 0));
+
+                if (UI::Button("Add filter", vec2(70, 0))) {}
+                
+                UI::PopStyleColor(3);
+
+                UI::SameLine();
+                newFilter = UI::InputText("##", newFilter);
+                UI::SameLine();
                 if (UI::Button("Add")) {
                     explorer.Config.Filters.InsertLast(newFilter.ToLower());
                     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
@@ -1244,17 +1276,18 @@ namespace FileExplorer {
 
                 for (uint i = 0; i < explorer.Config.Filters.Length; i++) {
                     string filter = explorer.Config.Filters[i];
-                    if (UI::BeginMenu(filter)) {
-                        // TODO: Add filter selection, you should be able to select a filter instead of just removing or adding a filter.
+                    bool isActive = explorer.Config.IsFilterActive(filter);
+
+                    if (UI::BeginMenu(filter + (isActive ? "\\$888 (Active)" : "\\$888 (Inactive)"))) {
+                        if (UI::MenuItem(isActive ? "Deactivate Filter" : "Activate Filter")) {
+                            explorer.Config.ToggleFilterActive(filter);
+                            explorer.tab[0].ApplyFiltersAndSearch();
+                        }
                         
-                        // if (UI::MenuItem("Select Filter")) {
-                        //     SelectFilter(filter);
-                        // }
                         if (UI::MenuItem("Remove Filter")) {
                             explorer.Config.Filters.RemoveAt(i);
+                            explorer.Config.ActiveFilters.Delete(filter);
                             explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
-                            // FIXME: It currenly closes the popup regardless of it UI::CloseCurrentPopup(); is commented out or not
-                            // UI::CloseCurrentPopup();
                         }
                         UI::EndMenu();
                     }
