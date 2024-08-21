@@ -144,6 +144,9 @@
         - Change all scrollable element location to use child regions so that the scrollbars are only applied to the 
           specific relevant region.
 
+        - If the current folder is one of the hardcoded ones we should make the color of the text of the hardcoded paths 
+          slightly different from when they are not the current directory (it should be slight more gray)
+
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
@@ -1844,8 +1847,6 @@ namespace FileExplorer {
     }
 
 /* ------------------------ Handle Button Clicks ------------------------ */
-// FIXME: After clicking ctrl it 'sticks' to you, you have to click ctrl again to remove the stickyness...
-//        Some custom functionality needs to be added to avoid this...
     enum EnterType {
         None,
         LeftClick,
@@ -1853,23 +1854,6 @@ namespace FileExplorer {
         DoubleClick,
         ControlClick
     }
-
-    class KeyPresses {
-        bool isControlPressed = false;
-
-        void HandleKeyPress(bool down, VirtualKey key) {
-            if (key == VirtualKey::Control) {
-                isControlPressed = down;
-            }
-        }
-    }
-
-    void fe_HandleKeyPresses(bool down, VirtualKey key) {
-        if (explorer !is null) {
-            explorer.keyPress.HandleKeyPress(down, key);
-        }
-    }
-
 /* ------------------------ End Handle Button Clicks ------------------------ */
 
     void RenderFileExplorer() {
@@ -2118,26 +2102,6 @@ void ParseChallengeMetadata(XML::Node &in headerNode, dictionary &inout metadata
 
 /* ------------------------ Functions / Variables that have to be in the global namespace ------------------------ */
 
-// Should be possible to remove this.
-// // Sorry, but all inline variables have to be in the global namespace.
-// array<string>@ FILE_EXPLORER_selectedPaths;
-
-// // Sorry, due to limitations in Openplanet the "OnKeyPress" function has has to be in the global namespace.
-// // If you are using this funciton in you own project please add: ` FILE_EXPLORER_KEYPRESS_HANDLER(down, key); ` to your 
-// // own "OnKeyPress" function.
-// // If this is not done, the File Explorer will not work as intended.
-
-// // ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
-//     void OnKeyPress(bool down, VirtualKey key) {
-//         FILE_EXPLORER_KEYPRESS_HANDLER(down, key);
-//     }
-// // ----- REMOVE THIS IF YOU HANDLE KEYPRESSES IN YOUR OWN CODE (also read the comment above) ----- //
-
-// void FILE_EXPLORER_KEYPRESS_HANDLER(bool down, VirtualKey key) {
-//     FileExplorer::fe_HandleKeyPresses(down, key);
-// }
-
-// _______________
 
 // Sorry, but due to limitations in Openplanet the "Render" function has to be in the global namespace.
 // If you are using this function in your own project please add ` FILE_EXPLORER_BASE_RENDERER ` to your own 
