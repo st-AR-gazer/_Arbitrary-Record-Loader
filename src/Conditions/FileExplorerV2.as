@@ -144,6 +144,9 @@
         - Change all scrollable element location to use child regions so that the scrollbars are only applied to the 
           specific relevant region.
 
+        - If the current folder is one of the hardcoded ones we should make the color of the text of the hardcoded paths 
+          slightly different from when they are not the current directory (it should be slight more gray)
+
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
