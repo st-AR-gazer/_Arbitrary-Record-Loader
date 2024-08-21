@@ -30,6 +30,7 @@
  *        FILE_EXPLORER_BASE_RENDERER();  // This ensures the FileExplorer is rendered properly.
  *    }
  *    ```
+ *    **NOTE**: The `FILE_EXPLORER_BASE_RENDERER()` function should be called at the start of your render loop.
  * 
  * 3. **Open the FileExplorer:**
  *    To display the FileExplorer UI and allow users to select files, you should call the `FileExplorer::fe_Start()` 
@@ -223,7 +224,6 @@ namespace FileExplorer {
                         PinnedElements[i] = pins[i];
                     }
                 }
-
                 if (settings.HasKey("HideFiles")) {
                     HideFiles = settings["HideFiles"];
                 }
@@ -410,7 +410,6 @@ namespace FileExplorer {
             GbxMetadata = metadata;
         }
     }
-
 
     class Navigation {
         string CurrentPath;
@@ -897,8 +896,6 @@ namespace FileExplorer {
     }
 
     class FileExplorer {
-        KeyPresses@ keyPress;
-
         array<FileTab@> tab;
         Config@ Config;
         array<string> PinnedElements;
@@ -915,8 +912,6 @@ namespace FileExplorer {
         ElementInfo@ CurrentSelectedElement;
 
         FileExplorer(Config@ cfg) {
-            @keyPress = KeyPresses();
-
             @Config = cfg;
             @nav = Navigation(this);
             tab.Resize(1);
@@ -938,7 +933,6 @@ namespace FileExplorer {
             @Config = config;
 
             nav.SetPath(Config.Path);
-            // StartIndexingFiles(Config.Path);
             explorer.Config.LoadSettings();
             explorer.exports.selectionComplete = false;
             showInterface = true;
@@ -947,8 +941,6 @@ namespace FileExplorer {
         void Close() {
             Config.SaveSettings();
             showInterface = false;
-
-            // @explorer = null;
         }
 
         void StartIndexingFiles(const string &in path) {
@@ -1839,7 +1831,6 @@ namespace FileExplorer {
                 UI::Text("No element selected.");
             }
         }
-
 
         ElementInfo@ GetSelectedElement() {
             return explorer.CurrentSelectedElement;
