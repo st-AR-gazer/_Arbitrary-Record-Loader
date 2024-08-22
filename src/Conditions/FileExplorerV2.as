@@ -1529,16 +1529,14 @@ namespace FileExplorer {
 
         void Render_PinnedElements() {
             if (explorer.Config.PinnedElements.Length == 0) {
-                //UI::Text("No pinned elements.");
+                // UI::Text("No pinned elements.");
             } else {
                 for (uint i = 0; i < explorer.Config.PinnedElements.Length; i++) {
                     string path = explorer.Config.PinnedElements[i];
                     ElementInfo@ element = explorer.GetElementInfo(path);
 
                     if (element !is null) {
-                        if (UI::Selectable(element.Name, false)) {
-                            explorer.tab[0].LoadDirectory(element.Path);
-                        }
+                        SelectableWithClickCheck(element, ContextType::PinnedElements);
                     } else {
                         explorer.Config.PinnedElements.RemoveAt(i);
                         explorer.Config.SaveSettings();
@@ -1581,31 +1579,32 @@ namespace FileExplorer {
             }
         }
 
-        void Render_Context_SelectedElements() {
-            if (openContextMenu) {
-                UI::OpenPopup("SelectedElementContextMenu");
-                openContextMenu = false;
+        void Render_Context_PinnedElements() {
+            if (explorer.ui.openContextMenu) {
+                UI::OpenPopup("PinnedElementContextMenu");
+                explorer.ui.openContextMenu = false;
             }
 
-            if (UI::BeginPopup("SelectedElementContextMenu")) {
-                ElementInfo@ element = explorer.ui.GetSelectedElement();
+            if (UI::BeginPopup("PinnedElementContextMenu")) {
+                ElementInfo@ element = explorer.CurrentSelectedElement;
                 if (element !is null) {
-                    if (UI::MenuItem("Remove from Selected Elements")) {
-                        int index = explorer.Config.SelectedPaths.Find(element.Path);
+                    if (UI::MenuItem("Remove from Pinned Elements")) {
+                        int index = explorer.Config.PinnedElements.Find(element.Path);
                         if (index != -1) {
-                            explorer.Config.SelectedPaths.RemoveAt(index);
+                            explorer.Config.PinnedElements.RemoveAt(index);
+                            explorer.Config.SaveSettings();
                         }
                     }
 
-                    if (UI::MenuItem("Pin Element")) {
-                        explorer.utils.PinSelectedElement();
+                    if (UI::MenuItem("Rename Pinned Element")) {
+                        explorer.utils.RENDER_RENAME_POPUP_FLAG = true;
                     }
                 }
                 UI::EndPopup();
             }
         }
 
-                void Render_MainAreaBar() {
+        void Render_MainAreaBar() {
             if (explorer.IsIndexing) {
                 UI::Text(explorer.IndexingMessage);
             } else if (explorer.tab[0].Elements.Length == 0) {
@@ -1757,9 +1756,15 @@ namespace FileExplorer {
                 @explorer.CurrentSelectedElement = element;
             } 
             // Handle double-click
-            else if (element.IsSelected) {
+            else if (contextType == ContextType::PinnedElements || element.IsSelected) {
                 if (currentTime - element.LastClickTime <= doubleClickThreshold) {
-                    if (element.IsFolder) {
+                    if (contextType == ContextType::PinnedElements) {
+                        if (canAddMore && explorer.Config.SelectedPaths.Find(element.Path) == -1) {
+                            explorer.Config.SelectedPaths.InsertLast(element.Path);
+                            explorer.utils.TruncateSelectedPathsIfNeeded();
+                        }
+                        @explorer.CurrentSelectedElement = element;
+                    } else if (element.IsFolder) {
                         explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
                     } else if (canAddMore) {
                         if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
@@ -1774,8 +1779,10 @@ namespace FileExplorer {
             } 
             // Normal left-click to select an element
             else if (enterType == EnterType::LeftClick) {
-                for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
-                    explorer.tab[0].Elements[i].IsSelected = false;
+                if (contextType != ContextType::PinnedElements) {
+                    for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
+                        explorer.tab[0].Elements[i].IsSelected = false;
+                    }
                 }
                 element.IsSelected = true;
                 element.LastSelectedTime = currentTime;
