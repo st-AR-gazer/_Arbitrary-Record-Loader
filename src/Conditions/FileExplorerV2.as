@@ -1547,18 +1547,19 @@ namespace FileExplorer {
         }
 
         void Render_Context_PinnedElements() {
-            if (openContextMenu) {
+            if (explorer.ui.openContextMenu) {
                 UI::OpenPopup("PinnedElementContextMenu");
-                openContextMenu = false;
+                explorer.ui.openContextMenu = false;
             }
 
             if (UI::BeginPopup("PinnedElementContextMenu")) {
                 ElementInfo@ element = explorer.CurrentSelectedElement;
                 if (element !is null) {
                     if (UI::MenuItem("Remove from Pinned Elements")) {
-                        int index = explorer.PinnedElements.Find(element.Path);
+                        int index = explorer.Config.PinnedElements.Find(element.Path);
                         if (index != -1) {
-                            explorer.PinnedElements.RemoveAt(index);
+                            explorer.Config.PinnedElements.RemoveAt(index);
+                            explorer.Config.SaveSettings();
                         }
                     }
 
@@ -1579,25 +1580,24 @@ namespace FileExplorer {
             }
         }
 
-        void Render_Context_PinnedElements() {
-            if (explorer.ui.openContextMenu) {
-                UI::OpenPopup("PinnedElementContextMenu");
-                explorer.ui.openContextMenu = false;
+        void Render_Context_SelectedElements() {
+            if (openContextMenu) {
+                UI::OpenPopup("SelectedElementContextMenu");
+                openContextMenu = false;
             }
 
-            if (UI::BeginPopup("PinnedElementContextMenu")) {
-                ElementInfo@ element = explorer.CurrentSelectedElement;
+            if (UI::BeginPopup("SelectedElementContextMenu")) {
+                ElementInfo@ element = explorer.ui.GetSelectedElement();
                 if (element !is null) {
-                    if (UI::MenuItem("Remove from Pinned Elements")) {
-                        int index = explorer.Config.PinnedElements.Find(element.Path);
+                    if (UI::MenuItem("Remove from Selected Elements")) {
+                        int index = explorer.Config.SelectedPaths.Find(element.Path);
                         if (index != -1) {
-                            explorer.Config.PinnedElements.RemoveAt(index);
-                            explorer.Config.SaveSettings();
+                            explorer.Config.SelectedPaths.RemoveAt(index);
                         }
                     }
 
-                    if (UI::MenuItem("Rename Pinned Element")) {
-                        explorer.utils.RENDER_RENAME_POPUP_FLAG = true;
+                    if (UI::MenuItem("Pin Element")) {
+                        explorer.utils.PinSelectedElement();
                     }
                 }
                 UI::EndPopup();
