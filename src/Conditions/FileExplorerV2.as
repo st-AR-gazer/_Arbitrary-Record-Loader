@@ -157,7 +157,8 @@
           (recursive search is also not in a coroutine)
 
         - The UI seems to continue to reference only selected elements, even after there has been a direcotry change, 
-          this is not intended and should be fixed.
+          this is not intended and should be fixed. (In regards to moving up directories, when selecting an element this 
+          reference is kept. It is not reset when moving to a new directory even though it should be...)
 
 */
 namespace FileExplorer {
@@ -536,12 +537,21 @@ namespace FileExplorer {
         }
 
         void LoadDirectory(const string &in path) {
+            ClearSelectorElements();
+
             explorer.nav.UpdateHistory(path);
             explorer.nav.SetPath(path);
 
             StartIndexingFiles(path);
             CurrentPage = 0;
             UpdatePagination();
+        }
+
+        void ClearSelectorElements() {
+            for (uint i = 0; i < Elements.Length; i++) {
+                @Elements[i] = null;
+            }
+            Elements.Resize(0);
         }
 
         void StartIndexingFiles(const string &in path) {
