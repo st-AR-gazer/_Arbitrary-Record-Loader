@@ -1179,14 +1179,14 @@ namespace FileExplorer {
             }
             UI::SameLine();
             
-            print(explorer.tab[0].Elements.Length);
-            print(explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder);
-            print(explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].Name);
-
             if (explorer.tab[0].Elements.Length > 0 && !explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
                 explorer.utils.DisabledButton(Icons::ArrowDown); 
             } else if (explorer.tab[0].Elements.Length > 0 && explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
-                if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
+                if (explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex] is null) {
+                    explorer.utils.DisabledButton(Icons::ArrowDown);
+                } else {
+                    if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
+                }
                 UI::SameLine();
             } else {
                 explorer.utils.DisabledButton(Icons::ArrowDown);
