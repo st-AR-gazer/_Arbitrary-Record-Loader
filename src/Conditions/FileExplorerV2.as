@@ -1187,7 +1187,7 @@ namespace FileExplorer {
             UI::SameLine();
             if (explorer.tab[0].Elements.Length > 0 && !explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
                 explorer.utils.DisabledButton(Icons::ArrowDown); 
-            } else if (explorer.tab[0].Elements.Length > 0) {
+            } else if (explorer.tab[0].Elements.Length > 0 && explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
                 if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
                 UI::SameLine();
             } else {
