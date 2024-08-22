@@ -50,16 +50,18 @@ namespace _IO {
         }
         
         string GetParentDirectoryName(const string &in path) {
-            if (!IsDirectory(path)) {
-                return _IO::File::GetFilePathWithoutFileName(path);
+            string trimmedPath = path;
+
+            if (!IsDirectory(trimmedPath)) {
+                return _IO::File::GetFilePathWithoutFileName(trimmedPath);
             }
 
-            if (path.EndsWith("/") || path.EndsWith("\\")) {
-                path = path.SubStr(0, path.Length - 1);
+            if (trimmedPath.EndsWith("/") || trimmedPath.EndsWith("\\")) {
+                trimmedPath = trimmedPath.SubStr(0, trimmedPath.Length - 1);
             }
             
-            int index = path.LastIndexOf("/");
-            int index2 = path.LastIndexOf("\\");
+            int index = trimmedPath.LastIndexOf("/");
+            int index2 = trimmedPath.LastIndexOf("\\");
 
             index = Math::Max(index, index2);
 
@@ -67,7 +69,7 @@ namespace _IO {
                 return "";
             }
 
-            return path.SubStr(index + 1);
+            return trimmedPath.SubStr(index + 1);
         }
     }
 
@@ -267,11 +269,11 @@ namespace _Net {
             }
            
             if (request.ResponseCode() == 200) {
-                content = request.Body;
+                string content = request.Body;
                 NotifyInfo("File downloaded successfully, returning the content");
             } else {
                 NotifyWarn("Failed to download file. Response code: " + request.ResponseCode());
-                content = "";
+                string content = "";
             }
         }
     }
