@@ -888,8 +888,11 @@ namespace FileExplorer {
         void PinSelectedElement() {
             ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
             if (selectedElement !is null) {
-                log("Pinning element: " + selectedElement.Path, LogLevel::Info, 885, "PinSelectedElement");
-                explorer.PinnedElements.InsertLast(selectedElement.Path);
+                if (explorer.Config.PinnedElements.Find(selectedElement.Path) == -1) {
+                    log("Pinning element: " + selectedElement.Path, LogLevel::Info, 885, "PinSelectedElement");
+                    explorer.Config.PinnedElements.InsertLast(selectedElement.Path);
+                    explorer.Config.SaveSettings();
+                }
             }
         }
 
@@ -1526,14 +1529,20 @@ namespace FileExplorer {
 
         void Render_PinnedElements() {
             if (explorer.Config.PinnedElements.Length == 0) {
-                // UI::Text("No pinned elements.");
+                //UI::Text("No pinned elements.");
             } else {
                 for (uint i = 0; i < explorer.Config.PinnedElements.Length; i++) {
                     string path = explorer.Config.PinnedElements[i];
                     ElementInfo@ element = explorer.GetElementInfo(path);
 
-                    if (UI::Selectable(path, false)) {
-                        explorer.tab[0].LoadDirectory(path);
+                    if (element !is null) {
+                        if (UI::Selectable(element.Name, false)) {
+                            explorer.tab[0].LoadDirectory(element.Path);
+                        }
+                    } else {
+                        explorer.Config.PinnedElements.RemoveAt(i);
+                        explorer.Config.SaveSettings();
+                        i--;
                     }
                 }
             }
