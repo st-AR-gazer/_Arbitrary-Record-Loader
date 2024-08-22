@@ -1185,6 +1185,11 @@ namespace FileExplorer {
                 explorer.utils.DisabledButton(Icons::ArrowUp, vec2(buttonWidth, 0));
             }
             UI::SameLine();
+            
+            print(explorer.tab[0].Elements.Length);
+            print(explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder);
+            print(explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].Name);
+
             if (explorer.tab[0].Elements.Length > 0 && !explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
                 explorer.utils.DisabledButton(Icons::ArrowDown); 
             } else if (explorer.tab[0].Elements.Length > 0 && explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
