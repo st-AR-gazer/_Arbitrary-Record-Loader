@@ -1555,6 +1555,13 @@ namespace FileExplorer {
             if (UI::BeginPopup("PinnedElementContextMenu")) {
                 ElementInfo@ element = explorer.CurrentSelectedElement;
                 if (element !is null) {
+                    if (UI::MenuItem("Add to Selected Elements")) {
+                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
+                            explorer.Config.SelectedPaths.InsertLast(element.Path);
+                            explorer.utils.TruncateSelectedPathsIfNeeded();
+                        }
+                    }
+
                     if (UI::MenuItem("Remove from Pinned Elements")) {
                         int index = explorer.Config.PinnedElements.Find(element.Path);
                         if (index != -1) {
@@ -1566,6 +1573,8 @@ namespace FileExplorer {
                     if (UI::MenuItem("Rename Pinned Element")) {
                         explorer.utils.RENDER_RENAME_POPUP_FLAG = true;
                     }
+                } else {
+                    explorer.Config.PinnedElements.RemoveAt(explorer.Config.PinnedElements.Find(element.Path)[0]);
                 }
                 UI::EndPopup();
             }
