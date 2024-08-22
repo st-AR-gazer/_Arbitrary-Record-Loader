@@ -545,10 +545,6 @@ namespace FileExplorer {
             StartIndexingFiles(path);
             CurrentPage = 0;
             UpdatePagination();
-
-            for (uint i = 0; i < Elements.Length; i++) {
-                Elements[i].IsSelected = false;
-            }
         }
 
         void StartIndexingFiles(const string &in path) {
