@@ -96,7 +96,7 @@ namespace _IO {
 
         namespace Exports {
             string GetFileName() {
-                currentSelectedFileName = _IO::File::GetFileExtension(currentSelectedElement);
+                currentSelectedFileName = Path::GetExtension(currentSelectedElement);
                 return currentSelectedFileName;
             }
 
@@ -110,10 +110,10 @@ namespace _IO {
             }
 
             string GetExportPathFileExt() {
-                string properFileExtension = _IO::File::GetFileExtension(GetExportPath()).ToLower();
+                string properFileExtension = Path::GetExtension(GetExportPath()).ToLower();
                 if (properFileExtension == "gbx") {
                     int secondLastDotIndex = _Text::NthLastIndexOf(GetExportPath(), ".", 2);
-                    int lastDotIndex = _Text::LastIndexOf(GetExportPath(), ".");
+                    int lastDotIndex = GetExportPath().LastIndexOf(".");
                     if (secondLastDotIndex != -1 && lastDotIndex > secondLastDotIndex) {
                         properFileExtension = GetExportPath().SubStr(secondLastDotIndex + 1, lastDotIndex - secondLastDotIndex - 1);
                     }
@@ -183,7 +183,7 @@ namespace _IO {
                 _UI::DisabledButton(Icons::ArrowUp, vec2(buttonWidth, 0)); } else {
                 if (UI::Button(Icons::ArrowUp, vec2(buttonWidth, 0))) { Hidden::FE_GoToParentDirectory(); } }
         UI::SameLine();
-            if (!_IO::Folder::IsDirectory(currentSelectedElement)) {
+            if (!_IO::Directory::IsDirectory(currentSelectedElement)) {
                 _UI::DisabledButton(Icons::ArrowDown, vec2(buttonWidth, 0)); } else { 
                 if (UI::Button(Icons::ArrowDown, vec2(buttonWidth, 0))) { Hidden::FE_GoToChildDirectory(); } }
         UI::SameLine();
@@ -230,8 +230,8 @@ namespace _IO {
                     currentDirectory = currentDirectory.SubStr(0, currentDirectory.Length - 1);
                 }
 
-                int posSlash = _Text::LastIndexOf(currentDirectory, "/");
-                int posBackslash = _Text::LastIndexOf(currentDirectory, "\\");
+                int posSlash = currentDirectory.LastIndexOf("/");
+                int posBackslash = currentDirectory.LastIndexOf("\\");
                 int pos = Math::Max(posSlash, posBackslash);
 
                 if (pos != -1) {
@@ -248,7 +248,7 @@ namespace _IO {
                 if (childFullPath.Length <= 0) return;
 
                 string newDir = childFullPath;
-                if (_IO::Folder::IsDirectory(newDir)) {
+                if (_IO::Directory::IsDirectory(newDir)) {
                     directoryHistory.InsertLast(currentDirectory);
                     currentDirectory = newDir;
                     currentPage = 0;
@@ -320,7 +320,7 @@ namespace _IO {
             }
 
             if (showRenameOption) {
-                newFileName = UI::InputText("+ ." + _IO::File::GetFileExtension(currentSelectedElementPath) +  " | New File Name", newFileName);
+                newFileName = UI::InputText("+ ." + Path::GetExtension(currentSelectedElementPath) +  " | New File Name", newFileName);
                 UI::SameLine();
                 if (!_IO::File::IsFile(currentSelectedElementPath)) 
                 { _UI::DisabledButton("Complete the renaming"); } else {
@@ -489,19 +489,19 @@ namespace _IO {
                     }
 
                     string path = elements[i];
-                    bool isFolder = _IO::Folder::IsDirectory(path);
+                    bool isFolder = _IO::Directory::IsDirectory(path);
 
                     fileInfos[i].name = elements[i];
                     fileInfos[i].isFolder = isFolder;
                     fileInfos[i].lastChangedDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileModifiedTime(path));
                     fileInfos[i].size = isFolder ? "-" : Hidden::FormatSize(IO::FileSize(path));
-                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", _IO::FileCreatedTime(path)); // the reason it is formatted with the current timestamp might be because of Time::FormatString, not sure though, will have to check at some point... Make a test plugin as they say :xdd:, or maybe -1 represents current time... idk xdd
+                    fileInfos[i].creationDate = Time::FormatString("%Y-%m-%d %H:%M:%S", IO::FileCreatedTime(path)); // the reason it is formatted with the current timestamp might be because of Time::FormatString, not sure though, will have to check at some point... Make a test plugin as they say :xdd:, or maybe -1 represents current time... idk xdd
                     fileInfos[i].clickCount = 0;
 
-                    string fullFileExtension = _IO::File::GetFileExtension(path).ToLower();
+                    string fullFileExtension = Path::GetExtension(path).ToLower();
                     if (fullFileExtension == "gbx") {
                         int secondLastDotIndex = _Text::NthLastIndexOf(path, ".", 2);
-                        int lastDotIndex = _Text::LastIndexOf(path, ".");
+                        int lastDotIndex = path.LastIndexOf(".");
                         if (secondLastDotIndex != -1 && lastDotIndex > secondLastDotIndex) {
                             fullFileExtension = path.SubStr(secondLastDotIndex + 1, lastDotIndex - secondLastDotIndex - 1);
                         }
@@ -564,7 +564,7 @@ namespace _IO {
                     return (info.name == currentSelectedElement) ? "\\$FD4"+Icons::FolderOpenO+"\\$g" : "\\$FD4"+Icons::FolderO+"\\$g";
                 }
 
-                string ext = _IO::File::GetFileExtension(info.name).ToLower();
+                string ext = Path::GetExtension(info.name).ToLower();
                 if (ext == "txt" || ext == "rtf" || ext == "csv" || ext == "json") return Icons::FileTextO;
                 if (ext == "pdf") return Icons::FilePdfO;
                 if (ext == "doc" || ext == "docx") return Icons::FileWordO;
@@ -631,61 +631,5 @@ namespace _IO {
                 IO::SetClipboard(text);
             }
         }
-    }
-}
-
-namespace _IO {
-    namespace DLL {
-        Import::Library@ g_lib;
-        Import::Function@ g_getFileCreationTimeFunc;
-
-        bool loadLibrary() {
-            if (g_lib is null) {
-                string dllPath = IO::FromStorageFolder("DLLs/FileCreationTime.dll");
-                @g_lib = Import::GetLibrary(dllPath);
-                if (g_lib is null) {
-                    log("Failed to load DLL: " + dllPath, LogLevel::Error, 647, "loadLibrary");
-                    return false;
-                }
-            }
-
-            if (g_getFileCreationTimeFunc is null) {
-                @g_getFileCreationTimeFunc = g_lib.GetFunction("GetFileCreationTime");
-                if (g_getFileCreationTimeFunc is null) {
-                    log("Failed to get function from DLL.", LogLevel::Error, 655, "loadLibrary");
-                    return false;
-                }
-                g_getFileCreationTimeFunc.SetConvention(Import::CallConvention::cdecl);
-            }
-            return true;
-        }
-
-        int64 FileCreatedTime(const string &in filePath) {
-            if (!loadLibrary()) { return -301; }
-            int64 result = g_getFileCreationTimeFunc.CallInt64(filePath);
-            return result;
-        }
-
-        void UnloadLibrary() {
-            @g_lib = null;
-            @g_getFileCreationTimeFunc = null;
-        }
-    }
-
-    int64 FileCreatedTime(const string &in filePath) {
-        log("Attempting to retrieve file creation time for: " + filePath, LogLevel::Info, 676, "FileCreatedTime");
-
-        if (!DLL::loadLibrary()) {
-            log("Failed to load library for file creation time retrieval.", LogLevel::Error, 679, "FileCreatedTime");
-            return -300;
-        }
-
-        int64 result = DLL::FileCreatedTime(filePath);
-        if (result < 0) {
-            log("Error retrieving file creation time. Code: " + result, LogLevel::Warn, 685, "FileCreatedTime");
-        } else {
-            log("File creation time retrieved successfully: " + result, LogLevel::Info, 687, "FileCreatedTime");
-        }
-        return result;
     }
 }

@@ -60,7 +60,7 @@ namespace OfficialManager {
             array<string>@ files = IO::IndexFolder(Server::officialJsonFilesDirectory, recursive);
 
             for (uint i = 0; i < files.Length; ++i) {
-                string fileName = _IO::File::GetFileNameWithoutExtension(files[i]);
+                string fileName = Path::GetFileNameWithoutExtension(files[i]);
                 localCampaigns.InsertLast(fileName);
             }
         }
@@ -106,7 +106,7 @@ namespace OfficialManager {
             specificSeason = specificSeason.Replace(" ", "_");
             string fullFileName = Server::officialJsonFilesDirectory + "/" + specificSeason + ".json";
 
-            _IO::File::WriteToFile(fullFileName, Json::Write(campaign));
+            _IO::File::WriteFile(fullFileName, Json::Write(campaign));
             log("Campaign data saved to: " + fullFileName, LogLevel::Info, 110, "SaveCampaignData");
         }
     }

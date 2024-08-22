@@ -225,10 +225,10 @@ namespace RecordManager {
                 json["content"]["StuntScore"] = ghost.Result.Score;
                 json["content"]["MwId Value"] = ghost.Id.Value;
 
-                _IO::File::WriteToFile(jsonFilePath, _Json::PrettyPrint(json));
+                _IO::File::WriteFile(jsonFilePath, Json::Write(json, true));
 
                 string replayFileData = _IO::File::ReadFileToEnd(tmpFilePath);
-                _IO::File::WriteToFile(Server::savedFilesDirectory + fileName + ".Replay.Gbx", replayFileData);
+                _IO::File::WriteFile(Server::savedFilesDirectory + fileName + ".Replay.Gbx", replayFileData);
                 IO::Delete(tmpFilePath);
 
                 NotifyInfo("Ghost saved successfully.");
@@ -267,17 +267,17 @@ namespace RecordManager {
 
 void ProcessSelectedFile(const string &in filePath) {
     if (filePath.StartsWith("https://") || filePath.StartsWith("http://")) {
-        _Net::DownloadFileToDestination(filePath, Server::specificDownloadedFilesDirectory + _IO::File::GetFileName(filePath));
+        _Net::DownloadFileToDestination(filePath, Server::specificDownloadedFilesDirectory + Path::GetFileName(filePath));
         return;
     }
 
-    string fileExt = _IO::File::GetFileExtension(filePath).ToLower();
+    string fileExt = Path::GetExtension(filePath).ToLower();
 
     if (fileExt == "gbx") {
-        string properFileExtension = _IO::File::GetFileExtension(filePath).ToLower();
+        string properFileExtension = Path::GetExtension(filePath).ToLower();
         if (properFileExtension == "gbx") {
             int secondLastDotIndex = _Text::NthLastIndexOf(filePath, ".", 2);
-            int lastDotIndex = _Text::LastIndexOf(filePath, ".");
+            int lastDotIndex = filePath.LastIndexOf(".");
             if (secondLastDotIndex != -1 && lastDotIndex > secondLastDotIndex) {
                 properFileExtension = filePath.SubStr(secondLastDotIndex + 1, lastDotIndex - secondLastDotIndex - 1);
             }

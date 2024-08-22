@@ -19,15 +19,15 @@ namespace ReplayLoader {
             log("Attempting to move the target replay file to the Trackmania folder!", LogLevel::Warn, 19, "LoadReplayFromPath");
             NotifyWarn("The replay file is not located in the Trackmania folder! Attempting to move the target replay file to the Trackmania folder!");
 
-            _IO::File::CopyMoveFile(path, Server::replayARLAutoMove + _IO::File::GetFileName(path));
-            if (!IO::FileExists(Server::replayARLAutoMove + _IO::File::GetFileName(path))) {
+            _IO::File::CopyFileTo(path, Server::replayARLAutoMove + Path::GetFileName(path));
+            if (!IO::FileExists(Server::replayARLAutoMove + Path::GetFileName(path))) {
                 NotifyError("Failed to move replay file to the target directory!");
                 log("Failed to move replay file to the target directory!", LogLevel::Error, 25, "LoadReplayFromPath");
                 return;
             }
         }
 
-        auto task = GetApp().Network.ClientManiaAppPlayground.DataFileMgr.Replay_Load(Server::replayARLAutoMove + _IO::File::GetFileName(path));
+        auto task = GetApp().Network.ClientManiaAppPlayground.DataFileMgr.Replay_Load(Server::replayARLAutoMove + Path::GetFileName(path));
         
         while (task.IsProcessing) { yield(); }
 

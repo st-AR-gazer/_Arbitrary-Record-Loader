@@ -113,7 +113,7 @@ void RenderTab_CurrentLoadedRecords() {
     UI::Separator();
 
     if (UI::Button("Remove All Records")) {
-        log("Remove All Records button clicked", LogLevel::Info, 88, "RenderTab_CurrentLoadedRecords");
+        log("Remove All Records button clicked", LogLevel::Info, 116, "RenderTab_CurrentLoadedRecords");
         RecordManager::RemoveAllRecords();
     }
 
@@ -149,14 +149,14 @@ void RenderTab_CurrentLoadedRecords() {
     }
 
     if (UI::Button(Icons::UserTimes + " Remove Specific Record")) {
-        log("Remove Specific Record button clicked", LogLevel::Info, 124, "RenderTab_CurrentLoadedRecords");
+        log("Remove Specific Record button clicked", LogLevel::Info, 152, "RenderTab_CurrentLoadedRecords");
         RecordManager::RemoveInstanceRecord(selectedRecordID);
         RecordManager::GhostTracker::RefreshTrackedGhosts();
         selectedRecordID = MwId();
     }
 
     if (UI::Button(Icons::Kenney::Save + " Save Ghost/Replay")) {
-        log("Save Ghost button clicked", LogLevel::Info, 131, "RenderTab_CurrentLoadedRecords");
+        log("Save Ghost button clicked", LogLevel::Info, 159, "RenderTab_CurrentLoadedRecords");
         RecordManager::Save::SaveRecord();
     }
 }
@@ -194,7 +194,7 @@ void RenderTab_SavedGhostsAndReplays() {
 
     for (uint i = 0; i < files.Length; i++) {
         string fullFilePath = files[i];
-        string fileName = _IO::File::GetFileName(fullFilePath);
+        string fileName = Path::GetFileName(fullFilePath);
         if (fileName.EndsWith(".json")) {
             string jsonContent = _IO::File::ReadFileToEnd(Server::savedJsonDirectory + fileName);
             Json::Value json = Json::Parse(jsonContent);

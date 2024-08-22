@@ -4,10 +4,10 @@ namespace GhostLoader {
 
     void LoadGhost(const string &in filePath, const string &in _destonationPath = Server::serverDirectoryAutoMove) {
         if (filePath.ToLower().EndsWith(".gbx")) {
-            string fileName = _IO::File::GetFileName(filePath);
+            string fileName = Path::GetFileName(filePath);
             string destinationPath = _destonationPath + fileName;
             log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, 9, "LoadGhost");
-            _IO::File::SafeMoveFileToNonSource(filePath, destinationPath);
+            _IO::File::CopySourceFileToNonSource(filePath, destinationPath);
             LoadGhostFromUrl(Server::HTTP_BASE_URL + "get_ghost/" + Net::UrlEncode(fileName));
         } else {
             NotifyError("Unsupported file type.");
@@ -23,7 +23,7 @@ namespace GhostLoader {
         auto ps = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript);
         CGameDataFileManagerScript@ dfm = ps.DataFileMgr;
         CGameGhostMgrScript@ gm = ps.GhostMgr;
-        CWebServicesTaskResult_GhostScript@ task = dfm.Ghost_Download(_IO::File::GetFileName(url), url);
+        CWebServicesTaskResult_GhostScript@ task = dfm.Ghost_Download(Path::GetFileName(url), url);
 
         while (task.IsProcessing) {
             yield();

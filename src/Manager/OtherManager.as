@@ -16,11 +16,11 @@ namespace OtherManager {
 
     void Coro_DownloadAndRefreshJsonFiles(const string &in downloadPath) {
         IsDownloading = true;
-        if (_IO::File::GetFileExtension(downloadPath).ToLower() != "json" && _IO::File::GetFileExtension(downloadPath).ToLower() != ".json") {
+        if (Path::GetExtension(downloadPath).ToLower() != "json" && Path::GetExtension(downloadPath).ToLower() != ".json") {
             NotifyWarn("Error | Invalid file extension.");
             IsDownloading = false;
         } else if (downloadPath != "") {
-            string destinationPath = Server::specificDownloadedJsonFilesDirectory + _IO::File::GetFileName(downloadPath);
+            string destinationPath = Server::specificDownloadedJsonFilesDirectory + Path::GetFileName(downloadPath);
             DownloadFileToDestination(downloadPath, destinationPath);
             jsonFiles = GetAvailableJsonFiles();
             IsDownloading = false;
@@ -33,12 +33,12 @@ namespace OtherManager {
     array<string> GetAvailableJsonFiles() {
         array<string> files;
         if (IO::FolderExists(Server::specificDownloadedJsonFilesDirectory) == false) {
-            _IO::Folder::RecursiveCreateFolder(Server::specificDownloadedJsonFilesDirectory);
+            IO::CreateFolder(Server::specificDownloadedJsonFilesDirectory, true);
         }
         files = IO::IndexFolder(Server::specificDownloadedJsonFilesDirectory, true);
         jsonFiles.Resize(files.Length);
         for (uint i = 0; i < files.Length; i++) {
-            jsonFiles[i] = _IO::File::GetFileName(files[i]);
+            jsonFiles[i] = Path::GetFileName(files[i]);
         }
         return jsonFiles;
     }
@@ -69,7 +69,7 @@ namespace OtherManager {
         }
         if (req.ResponseCode() == 200) {
             auto content = req.String();
-            _IO::File::WriteToFile(destinationPath, content);
+            _IO::File::WriteFile(destinationPath, content);
         } else {
             NotifyWarn("Error | Failed to download file from URL.");
         }
@@ -90,7 +90,7 @@ namespace OtherManager {
         }
 
         string filePath = Server::specificDownloadedCreatedProfilesDirectory + jsonName + ".json";
-        _IO::File::WriteToFile(filePath, Json::Write(newProfile));
+        _IO::File::WriteFile(filePath, Json::Write(newProfile));
         
         NewProfileMaps.RemoveRange(0, NewProfileMaps.Length);
     }
@@ -147,7 +147,7 @@ namespace OtherManager {
             }
             if (req.ResponseCode() == 200) {
                 auto content = req.String();
-                _IO::File::WriteToFile(destinationPath, content);
+                _IO::File::WriteFile(destinationPath, content);
             } else {
                 NotifyWarn("Error | Failed to download file from URL.");
             }
@@ -155,7 +155,7 @@ namespace OtherManager {
 
         void SaveCurrentVersion(const string &in version) {
             string versionFilePath = Server::specificDownloaded + "version.txt";
-            _IO::File::WriteToFile(versionFilePath, version);
+            _IO::File::WriteFile(versionFilePath, version);
         }
 
         string LoadCurrentVersion() {

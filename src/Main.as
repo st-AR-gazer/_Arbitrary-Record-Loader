@@ -15,31 +15,31 @@ void InitApi() {
 }
 
 void InitFolders() {
-    _IO::Folder::SafeCreateFolder(Server::replayARL);
-    _IO::Folder::SafeCreateFolder(Server::replayARLTmp);
-    _IO::Folder::SafeCreateFolder(Server::replayARLDummy);
-    _IO::Folder::SafeCreateFolder(Server::replayARLAutoMove);
+    IO::CreateFolder(Server::replayARL, true);
+    IO::CreateFolder(Server::replayARLTmp, true);
+    IO::CreateFolder(Server::replayARLDummy, true);
+    IO::CreateFolder(Server::replayARLAutoMove, true);
 
-    _IO::Folder::SafeCreateFolder(Server::serverDirectory);
-    _IO::Folder::SafeCreateFolder(Server::serverDirectoryAutoMove);
+    IO::CreateFolder(Server::serverDirectory, true);
+    IO::CreateFolder(Server::serverDirectoryAutoMove, true);
 
-    _IO::Folder::SafeCreateFolder(Server::savedFilesDirectory);
-    _IO::Folder::SafeCreateFolder(Server::savedJsonDirectory);
+    IO::CreateFolder(Server::savedFilesDirectory, true);
+    IO::CreateFolder(Server::savedJsonDirectory, true);
 
-    _IO::Folder::SafeCreateFolder(Server::currentMapRecords);
-    _IO::Folder::SafeCreateFolder(Server::currentMapRecordsValidationReplay);
-    _IO::Folder::SafeCreateFolder(Server::currentMapRecordsGPS);
+    IO::CreateFolder(Server::currentMapRecords, true);
+    IO::CreateFolder(Server::currentMapRecordsValidationReplay, true);
+    IO::CreateFolder(Server::currentMapRecordsGPS, true);
 
-    _IO::Folder::SafeCreateFolder(Server::specificDownloadedFilesDirectory);
-    _IO::Folder::SafeCreateFolder(Server::specificDownloadedJsonFilesDirectory);
-    _IO::Folder::SafeCreateFolder(Server::specificDownloadedCreatedProfilesDirectory);
-    
-    _IO::Folder::SafeCreateFolder(Server::officialFilesDirectory);
-    _IO::Folder::SafeCreateFolder(Server::officialInfoFilesDirectory);
-    _IO::Folder::SafeCreateFolder(Server::officialJsonFilesDirectory);
+    IO::CreateFolder(Server::specificDownloadedFilesDirectory, true);
+    IO::CreateFolder(Server::specificDownloadedJsonFilesDirectory, true);
+    IO::CreateFolder(Server::specificDownloadedCreatedProfilesDirectory, true);
+        
+    IO::CreateFolder(Server::officialFilesDirectory, true);
+    IO::CreateFolder(Server::officialInfoFilesDirectory, true);
+    IO::CreateFolder(Server::officialJsonFilesDirectory, true);
 }
 
 // void InitMoveDummy() {
 //     string storagePath = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Dummy/CTmRaceResult_VTable_Ptr.Replay.Gbx");
-//     _IO::File::SafeMoveSourceFileToNonSource("src/Dummy/CTmRaceResult_VTable_Ptr.Replay.Gbx", storagePath);
+//     _IO::File::MoveSourceFileToNonSource("src/Dummy/CTmRaceResult_VTable_Ptr.Replay.Gbx", storagePath);
 // }
