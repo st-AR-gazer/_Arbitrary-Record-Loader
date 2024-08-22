@@ -1574,7 +1574,9 @@ namespace FileExplorer {
                         explorer.utils.RENDER_RENAME_POPUP_FLAG = true;
                     }
                 } else {
-                    explorer.Config.PinnedElements.RemoveAt(explorer.Config.PinnedElements.Find(element.Path)[0]);
+                    int[] pinnedPaths = explorer.Config.PinnedElements.Find(element.Path);
+                    int firstPinnedPath = pinnedPaths[0];
+                    explorer.Config.PinnedElements.RemoveAt(firstPinnedPath);
                 }
                 UI::EndPopup();
             }
