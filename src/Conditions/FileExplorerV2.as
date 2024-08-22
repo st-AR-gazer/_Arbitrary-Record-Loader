@@ -546,7 +546,6 @@ namespace FileExplorer {
             CurrentPage = 0;
             UpdatePagination();
 
-            explorer.CurrentSelectedElement = null;
             for (uint i = 0; i < Elements.Length; i++) {
                 Elements[i].IsSelected = false;
             }
@@ -554,7 +553,7 @@ namespace FileExplorer {
 
         void ClearSelectorElements() {
             for (uint i = 0; i < Elements.Length; i++) {
-                Element[i] = null;
+                Elements[i] = null;
             }
             Elements.Resize(0);
         }
