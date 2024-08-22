@@ -273,7 +273,7 @@ namespace _IO {
             string content = file.ReadToEnd();
             file.Close();
 
-            SafeWriteToFile(destination, content, true, false, verbose);
+            WriteToFile(destination, content);
         }
 
         // Rename file

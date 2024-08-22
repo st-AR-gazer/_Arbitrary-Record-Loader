@@ -2131,7 +2131,6 @@ void Render() {
         if (UI::Button("Open File Explorer")) {
             OpenFileExplorerExample();
         }
-        if (FileExplorer::explorer !is null) UI::Text(tostring(FileExplorer::explorer.keyPress.isControlPressed));
         UI::Text("Control proper: " + tostring(UI::IsKeyDown(UI::Key::LeftCtrl)));
         UI::Text("Control proper: " + tostring(UI::IsKeyDown(UI::Key::RightCtrl)));
     }

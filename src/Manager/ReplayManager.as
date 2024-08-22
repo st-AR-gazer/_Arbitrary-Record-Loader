@@ -27,7 +27,7 @@ namespace ReplayLoader {
             }
         }
 
-        auto task = GetApp().Network.ClientManiaAppPlayground.DataFileMgr.Replay_Load(path);
+        auto task = GetApp().Network.ClientManiaAppPlayground.DataFileMgr.Replay_Load(Server::replayARLAutoMove + _IO::File::GetFileName(path));
         
         while (task.IsProcessing) { yield(); }
 

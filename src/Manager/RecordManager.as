@@ -434,7 +434,7 @@ namespace LoadRecordFromArbitraryMap {
         } else if (saveLocation == "GPS") {
             savePath = Server::currentMapRecordsGPS + "GPS_" + globalMapUid + "_Position" + offset + "_" + accountId + "_" + tostring(Time::Stamp) + ".Replay.Gbx";
         } else if (saveLocation == "AnyMap") {
-            savePath = Server::serverDirectoryAutoMove + "AnyMap_" + globalMapUid + "_Position" + offset + "_" + accountId + "_" + tostring(Time::Stamp) + ".Replay.Gbx";
+            savePath = Server::serverDirectoryAutoMove + "AnyMap_" + globalMapUid + "_Position" + offset + "_" + accountId + "_" + tostring(Time::Stamp) + ".Ghost.Gbx";
         } else if (saveLocation == "OtherMaps") {
             savePath = Server::specificDownloadedFilesDirectory + "OtherMaps_" + globalMapUid + "_Position" + offset + "_" + accountId + "_" + tostring(Time::Stamp) + ".Ghost.Gbx";
         } else if (saveLocation == "") {
