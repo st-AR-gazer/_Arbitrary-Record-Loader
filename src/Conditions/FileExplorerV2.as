@@ -159,8 +159,6 @@
         - The UI seems to continue to reference only selected elements, even after there has been a direcotry change, 
           this is not intended and should be fixed.
 
-        - Pinning any element does not work.
-
 */
 namespace FileExplorer {
     bool showInterface = false;
