@@ -537,7 +537,7 @@ namespace FileExplorer {
         }
 
         void LoadDirectory(const string &in path) {
-            Elements.Resize(0);
+            ClearSelectorElements();
 
             explorer.nav.UpdateHistory(path);
             explorer.nav.SetPath(path);
@@ -545,6 +545,18 @@ namespace FileExplorer {
             StartIndexingFiles(path);
             CurrentPage = 0;
             UpdatePagination();
+
+            explorer.CurrentSelectedElement = null;
+            for (uint i = 0; i < Elements.Length; i++) {
+                Elements[i].IsSelected = false;
+            }
+        }
+
+        void ClearSelectorElements() {
+            for (uint i = 0; i < Elements.Length; i++) {
+                Element[i] = null;
+            }
+            Elements.Resize(0);
         }
 
         void StartIndexingFiles(const string &in path) {
