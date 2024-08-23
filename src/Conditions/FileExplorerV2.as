@@ -458,7 +458,9 @@ namespace FileExplorer {
         }
 
         void MoveIntoSelectedDirectory() {
-            ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+            ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
+            // ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+
             if (selectedElement !is null && selectedElement.IsFolder) {
                 if (!selectedElement.Path.StartsWith(explorer.tab[0].Navigation.GetPath())) {
                     log("Folder is not in the current folder, cannot move into it.", LogLevel::Warn, 465, "MoveIntoSelectedDirectory");
@@ -758,7 +760,7 @@ namespace FileExplorer {
         }
 
         void OpenSelectedFolderInNativeFileExplorer() {
-            ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+            ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             if (selectedElement !is null && selectedElement.IsFolder) {
                 log("Opening folder: " + selectedElement.Path, LogLevel::Info, 762, "OpenSelectedFolderInNativeFileExplorer");
                 OpenExplorerPath(selectedElement.Path);
@@ -774,7 +776,7 @@ namespace FileExplorer {
         }
 
         bool IsElementSelected() {
-            ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+            ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             return selectedElement !is null;
         }
 
@@ -839,7 +841,7 @@ namespace FileExplorer {
 
         bool RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
         void DeleteSelectedElement() {
-            ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+            ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             if (selectedElement !is null) {
                 if (selectedElement.IsFolder) {
                     array<string> folderContents = IO::IndexFolder(selectedElement.Path, false);
@@ -860,7 +862,7 @@ namespace FileExplorer {
 
         bool RENDER_RENAME_POPUP_FLAG;
         void RenameSelectedElement(const string &in newName) {
-            ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+            ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             if (selectedElement is null) return;
 
             string currentPath = selectedElement.Path;
@@ -887,7 +889,7 @@ namespace FileExplorer {
         }
 
         void PinSelectedElement() {
-            ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+            ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             if (selectedElement !is null) {
                 if (explorer.Config.PinnedElements.Find(selectedElement.Path) == -1) {
                     log("Pinning element: " + selectedElement.Path, LogLevel::Info, 885, "PinSelectedElement");
@@ -1436,7 +1438,7 @@ namespace FileExplorer {
             if (explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG && explorer.Config.UseExtraWarningWhenDeleting) {
                 UI::OpenPopup("DeleteConfirmationPopup");
             } else if (explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG && !explorer.Config.UseExtraWarningWhenDeleting) {
-                ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+                ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
 
                 if (selectedElement !is null && selectedElement.IsFolder) {
                     log("Deleting folder with contents: " + selectedElement.Path, LogLevel::Info, 1427, "Render_DeleteConfirmationPopup");
@@ -1447,7 +1449,7 @@ namespace FileExplorer {
             }
 
             if (UI::BeginPopupModal("DeleteConfirmationPopup", explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG, UI::WindowFlags::AlwaysAutoResize)) {
-                ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
+                ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
 
                 UI::Text("Are you sure you want to delete this folder and all its contents?");
                 UI::Separator();
@@ -1603,7 +1605,7 @@ namespace FileExplorer {
             }
 
             if (UI::BeginPopup("SelectedElementContextMenu")) {
-                ElementInfo@ element = explorer.ui.GetSelectedElement();
+                ElementInfo@ element = explorer.tab[0].GetSelectedElement();
                 if (element !is null) {
                     if (UI::MenuItem("Remove from Selected Elements")) {
                         int index = explorer.Config.SelectedPaths.Find(element.Path);
@@ -1695,7 +1697,7 @@ namespace FileExplorer {
             }
 
             if (UI::BeginPopup("MainElementContextMenu")) {
-                ElementInfo@ element = explorer.ui.GetSelectedElement();
+                ElementInfo@ element = explorer.tab[0].GetSelectedElement();
                 if (element !is null) {
                     bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
 
@@ -1868,10 +1870,6 @@ namespace FileExplorer {
             } else {
                 UI::Text("No element selected.");
             }
-        }
-
-        ElementInfo@ GetSelectedElement() {
-            return explorer.CurrentSelectedElement;
         }
     }
 
