@@ -2173,7 +2173,7 @@ void Render() {
 
         if (FileExplorer::explorer !is null) {
             if (FileExplorer::explorer.tab[0] !is null) {
-                if (FileExplorer::explorer.tab[0].GetSelectedElement() !is null) print(FileExplorer::explorer.tab[0].GetSelectedElement().Name);
+                if (FileExplorer::explorer.tab[0].GetSelectedElement() !is null) UI::Text(FileExplorer::explorer.tab[0].GetSelectedElement().Name);
             }
         }
     }
