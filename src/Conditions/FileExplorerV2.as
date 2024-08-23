@@ -544,7 +544,7 @@ namespace FileExplorer {
             explorer.nav.UpdateHistory(path);
             explorer.nav.SetPath(path);
 
-            UpdateCurrentSelectedElement();
+            explorer.UpdateCurrentSelectedElement();
 
             StartIndexingFiles(path);
             CurrentPage = 0;
