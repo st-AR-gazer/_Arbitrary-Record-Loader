@@ -1193,7 +1193,7 @@ namespace FileExplorer {
                 if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
                 UI::Text(explorer.tab[0].GetSelectedElement().Name);
             } else {
-                explorer.utils.DisabledButton(Icons::ArrowDown, vec2(buttonWidth, 0))
+                explorer.utils.DisabledButton(Icons::ArrowDown, vec2(buttonWidth, 0));
             }
 
             UI::SameLine();
