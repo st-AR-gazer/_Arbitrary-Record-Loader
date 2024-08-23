@@ -1190,9 +1190,9 @@ namespace FileExplorer {
             &&  explorer.tab[0].GetSelectedElement().IsFolder
             &&  explorer.tab[0].GetSelectedElement().IsSelected
             ) {
-                if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory() }
+                if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
             } else {
-                if (UI::Button(Icons::ArrowDown)) { explorer.utils.DisabledButton(Icons::ArrowDown, vec2(buttonWidth, 0)) }
+                if (UI::Button(Icons::ArrowDown)) { explorer.utils.DisabledButton(Icons::ArrowDown, vec2(buttonWidth, 0)); }
             }
 
             UI::SameLine();
