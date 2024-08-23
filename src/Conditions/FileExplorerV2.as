@@ -2170,6 +2170,7 @@ void Render() {
         }
         UI::Text("Control proper: " + tostring(UI::IsKeyDown(UI::Key::LeftCtrl)));
         UI::Text("Control proper: " + tostring(UI::IsKeyDown(UI::Key::RightCtrl)));
+        if (FileExplorer::explorer.tab[0].GetSelectedElement() is null) print(FileExplorer::explorer.tab[0].GetSelectedElement().Name);
     }
     UI::End();
 }
