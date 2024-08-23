@@ -1191,6 +1191,7 @@ namespace FileExplorer {
             &&  explorer.tab[0].GetSelectedElement().IsSelected
             ) {
                 if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
+                UI::Text(explorer.tab[0].GetSelectedElement().Name);
             } else {
                 if (UI::Button(Icons::ArrowDown)) { explorer.utils.DisabledButton(Icons::ArrowDown, vec2(buttonWidth, 0)); }
             }
@@ -2170,12 +2171,6 @@ void Render() {
         }
         UI::Text("Control proper: " + tostring(UI::IsKeyDown(UI::Key::LeftCtrl)));
         UI::Text("Control proper: " + tostring(UI::IsKeyDown(UI::Key::RightCtrl)));
-
-        if (FileExplorer::explorer !is null) {
-            if (FileExplorer::explorer.tab[0] !is null) {
-                if (FileExplorer::explorer.tab[0].GetSelectedElement() !is null) UI::Text(FileExplorer::explorer.tab[0].GetSelectedElement().Name);
-            }
-        }
     }
     UI::End();
 }
