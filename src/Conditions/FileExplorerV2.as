@@ -547,8 +547,6 @@ namespace FileExplorer {
             StartIndexingFiles(path);
             CurrentPage = 0;
             UpdatePagination();
-
-            explorer.UpdateCurrentSelectedElement();
         }
 
         void StartIndexingFiles(const string &in path) {
@@ -604,6 +602,8 @@ namespace FileExplorer {
             tab.explorer.IsIndexing = false;
 
             log("Indexing completed. Number of elements: " + tab.Elements.Length, LogLevel::Info, 601, "IndexFilesCoroutine");
+
+            explorer.UpdateCurrentSelectedElement();
         }
 
         void ApplyFiltersAndSearch() {
