@@ -544,6 +544,8 @@ namespace FileExplorer {
             explorer.nav.UpdateHistory(path);
             explorer.nav.SetPath(path);
 
+            UpdateCurrentSelectedElement();
+
             StartIndexingFiles(path);
             CurrentPage = 0;
             UpdatePagination();
@@ -1561,7 +1563,7 @@ namespace FileExplorer {
             }
 
             if (UI::BeginPopup("PinnedElementContextMenu")) {
-                ElementInfo@ element = explorer.CurrentSelectedElement;
+                ElementInfo@ element = explorer.tab[0].GetSelectedElement();
                 if (element !is null) {
                     if (UI::MenuItem("Add to Selected Elements")) {
                         if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
@@ -1813,7 +1815,7 @@ namespace FileExplorer {
         bool openContextMenu = false;
 
         void Render_DetailBar() {
-            ElementInfo@ selectedElement = GetSelectedElement();
+            ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             if (selectedElement !is null) {
                 UI::Text("Selected Element Details");
                 UI::Separator();
