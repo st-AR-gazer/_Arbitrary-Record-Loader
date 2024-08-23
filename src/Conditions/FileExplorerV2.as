@@ -544,11 +544,11 @@ namespace FileExplorer {
             explorer.nav.UpdateHistory(path);
             explorer.nav.SetPath(path);
 
-            explorer.UpdateCurrentSelectedElement();
-
             StartIndexingFiles(path);
             CurrentPage = 0;
             UpdatePagination();
+
+            explorer.UpdateCurrentSelectedElement();
         }
 
         void StartIndexingFiles(const string &in path) {
