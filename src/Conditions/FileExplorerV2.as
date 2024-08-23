@@ -1185,17 +1185,14 @@ namespace FileExplorer {
             }
             UI::SameLine();
             
-            if (explorer.tab[0].Elements.Length > 0 && !explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
-                explorer.utils.DisabledButton(Icons::ArrowDown); 
-            } else if (explorer.tab[0].Elements.Length > 0 && explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex].IsFolder) {
-                if (explorer.tab[0].Elements[explorer.tab[0].SelectedElementIndex] is null) {
-                    explorer.utils.DisabledButton(Icons::ArrowDown);
-                } else {
-                    if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
-                }
-                UI::SameLine();
+            if (
+                explorer.tab[0].GetSelectedElement() !is null
+            &&  explorer.tab[0].GetSelectedElement().IsFolder
+            &&  explorer.tab[0].GetSelectedElement().IsSelected
+            ) {
+                if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory() }
             } else {
-                explorer.utils.DisabledButton(Icons::ArrowDown);
+                if (UI::Button(Icons::ArrowDown)) { explorer.utils.DisabledButton(Icons::ArrowDown, vec2(buttonWidth, 0)) }
             }
 
             UI::SameLine();
