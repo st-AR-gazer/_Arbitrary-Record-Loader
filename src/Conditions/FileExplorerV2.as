@@ -1053,6 +1053,8 @@ namespace FileExplorer {
         void Render_FileExplorer() {
             if (!showInterface) return;
 
+            print(explorer.tab[0].GetSelectedElement().Name);
+
             Render_Rows();
             Render_Columns();
 
