@@ -156,10 +156,6 @@
           not working as intended, it needs to be looked into more. Normal search works just fine though.
           (recursive search is also not in a coroutine)
 
-        - The UI seems to continue to reference only selected elements, even after there has been a direcotry change, 
-          this is not intended and should be fixed. (In regards to moving up directories, when selecting an element this 
-          reference is kept. It is not reset when moving to a new directory even though it should be...)
-
 */
 namespace FileExplorer {
     bool showInterface = false;
