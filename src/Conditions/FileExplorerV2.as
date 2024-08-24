@@ -142,19 +142,9 @@
     TODO: 
         - Add support for multiple tabs (not planned)
 
-        - Change all scrollable element location to use child regions so that the scrollbars are only applied to the 
-          specific relevant region.
-
-        - If the current folder is one of the hardcoded ones we should make the color of the text of the hardcoded paths 
-          slightly different from when they are not the current directory (it should be slight more gray)
-
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
-
-        - Recursive search is not fully working as intended, it is very hard to explain what is wrong, but it's just 
-          not working as intended, it needs to be looked into more. Normal search works just fine though.
-          (recursive search is also not in a coroutine)
 
 */
 namespace FileExplorer {
@@ -545,10 +535,11 @@ namespace FileExplorer {
             UpdatePagination();
         }
 
-        void StartIndexingFiles(const string &in path) {
+        void StartIndexingFiles(const string &in path, bool recursive = false) {
             explorer.IsIndexing = true;
-            explorer.IndexingMessage = "Folder is being indexed...";
+            explorer.IndexingMessage = recursive ? "Recursive search in progress..." : "Folder is being indexed...";
             explorer.CurrentIndexingPath = path;
+
             startnew(CoroutineFuncUserdata(IndexFilesCoroutine), this);
         }
 
@@ -558,13 +549,16 @@ namespace FileExplorer {
 
             tab.Elements.Resize(0);
             tab.explorer.IsIndexing = true;
-            tab.explorer.IndexingMessage = "Folder is being indexed...";
-            log("Indexing started for path: " + tab.Navigation.GetPath(), LogLevel::Info, 563, "IndexFilesCoroutine");
+            string startPath = tab.Navigation.GetPath();
+            bool recursive = tab.Config.RecursiveSearch;
+            log((recursive ? "Recursive " : "") + "Indexing started for path: " + startPath, LogLevel::Info, 563, "IndexFilesCoroutine");
 
-            array<string> elements = tab.explorer.GetFiles(tab.Navigation.GetPath(), tab.Config.RecursiveSearch);
+            // Incase I change my mind and want to add recursive search back in at a later date... (it's not fully working, so it's commented out for now, but I'm probably not gonna do anything with it... way too slow)
+            // array<string> elements = recursive ? PerformRecursiveIndexing(tab, startPath) : tab.explorer.GetFiles(startPath, false);
+            array<string> elements = tab.explorer.GetFiles(startPath, false);
 
             if (elements.Length == 0) {
-                log("No files found in directory: " + tab.Navigation.GetPath(), LogLevel::Info, 568, "IndexFilesCoroutine");
+                log("No files found in directory: " + startPath, LogLevel::Info, 568, "IndexFilesCoroutine");
             }
 
             const uint batchSize = 1000;
@@ -597,10 +591,39 @@ namespace FileExplorer {
             tab.ApplyVisibilitySettings();
             tab.explorer.IsIndexing = false;
 
-            log("Indexing completed. Number of elements: " + tab.Elements.Length, LogLevel::Info, 601, "IndexFilesCoroutine");
+            log((recursive ? "Recursive " : "") + "Indexing completed. Number of elements: " + tab.Elements.Length, LogLevel::Info, 601, "IndexFilesCoroutine");
 
             explorer.UpdateCurrentSelectedElement();
         }
+
+        // Incase I change my mind and want to add recursive search back in at a later date... (it's not fully working, so it's commented out for now, but I'm probably not gonna do anything with it... way too slow)
+        // array<string> PerformRecursiveIndexing(FileTab@ tab, const string &in startPath) {
+        //     array<string> results;
+        //     array<string> dirsToProcess = { startPath };
+
+        //     while (dirsToProcess.Length > 0) {
+        //         string currentDir = dirsToProcess[dirsToProcess.Length - 1];
+        //         dirsToProcess.RemoveLast();
+
+        //         array<string> elements = IO::IndexFolder(currentDir, false);
+
+        //         for (uint i = 0; i < elements.Length; i++) {
+        //             if (explorer.utils.IsDirectory(elements[i])) {
+        //                 dirsToProcess.InsertLast(elements[i]);
+        //             } else {
+        //                 results.InsertLast(elements[i]);
+        //             }
+
+        //             tab.explorer.IndexingMessage = "Indexed " + tostring(results.Length) + " files from " + currentDir;
+
+        //             if (results.Length % 100 == 0) {
+        //                 yield();
+        //             }
+        //         }
+        //     }
+
+        //     return results;
+        // }
 
         void ApplyFiltersAndSearch() {
             if (explorer.Config.RecursiveSearch) {
@@ -1049,8 +1072,6 @@ namespace FileExplorer {
         void Render_FileExplorer() {
             if (!showInterface) return;
 
-            while (explorer.tab[0].GetSelectedElement() !is null) print(explorer.tab[0].GetSelectedElement().Name);
-
             Render_Rows();
             Render_Columns();
 
@@ -1083,12 +1104,25 @@ namespace FileExplorer {
 
         void Render_Columns() {
             UI::BeginTable("FileExplorerTable", 3, UI::TableFlags::Resizable | UI::TableFlags::Borders);
+            
+            // Left Sidebar (Hardcoded Paths, Pinned Elements, Selected Elements)
             UI::TableNextColumn();
+            UI::BeginChild("LeftSidebar", vec2(0, 0), true);
             Render_LeftSidebar();
+            UI::EndChild();
+            
+            // Main Area (File listing, with some inforamtion about each file)
             UI::TableNextColumn();
+            UI::BeginChild("MainArea", vec2(0, 0), true);
             Render_MainAreaBar();
+            UI::EndChild();
+            
+            // Details Bar (Selected file details, more information about the selected file)
             UI::TableNextColumn();
+            UI::BeginChild("DetailBar", vec2(0, 0), true);
             Render_DetailBar();
+            UI::EndChild();
+            
             UI::EndTable();
         }
 
@@ -1187,9 +1221,8 @@ namespace FileExplorer {
             &&  explorer.tab[0].GetSelectedElement().IsSelected
             ) {
                 if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
-                UI::Text(explorer.tab[0].GetSelectedElement().Name);
             } else {
-                explorer.utils.DisabledButton(Icons::ArrowDown, vec2(buttonWidth, 0));
+                explorer.utils.DisabledButton(Icons::ArrowDown);
             }
 
             UI::SameLine();
@@ -1355,10 +1388,10 @@ namespace FileExplorer {
                         explorer.Config.SearchBarPadding = UI::SliderInt("Search Bar Padding", explorer.Config.SearchBarPadding, -200, 100);
                     }
 
-                    if (UI::MenuItem("Enable Recursive Search", "", explorer.Config.RecursiveSearch)) {
-                        explorer.Config.RecursiveSearch = !explorer.Config.RecursiveSearch;
-                        explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
-                    }
+                    // if (UI::MenuItem("Enable Recursive Search" + "\\$0f0 " + "Warning \\$g Extremely laggy, use with causion", "", explorer.Config.RecursiveSearch)) {
+                    //     explorer.Config.RecursiveSearch = !explorer.Config.RecursiveSearch;
+                    //     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+                    // }
 
                     UI::EndMenu();
                 }
@@ -1510,27 +1543,46 @@ namespace FileExplorer {
         }
 
         void Render_HardcodedPaths() {
+            vec4 defaultColor = vec4(1, 1, 1, 1);    // White         (default)
+            vec4 grayColor = vec4(0.7, 0.7, 0.7, 1); // Slightly gray
+
+            string currentPath = explorer.tab[0].Navigation.GetPath();
+
+            UI::PushStyleColor(UI::Col::Text, Path::SanitizeFileName(currentPath) == Path::SanitizeFileName(IO::FromUserGameFolder("")) ? grayColor : defaultColor);
             if (UI::Selectable(Icons::Home + " Trackmania Folder", false)) {
                 explorer.tab[0].LoadDirectory(IO::FromUserGameFolder(""));
             }
+            UI::PopStyleColor();
+
+            UI::PushStyleColor(UI::Col::Text, Path::SanitizeFileName(currentPath) == Path::SanitizeFileName(IO::FromUserGameFolder("Maps/")) ? grayColor : defaultColor);
             if (UI::Selectable(Icons::Map + " Trackmania Maps Folder", false)) {
                 explorer.tab[0].LoadDirectory(IO::FromUserGameFolder("Maps/"));
             }
+            UI::PopStyleColor();
+
+            UI::PushStyleColor(UI::Col::Text, Path::SanitizeFileName(currentPath) == Path::SanitizeFileName(IO::FromUserGameFolder("Replays/")) ? grayColor : defaultColor);
             if (UI::Selectable(Icons::SnapchatGhost + " Trackmania Replays Folder", false)) {
                 explorer.tab[0].LoadDirectory(IO::FromUserGameFolder("Replays/"));
             }
+            UI::PopStyleColor();
+
+            UI::PushStyleColor(UI::Col::Text, Path::SanitizeFileName(currentPath) == Path::SanitizeFileName(IO::FromAppFolder("")) ? grayColor : defaultColor);
             if (UI::Selectable(Icons::Trademark + " Trackmania App Folder", false)) {
                 explorer.tab[0].LoadDirectory(IO::FromAppFolder(""));
             }
+            UI::PopStyleColor();
+
+            UI::PushStyleColor(UI::Col::Text, Path::SanitizeFileName(currentPath) == Path::SanitizeFileName(IO::FromDataFolder("")) ? grayColor : defaultColor);
             if (UI::Selectable(Icons::Heartbeat + " Openplanet Folder", false)) {
                 explorer.tab[0].LoadDirectory(IO::FromDataFolder(""));
             }
+            UI::PopStyleColor();
+
+            UI::PushStyleColor(UI::Col::Text, Path::SanitizeFileName(currentPath) == Path::SanitizeFileName(IO::FromStorageFolder("")) ? grayColor : defaultColor);
             if (UI::Selectable(Icons::Inbox + " Openplanet Storage Folder", false)) {
                 explorer.tab[0].LoadDirectory(IO::FromStorageFolder(""));
             }
-            // if (UI::Selectable()) {
-            //     explorer.tab[0].LoadDirectory();
-            // }
+            UI::PopStyleColor();
         }
 
         void Render_PinnedElements() {
@@ -1638,23 +1690,14 @@ namespace FileExplorer {
 
                 if (columnCount > 0) {
                     UI::BeginTable("FilesTable", columnCount, UI::TableFlags::Resizable | UI::TableFlags::Borders | UI::TableFlags::SizingFixedSame);
-
-                    for (uint i = 0; i < orderedColumns.Length; i++) {
-                        if (explorer.Config.IsColumnVisible(orderedColumns[i])) {
-                            if (orderedColumns[i] == "ico") {
-                                UI::TableSetupColumn(orderedColumns[i], UI::TableColumnFlags::None, 30.0f);
-                            } else {
-                                UI::TableSetupColumn(orderedColumns[i]);
-                            }
-                        }
-                    }
-
                     UI::TableHeadersRow();
 
                     uint startIndex = explorer.Config.EnablePagination ? explorer.tab[0].CurrentPage * explorer.Config.MaxElementsPerPage : 0;
                     uint endIndex = explorer.Config.EnablePagination ? Math::Min(startIndex + explorer.Config.MaxElementsPerPage, explorer.tab[0].Elements.Length) : explorer.tab[0].Elements.Length;
 
                     for (uint i = startIndex; i < endIndex; i++) {
+                        if (i >= explorer.tab[0].Elements.Length) { break; }
+                        
                         ElementInfo@ element = explorer.tab[0].Elements[i];
                         if (!element.shouldShow) continue;
 
@@ -1664,6 +1707,8 @@ namespace FileExplorer {
                             if (explorer.Config.IsColumnVisible(orderedColumns[j])) {
                                 UI::TableSetColumnIndex(colIndex++);
                                 string col = orderedColumns[j];
+                                
+                                // FIXME: The column size is not set on first load, this has to be done manually by the user, which is not ideal...
                                 if (col == "ico") {
                                     UI::Text(explorer.GetElementIconString(element.Icon, element.IsSelected));
                                 } else if (col == "name") {
