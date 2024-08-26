@@ -108,8 +108,8 @@ namespace _IO {
 
         // Read from file
         string ReadFileToEnd(const string &in path, bool verbose = false) {
-            if (verbose) log("Reading file: " + path, LogLevel::Info, 98, "ReadFileToEnd");
-            if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 99, "ReadFileToEnd"); return ""; }
+            if (verbose) log("Reading file: " + path, LogLevel::Info, 111, "ReadFileToEnd");
+            if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 112, "ReadFileToEnd"); return ""; }
 
             IO::File file(path, IO::FileMode::Read);
             string content = file.ReadToEnd();
@@ -118,7 +118,7 @@ namespace _IO {
         }
         
         string ReadSourceFileToEnd(const string &in path, bool verbose = false) {
-            if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 108, "ReadSourceFileToEnd"); return ""; }
+            if (!IO::FileExists(path)) { log("File does not exist: " + path, LogLevel::Error, 121, "ReadSourceFileToEnd"); return ""; }
 
             IO::FileSource f(path);
             string content = f.ReadToEnd();
@@ -127,20 +127,20 @@ namespace _IO {
 
         // Move file
         void CopySourceFileToNonSource(const string &in originalPath, const string &in storagePath, bool verbose = false) {
-            if (verbose) log("Moving the file content", LogLevel::Info, 123, "MoveSourceFileToNonSource");
+            if (verbose) log("Moving the file content", LogLevel::Info, 130, "CopySourceFileToNonSource");
             
             string fileContents = ReadSourceFileToEnd(originalPath);
             WriteFile(storagePath, fileContents);
 
-            if (verbose) log("Finished moving the file", LogLevel::Info, 129, "MoveSourceFileToNonSource");
+            if (verbose) log("Finished moving the file", LogLevel::Info, 135, "CopySourceFileToNonSource");
 
             // TODO: Must check how IO::Move works with source files
         }
 
         // Copy file
         void CopyFileTo(const string &in source, const string &in destination, bool verbose = false) {
-            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 137, "CopyMoveFile"); return; }
-            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 138, "CopyMoveFile"); return; }
+            if (!IO::FileExists(source)) { if (verbose) log("Source file does not exist: " + source, LogLevel::Error, 142, "CopyFileTo"); return; }
+            if (IO::FileExists(destination)) { if (verbose) log("Destination file already exists: " + destination, LogLevel::Error, 143, "CopyFileTo"); return; }
 
             string content = ReadFileToEnd(source, verbose);
             WriteFile(destination, content, verbose);
@@ -148,8 +148,8 @@ namespace _IO {
 
         // Rename file
         void RenameFile(const string &in filePath, const string &in newFileName, bool verbose = false) {
-            if (verbose) log("Attempting to rename file: " + filePath, LogLevel::Info, 150, "RenameFile");
-            if (!IO::FileExists(filePath)) { log("File does not exist: " + filePath, LogLevel::Error, 151, "RenameFile"); return; }
+            if (verbose) log("Attempting to rename file: " + filePath, LogLevel::Info, 151, "RenameFile");
+            if (!IO::FileExists(filePath)) { log("File does not exist: " + filePath, LogLevel::Error, 152, "RenameFile"); return; }
 
             string currentPath = filePath;
             string newPath;
@@ -177,7 +177,7 @@ namespace _IO {
         if (IO::FolderExists(path)) {
             OpenExplorerPath(path);
         } else {
-            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 207, "OpenFolder");
+            if (verbose) log("Folder does not exist: " + path, LogLevel::Info, 180, "OpenFolder");
         }
     }
 }
