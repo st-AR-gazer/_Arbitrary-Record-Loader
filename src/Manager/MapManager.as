@@ -22,7 +22,8 @@ void MapCoro() {
             CurrentMapRecords::ChampMedal::OnMapLoad();
             // CurrentMapRecords::GPS::OnMapLoad();
 
-            AllowCheck::OnMapLoad();
+            AllowCheck::Chester::OnMapLoad();
+            AllowCheck::UciMapCheck::OnMapLoad();
 
             if (!mapRecordsLoaded) {
                 ReplayLoader::LoadReplayAfterFileExplorer();
