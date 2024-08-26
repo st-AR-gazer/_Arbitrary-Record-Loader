@@ -22,6 +22,8 @@ void MapCoro() {
             CurrentMapRecords::ChampMedal::OnMapLoad();
             // CurrentMapRecords::GPS::OnMapLoad();
 
+            AllowCheck::OnMapLoad();
+
             if (!mapRecordsLoaded) {
                 ReplayLoader::LoadReplayAfterFileExplorer();
                 mapRecordsLoaded = true;
