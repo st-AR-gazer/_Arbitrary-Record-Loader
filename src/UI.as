@@ -44,6 +44,10 @@ void RenderInterface() {
                 RenderTab_CurrentMapGhost();
                 UI::EndTabItem();
             }
+            if (UI::BeginTabItem(Icons::Keyboard + " Hotkeys")) {
+                RenderTab_Hotkeys();
+                UI::EndTabItem();
+            }
             UI::EndTabBar();
         }
         UI::End();
@@ -574,6 +578,100 @@ string pad(uint value, int length) {
         result = "0" + result;
     }
     return result;
+}
+
+
+//////////////////// Render Hotkey Tab /////////////////////
+
+void RenderTab_Hotkeys() {
+    UI::Text("Hotkeys");
+    UI::Separator();
+
+    if (UI::Button("Create New Hotkey")) {
+        isCreatingNewHotkey = true;
+        selectedKeys = {};
+        selectedAction = "";
+        selectedActionIndex = -1;
+        keyAmount = 1;
+    }
+
+    if (isCreatingNewHotkey) {
+        UI::Text("Define Hotkey:");
+        UI::Separator();
+
+        UI::Text("Number of keys: " + tostring(keyAmount));
+        if (UI::Button("Add another key")) {
+            keyAmount++;
+        }
+        UI::SameLine();
+        if (UI::Button("Remove last key")) {
+            if (keyAmount > 1) keyAmount--;
+        }
+
+        for (int i = 0; i < keyAmount; i++) {
+            string keyName = i < int(selectedKeys.Length) ? selectedKeys[i] : "Select Key";
+            UI::Text("Key " + tostring(i + 1) + ": ");
+            UI::SameLine();
+            if (UI::BeginCombo("##KeyCombo" + tostring(i), keyName)) {
+                for (uint j = 0; j < allPossibleKeys.Length; j++) {
+                    if (UI::Selectable(allPossibleKeys[j], selectedKeys.Find(allPossibleKeys[j]) != -1)) {
+                        if (i < int(selectedKeys.Length)) {
+                            selectedKeys[i] = allPossibleKeys[j];
+                        } else {
+                            selectedKeys.InsertLast(allPossibleKeys[j]);
+                        }
+                    }
+                }
+                UI::EndCombo();
+            }
+        }
+
+        UI::Text("Perform Action: ");
+        UI::SameLine();
+        if (UI::BeginCombo("##ActionCombo", selectedActionIndex == -1 ? "Select Action" : availableActions[selectedActionIndex])) {
+            for (uint i = 0; i < availableActions.Length; i++) {
+                bool isSelected = selectedActionIndex == int(i);
+                if (UI::Selectable(availableActions[i], isSelected)) {
+                    selectedActionIndex = int(i);
+                    selectedAction = availableActions[i];
+                }
+            }
+            UI::EndCombo();
+        }
+
+        int userDefinedTime = -1;
+        if (selectedAction == "Load X time") {
+            userDefinedTime = UI::InputInt("Specify X Time", 1);
+        }
+
+        UI::Separator();
+
+        if (UI::Button("Finish Creating Hotkey")) {
+            hotkeys.InsertLast(Hotkey(selectedKeys, selectedAction, userDefinedTime));
+            isCreatingNewHotkey = false;
+        }
+
+        UI::SameLine();
+        if (UI::Button("Cancel")) {
+            isCreatingNewHotkey = false;
+        }
+    }
+
+    UI::Separator();
+
+    // Display current hotkeys
+    UI::Text("All Current Hotkeys:");
+    for (uint i = 0; i < hotkeys.Length; i++) {
+        UI::Text(hotkeys[i].description);
+        UI::SameLine();
+        if (UI::Button("Edit##" + i)) {
+            StartEditingHotkey(i);
+        }
+        UI::SameLine();
+        if (UI::Button("Delete##" + i)) {
+            hotkeys.RemoveAt(i);
+        }
+    }
 }
 
 
