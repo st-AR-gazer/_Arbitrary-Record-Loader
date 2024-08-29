@@ -1692,6 +1692,17 @@ namespace FileExplorer {
 
                 if (columnCount > 0) {
                     UI::BeginTable("FilesTable", columnCount, UI::TableFlags::Resizable | UI::TableFlags::Borders | UI::TableFlags::SizingFixedSame);
+
+                    for (uint i = 0; i < orderedColumns.Length; i++) {
+                        if (explorer.Config.IsColumnVisible(orderedColumns[i])) {
+                            if (orderedColumns[i] == "ico") {
+                                UI::TableSetupColumn(orderedColumns[i], UI::TableColumnFlags::None, 30.0f);
+                            } else {
+                                UI::TableSetupColumn(orderedColumns[i]);
+                            }
+                        }
+                    }
+
                     UI::TableHeadersRow();
 
                     uint startIndex = explorer.Config.EnablePagination ? explorer.tab[0].CurrentPage * explorer.Config.MaxElementsPerPage : 0;
