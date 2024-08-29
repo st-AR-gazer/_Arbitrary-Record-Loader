@@ -44,6 +44,10 @@ void RenderInterface() {
                 RenderTab_CurrentMapGhost();
                 UI::EndTabItem();
             }
+            if (UI::BeginTabItem(Icons::Keyboard + " Hotkeys")) {
+                RenderTab_Hotkeys();
+                UI::EndTabItem();
+            }
             UI::EndTabBar();
         }
         UI::End();
@@ -575,6 +579,11 @@ string pad(uint value, int length) {
     }
     return result;
 }
+
+
+//////////////////// Render Hotkey Tab /////////////////////
+
+
 
 
 
