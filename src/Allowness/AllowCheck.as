@@ -1,6 +1,8 @@
 string[] GameModeBlackList = {
-    "TrackMania/TM_TimeAttack_Online", "TrackMania/TM_Rounds_Online"
+    "TM_TimeAttack_Online", "TM_Rounds_Online"
 };
+
+// TrackMania/TM_TimeAttack_Online
 
 namespace AllowCheck {
     bool AllowdToLoadRecords = true;
@@ -9,7 +11,7 @@ namespace AllowCheck {
 
         bool IsBlacklisted(string mode) {
             for (uint i = 0; i < GameModeBlackList.Length; i++) {
-                if (mode.ToLower() == GameModeBlackList[i].ToLower()) {
+                if (mode.ToLower().Contains(GameModeBlackList[i].ToLower())) {
                     return true;
                 }
             }
