@@ -1,4 +1,6 @@
 void Main() {
+    HotkeyManager::InitHotkeys();
+
     startnew(Server::StartHttpServer);
     InitApi();
     InitFolders();
