@@ -539,7 +539,7 @@ void RenderTab_CurrentMapGhost() {
 #if DEPENDENCY_CHAMPIONMEDALS
     UI::Separator();
 
-    UI::Text("Champion Medal Information");
+    UI::Text("\\$e79Champion Medal Information");
 
     UI::Text("Current Champion Medal Time: " + FromMsToFormat(CurrentMapRecords::ChampMedal::currentMapChampionMedal));
 
@@ -561,6 +561,33 @@ void RenderTab_CurrentMapGhost() {
         }
     } else {
         UI::Text("The current state of the champion medal record is unknown. Please load a champion medal record to check if there is an exact match.");
+    }
+#endif
+#if DEPENDENCY_WARRIORMEDALS
+    UI::Separator();
+
+    UI::Text("\\$0cfWarrior Medal Information");
+
+    UI::Text("Current Warrior Medal Time: " + FromMsToFormat(CurrentMapRecords::WarriorMedal::currentMapWarriorMedal));
+
+    if (!CurrentMapRecords::WarriorMedal::warriorMedalExists) {
+        _UI::DisabledButton(Icons::UserPlus + " Load Nearest Warrior Medal Time");
+    } else {
+        if (UI::Button(Icons::UserPlus + " Load Nearest Warrior Medal Time")) {
+            CurrentMapRecords::WarriorMedal::AddWarriorMedal();
+        }
+    }
+
+    if (CurrentMapRecords::WarriorMedal::ReqForCurrentMapFinished) {
+        if (CurrentMapRecords::WarriorMedal::warriorMedalHasExactMatch) {
+            UI::Text("Exact match found for the warrior medal!");
+            UI::Text("Time difference: " + tostring(CurrentMapRecords::WarriorMedal::timeDifference) + " ms");
+        } else {
+            UI::Text("There is no exact match for the warrior medal. Using the closest ghost that still beats the warrior medal time.");
+            UI::Text("Time difference: " + tostring(CurrentMapRecords::WarriorMedal::timeDifference) + " ms");
+        }
+    } else {
+        UI::Text("The current state of the warrior medal record is unknown. Please load a warrior medal record to check if there is an exact match.");
     }
 #endif
 }
@@ -593,19 +620,22 @@ namespace HotkeyManager {
         array<string> keys = hotkeyMappings.GetKeys();
         if (keys.Length > 0) {
             for (uint i = 0; i < keys.Length; i++) {
-                Hotkey@ hotkey = cast<Hotkey@>(hotkeyMappings[keys[i]]);
-                string currentKeys = hotkey.get_description();
+                array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[keys[i]]);
+                for (uint j = 0; j < hotkeysList.Length; j++) {
+                    Hotkey@ hotkey = hotkeysList[j];
+                    string currentKeys = hotkey.get_description();
 
-                UI::Text(hotkey.action + ": ");
-                UI::SameLine();
-                if (UI::Button(currentKeys + "##edit" + keys[i])) {
-                    actionToEdit = keys[i];
-                    editKeyCombination = hotkey.keyCombination;
-                    showEditHotkeyUI = true;
-                }
-                UI::SameLine();
-                if (UI::Button("Remove##remove" + keys[i])) {
-                    RemoveHotkey(keys[i]);
+                    UI::Text(hotkey.action + ": ");
+                    UI::SameLine();
+                    if (UI::Button(currentKeys + "##edit" + keys[i] + "-" + j)) {
+                        actionToEdit = keys[i];
+                        editKeyCombination = hotkey.keyCombination;
+                        showEditHotkeyUI = true;
+                    }
+                    UI::SameLine();
+                    if (UI::Button("Remove##remove" + keys[i] + "-" + j)) {
+                        RemoveHotkey(keys[i], j);
+                    }
                 }
             }
         } else {
@@ -622,6 +652,7 @@ namespace HotkeyManager {
             showEditHotkeyUI = false;
             selectedAction = "";
             newKeyCombination.RemoveRange(0, newKeyCombination.Length);
+            loadXPosition = 1;
         }
 
         if (showAddHotkeyUI) {
@@ -637,6 +668,12 @@ namespace HotkeyManager {
                     }
                 }
                 UI::EndCombo();
+            }
+
+            if (selectedAction == "Load X time") {
+                UI::Dummy(vec2(0, 10));
+                UI::Text("Specify Position:");
+                loadXPosition = Math::Clamp(UI::InputInt("Position (1 for top)", loadXPosition), 1, 1000);
             }
 
             UI::Dummy(vec2(0, 10));
@@ -668,7 +705,8 @@ namespace HotkeyManager {
             UI::Dummy(vec2(0, 10));
 
             if (UI::Button("Add Hotkey") && selectedAction.Length > 0 && newKeyCombination.Length > 0) {
-                RegisterHotkey(newKeyCombination, selectedAction);
+                int extraValue = (selectedAction == "Load X time") ? loadXPosition : -1;
+                RegisterHotkey(newKeyCombination, selectedAction, extraValue);
                 showAddHotkeyUI = false;
             }
         }
@@ -709,13 +747,13 @@ namespace HotkeyManager {
             UI::Dummy(vec2(0, 10));
 
             if (UI::Button("Update Hotkey") && editKeyCombination.Length > 0) {
-                UpdateHotkey(actionToEdit, editKeyCombination);
+                int extraValue = (actionToEdit == "Load X time") ? loadXPosition : -1;
+                UpdateHotkey(actionToEdit, 0 /*Update the first one*/, editKeyCombination, extraValue);
                 showEditHotkeyUI = false;
             }
         }
     }
 }
-
 
 
 ////////////////////////////// End Tabs //////////////////////////////

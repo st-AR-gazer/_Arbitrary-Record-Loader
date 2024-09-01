@@ -6,7 +6,8 @@ namespace HotkeyManager {
     string actionToEdit = "";
     array<string> newKeyCombination;
     array<string> editKeyCombination;
-    string configFilePath = IO::FromStorageFolder("hotkeys_config.txt");
+    int loadXPosition = 1;
+    string configFilePath = IO::FromStorageFolder("hotkeys_config.ini");
 
     class Hotkey {
         array<string> keyCombination;
@@ -34,8 +35,8 @@ namespace HotkeyManager {
     array<string> availableActions = {
         "Load top 1 time", "Load top 2 time", "Load top 3 time",
         "Load top 4 time", "Load top 5 time", "Load X time",
-        "Remove all ghosts from current map", "Remove ghost with specific MwId",
-        "Remove PB Ghost", "Open/Close Interface", "Open Interface", "Close Interface"
+        "Remove all ghosts from current map", "Remove PB Ghost", 
+        "Open/Close Interface", "Open Interface", "Close Interface"
     };
 
     array<string> GenerateKeyList() {
@@ -64,34 +65,52 @@ namespace HotkeyManager {
 
     void RegisterHotkey(array<string> keyCombination, string action, int extraValue = -1) {
         Hotkey@ hotkey = Hotkey(keyCombination, action, extraValue);
-        hotkeyMappings.Set(action, @hotkey);
+        array<Hotkey@>@ hotkeysList;
+        
+        if (hotkeyMappings.Exists(action)) {
+            @hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[action]);
+        } else {
+            @hotkeysList = array<Hotkey@>();
+            hotkeyMappings.Set(action, @hotkeysList);
+        }
+
+        hotkeysList.InsertLast(hotkey);
         SaveHotkeysToFile();
     }
 
-    void UpdateHotkey(string action, array<string> newKeyCombination, int extraValue = -1) {
+    void UpdateHotkey(string action, int hotkeyIndex, array<string> newKeyCombination, int extraValue = -1) {
         if (hotkeyMappings.Exists(action)) {
-            Hotkey@ hotkey = cast<Hotkey@>(hotkeyMappings[action]);
-            hotkey.keyCombination = newKeyCombination;
-            hotkey.extraValue = extraValue;
-            SaveHotkeysToFile();
-        } else {
-            RegisterHotkey(newKeyCombination, action, extraValue);
+            array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[action]);
+            if (hotkeyIndex >= 0 && hotkeyIndex < int(hotkeysList.Length)) {
+                Hotkey@ hotkey = hotkeysList[hotkeyIndex];
+                hotkey.keyCombination = newKeyCombination;
+                hotkey.extraValue = extraValue;
+                SaveHotkeysToFile();
+            }
         }
     }
 
-    void RemoveHotkey(string action) {
+    void RemoveHotkey(string action, int hotkeyIndex) {
         if (hotkeyMappings.Exists(action)) {
-            hotkeyMappings.Delete(action);
-            SaveHotkeysToFile();
+            array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[action]);
+            if (hotkeyIndex >= 0 && hotkeyIndex < int(hotkeysList.Length)) {
+                hotkeysList.RemoveAt(hotkeyIndex);
+                if (hotkeysList.Length == 0) {
+                    hotkeyMappings.Delete(action);
+                }
+                SaveHotkeysToFile();
+            }
         }
     }
 
     Hotkey@ GetHotkeyFromCombination(array<string>@ pressedKeys) {
         array<string> keys = hotkeyMappings.GetKeys();
         for (uint i = 0; i < keys.Length; i++) {
-            Hotkey@ hotkey = cast<Hotkey@>(hotkeyMappings[keys[i]]);
-            if (CompareKeyCombinations(hotkey.keyCombination, pressedKeys)) {
-                return hotkey;
+            array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[keys[i]]);
+            for (uint j = 0; j < hotkeysList.Length; j++) {
+                if (CompareKeyCombinations(hotkeysList[j].keyCombination, pressedKeys)) {
+                    return hotkeysList[j];
+                }
             }
         }
         return null;
@@ -99,29 +118,27 @@ namespace HotkeyManager {
 
     void ExecuteHotkeyAction(Hotkey@ hotkey) {
         if (hotkey.action == "Load top 1 time") {
-            // Logic to load the top 1 time
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), "0", "AnyMap");
         } else if (hotkey.action == "Load top 2 time") {
-            // Logic to load the top 2 time
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), "1", "AnyMap");
         } else if (hotkey.action == "Load top 3 time") {
-            // Logic to load the top 3 time
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), "2", "AnyMap");
         } else if (hotkey.action == "Load top 4 time") {
-            // Logic to load the top 4 time
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), "3", "AnyMap");
         } else if (hotkey.action == "Load top 5 time") {
-            // Logic to load the top 5 time
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), "4", "AnyMap");
         } else if (hotkey.action == "Load X time" && hotkey.extraValue > 0) {
-            // Logic to load the specific time based on extraValue
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), tostring(hotkey.extraValue - 1), "AnyMap");
         } else if (hotkey.action == "Open/Close Interface") {
-            // Logic to open or close the interface
+            S_windowOpen = !S_windowOpen;
         } else if (hotkey.action == "Open Interface") {
-            // Logic to open the interface
+            S_windowOpen = true;
         } else if (hotkey.action == "Close Interface") {
-            // Logic to close the interface
+            S_windowOpen = false;
         } else if (hotkey.action == "Remove all ghosts from current map") {
-            // Logic to remove all ghosts from the current map
-        } else if (hotkey.action == "Remove ghost with specific MwId") {
-            // Logic to remove ghost with specific MwId
+            RecordManager::RemoveAllRecords();
         } else if (hotkey.action == "Remove PB Ghost") {
-            // Logic to remove PB ghost
+            RecordManager::RemovePBRecord();
         } else {
             print("Action not implemented: " + hotkey.action);
         }
@@ -149,8 +166,11 @@ namespace HotkeyManager {
         string content = "";
 
         for (uint i = 0; i < keys.Length; i++) {
-            Hotkey@ hotkey = cast<Hotkey@>(hotkeyMappings[keys[i]]);
-            content += hotkey.action + "=" + JoinKeyCombination(hotkey.keyCombination) + "\n";
+            array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[keys[i]]);
+            for (uint j = 0; j < hotkeysList.Length; j++) {
+                Hotkey@ hotkey = hotkeysList[j];
+                content += hotkey.action + "=" + JoinKeyCombination(hotkey.keyCombination) + "\n";
+            }
         }
 
         IO::File configFile(configFilePath, IO::FileMode::Write);
