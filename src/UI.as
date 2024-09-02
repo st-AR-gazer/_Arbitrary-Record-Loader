@@ -258,10 +258,6 @@ void RenderTab_OtherSpecificUIDs() {
     string downloadPath;
     UI::InputText("Download URL", downloadPath);
     UI::SameLine();
-    if (UI::Button("Download Provided")) {
-        OtherManager::StartDownload(downloadPath);
-    }
-    UI::SameLine();
     if (UI::Button("Create New Download Profile")) {
         OtherManager::IsCreatingProfile = true;
     }

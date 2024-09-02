@@ -96,18 +96,19 @@ namespace OtherManager {
     }
 
     namespace CDN {
-        bool IsDownloading = false;
+
+        [Setting name="Should download files from CDN if they are already downloaded" category="CDN"]
+        bool shouldDownloadFilesIfTheyAreAleadyDownloaded = false;
+
         string manifestUrl = "http://maniacdn.net/ar_/Arbitrary-Record-Loader/manifest/manifest.json";
         string manifestPreinstalled = "http://maniacdn.net/ar_/Arbitrary-Record-Loader/preinstalled/";
-        string currentVersion = "v1";
-
-        void StartManifestDownload() {
-            startnew(Coro_FetchManifest);
-        }
 
         void Coro_FetchManifest() {
-            IsDownloading = true;
-            auto req = Net::HttpGet(manifestUrl);
+            Net::HttpRequest req;
+            req.Method = Net::HttpMethod::Get;
+            req.Url = manifestUrl;
+            req.Start();
+
             while (!req.Finished()) {
                 yield();
             }
@@ -115,9 +116,8 @@ namespace OtherManager {
             if (req.ResponseCode() == 200) {
                 ParseManifest(req.String());
             } else {
-                log("Error fetching manifest: " + req.ResponseCode(), LogLevel::Error, 118, "Coro_FetchManifest");
+                log("Error fetching manifest: " + req.ResponseCode(), LogLevel::Error, 119, "Coro_FetchManifest");
             }
-            IsDownloading = false;
         }
 
         void ParseManifest(const string &in reqBody) {
@@ -127,47 +127,49 @@ namespace OtherManager {
                 return;
             }
 
-            string manifestVersion = manifest["version"];
-            if (currentVersion != manifestVersion) {
-                auto files = manifest["files"];
-                for (uint i = 0; i < files.Length; i++) {
-                    string fileUrl = manifestPreinstalled + string(files[i]);
-                    string destinationPath = Server::specificDownloadedJsonFilesDirectory + string(files[i]);
-                    DownloadFileToDestination(fileUrl, destinationPath);
-                }
-                currentVersion = manifestVersion;
-                SaveCurrentVersion(manifestVersion);
-            }
-        }
+            bool shouldUpdate = manifest["shouldUpdate"];
+            if (!shouldUpdate) return;
 
-        void DownloadFileToDestination(const string &in url, const string &in destinationPath) {
-            auto req = Net::HttpGet(url);
-            while (!req.Finished()) {
-                yield();
-            }
-            if (req.ResponseCode() == 200) {
-                auto content = req.String();
-                _IO::File::WriteFile(destinationPath, content);
+            int version = manifest["version"];
+            if (version > get_StoredVersion()) {
+                log("New version available: " + version, LogLevel::Info, 135, "ParseManifest");
+                DownloadFiles(manifest);
             } else {
-                NotifyWarn("Error | Failed to download file from URL.");
+                log("No new version available.", LogLevel::Info, 138, "ParseManifest");
+                SetStoredVersion(version);
             }
         }
 
-        void SaveCurrentVersion(const string &in version) {
-            string versionFilePath = Server::specificDownloaded + "version.txt";
-            _IO::File::WriteFile(versionFilePath, version);
+        void DownloadFiles(Json::Value &manifest) {
+            Json::Value files = manifest["files"];
+            for (uint i = 0; i < files.Length; i++) {
+                string filename = files[i]["filename"];
+                string url = files[i]["url"];
+                string path = Server::specificDownloadedJsonFilesDirectory + filename;
+
+                if (shouldDownloadFilesIfTheyAreAleadyDownloaded || !IO::FileExists(path)) {
+                    log("Downloading: " + filename, LogLevel::Info, 151, "DownloadFiles");
+                    _Net::DownloadFileToDestination(url, path);
+                }
+            }
         }
 
-        string LoadCurrentVersion() {
-            string versionFilePath = Server::specificDownloaded + "version.txt";
-            if (IO::FileExists(versionFilePath)) {
-                return _IO::File::ReadFileToEnd(versionFilePath);
-            }
-            return "";
+        int get_StoredVersion() {
+            if (!IO::FileExists(IO::FromStorageFolder("version.txt"))) { return -1; }
+
+            string version = _IO::File::ReadFileToEnd(IO::FromStorageFolder("version.txt"));
+            return Text::ParseInt(version);
+        }
+
+        void SetStoredVersion(int version) {
+            _IO::File::WriteFile(IO::FromStorageFolder("version.txt"), "" + version);
+        }
+
+        void StartManifestDownload() {
+            startnew(Coro_FetchManifest);
         }
 
         void Init() {
-            currentVersion = LoadCurrentVersion();
             StartManifestDownload();
         }
     }

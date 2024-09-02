@@ -55,21 +55,21 @@ namespace CurrentMapRecords {
     }
 
     class Medal {
-        protected bool medalExists = false;
-        protected uint currentMapMedalTime = 0;
-        protected int timeDifference = 0;
+        bool medalExists = false;
+        uint currentMapMedalTime = 0;
+        int timeDifference = 0;
 
-        protected string displaySavePath = "";
-        protected uint displayTimeDifference = 0;
+        string displaySavePath = "";
+        uint displayTimeDifference = 0;
 
-        protected bool medalHasExactMatch = false;
-        protected bool reqForCurrentMapFinished = false;
+        bool medalHasExactMatch = false;
+        bool reqForCurrentMapFinished = false;
 
-        protected CGameCtnChallenge@ rootMap = null;
+        CGameCtnChallenge@ rootMap = null;
 
         void AddMedal() {
             if (medalExists) {
-                startnew(FetchSurroundingRecords);
+                startnew(CoroutineFunc(FetchSurroundingRecords));
             }
         }
 
@@ -83,7 +83,7 @@ namespace CurrentMapRecords {
             }
         }
 
-        protected void ResetState() {
+        void ResetState() {
             medalExists = false;
             currentMapMedalTime = 0;
             timeDifference = 0;
@@ -93,20 +93,20 @@ namespace CurrentMapRecords {
             reqForCurrentMapFinished = false;
         }
 
-        protected bool MedalExists() {
+        bool MedalExists() {
             int startTime = Time::Now;
             while (Time::Now - startTime < 2000 || GetMedalTime() == 0) { yield(); }
             log("Medal time is: " + GetMedalTime(), LogLevel::Info, 99, "MedalExists");
             return GetMedalTime() > 0;
         }
 
-        protected void FetchMedalTime() {
+        void FetchMedalTime() {
             if (medalExists) {
                 currentMapMedalTime = GetMedalTime();
             }
         }
 
-        protected void FetchSurroundingRecords() {
+        void FetchSurroundingRecords() {
             if (!medalExists) return;
 
             string url = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/" + get_CurrentMap() + "/surround/1/1?score=" + currentMapMedalTime;
@@ -174,30 +174,42 @@ namespace CurrentMapRecords {
                 medalHasExactMatch = exactMatchFound;
 
                 log("Closest record found: score = " + closestScore + ", accountId = " + closestAccountId + ", position = " + closestPosition + ", difference = " + timeDifference, LogLevel::Info, 176, "FetchSurroundingRecords");
-                LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), tostring(closestPosition - 1), closestAccountId);
+                LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), tostring(closestPosition - 1), "Medal", closestAccountId);
             }
 
             reqForCurrentMapFinished = true;
         }
 
-        protected uint GetMedalTime() { return 0; }
+        uint GetMedalTime() { return 0; }
     }
 
     class ChampionMedal : Medal {
-        protected uint GetMedalTime() override {
-            return ChampionMedals::GetCMTime();
+        uint GetMedalTime() override {
+            int x = -1;
+#if DEPENDENCY_CHAMPIONMEDALS
+            x = ChampionMedals::GetCMTime();
+#endif
+            return x;
         }
     }
 
     class WarriorMedal : Medal {
-        protected uint GetMedalTime() override {
-            return WarriorMedals::GetWMTime();
+        uint GetMedalTime() override {
+            int x = -1;
+#if DEPENDENCY_WARRIORMEDALS
+            x = WarriorMedals::GetWMTime();
+#endif
+            return x;
         }
     }
 
     class SBVilleMedal : Medal {
-        protected uint GetMedalTime() override {
-            return SBVilleCampaignChallenges::getChallengeTime();
+        uint GetMedalTime() override {
+            int x = -1;
+#if DEPENDENCY_SBVILLECAMPAIGNCHALLENGES
+            x = SBVilleCampaignChallenges::getChallengeTime();
+#endif
+            return x;
         }
     }
 
@@ -215,7 +227,7 @@ namespace CurrentMapRecords {
 
 #if DEPENDENCY_SBVILLECAMPAIGNCHALLENGES
     namespace SBVille {
-        ChampionMedal medal;
+        SBVilleMedal medal;
     }
 #endif
 
@@ -253,7 +265,7 @@ namespace CurrentMapRecords {
 
         //     bool GPSReplayCanBeLoadedForCurrentMap() {
         //         if (rootMap is null || rootMap.ClipGroupInGame is null) {
-        //             log("rootMap or ClipGroupInGame is null", LogLevel::Error, 256, "GPSReplayCanBeLoadedForCurrentMap");
+        //             log("rootMap or ClipGroupInGame is null", LogLevel::Error, 268, "GPSReplayCanBeLoadedForCurrentMap");
         //             return false;
         //         }
 
@@ -286,27 +298,27 @@ namespace CurrentMapRecords {
         //         sleep(1000);                            // Change to something that waits until the player is loaded.
 
         //         auto dfm = cast<CGameDataFileManagerScript>(GetApp().Network.ClientManiaAppPlayground.DataFileMgr);
-        //         if (dfm is null) { log("DataFileMgr is null", LogLevel::Error, 289, "FetchVTablePtr"); return; }
+        //         if (dfm is null) { log("DataFileMgr is null", LogLevel::Error, 301, "FetchVTablePtr"); return; }
 
         //         auto task = dfm.Replay_Load(ghostFilePath);
         //         while (task.IsProcessing) { yield(); }
 
         //         if (task.HasFailed || !task.HasSucceeded) {
-        //             log("Failed to load replay file!", LogLevel::Error, 295, "FetchVTablePtr");
-        //             log(task.ErrorCode, LogLevel::Error, 296, "FetchVTablePtr");
-        //             log(task.ErrorDescription, LogLevel::Error, 297, "FetchVTablePtr");
-        //             log(task.ErrorType, LogLevel::Error, 298, "FetchVTablePtr");
-        //             log(tostring(task.Ghosts.Length), LogLevel::Error, 299, "FetchVTablePtr");
+        //             log("Failed to load replay file!", LogLevel::Error, 307, "FetchVTablePtr");
+        //             log(task.ErrorCode, LogLevel::Error, 308, "FetchVTablePtr");
+        //             log(task.ErrorDescription, LogLevel::Error, 309, "FetchVTablePtr");
+        //             log(task.ErrorType, LogLevel::Error, 310, "FetchVTablePtr");
+        //             log(tostring(task.Ghosts.Length), LogLevel::Error, 311, "FetchVTablePtr");
         //             return;
         //         }
 
-        //         if (task.Ghosts.Length == 0) { log("No ghosts found in the replay file!", LogLevel::Warn, 303, "FetchVTablePtr"); return; }
+        //         if (task.Ghosts.Length == 0) { log("No ghosts found in the replay file!", LogLevel::Warn, 315, "FetchVTablePtr"); return; }
 
         //         auto ghost = task.Ghosts[0];
-        //         if (ghost is null) { log("Failed to retrieve the ghost from the replay file", LogLevel::Error, 306, "FetchVTablePtr"); return; }
+        //         if (ghost is null) { log("Failed to retrieve the ghost from the replay file", LogLevel::Error, 318, "FetchVTablePtr"); return; }
 
         //         uint64 pointer = Dev::GetOffsetUint64(ghost.Result, 0x0);
-        //         log("Hexadecimal pointer: " + Text::FormatPointer(pointer), LogLevel::Info, 309, "FetchVTablePtr");
+        //         log("Hexadecimal pointer: " + Text::FormatPointer(pointer), LogLevel::Info, 321, "FetchVTablePtr");
 
         //         CTmRaceResult_VTable_Ptr = pointer;
         //     }
@@ -386,7 +398,7 @@ namespace CurrentMapRecords {
 
         //     void ConvertGhosts() {
         //         for (uint i = 0; i < ghosts.Length; i++) {
-        //             if (ghosts[i] is null) { log("Ghost at index " + i + " is null", LogLevel::Error, 389, "ConvertGhosts"); continue; }
+        //             if (ghosts[i] is null) { log("Ghost at index " + i + " is null", LogLevel::Error, 401, "ConvertGhosts"); continue; }
         //             ghosts[i].ConvertToScript(CTmRaceResult_VTable_Ptr, ghosts[i].ghost);
         //         }
         //     }
@@ -394,7 +406,7 @@ namespace CurrentMapRecords {
         //     void SaveReplays() {
         //         for (uint i = 0; i < ghosts.Length; i++) {
         //             if (ghosts[i] is null) {
-        //                 log("Ghost at index " + i + " is null", LogLevel::Error, 397, "SaveReplays");
+        //                 log("Ghost at index " + i + " is null", LogLevel::Error, 409, "SaveReplays");
         //                 continue;
         //             }
         //             ghosts[i].Save(rootMap);
@@ -417,7 +429,7 @@ namespace CurrentMapRecords {
         //     }
 
         //     void ConvertToScript(uint64 CTmRaceResult_VTable_Ptr, CGameCtnGhost@ ghost) {
-        //         if (ghost is null) { log("Ghost is null in ConvertToScript", LogLevel::Error, 420, "ConvertToScript"); return; }
+        //         if (ghost is null) { log("Ghost is null in ConvertToScript", LogLevel::Error, 432, "ConvertToScript"); return; }
 
         //         ghost.MwAddRef();
 
@@ -438,7 +450,7 @@ namespace CurrentMapRecords {
         //     }
 
         //     void Save(CGameCtnChallenge@ rootMap) {
-        //         if (ghostScript is null) { log("GhostScript is null in Save for ghost " + name, LogLevel::Error, 441, "Save"); return; }
+        //         if (ghostScript is null) { log("GhostScript is null in Save for ghost " + name, LogLevel::Error, 453, "Save"); return; }
 
         //         print(savePath);
         //         print(rootMap.MapName);
@@ -447,7 +459,7 @@ namespace CurrentMapRecords {
         //         CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
         //         CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(savePath, rootMap, ghostScript);
         //         if (taskResult is null) {
-        //             log("Replay task returned null for ghost " + name, LogLevel::Error, 450, "Save");
+        //             log("Replay task returned null for ghost " + name, LogLevel::Error, 462, "Save");
         //         }
         //     }
         // }

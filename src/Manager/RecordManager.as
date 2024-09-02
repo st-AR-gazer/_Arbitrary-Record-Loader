@@ -286,9 +286,9 @@ void ProcessSelectedFile(const string &in filePath) {
 
     string fileExt = Path::GetExtension(filePath).ToLower();
 
-    if (fileExt == "gbx") {
+    if (fileExt == ".gbx") {
         string properFileExtension = Path::GetExtension(filePath).ToLower();
-        if (properFileExtension == "gbx") {
+        if (properFileExtension == ".gbx") {
             int secondLastDotIndex = _Text::NthLastIndexOf(filePath, ".", 2);
             int lastDotIndex = filePath.LastIndexOf(".");
             if (secondLastDotIndex != -1 && lastDotIndex > secondLastDotIndex) {
@@ -425,7 +425,7 @@ namespace LoadRecordFromArbitraryMap {
         mapIdFetched = true;
     }
 
-    void SaveReplay(const string &in mapId, const string &in accountId, const string &in offset, const string &in saveLocation = Server::serverDirectoryAutoMove) {
+    void SaveReplay(const string &in mapId, const string &in accountId, const string &in offset, const string &in saveLocation = "") {
         string url = "https://prod.trackmania.core.nadeo.online/v2/mapRecords/?accountIdList=" + accountId + "&mapId=" + mapId;
         auto req = NadeoServices::Get("NadeoServices", url);
 
@@ -440,6 +440,7 @@ namespace LoadRecordFromArbitraryMap {
         if (data.GetType() != Json::Type::Array || data.Length == 0) { log("Invalid replay data in response.", LogLevel::Error, 440, "SaveReplay"); return; }
 
         string fileUrl = data[0]["url"];
+
         string savePath = "";
 
         if (saveLocation == "Official") {
@@ -450,6 +451,8 @@ namespace LoadRecordFromArbitraryMap {
             savePath = Server::serverDirectoryAutoMove + "AnyMap_" + globalMapUid + "_Position" + offset + "_" + accountId + "_" + tostring(Time::Stamp) + ".Ghost.Gbx";
         } else if (saveLocation == "OtherMaps") {
             savePath = Server::specificDownloadedFilesDirectory + "OtherMaps_" + globalMapUid + "_Position" + offset + "_" + accountId + "_" + tostring(Time::Stamp) + ".Ghost.Gbx";
+        } else if (saveLocation == "Medal") {
+            savePath = Server::serverDirectoryMedal + "Medal_" + globalMapUid + "_Position" + offset + "_" + accountId + "_" + tostring(Time::Stamp) + ".Ghost.Gbx";
         } else if (saveLocation == "") {
             savePath = Server::savedFilesDirectory + "AutoMove_" + globalMapUid + "_Position" + offset + "_" + accountId + "_" + tostring(Time::Stamp) + ".Replay.Gbx";
         }
@@ -460,12 +463,12 @@ namespace LoadRecordFromArbitraryMap {
 
         while (!fileReq.Finished()) { yield(); }
 
-        if (fileReq.ResponseCode() != 200) { log("Failed to download replay file, response code: " + fileReq.ResponseCode(), LogLevel::Error, 463, "SaveReplay"); return; }
+        if (fileReq.ResponseCode() != 200) { log("Failed to download replay file, response code: " + fileReq.ResponseCode(), LogLevel::Error, 466, "SaveReplay"); return; }
 
         fileReq.SaveToFile(savePath);
 
         ProcessSelectedFile(savePath);
 
-        log("Replay file saved to: " + savePath, LogLevel::Info, 469, "SaveReplay");
+        log("Replay file saved to: " + savePath, LogLevel::Info, 472, "SaveReplay");
     }
 }

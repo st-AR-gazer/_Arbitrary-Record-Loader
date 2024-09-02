@@ -32,6 +32,8 @@ void InitFolders() {
     IO::CreateFolder(Server::currentMapRecordsValidationReplay, true);
     IO::CreateFolder(Server::currentMapRecordsGPS, true);
 
+    IO::CreateFolder(Server::serverDirectoryMedal, true);
+
     IO::CreateFolder(Server::specificDownloadedFilesDirectory, true);
     IO::CreateFolder(Server::specificDownloadedJsonFilesDirectory, true);
     IO::CreateFolder(Server::specificDownloadedCreatedProfilesDirectory, true);
