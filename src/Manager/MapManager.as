@@ -19,11 +19,13 @@ void MapCoro() {
             CurrentMapRecords::ValidationReplay::validationReplayCanBeLoaded = CurrentMapRecords::ValidationReplay::ValidationReplayCanBeLoadedForCurrentMap();
 
             // CurrentMapRecords::ValidationReplay::OnMapLoad();
-            CurrentMapRecords::ChampMedal::OnMapLoad();
+            champMedal.OnMapLoad();
+            warriorMedal.OnMapLoad();
+            sbVilleMedal.OnMapLoad();
             // CurrentMapRecords::GPS::OnMapLoad();
 
             AllowCheck::Chester::OnMapLoad();
-            AllowCheck::UciMapCheck::OnMapLoad();
+            AllowCheck::MapCommentCheck::OnMapLoad();
 
             if (!mapRecordsLoaded) {
                 ReplayLoader::LoadReplayAfterFileExplorer();
