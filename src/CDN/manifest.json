@@ -1,0 +1,11 @@
+{
+    "version": 1,
+    "shouldUpdate": true,
+    "fileNames": {
+        "Spring 2020": "Spring_2020.json",
+        "Snow Discovery": "Discovery_Snow.json",
+        "Rally Discovery": "Discovery_Rally.json",
+        "Desert Discovery": "Discovery_Desert.json",
+        "Stunt Discovery": "Discovery_Stunt.json"
+    }
+}

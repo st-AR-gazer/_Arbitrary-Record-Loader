@@ -271,9 +271,10 @@ namespace _Net {
             if (request.ResponseCode() == 200) {
                 string content = request.Body;
                 NotifyInfo("File downloaded successfully, returning the content");
+
+                _IO::File::WriteFile(destination, content);
             } else {
                 NotifyWarn("Failed to download file. Response code: " + request.ResponseCode());
-                string content = "";
             }
         }
     }
