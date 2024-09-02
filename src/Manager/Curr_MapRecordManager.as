@@ -195,6 +195,12 @@ namespace CurrentMapRecords {
         }
     }
 
+    class SBVilleMedal : Medal {
+        protected uint GetMedalTime() override {
+            return SBVilleCampaignChallenges::getChallengeTime();
+        }
+    }
+
 #if DEPENDENCY_CHAMPIONMEDALS
     namespace ChampMedal {
         ChampionMedal medal;
@@ -207,7 +213,11 @@ namespace CurrentMapRecords {
     }
 #endif
 
-
+#if DEPENDENCY_SBVILLECAMPAIGNCHALLENGES
+    namespace SBVille {
+        ChampionMedal medal;
+    }
+#endif
 
     /* Pain Pain Go Away 
         // GPS extraction/loading is something I've canned for now, due to lack of knowledge on my part...

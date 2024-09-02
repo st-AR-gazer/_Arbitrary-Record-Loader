@@ -484,6 +484,7 @@ void RenderTab_OfficialMaps() {
 
 CurrentMapRecords::ChampionMedal champMedal;
 CurrentMapRecords::WarriorMedal warriorMedal;
+CurrentMapRecords::SBVilleMedal sbVilleMedal;
 
 void RenderTab_CurrentMapGhost() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
@@ -591,6 +592,33 @@ void RenderTab_CurrentMapGhost() {
         }
     } else {
         UI::Text("The current state of the warrior medal record is unknown. Please load a warrior medal record to check if there is an exact match.");
+    }
+#endif
+#if DEPENDENCY_SBVILLECAMPAIGNCHALLENGES
+    UI::Separator();
+
+    UI::Text("\\$f90SB Ville Medal Information");
+
+    UI::Text("Current SB Ville Medal Time: " + FromMsToFormat(sbVilleMedal.currentMapMedalTime));
+
+    if (!sbVilleMedal.medalExists) {
+        _UI::DisabledButton(Icons::UserPlus + " Load Nearest SB Ville Medal Time");
+    } else {
+        if (UI::Button(Icons::UserPlus + " Load Nearest SB Ville Medal Time")) {
+            sbVilleMedal.AddMedal();
+        }
+    }
+
+    if (sbVilleMedal.reqForCurrentMapFinished) {
+        if (sbVilleMedal.medalHasExactMatch) {
+            UI::Text("Exact match found for the SB Ville medal!");
+            UI::Text("Time difference: " + tostring(sbVilleMedal.timeDifference) + " ms");
+        } else {
+            UI::Text("There is no exact match for the SB Ville medal. Using the closest ghost that still beats the SB Ville medal time.");
+            UI::Text("Time difference: " + tostring(sbVilleMedal.timeDifference) + " ms");
+        }
+    } else {
+        UI::Text("The current state of the SB Ville medal record is unknown. Please load a SB Ville medal record to check if there is an exact match.");
     }
 #endif
 }
