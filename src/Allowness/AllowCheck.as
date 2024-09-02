@@ -30,7 +30,7 @@ namespace AllowCheck {
 
             if (IsBlacklisted(mode)) {
                 NotifyWarn("Loading records on the current map is disabled due to playing in the blacklisted mode: '" + mode + "'");
-                log("Map loading disabled due to blacklisted mode.", LogLevel::Warn, 60, "OnMapLoad");
+                log("Map loading disabled due to blacklisted mode.", LogLevel::Warn, 33, "OnMapLoad");
                 AllowdToLoadRecords = false;
                 return;
             }
@@ -107,28 +107,28 @@ namespace AllowCheck {
 
             switch (setting) {
                 case MapperSetting::arl_Hide:
-                    log("Map loading disabled due to ARL Hide setting.", LogLevel::Warn, 65, "OnMapLoad");
+                    log("Map loading disabled due to ARL Hide setting.", LogLevel::Warn, 110, "OnMapLoad");
                     AllowdToLoadRecords = false;
                     return;
 
                 case MapperSetting::uci_Hide:
-                    log("Map loading disabled due to UCI Hide setting.", LogLevel::Warn, 70, "OnMapLoad");
+                    log("Map loading disabled due to UCI Hide setting.", LogLevel::Warn, 115, "OnMapLoad");
                     AllowdToLoadRecords = false;
                     return;
 
                 case MapperSetting::uci_Order:
-                    log("Map loaded with UCI Order setting.", LogLevel::Info, 75, "OnMapLoad");
+                    log("Map loaded with UCI Order setting.", LogLevel::Info, 120, "OnMapLoad");
                     AllowdToLoadRecords = true;
                     break;
 
                 case MapperSetting::uci_Xdd:
-                    log("Map loaded with UCI Xdd setting.", LogLevel::Info, 80, "OnMapLoad");
+                    log("Map loaded with UCI Xdd setting.", LogLevel::Info, 125, "OnMapLoad");
                     AllowdToLoadRecords = true;
                     break;
 
                 default:
                     AllowdToLoadRecords = true;
-                    // log("Map loaded without any UCI restrictions.", LogLevel::Info, 86, "OnMapLoad");
+                    // log("Map loaded without any UCI restrictions.", LogLevel::Info, 131, "OnMapLoad");
                     break;
             }
         }
