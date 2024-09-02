@@ -54,78 +54,89 @@ namespace CurrentMapRecords {
         }
     }
 
-#if DEPENDENCY_CHAMPIONMEDALS
-    namespace ChampMedal {
-        bool championMedalExists = false;
-        uint currentMapChampionMedal = 0;
-        int timeDifference = 0;
+    class Medal {
+        protected bool medalExists = false;
+        protected uint currentMapMedalTime = 0;
+        protected int timeDifference = 0;
 
-        CGameCtnChallenge@ rootMap = null;
+        protected string displaySavePath = "";
+        protected uint displayTimeDifference = 0;
 
-        string displaySavePath = "";
-        uint displayTimeDifference = 0;
+        protected bool medalHasExactMatch = false;
+        protected bool reqForCurrentMapFinished = false;
 
-        bool championMedalHasExactMatch = false;
-        bool ReqForCurrentMapFinished = false;
+        protected CGameCtnChallenge@ rootMap = null;
 
-        void AddChampionMedal() {
-            if (championMedalExists) {
+        void AddMedal() {
+            if (medalExists) {
                 startnew(FetchSurroundingRecords);
             }
         }
 
         void OnMapLoad() {
-            if (ChampionMedalExists()) {
+            if (MedalExists()) {
                 ResetState();
-                championMedalExists = true;
-                FetchChampionMedalTime();
+                medalExists = true;
+                FetchMedalTime();
             } else {
-                championMedalExists = false;
+                medalExists = false;
             }
         }
 
-        void ResetState() {
-            championMedalExists = false;
-            currentMapChampionMedal = 0;
+        protected void ResetState() {
+            medalExists = false;
+            currentMapMedalTime = 0;
             timeDifference = 0;
             displaySavePath = "";
             displayTimeDifference = 0;
-            championMedalHasExactMatch = false;
-            ReqForCurrentMapFinished = false;
+            medalHasExactMatch = false;
+            reqForCurrentMapFinished = false;
         }
 
-        bool ChampionMedalExists() {
+        protected bool MedalExists() {
             int startTime = Time::Now;
-            while (Time::Now - startTime < 500 || ChampionMedals::GetCMTime() == 0) { yield(); }
-            log("Champion medal is: " + ChampionMedals::GetCMTime(), LogLevel::Info, 100, "ChampionMedalExists");
-            return ChampionMedals::GetCMTime() > 0;
+            while (Time::Now - startTime < 2000 || GetMedalTime() == 0) { yield(); }
+            log("Medal time is: " + GetMedalTime(), LogLevel::Info, 100, "MedalExists");
+            return GetMedalTime() > 0;
         }
 
-        void FetchChampionMedalTime() {
-            if (championMedalExists) {
-                currentMapChampionMedal = ChampionMedals::GetCMTime();
+        protected void FetchMedalTime() {
+            if (medalExists) {
+                currentMapMedalTime = GetMedalTime();
             }
         }
 
-        void FetchSurroundingRecords() {
-            if (!championMedalExists) return;
+        protected void FetchSurroundingRecords() {
+            if (!medalExists) return;
 
-            string url = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/" + get_CurrentMap() + "/surround/1/1?score=" + currentMapChampionMedal;
+            string url = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/" + get_CurrentMap() + "/surround/1/1?score=" + currentMapMedalTime;
             auto req = NadeoServices::Get("NadeoLiveServices", url);
             req.Start();
 
             while (!req.Finished()) { yield(); }
 
-            if (req.ResponseCode() != 200) { log("Failed to fetch surrounding records, response code: " + req.ResponseCode(), LogLevel::Error, 119, "FetchSurroundingRecords"); return; }
+            if (req.ResponseCode() != 200) {
+                log("Failed to fetch surrounding records, response code: " + req.ResponseCode(), LogLevel::Error, 119, "FetchSurroundingRecords");
+                return;
+            }
 
             Json::Value data = Json::Parse(req.String());
-            if (data.GetType() == Json::Type::Null) { log("Failed to parse response for surrounding records.", LogLevel::Error, 122, "FetchSurroundingRecords"); return; }
+            if (data.GetType() == Json::Type::Null) {
+                log("Failed to parse response for surrounding records.", LogLevel::Error, 122, "FetchSurroundingRecords");
+                return;
+            }
 
             Json::Value tops = data["tops"];
-            if (tops.GetType() != Json::Type::Array || tops.Length == 0) { log("Invalid tops data in response.", LogLevel::Error, 125, "FetchSurroundingRecords"); return; }
+            if (tops.GetType() != Json::Type::Array || tops.Length == 0) {
+                log("Invalid tops data in response.", LogLevel::Error, 125, "FetchSurroundingRecords");
+                return;
+            }
 
             Json::Value top = tops[0]["top"];
-            if (top.GetType() != Json::Type::Array || top.Length == 0) { log("Invalid top data in response.", LogLevel::Error, 128, "FetchSurroundingRecords"); return; }
+            if (top.GetType() != Json::Type::Array || top.Length == 0) {
+                log("Invalid top data in response.", LogLevel::Error, 128, "FetchSurroundingRecords");
+                return;
+            }
 
             uint closestScore = 0;
             int smallestDifference = int(0x7FFFFFFF);
@@ -139,7 +150,7 @@ namespace CurrentMapRecords {
                 uint score = top[i]["score"];
                 string accountId = top[i]["accountId"];
                 int position = top[i]["position"];
-                int difference = int(currentMapChampionMedal) - int(score);
+                int difference = int(currentMapMedalTime) - int(score);
 
                 log("Found surrounding record: score = " + score + ", accountId = " + accountId + ", position = " + position + ", difference = " + difference, LogLevel::Info, 144, "FetchSurroundingRecords");
 
@@ -160,142 +171,42 @@ namespace CurrentMapRecords {
 
             if (closestAccountId != "") {
                 timeDifference = smallestDifference;
-                championMedalHasExactMatch = exactMatchFound;
+                medalHasExactMatch = exactMatchFound;
 
                 log("Closest record found: score = " + closestScore + ", accountId = " + closestAccountId + ", position = " + closestPosition + ", difference = " + timeDifference, LogLevel::Info, 165, "FetchSurroundingRecords");
                 LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), tostring(closestPosition - 1), closestAccountId);
             }
 
-            ReqForCurrentMapFinished = true;
+            reqForCurrentMapFinished = true;
         }
 
+        protected uint GetMedalTime() { return 0; }
+    }
 
+    class ChampionMedal : Medal {
+        protected uint GetMedalTime() override {
+            return ChampionMedals::GetCMTime();
+        }
+    }
+
+    class WarriorMedal : Medal {
+        protected uint GetMedalTime() override {
+            return WarriorMedals::GetWMTime();
+        }
+    }
+
+#if DEPENDENCY_CHAMPIONMEDALS
+    namespace ChampMedal {
+        ChampionMedal medal;
     }
 #endif
 
 #if DEPENDENCY_WARRIORMEDALS
-
     namespace WarriorMedal {
-        bool warriorMedalExists = false;
-        uint currentMapWarriorMedal = 0;
-        int timeDifference = 0;
-
-        CGameCtnChallenge@ rootMap = null;
-
-        string displaySavePath = "";
-        uint displayTimeDifference = 0;
-
-        bool warriorMedalHasExactMatch = false;
-        bool ReqForCurrentMapFinished = false;
-
-        void AddWarriorMedal() {
-            if (warriorMedalExists) {
-                startnew(FetchSurroundingRecords);
-            }
-        }
-
-        void OnMapLoad() {
-            if (WarriorMedalExists()) {
-                ResetState();
-                warriorMedalExists = true;
-                FetchWarriorMedalTime();
-            } else {
-                warriorMedalExists = false;
-            }
-        }
-
-        void ResetState() {
-            warriorMedalExists = false;
-            currentMapWarriorMedal = 0;
-            timeDifference = 0;
-            displaySavePath = "";
-            displayTimeDifference = 0;
-            warriorMedalHasExactMatch = false;
-            ReqForCurrentMapFinished = false;
-        }
-
-        bool WarriorMedalExists() {
-            int startTime = Time::Now;
-            while (Time::Now - startTime < 500 || WarriorMedals::GetWMTime() == 0) { yield(); }
-            log("Warrior medal is: " + WarriorMedals::GetWMTime(), LogLevel::Info, 220, "WarriorMedalExists");
-            return WarriorMedals::GetWMTime() > 0;
-        }
-
-        void FetchWarriorMedalTime() {
-            if (warriorMedalExists) {
-                currentMapWarriorMedal = WarriorMedals::GetWMTime();
-            }
-        }
-
-        void FetchSurroundingRecords() {
-            if (!warriorMedalExists) return;
-
-            string url = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/" + get_CurrentMap() + "/surround/1/1?score=" + currentMapWarriorMedal;
-            auto req = NadeoServices::Get("NadeoLiveServices", url);
-            req.Start();
-
-            while (!req.Finished()) { yield(); }
-
-            if (req.ResponseCode() != 200) { log("Failed to fetch surrounding records, response code: " + req.ResponseCode(), LogLevel::Error, 239, "FetchSurroundingRecords"); return; }
-
-            Json::Value data = Json::Parse(req.String());
-            if (data.GetType() == Json::Type::Null) { log("Failed to parse response for surrounding records.", LogLevel::Error, 242, "FetchSurroundingRecords"); return; }
-
-            Json::Value tops = data["tops"];
-            if (tops.GetType() != Json::Type::Array || tops.Length == 0) { log("Invalid tops data in response.", LogLevel::Error, 245, "FetchSurroundingRecords"); return; }
-
-            Json::Value top = tops[0]["top"];
-            if (top.GetType() != Json::Type::Array || top.Length == 0) { log("Invalid top data in response.", LogLevel::Error, 248, "FetchSurroundingRecords"); return; }
-
-            uint closestScore = 0;
-            int smallestDifference = int(0x7FFFFFFF);
-            string closestAccountId;
-            int closestPosition = -1;
-            bool exactMatchFound = false;
-
-            for (uint i = 0; i < top.Length; i++) {
-                if (i == top.Length / 2) continue;
-
-                uint score = top[i]["score"];
-                string accountId = top[i]["accountId"];
-                int position = top[i]["position"];
-                int difference = int(currentMapWarriorMedal) - int(score);
-
-                log("Found surrounding record: score = " + score + ", accountId = " + accountId + ", position = " + position + ", difference = " + difference, LogLevel::Info, 264, "FetchSurroundingRecords");
-
-                if (difference == 0) {
-                    closestScore = score;
-                    closestAccountId = accountId;
-                    closestPosition = position;
-                    smallestDifference = difference;
-                    exactMatchFound = true;
-                    break;
-                } else if (difference > 0 && difference < smallestDifference) {
-                    closestScore = score;
-                    closestAccountId = accountId;
-                    closestPosition = position;
-                    smallestDifference = difference;
-                }
-            }
-
-            if (closestAccountId != "") {
-                timeDifference = smallestDifference;
-                warriorMedalHasExactMatch = exactMatchFound;
-
-                log("Closest record found: score = " + closestScore + ", accountId = " + closestAccountId + ", position = " + closestPosition + ", difference = " + timeDifference, LogLevel::Info, 285, "FetchSurroundingRecords");
-                LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), tostring(closestPosition - 1), closestAccountId);
-            }
-
-            ReqForCurrentMapFinished = true;
-        }
-
+        WarriorMedal medal;
     }
-
 #endif
 
-    namespace MedalUtils {
-        
-    }
 
 
     /* Pain Pain Go Away 

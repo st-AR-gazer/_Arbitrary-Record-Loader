@@ -482,6 +482,9 @@ void RenderTab_OfficialMaps() {
 
 //////////////////// Render Current Map Ghost Tab /////////////////////
 
+CurrentMapRecords::ChampionMedal champMedal;
+CurrentMapRecords::WarriorMedal warriorMedal;
+
 void RenderTab_CurrentMapGhost() {
     UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
     UI::Separator();
@@ -541,23 +544,23 @@ void RenderTab_CurrentMapGhost() {
 
     UI::Text("\\$e79Champion Medal Information");
 
-    UI::Text("Current Champion Medal Time: " + FromMsToFormat(CurrentMapRecords::ChampMedal::currentMapChampionMedal));
+    UI::Text("Current Champion Medal Time: " + FromMsToFormat(champMedal.currentMapMedalTime));
 
-    if (!CurrentMapRecords::ChampMedal::championMedalExists) {
+    if (!champMedal.medalExists) {
         _UI::DisabledButton(Icons::UserPlus + " Load Nearest Champion Medal Time");
     } else {
         if (UI::Button(Icons::UserPlus + " Load Nearest Champion Medal Time")) {
-            CurrentMapRecords::ChampMedal::AddChampionMedal();
+            champMedal.AddMedal();
         }
     }
 
-    if (CurrentMapRecords::ChampMedal::ReqForCurrentMapFinished) {
-        if (CurrentMapRecords::ChampMedal::championMedalHasExactMatch) {
+    if (champMedal.reqForCurrentMapFinished) {
+        if (champMedal.medalHasExactMatch) {
             UI::Text("Exact match found for the champion medal!");
-            UI::Text("Time difference: " + tostring(CurrentMapRecords::ChampMedal::timeDifference) + " ms");
+            UI::Text("Time difference: " + tostring(champMedal.timeDifference) + " ms");
         } else {
             UI::Text("There is no exact match for the champion medal. Using the closest ghost that still beats the champion medal time.");
-            UI::Text("Time difference: " + tostring(CurrentMapRecords::ChampMedal::timeDifference) + " ms");
+            UI::Text("Time difference: " + tostring(champMedal.timeDifference) + " ms");
         }
     } else {
         UI::Text("The current state of the champion medal record is unknown. Please load a champion medal record to check if there is an exact match.");
@@ -568,23 +571,23 @@ void RenderTab_CurrentMapGhost() {
 
     UI::Text("\\$0cfWarrior Medal Information");
 
-    UI::Text("Current Warrior Medal Time: " + FromMsToFormat(CurrentMapRecords::WarriorMedal::currentMapWarriorMedal));
+    UI::Text("Current Warrior Medal Time: " + FromMsToFormat(warriorMedal.currentMapMedalTime));
 
-    if (!CurrentMapRecords::WarriorMedal::warriorMedalExists) {
+    if (!warriorMedal.medalExists) {
         _UI::DisabledButton(Icons::UserPlus + " Load Nearest Warrior Medal Time");
     } else {
         if (UI::Button(Icons::UserPlus + " Load Nearest Warrior Medal Time")) {
-            CurrentMapRecords::WarriorMedal::AddWarriorMedal();
+            warriorMedal.AddMedal();
         }
     }
 
-    if (CurrentMapRecords::WarriorMedal::ReqForCurrentMapFinished) {
-        if (CurrentMapRecords::WarriorMedal::warriorMedalHasExactMatch) {
+    if (warriorMedal.reqForCurrentMapFinished) {
+        if (warriorMedal.medalHasExactMatch) {
             UI::Text("Exact match found for the warrior medal!");
-            UI::Text("Time difference: " + tostring(CurrentMapRecords::WarriorMedal::timeDifference) + " ms");
+            UI::Text("Time difference: " + tostring(warriorMedal.timeDifference) + " ms");
         } else {
             UI::Text("There is no exact match for the warrior medal. Using the closest ghost that still beats the warrior medal time.");
-            UI::Text("Time difference: " + tostring(CurrentMapRecords::WarriorMedal::timeDifference) + " ms");
+            UI::Text("Time difference: " + tostring(warriorMedal.timeDifference) + " ms");
         }
     } else {
         UI::Text("The current state of the warrior medal record is unknown. Please load a warrior medal record to check if there is an exact match.");
