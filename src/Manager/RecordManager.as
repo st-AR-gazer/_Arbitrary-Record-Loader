@@ -19,6 +19,19 @@ namespace RecordManager {
         GhostTracker::RemoveTrackedGhost(instanceId);
     }
 
+    void RemovePBRecord() {
+        auto dataFileMgr = GetApp().Network.ClientManiaAppPlayground.DataFileMgr;
+        auto newGhosts = dataFileMgr.Ghosts;
+
+        for (uint i = 0; i < newGhosts.Length; i++) {
+            CGameGhostScript@ ghost = cast<CGameGhostScript>(newGhosts[i]);
+            if (ghost.Nickname == "PB") {
+                RemoveInstanceRecord(ghost.Id);
+                return;
+            }
+        }
+    }
+
     void SetRecordDossard(MwId instanceId, const string &in dossard, vec3 color = vec3()) {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_SetDossard(instanceId, dossard, color);

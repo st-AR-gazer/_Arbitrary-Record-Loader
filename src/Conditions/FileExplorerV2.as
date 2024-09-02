@@ -53,20 +53,7 @@
  *    **Note:** The FileExplorer will close itself automatically when the user has selected the required files and 
  *    clicks the "Return Selected Paths" button.
  * 
- * 4. **Handle KeyPresses:**
- *    The FileExplorer requires certain key press events to function correctly. If your plugin uses key press 
- *    functionality, you must integrate the `FILE_EXPLORER_KEYPRESS_HANDLER()` into your `OnKeyPress()` function. 
- *    This ensures that the FileExplorer can detect and respond to key presses.
- *    
- *    Example:
- *    ```angelscript
- *    void OnKeyPress(bool down, VirtualKey key) {
- *        FILE_EXPLORER_KEYPRESS_HANDLER(down, key);  // Ensures FileExplorer handles key presses.
- *        // Add your own key handling logic here if needed.
- *    }
- *    ```
- * 
- * 5. **Retrieve Selected File Paths:**
+ * 4. **Retrieve Selected File Paths:**
  *    Once the user has selected files and clicked "Return Selected Paths," you can retrieve the selected file paths 
  *    from `FileExplorer::exports.GetSelectedPaths()` in your plugin's main loop or event handler.
  *    
@@ -90,7 +77,6 @@
  * **Summary:**
  * - **Rendering:** Add `FILE_EXPLORER_BASE_RENDERER()` to your `Render()` or `RenderInterface()` method.
  * - **Opening:** Use `FileExplorer::fe_Start()` to open the FileExplorer.
- * - **KeyPress Handling:** Integrate `FILE_EXPLORER_KEYPRESS_HANDLER()` into your `OnKeyPress()` function.
  * - **File Selection:** Retrieve the selected paths using `FileExplorer::exports.GetSelectedPaths()` after the user 
  *   has made their selection.
  * 
@@ -1509,8 +1495,8 @@ namespace FileExplorer {
 
         void Render_ReturnBar() {
             if (explorer.Config.MustReturn) {
-                bool validReturnAmount = explorer.Config.SelectedPaths.Length >= explorer.Config.MinMaxReturnAmount.x &&
-                                        (explorer.Config.SelectedPaths.Length <= explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1);
+                bool validReturnAmount = explorer.Config.SelectedPaths.Length >= uint(explorer.Config.MinMaxReturnAmount.x) &&
+                                        (explorer.Config.SelectedPaths.Length <= uint(explorer.Config.MinMaxReturnAmount.y) || explorer.Config.MinMaxReturnAmount.y == -1);
 
                 if (validReturnAmount) {
                     if (UI::Button("Return Selected Paths")) {
@@ -1755,7 +1741,7 @@ namespace FileExplorer {
             if (UI::BeginPopup("MainElementContextMenu")) {
                 ElementInfo@ element = explorer.tab[0].GetSelectedElement();
                 if (element !is null) {
-                    bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
+                    bool canAddMore = explorer.Config.SelectedPaths.Length < uint(explorer.Config.MinMaxReturnAmount.y) || explorer.Config.MinMaxReturnAmount.y == -1;
 
                     if (canAddMore) {
                         if (UI::MenuItem("Add to Selected Elements", "", false)) {
@@ -1821,7 +1807,7 @@ namespace FileExplorer {
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
-            bool canAddMore = explorer.Config.SelectedPaths.Length < explorer.Config.MinMaxReturnAmount.y || explorer.Config.MinMaxReturnAmount.y == -1;
+            bool canAddMore = explorer.Config.SelectedPaths.Length < uint(explorer.Config.MinMaxReturnAmount.y) || explorer.Config.MinMaxReturnAmount.y == -1;
 
             // Handle control-click (for multi-selection) or right-click (for context menu)
             if (enterType == EnterType::RightClick || enterType == EnterType::ControlClick) {

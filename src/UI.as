@@ -44,8 +44,8 @@ void RenderInterface() {
                 RenderTab_CurrentMapGhost();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Keyboard + " Hotkeys")) {
-                RenderTab_Hotkeys();
+            if (UI::BeginTabItem(Icons::KeyboardO + " Hotkeys")) {
+                HotkeyManager::RenderTab_Hotkeys();
                 UI::EndTabItem();
             }
             UI::EndTabBar();
@@ -539,7 +539,7 @@ void RenderTab_CurrentMapGhost() {
 #if DEPENDENCY_CHAMPIONMEDALS
     UI::Separator();
 
-    UI::Text("Champion Medal Information");
+    UI::Text("\\$e79Champion Medal Information");
 
     UI::Text("Current Champion Medal Time: " + FromMsToFormat(CurrentMapRecords::ChampMedal::currentMapChampionMedal));
 
@@ -563,6 +563,33 @@ void RenderTab_CurrentMapGhost() {
         UI::Text("The current state of the champion medal record is unknown. Please load a champion medal record to check if there is an exact match.");
     }
 #endif
+#if DEPENDENCY_WARRIORMEDALS
+    UI::Separator();
+
+    UI::Text("\\$0cfWarrior Medal Information");
+
+    UI::Text("Current Warrior Medal Time: " + FromMsToFormat(CurrentMapRecords::WarriorMedal::currentMapWarriorMedal));
+
+    if (!CurrentMapRecords::WarriorMedal::warriorMedalExists) {
+        _UI::DisabledButton(Icons::UserPlus + " Load Nearest Warrior Medal Time");
+    } else {
+        if (UI::Button(Icons::UserPlus + " Load Nearest Warrior Medal Time")) {
+            CurrentMapRecords::WarriorMedal::AddWarriorMedal();
+        }
+    }
+
+    if (CurrentMapRecords::WarriorMedal::ReqForCurrentMapFinished) {
+        if (CurrentMapRecords::WarriorMedal::warriorMedalHasExactMatch) {
+            UI::Text("Exact match found for the warrior medal!");
+            UI::Text("Time difference: " + tostring(CurrentMapRecords::WarriorMedal::timeDifference) + " ms");
+        } else {
+            UI::Text("There is no exact match for the warrior medal. Using the closest ghost that still beats the warrior medal time.");
+            UI::Text("Time difference: " + tostring(CurrentMapRecords::WarriorMedal::timeDifference) + " ms");
+        }
+    } else {
+        UI::Text("The current state of the warrior medal record is unknown. Please load a warrior medal record to check if there is an exact match.");
+    }
+#endif
 }
 
 string FromMsToFormat(uint ms) {
@@ -584,10 +611,149 @@ string pad(uint value, int length) {
 //////////////////// Render Hotkey Tab /////////////////////
 
 
+namespace HotkeyManager {
+    void RenderTab_Hotkeys() {
+        UI::Text("Hotkey Configuration");
+        UI::Separator();
 
+        UI::Text("Existing Hotkeys:");
+        array<string> keys = hotkeyMappings.GetKeys();
+        if (keys.Length > 0) {
+            for (uint i = 0; i < keys.Length; i++) {
+                array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[keys[i]]);
+                for (uint j = 0; j < hotkeysList.Length; j++) {
+                    Hotkey@ hotkey = hotkeysList[j];
+                    string currentKeys = hotkey.get_description();
 
+                    UI::Text(hotkey.action + ": ");
+                    UI::SameLine();
+                    if (UI::Button(currentKeys + "##edit" + keys[i] + "-" + j)) {
+                        actionToEdit = keys[i];
+                        editKeyCombination = hotkey.keyCombination;
+                        showEditHotkeyUI = true;
+                    }
+                    UI::SameLine();
+                    if (UI::Button("Remove##remove" + keys[i] + "-" + j)) {
+                        RemoveHotkey(keys[i], j);
+                    }
+                }
+            }
+        } else {
+            UI::TextDisabled("No hotkeys configured yet.");
+        }
 
+        UI::Dummy(vec2(0, 10));
 
+        UI::Separator();
+        UI::Dummy(vec2(0, 10));
+
+        if (UI::Button(showAddHotkeyUI ? "Cancel Adding New Hotkey" : "Add New Hotkey")) {
+            showAddHotkeyUI = !showAddHotkeyUI;
+            showEditHotkeyUI = false;
+            selectedAction = "";
+            newKeyCombination.RemoveRange(0, newKeyCombination.Length);
+            loadXPosition = 1;
+        }
+
+        if (showAddHotkeyUI) {
+            UI::Dummy(vec2(0, 10));
+            UI::Text("New Hotkey Configuration:");
+            UI::Separator();
+
+            UI::Text("Action:");
+            if (UI::BeginCombo("##SelectAction", selectedAction.Length == 0 ? "Select Action" : selectedAction)) {
+                for (uint i = 0; i < availableActions.Length; i++) {
+                    if (UI::Selectable(availableActions[i], availableActions[i] == selectedAction)) {
+                        selectedAction = availableActions[i];
+                    }
+                }
+                UI::EndCombo();
+            }
+
+            if (selectedAction == "Load X time") {
+                UI::Dummy(vec2(0, 10));
+                UI::Text("Specify Position:");
+                loadXPosition = Math::Clamp(UI::InputInt("Position (1 for top)", loadXPosition), 1, 1000);
+            }
+
+            UI::Dummy(vec2(0, 10));
+
+            UI::Text("Key Combination:");
+            if (UI::Button("Add Key")) {
+                newKeyCombination.InsertLast("Select Key");
+            }
+
+            for (uint i = 0; i < newKeyCombination.Length; i++) {
+                if (UI::BeginCombo("##Key" + (i + 1), newKeyCombination[i])) {
+                    array<string> allKeys = GenerateKeyList();
+                    for (uint k = 0; k < allKeys.Length; k++) {
+                        if (UI::Selectable(allKeys[k], allKeys[k] == newKeyCombination[i])) {
+                            newKeyCombination[i] = allKeys[k];
+                        }
+                    }
+                    UI::EndCombo();
+                }
+                if (newKeyCombination[i] != "Select Key") {
+                    UI::SameLine();
+                    if (UI::Button("Remove##new" + i)) {
+                        newKeyCombination.RemoveAt(i);
+                        i--;
+                    }
+                }
+            }
+
+            UI::Dummy(vec2(0, 10));
+
+            if (UI::Button("Add Hotkey") && selectedAction.Length > 0 && newKeyCombination.Length > 0) {
+                int extraValue = (selectedAction == "Load X time") ? loadXPosition : -1;
+                RegisterHotkey(newKeyCombination, selectedAction, extraValue);
+                showAddHotkeyUI = false;
+            }
+        }
+
+        if (showEditHotkeyUI) {
+            UI::Dummy(vec2(0, 10));
+            UI::Text("Edit Hotkey Configuration:");
+            UI::Separator();
+
+            UI::Text("Action: " + actionToEdit);
+
+            UI::Dummy(vec2(0, 10));
+
+            UI::Text("Key Combination:");
+            if (UI::Button("Add Key")) {
+                editKeyCombination.InsertLast("Select Key");
+            }
+
+            for (uint i = 0; i < editKeyCombination.Length; i++) {
+                if (UI::BeginCombo("##EditKey" + (i + 1), editKeyCombination[i])) {
+                    array<string> allKeys = GenerateKeyList();
+                    for (uint k = 0; k < allKeys.Length; k++) {
+                        if (UI::Selectable(allKeys[k], allKeys[k] == editKeyCombination[i])) {
+                            editKeyCombination[i] = allKeys[k];
+                        }
+                    }
+                    UI::EndCombo();
+                }
+                if (editKeyCombination[i] != "Select Key") {
+                    UI::SameLine();
+                    if (UI::Button("Remove##edit" + i)) {
+                        editKeyCombination.RemoveAt(i);
+                        i--;
+                    }
+                }
+            }
+
+            UI::Dummy(vec2(0, 10));
+
+            if (UI::Button("Update Hotkey") && editKeyCombination.Length > 0) {
+                int extraValue = (actionToEdit == "Load X time") ? loadXPosition : -1;
+                UpdateHotkey(actionToEdit, 0 /*Update the first one*/, editKeyCombination, extraValue);
+                showEditHotkeyUI = false;
+            }
+        }
+    }
+}
 
 
 ////////////////////////////// End Tabs //////////////////////////////
