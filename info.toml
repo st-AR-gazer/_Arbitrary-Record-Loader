@@ -6,4 +6,4 @@ category = "ARL"
 
 [script]
 dependencies = [ "NadeoServices", "MLHook" ]
-optional_dependencies = [ "ChampionMedals", "WarriorMedals" ]
+optional_dependencies = [ "ChampionMedals", "WarriorMedals", "SBVilleCampaignChallenges" ]
