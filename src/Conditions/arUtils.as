@@ -258,6 +258,8 @@ namespace _Net {
             }
             string url = parts[0];
             string destination = parts[1];
+            destination = Path::SanitizePath(destination);
+            destination = Path::GetDirectoryName(destination);
 
             Net::HttpRequest@ request = Net::HttpRequest();
             request.Url = url;
@@ -267,25 +269,24 @@ namespace _Net {
             while (!request.Finished()) {
                 yield();
             }
-
-
-            print(tostring(request.Url));
-            for (uint i = 0; i < request.Headers.GetKeys().Length; i++) {
-                print(tostring(request.Headers.GetKeys()[i]));
-            }
-            print(tostring(request.Redirect));
-            print(tostring(request.Method));
-            print("aa");
-            for (uint i = 0; i < request.ResponseHeaders().GetKeys().Length; i++) {
-                print(tostring(request.ResponseHeaders().GetKeys()[i]));
-            }
-            print("aa");
-            print(Json::Write(request.ResponseHeaders().ToJson(), true));
-            print("aa");
            
             if (request.ResponseCode() == 200) {
-                NotifyInfo("File downloaded successfully, returning the content");
-                request.SaveToFile(destination);
+                string content_disposition = request.ResponseHeaders().Get("Content-Disposition");
+
+                string file_name = "";
+                if (content_disposition != "") {
+                    int index = content_disposition.IndexOf("filename=");
+                    if (index != -1) {
+                        file_name = content_disposition.SubStr(index + 9);
+                        file_name = file_name.Trim();
+                        file_name = file_name.Replace("\"", "");
+                        destination = Path::Join(destination, file_name);
+                    }
+                }
+
+                NotifyInfo("File downloaded successfully, saving " + file_name + " to: " + destination);
+                
+                request.SaveToFile(destination + file_name);
             } else {
                 NotifyWarn("Failed to download file. Response code: " + request.ResponseCode());
             }
