@@ -284,6 +284,8 @@ void ProcessSelectedFile(const string &in filePath) {
         return;
     }
 
+    print(filePath);
+
     string fileExt = Path::GetExtension(filePath).ToLower();
 
     print(fileExt + " 1");
