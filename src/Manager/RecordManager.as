@@ -282,7 +282,7 @@ namespace RecordManager {
 void ProcessSelectedFile(const string &in filePath) {
     if (filePath.StartsWith("https://") || filePath.StartsWith("http://") || filePath.Contains("trackmania.io") || filePath.Contains("trackmania.exchange") || filePath.Contains("www.")) {
         _Net::DownloadFileToDestination(filePath, Server::linksFilesDirectory + Path::GetFileName(filePath));
-        startnew(CoroutineFuncUserdataString(ProcessDownloadedFile, Server::linksFilesDirectory + Path::GetFileName(filePath)));
+        startnew(CoroutineFuncUserdataString(ProcessDownloadedFile), Server::linksFilesDirectory + Path::GetFileName(filePath));
         return;
     }
 
