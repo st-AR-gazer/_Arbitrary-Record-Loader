@@ -13,18 +13,18 @@ namespace AllowCheck {
 
     bool AllowdToLoadRecords() {
         if (!ConditionCheckMet()) {
-            log("Not all conditions have been checked or passed, records cannot be loaded.", LogLevel::Warn, 13, "CanRecordsBeLoaded");
+            log("Not all conditions have been checked or passed, records cannot be loaded.", LogLevel::Warn, 16, "AllowdToLoadRecords");
             return false;
         }
         if (!vAllowdToLoadRecords) {
-            log("AllowdToLoadRecords is false, not allowing records to be loaded.", LogLevel::Warn, 17, "CanRecordsBeLoaded");
+            log("AllowdToLoadRecords is false, not allowing records to be loaded.", LogLevel::Warn, 20, "AllowdToLoadRecords");
             return false;
         }
         return true;
     }
 
     namespace Chester {
-        bool IsBlacklisted(string mode) {
+        bool IsBlacklisted(const string &in mode) {
             for (uint i = 0; i < GameModeBlackList.Length; i++) {
                 if (mode.ToLower().Contains(GameModeBlackList[i].ToLower())) {
                     return true;
@@ -45,7 +45,7 @@ namespace AllowCheck {
 
             if (IsBlacklisted(mode)) {
                 NotifyWarn("Loading records on the current map is disabled due to playing in the blacklisted mode: '" + mode + "'");
-                log("Map loading disabled due to blacklisted mode.", LogLevel::Warn, 33, "OnMapLoad");
+                log("Map loading disabled due to blacklisted mode.", LogLevel::Warn, 48, "OnMapLoad");
                 vAllowdToLoadRecords = false;
                 return;
             }
@@ -120,22 +120,22 @@ namespace AllowCheck {
 
             switch (setting) {
                 case MapperSetting::Hide:
-                    log("Map loading disabled due to ARL Hide setting.", LogLevel::Warn, 108, "OnMapLoad");
+                    log("Map loading disabled due to ARL Hide setting.", LogLevel::Warn, 123, "OnMapLoad");
                     MapCommentCheck = false;
                     return;
                 
                 case MapperSetting::HideUCI:
-                    log("Map loading disabled due to UCI Hide setting.", LogLevel::Warn, 113, "OnMapLoad");
+                    log("Map loading disabled due to UCI Hide setting.", LogLevel::Warn, 128, "OnMapLoad");
                     MapCommentCheck = false;
                     return;
 
                 case MapperSetting::Order:
-                    log("Map loaded with UCI Order setting.", LogLevel::Info, 118, "OnMapLoad");
+                    log("Map loaded with UCI Order setting.", LogLevel::Info, 133, "OnMapLoad");
                     MapCommentCheck = true;
                     break;
 
                 case MapperSetting::Xdd:
-                    log("Map loaded with UCI Xdd setting.", LogLevel::Info, 123, "OnMapLoad");
+                    log("Map loaded with UCI Xdd setting.", LogLevel::Info, 138, "OnMapLoad");
                     MapCommentCheck = true;
                     break;
 

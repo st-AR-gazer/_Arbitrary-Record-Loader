@@ -121,7 +121,7 @@ void RenderTab_CurrentLoadedRecords() {
     UI::Separator();
 
     if (UI::Button("Remove All Records")) {
-        log("Remove All Records button clicked", LogLevel::Info, 120, "RenderTab_CurrentLoadedRecords");
+        log("Remove All Records button clicked", LogLevel::Info, 124, "RenderTab_CurrentLoadedRecords");
         RecordManager::RemoveAllRecords();
     }
 
@@ -163,14 +163,14 @@ void RenderTab_CurrentLoadedRecords() {
     }
 
     if (UI::Button(Icons::UserTimes + " Remove Specific Record")) {
-        log("Remove Specific Record button clicked", LogLevel::Info, 156, "RenderTab_CurrentLoadedRecords");
+        log("Remove Specific Record button clicked", LogLevel::Info, 166, "RenderTab_CurrentLoadedRecords");
         RecordManager::RemoveInstanceRecord(selectedRecordID);
         RecordManager::GhostTracker::RefreshTrackedGhosts();
         selectedRecordID = MwId();
     }
 
     if (UI::Button(Icons::Kenney::Save + " Save Ghost/Replay")) {
-        log("Save Ghost button clicked", LogLevel::Info, 163, "RenderTab_CurrentLoadedRecords");
+        log("Save Ghost button clicked", LogLevel::Info, 173, "RenderTab_CurrentLoadedRecords");
         RecordManager::Save::SaveRecord();
     }
     

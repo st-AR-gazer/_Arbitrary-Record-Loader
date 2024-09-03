@@ -14,7 +14,7 @@ namespace HotkeyManager {
         string action;
         int extraValue = -1;
 
-        Hotkey(array<string> keyCombination, string action, int extraValue = -1) {
+        Hotkey(array<string> keyCombination, const string &in action, int extraValue = -1) {
             this.keyCombination = keyCombination;
             this.action = action;
             this.extraValue = extraValue;
@@ -63,7 +63,7 @@ namespace HotkeyManager {
         return string::Join(keys, "+");
     }
 
-    void RegisterHotkey(array<string> keyCombination, string action, int extraValue = -1) {
+    void RegisterHotkey(array<string> keyCombination, const string &in action, int extraValue = -1) {
         Hotkey@ hotkey = Hotkey(keyCombination, action, extraValue);
         array<Hotkey@>@ hotkeysList;
         
@@ -78,7 +78,7 @@ namespace HotkeyManager {
         SaveHotkeysToFile();
     }
 
-    void UpdateHotkey(string action, int hotkeyIndex, array<string> newKeyCombination, int extraValue = -1) {
+    void UpdateHotkey(const string &in action, int hotkeyIndex, array<string> newKeyCombination, int extraValue = -1) {
         if (hotkeyMappings.Exists(action)) {
             array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[action]);
             if (hotkeyIndex >= 0 && hotkeyIndex < int(hotkeysList.Length)) {
@@ -90,7 +90,7 @@ namespace HotkeyManager {
         }
     }
 
-    void RemoveHotkey(string action, int hotkeyIndex) {
+    void RemoveHotkey(const string &in action, int hotkeyIndex) {
         if (hotkeyMappings.Exists(action)) {
             array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[action]);
             if (hotkeyIndex >= 0 && hotkeyIndex < int(hotkeysList.Length)) {
