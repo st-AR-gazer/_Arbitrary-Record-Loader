@@ -269,6 +269,7 @@ namespace RecordManager {
         }
 
         void SaveRecordByPath(const string &in overwritePath) {
+            
 
         }
     }
@@ -279,8 +280,9 @@ namespace RecordManager {
 
 
 void ProcessSelectedFile(const string &in filePath) {
-    if (filePath.StartsWith("https://") || filePath.StartsWith("http://")) {
-        _Net::DownloadFileToDestination(filePath, Server::specificDownloadedFilesDirectory + Path::GetFileName(filePath));
+    if (filePath.StartsWith("https://") || filePath.StartsWith("http://") || filePath.Contains("trackmania.io") || filePath.Contains("trackmania.exchange") || filePath.Contains("www.")) {
+        _Net::DownloadFileToDestination(filePath, Server::linksFilesDirectory + Path::GetFileName(filePath));
+        startnew(ProcessDownloadedFile(Server::linksFilesDirectory + Path::GetFileName(filePath)));
         return;
     }
 
@@ -305,6 +307,13 @@ void ProcessSelectedFile(const string &in filePath) {
         print(fileExt + " 4");
     }
 
+    while (!AllowCheck::ConditionCheckMet) { yield(); }
+
+    if (!AllowCheck::AllowdToLoadRecords) {
+        NotifyWarn("Error | Not allowed to load records due to either map comment, or current game mode.");
+        return;
+    }
+
     if (fileExt == "replay") {
         ReplayLoader::LoadReplayFromPath(filePath);
     } else if (fileExt == "ghost") {
@@ -314,6 +323,14 @@ void ProcessSelectedFile(const string &in filePath) {
         NotifyWarn("Error | Unsupported file type.");
     }
 }
+
+void ProcessDownloadedFile(const string &in filePath) {
+    while (!IO::FileExists(filePath)) { yield(); }
+    ProcessSelectedFile(filePath);
+}
+
+
+
 
 
 

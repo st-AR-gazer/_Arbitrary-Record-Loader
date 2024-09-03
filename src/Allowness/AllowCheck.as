@@ -2,13 +2,28 @@ string[] GameModeBlackList = {
     "TM_TimeAttack_Online", "TM_Rounds_Online"
 };
 
-// TrackMania/TM_TimeAttack_Online
-
 namespace AllowCheck {
     bool AllowdToLoadRecords = true;
+    bool ChesterCheckIsOK = false;
+    bool MapCommentCheck = false;
+
+    bool ConditionCheckMet() {
+        return ChesterCheckIsOK && MapCommentCheck;
+    }
+
+    bool AllowdToLoadRecords() {
+        if (!ConditionCheckMet()) {
+            log("Not all conditions have been checked or passed, records cannot be loaded.", LogLevel::Warn, 13, "CanRecordsBeLoaded");
+            return false;
+        }
+        if (!AllowdToLoadRecords) {
+            log("AllowdToLoadRecords is false, not allowing records to be loaded.", LogLevel::Warn, 17, "CanRecordsBeLoaded");
+            return false;
+        }
+        return true;
+    }
 
     namespace Chester {
-
         bool IsBlacklisted(string mode) {
             for (uint i = 0; i < GameModeBlackList.Length; i++) {
                 if (mode.ToLower().Contains(GameModeBlackList[i].ToLower())) {
@@ -35,9 +50,9 @@ namespace AllowCheck {
                 return;
             }
 
+            ChesterCheckIsOK = true;
             AllowdToLoadRecords = true;
         }
-
     }
 
     namespace MapCommentCheck {
@@ -106,30 +121,28 @@ namespace AllowCheck {
             switch (setting) {
                 case MapperSetting::Hide:
                     log("Map loading disabled due to ARL Hide setting.", LogLevel::Warn, 108, "OnMapLoad");
-                    AllowdToLoadRecords = false;
+                    MapCommentCheck = false;
                     return;
                 
                 case MapperSetting::HideUCI:
                     log("Map loading disabled due to UCI Hide setting.", LogLevel::Warn, 113, "OnMapLoad");
-                    AllowdToLoadRecords = false;
+                    MapCommentCheck = false;
                     return;
 
                 case MapperSetting::Order:
                     log("Map loaded with UCI Order setting.", LogLevel::Info, 118, "OnMapLoad");
-                    AllowdToLoadRecords = true;
+                    MapCommentCheck = true;
                     break;
 
                 case MapperSetting::Xdd:
                     log("Map loaded with UCI Xdd setting.", LogLevel::Info, 123, "OnMapLoad");
-                    AllowdToLoadRecords = true;
+                    MapCommentCheck = true;
                     break;
 
                 default:
-                    AllowdToLoadRecords = true;
-                    // log("Map loaded without any UCI restrictions.", LogLevel::Info, 129, "OnMapLoad");
+                    MapCommentCheck = true;
                     break;
             }
         }
     }
-
 }

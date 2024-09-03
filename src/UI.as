@@ -28,6 +28,10 @@ void RenderInterface() {
                 RenderTab_SavedGhostsAndReplays();
                 UI::EndTabItem();
             }
+            if (UI::BeginTabItem(Icons::Users + " " + Icons::Link + " Load record from link")) {
+                RenderTab_Link();
+                UI::EndTabItem();
+            }
             if (UI::BeginTabItem(Icons::Users + " " + Icons::Download + " Load record from other")) {
                 RenderTab_OtherSpecificUIDs();
                 UI::EndTabItem();
@@ -172,7 +176,7 @@ void RenderTab_CurrentLoadedRecords() {
     
     if (CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
         if (UI::Button(Icons::Kenney::Save + " Save validation replay")) {
-            RecordManager::Save::SaveRecord(CurrentMapRecords::ValidationReplay::GetValidationReplayFilePathForCurrentMap());
+            RecordManager::Save::SaveRecordByPath(CurrentMapRecords::ValidationReplay::GetValidationReplayFilePathForCurrentMap());
         }
     } else {
         _UI::DisabledButton(Icons::Kenney::Save + " Save validation replay");
@@ -248,6 +252,23 @@ void RenderTab_SavedGhostsAndReplays() {
         }
     }
 }
+
+//////////////////// Render Link Tab /////////////////////
+
+
+string link;
+
+void RenderTab_Link() {
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Separator();
+
+    link = UI::InputText("Link", link);
+
+    if (UI::Button("Load Record")) {
+        ProcessSelectedFile(link);
+    }
+}
+
 
 
 //////////////////// Render Other Specific UIDs Tab /////////////////////

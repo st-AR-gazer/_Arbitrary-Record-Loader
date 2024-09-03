@@ -34,6 +34,9 @@ void InitFolders() {
 
     IO::CreateFolder(Server::serverDirectoryMedal, true);
 
+    IO::CreateFolder(Server::linksDirectory, true);
+    IO::CreateFolder(Server::linksFilesDirectory, true);
+
     IO::CreateFolder(Server::specificDownloadedFilesDirectory, true);
     IO::CreateFolder(Server::specificDownloadedJsonFilesDirectory, true);
     IO::CreateFolder(Server::specificDownloadedCreatedProfilesDirectory, true);

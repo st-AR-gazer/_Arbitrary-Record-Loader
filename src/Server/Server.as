@@ -22,6 +22,9 @@ namespace Server {
     const string specificDownloadedJsonFilesDirectory = IO::FromStorageFolder("Server/Downloaded/JsonData/");
     const string specificDownloadedCreatedProfilesDirectory = IO::FromStorageFolder("Server/Downloaded/CreatedProfiles/");
 
+    const string linksDirectory = IO::FromStorageFolder("Server/Links/");
+    const string linksFilesDirectory = IO::FromStorageFolder("Server/Links/Files/");
+
     const string officialFilesDirectory = IO::FromStorageFolder("Server/Official/Files/");
     const string officialInfoFilesDirectory = IO::FromStorageFolder("Server/Official/Info/");
     const string officialJsonFilesDirectory = IO::FromStorageFolder("Server/Official/JsonData/");
