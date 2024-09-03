@@ -269,10 +269,10 @@ namespace _Net {
             }
 
 
-            print(request.Url);
-            print(request.Headers.GetKeys());
-            print(request.Redirect);
-            print(request.Method);
+            print(tostring(request.Url));
+            print(tostring(request.Headers.GetKeys()));
+            print(tostring(request.Redirect));
+            print(tostring(request.Method));
             
            
             if (request.ResponseCode() == 200) {
