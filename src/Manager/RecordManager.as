@@ -282,7 +282,7 @@ namespace RecordManager {
 void ProcessSelectedFile(const string &in filePath) {
     if (filePath.StartsWith("https://") || filePath.StartsWith("http://") || filePath.Contains("trackmania.io") || filePath.Contains("trackmania.exchange") || filePath.Contains("www.")) {
         _Net::DownloadFileToDestination(filePath, Server::linksFilesDirectory + Path::GetFileName(filePath));
-        startnew(ProcessDownloadedFile(Server::linksFilesDirectory + Path::GetFileName(filePath)));
+        startnew(CoroutineFunc(ProcessDownloadedFile(Server::linksFilesDirectory + Path::GetFileName(filePath))));
         return;
     }
 
@@ -307,9 +307,9 @@ void ProcessSelectedFile(const string &in filePath) {
         print(fileExt + " 4");
     }
 
-    while (!AllowCheck::ConditionCheckMet) { yield(); }
+    while (!AllowCheck::ConditionCheckMet()) { yield(); }
 
-    if (!AllowCheck::AllowdToLoadRecords) {
+    if (!AllowCheck::AllowdToLoadRecords()) {
         NotifyWarn("Error | Not allowed to load records due to either map comment, or current game mode.");
         return;
     }
