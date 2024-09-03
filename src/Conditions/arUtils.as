@@ -268,11 +268,17 @@ namespace _Net {
                 yield();
             }
 
+            print(destination);
+
+            string truedestin = Path::GetDirectoryName(destination);
+            print(truedestin);
+
+
             request.Url;
             request.Headers.GetKeys();
             request.Redirect;
             request.Method;
-            request.SaveToFile(destination);
+            request.SaveToFile(truedestin);
             
            
             if (request.ResponseCode() == 200) {
