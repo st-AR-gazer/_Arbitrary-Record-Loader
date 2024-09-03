@@ -310,7 +310,7 @@ void ProcessSelectedFile(const string &in filePath) {
     } else if (fileExt == "ghost") {
         GhostLoader::LoadGhost(filePath);
     } else {
-        log("Unsupported file type: " + fileExt + " " + "Full path: " + filePath, LogLevel::Error, 306, "ProcessSelectedFile");
+        log("Unsupported file type: " + fileExt + " " + "Full path: " + filePath, LogLevel::Error, 313, "ProcessSelectedFile");
         NotifyWarn("Error | Unsupported file type.");
     }
 }
@@ -343,8 +343,8 @@ namespace LoadRecordFromArbitraryMap {
     }
 
     void Coro_LoadSelectedGhost() {
-        if (globalMapUid.Length == 0) { log("Map UID not provided.", LogLevel::Error, 339, "Coro_LoadSelectedGhost"); return; }
-        if (globalOffset.Length == 0) { log("Offset not provided.", LogLevel::Error, 340, "Coro_LoadSelectedGhost"); return; }
+        if (globalMapUid.Length == 0) { log("Map UID not provided.", LogLevel::Error, 346, "Coro_LoadSelectedGhost"); return; }
+        if (globalOffset.Length == 0) { log("Offset not provided.", LogLevel::Error, 347, "Coro_LoadSelectedGhost"); return; }
 
         accountIdFetched = false;
         mapIdFetched = false;
@@ -354,14 +354,14 @@ namespace LoadRecordFromArbitraryMap {
 
         while (!(accountIdFetched && mapIdFetched)) { yield(); }
 
-        if (accountId.Length == 0) { log("Account ID not found.", LogLevel::Error, 350, "Coro_LoadSelectedGhost"); return; }
-        if (mapId.Length == 0) { log("Map ID not found.", LogLevel::Error, 351, "Coro_LoadSelectedGhost"); return; }
+        if (accountId.Length == 0) { log("Account ID not found.", LogLevel::Error, 357, "Coro_LoadSelectedGhost"); return; }
+        if (mapId.Length == 0) { log("Map ID not found.", LogLevel::Error, 358, "Coro_LoadSelectedGhost"); return; }
 
         SaveReplay(mapId, accountId, globalOffset, specialSaveLocation);
     }
 
     void Coro_FetchAccountId() {
-        // if (accountId.Length > 0) { log("AccountId provided in LoadSelectedRevord", LogLevel::Info, 357, "Coro_FetchAccountId"); accountIdFetched = true; return; }
+        // if (accountId.Length > 0) { log("AccountId provided in LoadSelectedRevord", LogLevel::Info, 364, "Coro_FetchAccountId"); accountIdFetched = true; return; }
 
         accountIdFetched = false;
 
@@ -373,26 +373,26 @@ namespace LoadRecordFromArbitraryMap {
         while (!req.Finished()) { yield(); }
 
         if (req.ResponseCode() != 200) {
-            log("Failed to fetch account ID, response code: " + req.ResponseCode(), LogLevel::Error, 369, "Coro_FetchAccountId");
+            log("Failed to fetch account ID, response code: " + req.ResponseCode(), LogLevel::Error, 376, "Coro_FetchAccountId");
             accountId = "";
         } else {
             Json::Value data = Json::Parse(req.String());
             if (data.GetType() == Json::Type::Null) {
-                log("Failed to parse response for account ID.", LogLevel::Error, 374, "Coro_FetchAccountId");
+                log("Failed to parse response for account ID.", LogLevel::Error, 381, "Coro_FetchAccountId");
                 accountId = "";
             } else {
                 auto tops = data["tops"];
                 if (tops.GetType() != Json::Type::Array || tops.Length == 0) {
-                    log("Invalid tops data in response.", LogLevel::Error, 379, "Coro_FetchAccountId");
+                    log("Invalid tops data in response.", LogLevel::Error, 386, "Coro_FetchAccountId");
                     accountId = "";
                 } else {
                     auto top = tops[0]["top"];
                     if (top.GetType() != Json::Type::Array || top.Length == 0) {
-                        log("Invalid top data in response.", LogLevel::Error, 384, "Coro_FetchAccountId");
+                        log("Invalid top data in response.", LogLevel::Error, 391, "Coro_FetchAccountId");
                         accountId = "";
                     } else {
                         accountId = top[0]["accountId"];
-                        log("Found account ID: " + accountId, LogLevel::Info, 388, "Coro_FetchAccountId");
+                        log("Found account ID: " + accountId, LogLevel::Info, 395, "Coro_FetchAccountId");
                     }
                 }
             }
@@ -401,7 +401,7 @@ namespace LoadRecordFromArbitraryMap {
     }
 
     void Coro_FetchMapId() {
-        // if (mapId.Length > 0) { log("MapId provided in LoadSelectedRevord", LogLevel::Info, 397, "Coro_FetchMapId"); mapIdFetched = true; return; }
+        // if (mapId.Length > 0) { log("MapId provided in LoadSelectedRevord", LogLevel::Info, 404, "Coro_FetchMapId"); mapIdFetched = true; return; }
 
         mapIdFetched = false;
         string url = "https://prod.trackmania.core.nadeo.online/maps/?mapUidList=" + globalMapUid;
@@ -412,20 +412,20 @@ namespace LoadRecordFromArbitraryMap {
         while (!req.Finished()) { yield(); }
 
         if (req.ResponseCode() != 200) {
-            log("Failed to fetch map ID, response code: " + req.ResponseCode(), LogLevel::Error, 408, "Coro_FetchMapId");
+            log("Failed to fetch map ID, response code: " + req.ResponseCode(), LogLevel::Error, 415, "Coro_FetchMapId");
             mapId = "";
         } else {
             Json::Value data = Json::Parse(req.String());
             if (data.GetType() == Json::Type::Null) {
-                log("Failed to parse response for map ID.", LogLevel::Error, 413, "Coro_FetchMapId");
+                log("Failed to parse response for map ID.", LogLevel::Error, 420, "Coro_FetchMapId");
                 mapId = "";
             } else {
                 if (data.GetType() != Json::Type::Array || data.Length == 0) {
-                    log("Invalid map data in response.", LogLevel::Error, 417, "Coro_FetchMapId");
+                    log("Invalid map data in response.", LogLevel::Error, 424, "Coro_FetchMapId");
                     mapId = "";
                 } else {
                     mapId = data[0]["mapId"];
-                    log("Found map ID: " + mapId, LogLevel::Info, 421, "Coro_FetchMapId");
+                    log("Found map ID: " + mapId, LogLevel::Info, 428, "Coro_FetchMapId");
                 }
             }
         }
@@ -440,11 +440,11 @@ namespace LoadRecordFromArbitraryMap {
 
         while (!req.Finished()) { yield(); }
 
-        if (req.ResponseCode() != 200) { log("Failed to fetch replay record, response code: " + req.ResponseCode(), LogLevel::Error, 436, "SaveReplay"); return; }
+        if (req.ResponseCode() != 200) { log("Failed to fetch replay record, response code: " + req.ResponseCode(), LogLevel::Error, 443, "SaveReplay"); return; }
 
         Json::Value data = Json::Parse(req.String());
-        if (data.GetType() == Json::Type::Null) { log("Failed to parse response for replay record.", LogLevel::Error, 439, "SaveReplay"); return; }
-        if (data.GetType() != Json::Type::Array || data.Length == 0) { log("Invalid replay data in response.", LogLevel::Error, 440, "SaveReplay"); return; }
+        if (data.GetType() == Json::Type::Null) { log("Failed to parse response for replay record.", LogLevel::Error, 446, "SaveReplay"); return; }
+        if (data.GetType() != Json::Type::Array || data.Length == 0) { log("Invalid replay data in response.", LogLevel::Error, 447, "SaveReplay"); return; }
 
         string fileUrl = data[0]["url"];
 
@@ -470,12 +470,12 @@ namespace LoadRecordFromArbitraryMap {
 
         while (!fileReq.Finished()) { yield(); }
 
-        if (fileReq.ResponseCode() != 200) { log("Failed to download replay file, response code: " + fileReq.ResponseCode(), LogLevel::Error, 466, "SaveReplay"); return; }
+        if (fileReq.ResponseCode() != 200) { log("Failed to download replay file, response code: " + fileReq.ResponseCode(), LogLevel::Error, 473, "SaveReplay"); return; }
 
         fileReq.SaveToFile(savePath);
 
         ProcessSelectedFile(savePath);
 
-        log("Replay file saved to: " + savePath, LogLevel::Info, 472, "SaveReplay");
+        log("Replay file saved to: " + savePath, LogLevel::Info, 479, "SaveReplay");
     }
 }

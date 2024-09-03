@@ -16,9 +16,8 @@ void MapCoro() {
             s_currMap = CurrentMap;
             s_currMapName = CurrentMapName;
             mapRecordsLoaded = false;
-            CurrentMapRecords::ValidationReplay::validationReplayCanBeLoaded = CurrentMapRecords::ValidationReplay::ValidationReplayCanBeLoadedForCurrentMap();
 
-            // CurrentMapRecords::ValidationReplay::OnMapLoad();
+            CurrentMapRecords::ValidationReplay::OnMapLoad();
             champMedal.OnMapLoad();
             warriorMedal.OnMapLoad();
             sbVilleMedal.OnMapLoad();

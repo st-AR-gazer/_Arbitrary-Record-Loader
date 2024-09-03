@@ -163,12 +163,17 @@ void RenderTab_CurrentLoadedRecords() {
         log("Save Ghost button clicked", LogLevel::Info, 163, "RenderTab_CurrentLoadedRecords");
         RecordManager::Save::SaveRecord();
     }
+    
+    if (CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
+        if (UI::Button(Icons::Kenney::Save + " Save validation replay")) {
+            RecordManager::Save::SaveRecord(CurrentMapRecords::ValidationReplay::GetValidationReplayFilePathForCurrentMap());
+        }
+    } else {
+        _UI::DisabledButton(Icons::Kenney::Save + " Save validation replay");
+    }
 }
 
 
-    /*if (UI::Button(Icons::Kenney::Save + " Save validation replay")) {
-        RecordManager::Save::SaveRecord(CurrentMapRecords::ValidationReplay::GetValidationReplayFilePath());
-    }*/
 
 //////////////////// Render Saved Ghosts and Replays Tab /////////////////////
 
@@ -222,7 +227,7 @@ void RenderTab_SavedGhostsAndReplays() {
                     if (bool(content["FromLocalFile"])) {
                         ProcessSelectedFile(string(content["FullFilePath"]));
                     } else {
-                        NotifyWarn("Func not implemented yet... You can only load local files.."); // TODO: Implement this :xdd:
+                        NotifyWarn("You can only load local files...");
                     }
                 }
                 UI::SameLine();
@@ -498,6 +503,11 @@ void RenderTab_CurrentMapGhost() {
     } else {
         if (UI::Button(Icons::UserPlus + " Add validation replay to current run")) {
             CurrentMapRecords::ValidationReplay::AddValidationReplay();
+        }
+    }
+    if (CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
+        if (UI::Button(Icons::UserTimes + " Validation replay time")) {
+            CurrentMapRecords::ValidationReplay::GetValidationReplayTime();
         }
     }
 

@@ -1,56 +1,65 @@
 namespace CurrentMapRecords {
+
     namespace ValidationReplay {
-        bool validationReplayCanBeLoaded = false;
 
-        bool ValidationReplayCanBeLoadedForCurrentMap() {
-            if (ValidationReplayExists()) { ExtractReplay(); }
-            return true;
-        }
-        
-        string GetValidationReplayFilePath() {
-            return Server::currentMapRecordsValidationReplay + "Validation_" + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
-        }
-
-        bool ValidationReplayExists() {
-            CTrackMania@ app = cast<CTrackMania>(GetApp());
-            if (app is null) return false;
-
-            CGamePlaygroundScript@ playground = cast<CGamePlaygroundScript>(app.PlaygroundScript);
-            if (playground is null) return false;
-
-            CGameDataFileManagerScript@ dataFileMgr = playground.DataFileMgr;
-            if (dataFileMgr is null) { /*log("DataFileMgr is null", LogLevel::Error, 22, "ValidationReplayExists");*/ return false; }
-
-            CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
-            if (authorGhost is null) { /*log("Author ghost is empty", LogLevel::Warn, 25, "ValidationReplayExists");*/ return false; }
-
-            return true;
-        }
-
-        void ExtractReplay() {
-            try {
-                CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
-                if (dataFileMgr is null) { log("DataFileMgr is null", LogLevel::Error, 33, "ExtractReplay"); }
-                string outputFileName = Server::currentMapRecordsValidationReplay + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
-
-                CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
-                if (authorGhost is null) { log("Author ghost is empty", LogLevel::Warn, 37, "ExtractReplay"); }
-
-                CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(outputFileName, GetApp().RootMap, authorGhost);
-                if (taskResult is null) { log("Replay task returned null", LogLevel::Error, 40, "ExtractReplay"); }
-
-                while (taskResult.IsProcessing) { yield(); }
-                if (!taskResult.HasSucceeded) { log("Error while saving replay " + taskResult.ErrorDescription, LogLevel::Error, 43, "ExtractReplay"); }
-
-                log("Replay extracted to: " + outputFileName, LogLevel::Info, 45, "ExtractReplay");
-            } catch {
-                log("Error occurred when trying to extract replay: " + getExceptionInfo(), LogLevel::Info, 47, "ExtractReplay");
+        void AddValidationReplay() {
+            if (ValidationReplayExists()) {
+                ReplayLoader::LoadReplayFromPath(GetValidationReplayFilePathForCurrentMap());
             }
         }
 
-        void AddValidationReplay() {
-            if (validationReplayCanBeLoaded) { ExtractReplay(); }
-            ReplayLoader::LoadReplayFromPath(GetValidationReplayFilePath());
+        void ValidationReplayExists() {
+            CTrackMania@ app = cast<CTrackMania>(GetApp());
+            if (app is null) return false;
+            CGamePlaygroundScript@ playground = cast<CGamePlaygroundScript>(app.PlaygroundScript);
+            if (playground is null) return false;
+            CGameDataFileManagerScript@ dataFileMgr = playground.DataFileMgr;
+            if (dataFileMgr is null) { /*log("DataFileMgr is null", LogLevel::Error, 17, "ValidationReplayExists");*/ return false; }
+            CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
+            if (authorGhost is null) { /*log("Author ghost is empty", LogLevel::Warn, 19, "ValidationReplayExists");*/ return false; }
+            return true;
+        }
+
+        void OnMapLoad() {
+            if (ValidationReplayExists()) {
+                ExtractValidationReplay();
+            }
+        }
+
+        void ExtractValidationReplay() {
+            try {
+                CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
+                if (dataFileMgr is null) { log("DataFileMgr is null", LogLevel::Error, 32, "ExtractValidationReplay"); }
+                string outputFileName = Server::currentMapRecordsValidationReplay + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
+                CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
+                if (authorGhost is null) { log("Author ghost is empty", LogLevel::Warn, 35, "ExtractValidationReplay"); }
+                CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(outputFileName, GetApp().RootMap, authorGhost);
+                if (taskResult is null) { log("Replay task returned null", LogLevel::Error, 37, "ExtractValidationReplay"); }
+                while (taskResult.IsProcessing) { yield(); }
+                if (!taskResult.HasSucceeded) { log("Error while saving replay " + taskResult.ErrorDescription, LogLevel::Error, 39, "ExtractValidationReplay"); }
+                log("Replay extracted to: " + outputFileName, LogLevel::Info, 40, "ExtractValidationReplay");
+            } catch {
+                log("Error occurred when trying to extract replay: " + getExceptionInfo(), LogLevel::Info, 42, "ExtractValidationReplay");
+            }
+        }
+
+        int GetValidationReplayTime() {
+            CTrackMania@ app = cast<CTrackMania>(GetApp());
+            if (app is null) return -1;
+            CGamePlaygroundScript@ playground = cast<CGamePlaygroundScript>(app.PlaygroundScript);
+            if (playground is null) return -1;
+            CGameDataFileManagerScript@ dataFileMgr = playground.DataFileMgr;
+            if (dataFileMgr is null) return -1;
+            CGameGhostScript@ authorGhost = dataFileMgr.Map_GetAuthorGhost(GetApp().RootMap);
+            if (authorGhost is null) return -1;
+            return authorGhost.Result.Time;
+        }
+
+        string GetValidationReplayFilePathForCurrentMap() {
+            if (GetApp().RootMap is null) { log("RootMap is null, no replay can be loaded...", LogLevel::Info, 59, "GetValidationReplayFilePathForCurrentMap"); return ""; }
+            string path = Server::currentMapRecordsValidationReplay + "Validation_" + Text::StripFormatCodes(GetApp().RootMap.MapName) + ".Replay.Gbx";
+            if (!IO::FileExists(path)) { log("Validation replay does not exist at path: " + path + " | This is likely due to the validation replay not yet being extracted.", LogLevel::Info, 61, "GetValidationReplayFilePathForCurrentMap"); return ""; }
+            return path;
         }
     }
 
@@ -96,7 +105,7 @@ namespace CurrentMapRecords {
         bool MedalExists() {
             int startTime = Time::Now;
             while (Time::Now - startTime < 2000 || GetMedalTime() == 0) { yield(); }
-            log("Medal time is: " + GetMedalTime(), LogLevel::Info, 99, "MedalExists");
+            log("Medal time is: " + GetMedalTime(), LogLevel::Info, 108, "MedalExists");
             return GetMedalTime() > 0;
         }
 
@@ -116,25 +125,25 @@ namespace CurrentMapRecords {
             while (!req.Finished()) { yield(); }
 
             if (req.ResponseCode() != 200) {
-                log("Failed to fetch surrounding records, response code: " + req.ResponseCode(), LogLevel::Error, 119, "FetchSurroundingRecords");
+                log("Failed to fetch surrounding records, response code: " + req.ResponseCode(), LogLevel::Error, 128, "FetchSurroundingRecords");
                 return;
             }
 
             Json::Value data = Json::Parse(req.String());
             if (data.GetType() == Json::Type::Null) {
-                log("Failed to parse response for surrounding records.", LogLevel::Error, 125, "FetchSurroundingRecords");
+                log("Failed to parse response for surrounding records.", LogLevel::Error, 134, "FetchSurroundingRecords");
                 return;
             }
 
             Json::Value tops = data["tops"];
             if (tops.GetType() != Json::Type::Array || tops.Length == 0) {
-                log("Invalid tops data in response.", LogLevel::Error, 131, "FetchSurroundingRecords");
+                log("Invalid tops data in response.", LogLevel::Error, 140, "FetchSurroundingRecords");
                 return;
             }
 
             Json::Value top = tops[0]["top"];
             if (top.GetType() != Json::Type::Array || top.Length == 0) {
-                log("Invalid top data in response.", LogLevel::Error, 137, "FetchSurroundingRecords");
+                log("Invalid top data in response.", LogLevel::Error, 146, "FetchSurroundingRecords");
                 return;
             }
 
@@ -152,7 +161,7 @@ namespace CurrentMapRecords {
                 int position = top[i]["position"];
                 int difference = int(currentMapMedalTime) - int(score);
 
-                log("Found surrounding record: score = " + score + ", accountId = " + accountId + ", position = " + position + ", difference = " + difference, LogLevel::Info, 155, "FetchSurroundingRecords");
+                log("Found surrounding record: score = " + score + ", accountId = " + accountId + ", position = " + position + ", difference = " + difference, LogLevel::Info, 164, "FetchSurroundingRecords");
 
                 if (difference == 0) {
                     closestScore = score;
@@ -173,7 +182,7 @@ namespace CurrentMapRecords {
                 timeDifference = smallestDifference;
                 medalHasExactMatch = exactMatchFound;
 
-                log("Closest record found: score = " + closestScore + ", accountId = " + closestAccountId + ", position = " + closestPosition + ", difference = " + timeDifference, LogLevel::Info, 176, "FetchSurroundingRecords");
+                log("Closest record found: score = " + closestScore + ", accountId = " + closestAccountId + ", position = " + closestPosition + ", difference = " + timeDifference, LogLevel::Info, 185, "FetchSurroundingRecords");
                 LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), tostring(closestPosition - 1), "Medal", closestAccountId);
             }
 
@@ -265,7 +274,7 @@ namespace CurrentMapRecords {
 
         //     bool GPSReplayCanBeLoadedForCurrentMap() {
         //         if (rootMap is null || rootMap.ClipGroupInGame is null) {
-        //             log("rootMap or ClipGroupInGame is null", LogLevel::Error, 268, "GPSReplayCanBeLoadedForCurrentMap");
+        //             log("rootMap or ClipGroupInGame is null", LogLevel::Error, 277, "GPSReplayCanBeLoadedForCurrentMap");
         //             return false;
         //         }
 
@@ -298,27 +307,27 @@ namespace CurrentMapRecords {
         //         sleep(1000);                            // Change to something that waits until the player is loaded.
 
         //         auto dfm = cast<CGameDataFileManagerScript>(GetApp().Network.ClientManiaAppPlayground.DataFileMgr);
-        //         if (dfm is null) { log("DataFileMgr is null", LogLevel::Error, 301, "FetchVTablePtr"); return; }
+        //         if (dfm is null) { log("DataFileMgr is null", LogLevel::Error, 310, "FetchVTablePtr"); return; }
 
         //         auto task = dfm.Replay_Load(ghostFilePath);
         //         while (task.IsProcessing) { yield(); }
 
         //         if (task.HasFailed || !task.HasSucceeded) {
-        //             log("Failed to load replay file!", LogLevel::Error, 307, "FetchVTablePtr");
-        //             log(task.ErrorCode, LogLevel::Error, 308, "FetchVTablePtr");
-        //             log(task.ErrorDescription, LogLevel::Error, 309, "FetchVTablePtr");
-        //             log(task.ErrorType, LogLevel::Error, 310, "FetchVTablePtr");
-        //             log(tostring(task.Ghosts.Length), LogLevel::Error, 311, "FetchVTablePtr");
+        //             log("Failed to load replay file!", LogLevel::Error, 316, "FetchVTablePtr");
+        //             log(task.ErrorCode, LogLevel::Error, 317, "FetchVTablePtr");
+        //             log(task.ErrorDescription, LogLevel::Error, 318, "FetchVTablePtr");
+        //             log(task.ErrorType, LogLevel::Error, 319, "FetchVTablePtr");
+        //             log(tostring(task.Ghosts.Length), LogLevel::Error, 320, "FetchVTablePtr");
         //             return;
         //         }
 
-        //         if (task.Ghosts.Length == 0) { log("No ghosts found in the replay file!", LogLevel::Warn, 315, "FetchVTablePtr"); return; }
+        //         if (task.Ghosts.Length == 0) { log("No ghosts found in the replay file!", LogLevel::Warn, 324, "FetchVTablePtr"); return; }
 
         //         auto ghost = task.Ghosts[0];
-        //         if (ghost is null) { log("Failed to retrieve the ghost from the replay file", LogLevel::Error, 318, "FetchVTablePtr"); return; }
+        //         if (ghost is null) { log("Failed to retrieve the ghost from the replay file", LogLevel::Error, 327, "FetchVTablePtr"); return; }
 
         //         uint64 pointer = Dev::GetOffsetUint64(ghost.Result, 0x0);
-        //         log("Hexadecimal pointer: " + Text::FormatPointer(pointer), LogLevel::Info, 321, "FetchVTablePtr");
+        //         log("Hexadecimal pointer: " + Text::FormatPointer(pointer), LogLevel::Info, 330, "FetchVTablePtr");
 
         //         CTmRaceResult_VTable_Ptr = pointer;
         //     }
@@ -398,7 +407,7 @@ namespace CurrentMapRecords {
 
         //     void ConvertGhosts() {
         //         for (uint i = 0; i < ghosts.Length; i++) {
-        //             if (ghosts[i] is null) { log("Ghost at index " + i + " is null", LogLevel::Error, 401, "ConvertGhosts"); continue; }
+        //             if (ghosts[i] is null) { log("Ghost at index " + i + " is null", LogLevel::Error, 410, "ConvertGhosts"); continue; }
         //             ghosts[i].ConvertToScript(CTmRaceResult_VTable_Ptr, ghosts[i].ghost);
         //         }
         //     }
@@ -406,7 +415,7 @@ namespace CurrentMapRecords {
         //     void SaveReplays() {
         //         for (uint i = 0; i < ghosts.Length; i++) {
         //             if (ghosts[i] is null) {
-        //                 log("Ghost at index " + i + " is null", LogLevel::Error, 409, "SaveReplays");
+        //                 log("Ghost at index " + i + " is null", LogLevel::Error, 418, "SaveReplays");
         //                 continue;
         //             }
         //             ghosts[i].Save(rootMap);
@@ -429,7 +438,7 @@ namespace CurrentMapRecords {
         //     }
 
         //     void ConvertToScript(uint64 CTmRaceResult_VTable_Ptr, CGameCtnGhost@ ghost) {
-        //         if (ghost is null) { log("Ghost is null in ConvertToScript", LogLevel::Error, 432, "ConvertToScript"); return; }
+        //         if (ghost is null) { log("Ghost is null in ConvertToScript", LogLevel::Error, 441, "ConvertToScript"); return; }
 
         //         ghost.MwAddRef();
 
@@ -450,7 +459,7 @@ namespace CurrentMapRecords {
         //     }
 
         //     void Save(CGameCtnChallenge@ rootMap) {
-        //         if (ghostScript is null) { log("GhostScript is null in Save for ghost " + name, LogLevel::Error, 453, "Save"); return; }
+        //         if (ghostScript is null) { log("GhostScript is null in Save for ghost " + name, LogLevel::Error, 462, "Save"); return; }
 
         //         print(savePath);
         //         print(rootMap.MapName);
@@ -459,7 +468,7 @@ namespace CurrentMapRecords {
         //         CGameDataFileManagerScript@ dataFileMgr = GetApp().PlaygroundScript.DataFileMgr;
         //         CWebServicesTaskResult@ taskResult = dataFileMgr.Replay_Save(savePath, rootMap, ghostScript);
         //         if (taskResult is null) {
-        //             log("Replay task returned null for ghost " + name, LogLevel::Error, 462, "Save");
+        //             log("Replay task returned null for ghost " + name, LogLevel::Error, 471, "Save");
         //         }
         //     }
         // }
