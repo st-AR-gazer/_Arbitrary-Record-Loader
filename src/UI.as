@@ -134,8 +134,14 @@ void RenderTab_CurrentLoadedRecords() {
         for (uint i = 0; i < RecordManager::GhostTracker::trackedGhosts.Length; i++) {
             auto ghost = RecordManager::GhostTracker::trackedGhosts[i];
             bool isSelected = (selectedRecordID.Value == ghost.Id.Value);
-            if (UI::Selectable(ghost.Nickname, isSelected)) {
-                selectedRecordID = ghost.Id;
+            if (ghost.Nickname.Length != 0) {
+                if (UI::Selectable(ghost.Nickname, isSelected)) {
+                    selectedRecordID = ghost.Id;
+                }
+            } else {
+                if (UI::Selectable("##", isSelected)) {
+                    selectedRecordID = ghost.Id;
+                }
             }
             if (isSelected) {
                 UI::SetItemDefaultFocus();
