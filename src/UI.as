@@ -220,7 +220,7 @@ void RenderTab_SavedGhostsAndReplays() {
 
                 if (UI::Button("Load " + fileName)) {
                     if (bool(content["FromLocalFile"])) {
-                        ProcessSelectedFile(string(content["ReplayFilePath"]) + string(content["FileName"]));
+                        ProcessSelectedFile(string(content["FullFilePath"]));
                     } else {
                         NotifyWarn("Func not implemented yet... You can only load local files.."); // TODO: Implement this :xdd:
                     }
