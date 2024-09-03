@@ -8,7 +8,7 @@ namespace CurrentMapRecords {
             }
         }
 
-        void ValidationReplayExists() {
+        bool ValidationReplayExists() {
             CTrackMania@ app = cast<CTrackMania>(GetApp());
             if (app is null) return false;
             CGamePlaygroundScript@ playground = cast<CGamePlaygroundScript>(app.PlaygroundScript);
