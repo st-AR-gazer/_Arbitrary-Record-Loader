@@ -268,24 +268,16 @@ namespace _Net {
                 yield();
             }
 
-            print(destination);
 
-            string truedestin = Path::GetDirectoryName(destination);
-            print(truedestin);
-
-
-            request.Url;
-            request.Headers.GetKeys();
-            request.Redirect;
-            request.Method;
-            request.SaveToFile(truedestin);
+            print(request.Url);
+            print(request.Headers.GetKeys());
+            print(request.Redirect);
+            print(request.Method);
             
            
             if (request.ResponseCode() == 200) {
-                string content = request.Body;
                 NotifyInfo("File downloaded successfully, returning the content");
-
-                // _IO::File::WriteFile(destination, content);
+                request.SaveToFile(destination);
             } else {
                 NotifyWarn("Failed to download file. Response code: " + request.ResponseCode());
             }
