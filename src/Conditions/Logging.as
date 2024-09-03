@@ -1,13 +1,13 @@
-void NotifyWarn(const string &in msg, int duration = 6000) {
-    UI::ShowNotification("Arbetrary Ghost Loader", msg, vec4(1, .5, .1, .5), duration);
-}
+string pluginName = "Arbitrary Record Loader";
 
-void NotifyInfo(const string &in msg) {
-    UI::ShowNotification("Arbetrary Ghost Loader", msg, vec4(.2, .8, .5, .3), 6000);
+void NotifyInfo(const string &in overwritePluginName = pluginName, const string &in msg = "", int time = 6000) {
+    UI::ShowNotification(overwritePluginName, msg, vec4(.2, .8, .5, .3), time);
 }
-
-void NotifyError(const string &in msg) {
-    UI::ShowNotification("Arbetrary Ghost Loader", msg, vec4(1, .2, .2, .3), 6000);
+void NotifyWarn(const string &in overwritePluginName = pluginName, const string &in msg = "", int time = 6000) {
+    UI::ShowNotification(overwritePluginName, msg, vec4(1, .5, .1, .5), time);
+}
+void NotifyError(const string &in overwritePluginName = pluginName, const string &in msg = "", int time = 6000) {
+    UI::ShowNotification(overwritePluginName, msg, vec4(1, .2, .2, .3), time);
 }
 
 enum LogLevel {

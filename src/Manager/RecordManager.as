@@ -93,7 +93,7 @@ namespace RecordManager {
         void UpdateGhosts() {
             auto app = GetApp();
             if (app is null || app.Network is null || app.Network.ClientManiaAppPlayground is null) {
-                log("App or network components not ready", LogLevel::Info, 96, "UpdateGhosts");
+                log("App or network components not ready", LogLevel::Warn, 96, "UpdateGhosts");
                 return;
             }
 
@@ -286,16 +286,21 @@ void ProcessSelectedFile(const string &in filePath) {
 
     string fileExt = Path::GetExtension(filePath).ToLower();
 
+    print(fileExt + " 1");
+
     if (fileExt == ".gbx") {
         string properFileExtension = Path::GetExtension(filePath).ToLower();
+        print(properFileExtension + " 2");
         if (properFileExtension == ".gbx") {
             int secondLastDotIndex = _Text::NthLastIndexOf(filePath, ".", 2);
             int lastDotIndex = filePath.LastIndexOf(".");
             if (secondLastDotIndex != -1 && lastDotIndex > secondLastDotIndex) {
                 properFileExtension = filePath.SubStr(secondLastDotIndex + 1, lastDotIndex - secondLastDotIndex - 1);
+                print(properFileExtension + " 3");
             }
         }
         fileExt = properFileExtension.ToLower();
+        print(fileExt + " 4");
     }
 
     if (fileExt == "replay") {
