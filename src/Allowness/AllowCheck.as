@@ -3,7 +3,7 @@ string[] GameModeBlackList = {
 };
 
 namespace AllowCheck {
-    bool AllowdToLoadRecords = true;
+    bool vAllowdToLoadRecords = true;
     bool ChesterCheckIsOK = false;
     bool MapCommentCheck = false;
 
@@ -16,7 +16,7 @@ namespace AllowCheck {
             log("Not all conditions have been checked or passed, records cannot be loaded.", LogLevel::Warn, 13, "CanRecordsBeLoaded");
             return false;
         }
-        if (!AllowdToLoadRecords) {
+        if (!vAllowdToLoadRecords) {
             log("AllowdToLoadRecords is false, not allowing records to be loaded.", LogLevel::Warn, 17, "CanRecordsBeLoaded");
             return false;
         }
@@ -46,12 +46,12 @@ namespace AllowCheck {
             if (IsBlacklisted(mode)) {
                 NotifyWarn("Loading records on the current map is disabled due to playing in the blacklisted mode: '" + mode + "'");
                 log("Map loading disabled due to blacklisted mode.", LogLevel::Warn, 33, "OnMapLoad");
-                AllowdToLoadRecords = false;
+                vAllowdToLoadRecords = false;
                 return;
             }
 
             ChesterCheckIsOK = true;
-            AllowdToLoadRecords = true;
+            vAllowdToLoadRecords = true;
         }
     }
 
