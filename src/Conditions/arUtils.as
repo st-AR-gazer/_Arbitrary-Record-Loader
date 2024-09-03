@@ -271,12 +271,12 @@ namespace _Net {
 
             print(tostring(request.Url));
             for (uint i = 0; i < request.Headers.GetKeys().Length; i++) {
-                print(tostring(request.Headers.GetKeys()[i]) + ": " + tostring(request.Headers.Get(request.Headers.GetKeys()[i])));
+                print(tostring(request.Headers.GetKeys()[i]));
             }
             print(tostring(request.Redirect));
             print(tostring(request.Method));
             for (uint i = 0; i < request.ResponseHeaders().GetKeys().Length; i++) {
-                print(tostring(request.ResponseHeaders().GetKeys()[i]) + ": " + tostring(request.ResponseHeaders().Get(request.ResponseHeaders().GetKeys()[i])));
+                print(tostring(request.ResponseHeaders().GetKeys()[i]));
             }
            
             if (request.ResponseCode() == 200) {
