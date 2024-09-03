@@ -1,12 +1,12 @@
 string pluginName = "Arbitrary Record Loader";
 
-void NotifyInfo(const string &in overwritePluginName = pluginName, const string &in msg = "", int time = 6000) {
+void NotifyInfo(const string &in msg = "", const string &in overwritePluginName = pluginName, int time = 6000) {
     UI::ShowNotification(overwritePluginName, msg, vec4(.2, .8, .5, .3), time);
 }
-void NotifyWarn(const string &in overwritePluginName = pluginName, const string &in msg = "", int time = 6000) {
+void NotifyWarn(const string &in msg = "", const string &in overwritePluginName = pluginName, int time = 6000) {
     UI::ShowNotification(overwritePluginName, msg, vec4(1, .5, .1, .5), time);
 }
-void NotifyError(const string &in overwritePluginName = pluginName, const string &in msg = "", int time = 6000) {
+void NotifyError(const string &in msg = "", const string &in overwritePluginName = pluginName, int time = 6000) {
     UI::ShowNotification(overwritePluginName, msg, vec4(1, .2, .2, .3), time);
 }
 

@@ -267,6 +267,13 @@ namespace _Net {
             while (!request.Finished()) {
                 yield();
             }
+
+            request.Url;
+            request.Headers.GetKeys();
+            request.Redirect;
+            request.Method;
+            request.SaveToFile(destination);
+            
            
             if (request.ResponseCode() == 200) {
                 string content = request.Body;
