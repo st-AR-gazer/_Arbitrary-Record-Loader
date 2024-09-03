@@ -275,11 +275,13 @@ namespace _Net {
             }
             print(tostring(request.Redirect));
             print(tostring(request.Method));
-            print("aa")
+            print("aa");
             for (uint i = 0; i < request.ResponseHeaders().GetKeys().Length; i++) {
-                print(tostring(request.ResponseHeaders().GetKeys()[i])) + " : " + Json::Write(request.ResponseHeaders().ToJson(), true);
+                print(tostring(request.ResponseHeaders().GetKeys()[i]));
             }
-            print("aa")
+            print("aa");
+            print(Json::Write(request.ResponseHeaders().ToJson(), true));
+            print("aa");
            
             if (request.ResponseCode() == 200) {
                 NotifyInfo("File downloaded successfully, returning the content");
