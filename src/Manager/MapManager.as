@@ -9,7 +9,7 @@ string mapName;
 bool g_enableGhosts = true;
 
 void MapCoro() {
-    while(true) {
+    while(true) {    
         sleep(273);
         if (!g_enableGhosts) continue;
         if (s_currMap != CurrentMap) {
@@ -18,9 +18,9 @@ void MapCoro() {
             mapRecordsLoaded = false;
 
             CurrentMapRecords::ValidationReplay::OnMapLoad();
-            champMedal.OnMapLoad();
-            warriorMedal.OnMapLoad();
-            sbVilleMedal.OnMapLoad();
+            startnew(CoroutineFunc(champMedal.OnMapLoad));
+            startnew(CoroutineFunc(warriorMedal.OnMapLoad));
+            startnew(CoroutineFunc(sbVilleMedal.OnMapLoad));
             // CurrentMapRecords::GPS::OnMapLoad();
 
             AllowCheck::Chester::OnMapLoad();

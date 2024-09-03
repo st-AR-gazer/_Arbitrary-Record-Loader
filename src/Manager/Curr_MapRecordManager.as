@@ -90,6 +90,7 @@ namespace CurrentMapRecords {
             } else {
                 medalExists = false;
             }
+            return;
         }
 
         void ResetState() {

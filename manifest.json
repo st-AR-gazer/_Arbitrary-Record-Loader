@@ -9,6 +9,6 @@
         "Stunt Discovery": "Discovery_Stunt.json"
     },
     "blockedGamemodeList": [
-        ""
+        "TM_COTDQualifications_Online", "TM_KnockoutDaily_Online"
     ]
 }

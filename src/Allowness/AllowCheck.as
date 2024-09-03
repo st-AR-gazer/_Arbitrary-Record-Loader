@@ -1,5 +1,5 @@
 string[] GameModeBlackList = {
-    "TM_TimeAttack_Online", "TM_Rounds_Online"
+    "TM_COTDQualifications_Online", "TM_KnockoutDaily_Online"
 };
 
 namespace AllowCheck {
@@ -45,7 +45,7 @@ namespace AllowCheck {
 
             if (IsBlacklisted(mode)) {
                 NotifyWarn("Loading records on the current map is disabled due to playing in the blacklisted mode: '" + mode + "'");
-                log("Map loading disabled due to blacklisted mode.", LogLevel::Warn, 48, "OnMapLoad");
+                log("Map loading disabled due to blacklisted mode: " + mode + "'", LogLevel::Warn, 48, "OnMapLoad");
                 vAllowdToLoadRecords = false;
                 return;
             }
