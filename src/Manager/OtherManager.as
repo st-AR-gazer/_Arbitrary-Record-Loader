@@ -134,9 +134,10 @@ namespace OtherManager {
             if (version > get_StoredVersion()) {
                 log("New version available: " + version, LogLevel::Info, 135, "ParseManifest");
                 DownloadFiles(manifest);
+                UpdateBlockedGamemodes(manifest);
+                SetStoredVersion(version);
             } else {
                 log("No new version available.", LogLevel::Info, 138, "ParseManifest");
-                SetStoredVersion(version);
             }
         }
 
@@ -160,6 +161,21 @@ namespace OtherManager {
             }
         }
 
+        void UpdateBlockedGamemodes(Json::Value &manifest) {
+            if (manifest.HasKey("blockedGamemodeList")) {
+                GameModeBlackList.RemoveRange(0, GameModeBlackList.Length);
+
+                Json::Value blockedList = manifest["blockedGamemodeList"];
+                for (uint i = 0; i < blockedList.Length; i++) {
+                    GameModeBlackList.InsertLast(blockedList[i]);
+                }
+
+                log("Blocked gamemodes updated.", LogLevel::Info, 190, "UpdateBlockedGamemodes");
+            } else {
+                log("No blocked gamemodes in manifest.", LogLevel::Info, 193, "UpdateBlockedGamemodes");
+            }
+        }
+
         int get_StoredVersion() {
             if (!IO::FileExists(IO::FromStorageFolder("version.txt"))) { return -1; }
 
@@ -179,4 +195,5 @@ namespace OtherManager {
             StartManifestDownload();
         }
     }
+
 }
