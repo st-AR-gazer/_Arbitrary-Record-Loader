@@ -149,7 +149,7 @@ namespace OtherManager {
 
                 if (shouldDownloadFilesIfTheyAreAleadyDownloaded || !IO::FileExists(path)) {
                     log("Downloading: " + filename, LogLevel::Info, 151, "DownloadFiles");
-                    _Net::DownloadFileToDestination(url, path);
+                    _Net::DownloadFileToDestination(url, path, "key");
                 }
             }
         }

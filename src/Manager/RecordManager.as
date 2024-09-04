@@ -6,6 +6,8 @@ namespace RecordManager {
     }
 
     void RemoveAllRecords() {
+        if (GetApp().PlaygroundScript is null) return;
+        
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_RemoveAll();
         log("All ghosts removed.", LogLevel::Info, 11, "RemoveAllRecords");
@@ -13,6 +15,8 @@ namespace RecordManager {
     }
 
     void RemoveInstanceRecord(MwId instanceId) {
+        if (GetApp().PlaygroundScript is null) return;
+
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_Remove(instanceId);
         log("Record with the MwID of: " + instanceId.GetName() + " removed.", LogLevel::Info, 18, "RemoveInstanceRecord");
@@ -20,6 +24,8 @@ namespace RecordManager {
     }
 
     void RemovePBRecord() {
+        if (GetApp().PlaygroundScript is null) return;
+
         auto dataFileMgr = GetApp().Network.ClientManiaAppPlayground.DataFileMgr;
         auto newGhosts = dataFileMgr.Ghosts;
 
@@ -145,6 +151,9 @@ namespace RecordManager {
         }
 
         void ClearTrackedGhosts() {
+            for (uint i = 0; i < trackedGhosts.Length; i++) {
+                
+            }
             trackedGhosts.RemoveRange(0, trackedGhosts.Length);
             log("Cleared all tracked ghosts.", LogLevel::Info, 149, "ClearTrackedGhosts");
         }
@@ -279,33 +288,29 @@ namespace RecordManager {
 
 
 
+
+
+
+
 void ProcessSelectedFile(const string &in filePath) {
     if (filePath.StartsWith("https://") || filePath.StartsWith("http://") || filePath.Contains("trackmania.io") || filePath.Contains("trackmania.exchange") || filePath.Contains("www.")) {
-        print(filePath);
-        _Net::DownloadFileToDestination(filePath, Server::linksFilesDirectory + Path::GetFileName(filePath));
-        startnew(CoroutineFuncUserdataString(ProcessDownloadedFile), Server::linksFilesDirectory + Path::GetFileName(filePath));
+        _Net::DownloadFileToDestination(filePath, Server::linksFilesDirectory + Path::GetFileName(filePath), "Link");
+        startnew(CoroutineFuncUserdataString(ProcessDownloadedFile), "Link");
         return;
     }
 
-    print(filePath);
-
     string fileExt = Path::GetExtension(filePath).ToLower();
-
-    print(fileExt + " 1");
 
     if (fileExt == ".gbx") {
         string properFileExtension = Path::GetExtension(filePath).ToLower();
-        print(properFileExtension + " 2");
         if (properFileExtension == ".gbx") {
             int secondLastDotIndex = _Text::NthLastIndexOf(filePath, ".", 2);
             int lastDotIndex = filePath.LastIndexOf(".");
             if (secondLastDotIndex != -1 && lastDotIndex > secondLastDotIndex) {
                 properFileExtension = filePath.SubStr(secondLastDotIndex + 1, lastDotIndex - secondLastDotIndex - 1);
-                print(properFileExtension + " 3");
             }
         }
         fileExt = properFileExtension.ToLower();
-        print(fileExt + " 4");
     }
 
     while (!AllowCheck::ConditionCheckMet()) { yield(); }
@@ -325,9 +330,14 @@ void ProcessSelectedFile(const string &in filePath) {
     }
 }
 
-void ProcessDownloadedFile(const string &in filePath) {
-    while (!IO::FileExists(filePath)) { yield(); }
-    ProcessSelectedFile(filePath);
+void ProcessDownloadedFile(const string &in key) {
+    while (!_Net::downloadedFilePaths.Exists(key)) { yield(); }
+
+    string finalFilePath = string(_Net::downloadedFilePaths[key]);
+    _Net::downloadedFilePaths.Delete(key);
+    while (!IO::FileExists(finalFilePath)) { yield(); }
+
+    ProcessSelectedFile(finalFilePath);
 }
 
 
