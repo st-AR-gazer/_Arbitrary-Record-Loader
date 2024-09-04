@@ -79,7 +79,8 @@ namespace _IO {
             return false;
         }
 
-        void WriteFile(string path, const string &in content, bool verbose = false) {
+        void WriteFile(string _path, const string &in content, bool verbose = false) {
+            string path = _path;
             if (verbose) log("Writing to file: " + path, LogLevel::Info, 83, "WriteFile");
 
             if (path.EndsWith("/") || path.EndsWith("\\")) { log("Invalid file path: " + path, LogLevel::Error, 85, "WriteFile"); return; }
