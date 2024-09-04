@@ -10,7 +10,7 @@ namespace RecordManager {
         
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_RemoveAll();
-        log("All ghosts removed.", LogLevel::Info, 11, "RemoveAllRecords");
+        log("All ghosts removed.", LogLevel::Info, 13, "RemoveAllRecords");
         GhostTracker::ClearTrackedGhosts();
     }
 
@@ -19,7 +19,7 @@ namespace RecordManager {
 
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_Remove(instanceId);
-        log("Record with the MwID of: " + instanceId.GetName() + " removed.", LogLevel::Info, 18, "RemoveInstanceRecord");
+        log("Record with the MwID of: " + instanceId.GetName() + " removed.", LogLevel::Info, 22, "RemoveInstanceRecord");
         GhostTracker::RemoveTrackedGhost(instanceId);
     }
 
@@ -41,7 +41,7 @@ namespace RecordManager {
     void SetRecordDossard(MwId instanceId, const string &in dossard, vec3 color = vec3()) {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_SetDossard(instanceId, dossard, color);
-        log("Record dossard set.", LogLevel::Info, 38, "RemovePBRecord");
+        log("Record dossard set.", LogLevel::Info, 44, "RemovePBRecord");
     }
 
     bool IsReplayVisible(MwId instanceId) {
@@ -59,7 +59,7 @@ namespace RecordManager {
     void AddGhostWithOffset(CGameGhostScript@ ghost, const int &in offset) {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_Add(ghost, true, offset);
-        log("Ghost added with offset.", LogLevel::Info, 56, "AddGhostWithOffset");
+        log("Ghost added with offset.", LogLevel::Info, 62, "AddGhostWithOffset");
         GhostTracker::AddTrackedGhost(ghost);
     }
 
@@ -92,14 +92,14 @@ namespace RecordManager {
         array<MwId> removedGhosts;
 
         void Init() {
-            log("Initializing GhostTracker", LogLevel::Info, 89, "Init");
+            log("Initializing GhostTracker", LogLevel::Info, 95, "Init");
             UpdateGhosts();
         }
 
         void UpdateGhosts() {
             auto app = GetApp();
             if (app is null || app.Network is null || app.Network.ClientManiaAppPlayground is null) {
-                log("App or network components not ready", LogLevel::Warn, 96, "UpdateGhosts");
+                log("App or network components not ready", LogLevel::Warn, 102, "UpdateGhosts");
                 return;
             }
 
@@ -127,7 +127,7 @@ namespace RecordManager {
                 }
             }
 
-            log("Ghosts updated, count: " + ghosts.Length + " Normal Ghosts: " + ghostsWithoutNickname + " VTable Ghosts: " + ghostsWithNickname, LogLevel::Info, 124, "UpdateGhosts");
+            log("Ghosts updated, count: " + ghosts.Length + " Normal Ghosts: " + ghostsWithoutNickname + " VTable Ghosts: " + ghostsWithNickname, LogLevel::Info, 130, "UpdateGhosts");
         }
 
         void AddTrackedGhost(CGameGhostScript@ ghost) {
@@ -135,14 +135,14 @@ namespace RecordManager {
                 trackedGhosts.InsertLast(ghost);
 
                 if (ghost.Nickname == "cfa844b7-6b53-4663-ac0d-9bdd3ad1af22") return;
-                log("Tracked ghost added: " + ghost.Nickname, LogLevel::Info, 132, "AddTrackedGhost");
+                log("Tracked ghost added: " + ghost.Nickname, LogLevel::Info, 138, "AddTrackedGhost");
             }
         }
 
         void RemoveTrackedGhost(MwId instanceId) {
             for (uint i = 0; i < trackedGhosts.Length; i++) {
                 if (trackedGhosts[i].Id.Value == instanceId.Value) {
-                    log("Tracked ghost removed: " + trackedGhosts[i].Nickname, LogLevel::Info, 139, "RemoveTrackedGhost");
+                    log("Tracked ghost removed: " + trackedGhosts[i].Nickname, LogLevel::Info, 145, "RemoveTrackedGhost");
                     trackedGhosts.RemoveAt(i);
                     removedGhosts.InsertLast(instanceId);
                     return;
@@ -155,7 +155,7 @@ namespace RecordManager {
                 
             }
             trackedGhosts.RemoveRange(0, trackedGhosts.Length);
-            log("Cleared all tracked ghosts.", LogLevel::Info, 149, "ClearTrackedGhosts");
+            log("Cleared all tracked ghosts.", LogLevel::Info, 158, "ClearTrackedGhosts");
         }
 
         bool IsGhostRemoved(MwId id) {
@@ -221,7 +221,7 @@ namespace RecordManager {
             string replayFilePath = Server::savedFilesDirectory;
             string jsonFilePath = Server::savedJsonDirectory + fileName + ".json";
 
-            log("Saving ghost to file: " + replayFilePath, LogLevel::Info, 215, "SaveRecord");
+            log("Saving ghost to file: " + replayFilePath, LogLevel::Info, 224, "SaveRecord");
 
             auto app = GetApp();
             if (app is null || app.Network is null || app.Network.ClientManiaAppPlayground is null) { NotifyError("App or network components not ready."); return; }
@@ -230,7 +230,7 @@ namespace RecordManager {
 
             CWebServicesTaskResult@ saveResult = app.Network.ClientManiaAppPlayground.DataFileMgr.Replay_Save(tmpFilePath, rootMap, ghost);
             if (saveResult.HasSucceeded && !saveResult.HasFailed) {
-                log("Replay save successful", LogLevel::Info, 224, "SaveRecord");
+                log("Replay save successful", LogLevel::Info, 233, "SaveRecord");
 
                 string _uuid = CreateRandomUuid();
                 Json::Value json = Json::Object();
@@ -255,7 +255,7 @@ namespace RecordManager {
 
                 NotifyInfo("Ghost saved successfully.");
             } else {
-                log("Replay save failed: " + saveResult.ErrorDescription, LogLevel::Error, 249, "SaveRecord");
+                log("Replay save failed: " + saveResult.ErrorDescription, LogLevel::Error, 258, "SaveRecord");
                 NotifyError("Failed to save ghost replay.");
             }
         }
@@ -325,7 +325,7 @@ void ProcessSelectedFile(const string &in filePath) {
     } else if (fileExt == "ghost") {
         GhostLoader::LoadGhost(filePath);
     } else {
-        log("Unsupported file type: " + fileExt + " " + "Full path: " + filePath, LogLevel::Error, 323, "ProcessSelectedFile");
+        log("Unsupported file type: " + fileExt + " " + "Full path: " + filePath, LogLevel::Error, 328, "ProcessSelectedFile");
         NotifyWarn("Error | Unsupported file type.");
     }
 }
@@ -371,8 +371,8 @@ namespace LoadRecordFromArbitraryMap {
     }
 
     void Coro_LoadSelectedGhost() {
-        if (globalMapUid.Length == 0) { log("Map UID not provided.", LogLevel::Error, 364, "Coro_LoadSelectedGhost"); return; }
-        if (globalOffset.Length == 0) { log("Offset not provided.", LogLevel::Error, 365, "Coro_LoadSelectedGhost"); return; }
+        if (globalMapUid.Length == 0) { log("Map UID not provided.", LogLevel::Error, 374, "Coro_LoadSelectedGhost"); return; }
+        if (globalOffset.Length == 0) { log("Offset not provided.", LogLevel::Error, 375, "Coro_LoadSelectedGhost"); return; }
 
         accountIdFetched = false;
         mapIdFetched = false;
@@ -382,14 +382,14 @@ namespace LoadRecordFromArbitraryMap {
 
         while (!(accountIdFetched && mapIdFetched)) { yield(); }
 
-        if (accountId.Length == 0) { log("Account ID not found.", LogLevel::Error, 375, "Coro_LoadSelectedGhost"); return; }
-        if (mapId.Length == 0) { log("Map ID not found.", LogLevel::Error, 376, "Coro_LoadSelectedGhost"); return; }
+        if (accountId.Length == 0) { log("Account ID not found.", LogLevel::Error, 385, "Coro_LoadSelectedGhost"); return; }
+        if (mapId.Length == 0) { log("Map ID not found.", LogLevel::Error, 386, "Coro_LoadSelectedGhost"); return; }
 
         SaveReplay(mapId, accountId, globalOffset, specialSaveLocation);
     }
 
     void Coro_FetchAccountId() {
-        // if (accountId.Length > 0) { log("AccountId provided in LoadSelectedRevord", LogLevel::Info, 382, "Coro_FetchAccountId"); accountIdFetched = true; return; }
+        // if (accountId.Length > 0) { log("AccountId provided in LoadSelectedRevord", LogLevel::Info, 392, "Coro_FetchAccountId"); accountIdFetched = true; return; }
 
         accountIdFetched = false;
 
@@ -401,26 +401,26 @@ namespace LoadRecordFromArbitraryMap {
         while (!req.Finished()) { yield(); }
 
         if (req.ResponseCode() != 200) {
-            log("Failed to fetch account ID, response code: " + req.ResponseCode(), LogLevel::Error, 394, "Coro_FetchAccountId");
+            log("Failed to fetch account ID, response code: " + req.ResponseCode(), LogLevel::Error, 404, "Coro_FetchAccountId");
             accountId = "";
         } else {
             Json::Value data = Json::Parse(req.String());
             if (data.GetType() == Json::Type::Null) {
-                log("Failed to parse response for account ID.", LogLevel::Error, 399, "Coro_FetchAccountId");
+                log("Failed to parse response for account ID.", LogLevel::Error, 409, "Coro_FetchAccountId");
                 accountId = "";
             } else {
                 auto tops = data["tops"];
                 if (tops.GetType() != Json::Type::Array || tops.Length == 0) {
-                    log("Invalid tops data in response.", LogLevel::Error, 404, "Coro_FetchAccountId");
+                    log("Invalid tops data in response.", LogLevel::Error, 414, "Coro_FetchAccountId");
                     accountId = "";
                 } else {
                     auto top = tops[0]["top"];
                     if (top.GetType() != Json::Type::Array || top.Length == 0) {
-                        log("Invalid top data in response.", LogLevel::Error, 409, "Coro_FetchAccountId");
+                        log("Invalid top data in response.", LogLevel::Error, 419, "Coro_FetchAccountId");
                         accountId = "";
                     } else {
                         accountId = top[0]["accountId"];
-                        log("Found account ID: " + accountId, LogLevel::Info, 413, "Coro_FetchAccountId");
+                        log("Found account ID: " + accountId, LogLevel::Info, 423, "Coro_FetchAccountId");
                     }
                 }
             }
@@ -429,7 +429,7 @@ namespace LoadRecordFromArbitraryMap {
     }
 
     void Coro_FetchMapId() {
-        // if (mapId.Length > 0) { log("MapId provided in LoadSelectedRevord", LogLevel::Info, 422, "Coro_FetchMapId"); mapIdFetched = true; return; }
+        // if (mapId.Length > 0) { log("MapId provided in LoadSelectedRevord", LogLevel::Info, 432, "Coro_FetchMapId"); mapIdFetched = true; return; }
 
         mapIdFetched = false;
         string url = "https://prod.trackmania.core.nadeo.online/maps/?mapUidList=" + globalMapUid;
@@ -440,20 +440,20 @@ namespace LoadRecordFromArbitraryMap {
         while (!req.Finished()) { yield(); }
 
         if (req.ResponseCode() != 200) {
-            log("Failed to fetch map ID, response code: " + req.ResponseCode(), LogLevel::Error, 433, "Coro_FetchMapId");
+            log("Failed to fetch map ID, response code: " + req.ResponseCode(), LogLevel::Error, 443, "Coro_FetchMapId");
             mapId = "";
         } else {
             Json::Value data = Json::Parse(req.String());
             if (data.GetType() == Json::Type::Null) {
-                log("Failed to parse response for map ID.", LogLevel::Error, 438, "Coro_FetchMapId");
+                log("Failed to parse response for map ID.", LogLevel::Error, 448, "Coro_FetchMapId");
                 mapId = "";
             } else {
                 if (data.GetType() != Json::Type::Array || data.Length == 0) {
-                    log("Invalid map data in response.", LogLevel::Error, 442, "Coro_FetchMapId");
+                    log("Invalid map data in response.", LogLevel::Error, 452, "Coro_FetchMapId");
                     mapId = "";
                 } else {
                     mapId = data[0]["mapId"];
-                    log("Found map ID: " + mapId, LogLevel::Info, 446, "Coro_FetchMapId");
+                    log("Found map ID: " + mapId, LogLevel::Info, 456, "Coro_FetchMapId");
                 }
             }
         }
@@ -468,11 +468,11 @@ namespace LoadRecordFromArbitraryMap {
 
         while (!req.Finished()) { yield(); }
 
-        if (req.ResponseCode() != 200) { log("Failed to fetch replay record, response code: " + req.ResponseCode(), LogLevel::Error, 461, "SaveReplay"); return; }
+        if (req.ResponseCode() != 200) { log("Failed to fetch replay record, response code: " + req.ResponseCode(), LogLevel::Error, 471, "SaveReplay"); return; }
 
         Json::Value data = Json::Parse(req.String());
-        if (data.GetType() == Json::Type::Null) { log("Failed to parse response for replay record.", LogLevel::Error, 464, "SaveReplay"); return; }
-        if (data.GetType() != Json::Type::Array || data.Length == 0) { log("Invalid replay data in response.", LogLevel::Error, 465, "SaveReplay"); return; }
+        if (data.GetType() == Json::Type::Null) { log("Failed to parse response for replay record.", LogLevel::Error, 474, "SaveReplay"); return; }
+        if (data.GetType() != Json::Type::Array || data.Length == 0) { log("Invalid replay data in response.", LogLevel::Error, 475, "SaveReplay"); return; }
 
         string fileUrl = data[0]["url"];
 
@@ -498,12 +498,12 @@ namespace LoadRecordFromArbitraryMap {
 
         while (!fileReq.Finished()) { yield(); }
 
-        if (fileReq.ResponseCode() != 200) { log("Failed to download replay file, response code: " + fileReq.ResponseCode(), LogLevel::Error, 491, "SaveReplay"); return; }
+        if (fileReq.ResponseCode() != 200) { log("Failed to download replay file, response code: " + fileReq.ResponseCode(), LogLevel::Error, 501, "SaveReplay"); return; }
 
         fileReq.SaveToFile(savePath);
 
         ProcessSelectedFile(savePath);
 
-        log("Replay file saved to: " + savePath, LogLevel::Info, 497, "SaveReplay");
+        log("Replay file saved to: " + savePath, LogLevel::Info, 507, "SaveReplay");
     }
 }

@@ -141,15 +141,21 @@ namespace OtherManager {
         }
 
         void DownloadFiles(Json::Value &manifest) {
-            Json::Value files = manifest["files"];
-            for (uint i = 0; i < files.Length; i++) {
-                string filename = files[i]["filename"];
-                string url = files[i]["url"];
+            Json::Value files = manifest["fileNames"];
+
+            array<string> keys = files.GetKeys();
+
+            for (uint i = 0; i < keys.Length; i++) {
+                string key = keys[i];
+                
+                string filename = string(files[key]);
+                string url = manifestPreinstalled + filename;
                 string path = Server::specificDownloadedJsonFilesDirectory + filename;
 
                 if (shouldDownloadFilesIfTheyAreAleadyDownloaded || !IO::FileExists(path)) {
-                    log("Downloading: " + filename, LogLevel::Info, 151, "DownloadFiles");
-                    _Net::DownloadFileToDestination(url, path, "key");
+                    log("Downloading: " + filename, LogLevel::Info, 167, "DownloadFiles");
+
+                    _Net::DownloadFileToDestination(url, path, "other", Path::GetFileName(filename));
                 }
             }
         }

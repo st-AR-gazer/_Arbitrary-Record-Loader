@@ -17,7 +17,7 @@ namespace ReplayLoader {
         if (!path.Contains("Trackmania") && !path.Contains("Trackmania2020")) {
             log("The replay file is not located in the Trackmania folder!", LogLevel::Warn, 18, "LoadReplayFromPath");
             log("Attempting to move the target replay file to the Trackmania folder!", LogLevel::Warn, 19, "LoadReplayFromPath");
-            NotifyWarn("The replay file is not located in the Trackmania folder! Attempting to move the target replay file to the Trackmania folder!");
+            // NotifyWarn("The replay file is not located in the Trackmania folder! Attempting to move the target replay file to the Trackmania folder!");
 
             _IO::File::CopyFileTo(path, Server::replayARLAutoMove + Path::GetFileName(path));
             if (!IO::FileExists(Server::replayARLAutoMove + Path::GetFileName(path))) {

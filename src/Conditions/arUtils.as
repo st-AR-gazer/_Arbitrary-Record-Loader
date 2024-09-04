@@ -225,21 +225,23 @@ namespace _Game {
 namespace _Net {
     dictionary downloadedFilePaths;
 
-    void DownloadFileToDestination(const string &in url, const string &in destination, const string &in key) {
-        string userdata = url + "|" + destination + "|" + key;
+    void DownloadFileToDestination(const string &in url, const string &in destination, const string &in key, const string &in overwriteFileName = "", bool noTmp = false) {
+        string userdata = url + "|" + destination + "|" + key + "|" + overwriteFileName + "|" + noTmp;
         startnew(Hidden::CoroDownloadFileToDestination, userdata);
     }
 
     namespace Hidden {
         void CoroDownloadFileToDestination(const string &in userdata) {
             array<string> parts = userdata.Split("|");
-            if (parts.Length != 3) {
-                log("Invalid userdata format.", LogLevel::Error, 258, "CoroDownloadFileToDestination");
+            if (parts.Length != 5) {
+                log("Invalid userdata format.", LogLevel::Error, 237, "CoroDownloadFileToDestination");
                 return;
             }
             string url = parts[0];
             string destination = parts[1];
             string key = parts[2];
+            string overwriteFileName = parts[3];
+            // bool noTmp = parts[4] == "true";
             destination = Path::GetDirectoryName(destination);
 
             Net::HttpRequest@ request = Net::HttpRequest();
@@ -253,41 +255,54 @@ namespace _Net {
 
             if (request.ResponseCode() == 200) {
                 string content_disposition = Json::Write(request.ResponseHeaders().ToJson().Get("content-disposition"));
-                string file_name = "";
+                string file_name = overwriteFileName;
 
-                if (content_disposition != "") {
-                    int index = content_disposition.IndexOf("filename=");
-                    if (index != -1) {
-                        file_name = content_disposition.SubStr(index + 9);
-                        file_name = file_name.Trim();
-                        file_name = file_name.Replace("\"", "");
-                        destination = Path::Join(destination, file_name);
-                        if (destination.EndsWith("/") || destination.EndsWith("\\")) {
-                            destination = destination.SubStr(0, destination.Length - 1);
+                if (file_name == "") {
+                    if (content_disposition != "") {
+                        int index = content_disposition.IndexOf("filename=");
+                        if (index != -1) {
+                            file_name = content_disposition.SubStr(index + 9);
+                            file_name = file_name.Trim();
+                            file_name = file_name.Replace("\"", "");
                         }
-                            
+                    } 
+                    
+                    if (file_name == "") {
+                        file_name = Path::GetFileName(url);
                     }
                 }
 
+                destination = Path::Join(destination, file_name);
+                if (destination.EndsWith("/") || destination.EndsWith("\\")) {
+                    destination = destination.SubStr(0, destination.Length - 1);
+                }
+
                 string tmp_path = Path::Join(IO::FromUserGameFolder(""), file_name);
-                tmp_path = tmp_path.SubStr(0, tmp_path.Length - 1);
 
                 request.SaveToFile(tmp_path);
                 _IO::File::CopyFileTo(tmp_path, destination);
 
-                if (!IO::FileExists(tmp_path)) { log("Failed to save file to: " + tmp_path, LogLevel::Error, 300, "CoroDownloadFileToDestination"); return; }
-                if (!IO::FileExists(destination)) { log("Failed to move file to: " + destination, LogLevel::Error, 301, "CoroDownloadFileToDestination"); return; }
+                if (!IO::FileExists(tmp_path)) { log("Failed to save file to: " + tmp_path, LogLevel::Error, 278, "CoroDownloadFileToDestination"); return; }
+                if (!IO::FileExists(destination)) { log("Failed to move file to: " + destination, LogLevel::Error, 279, "CoroDownloadFileToDestination"); return; }
 
                 IO::Delete(tmp_path);
 
                 if (!IO::FileExists(tmp_path) && IO::FileExists(destination)) {
-                    log("File downloaded successfully, saving " + file_name + " to: " + destination, LogLevel::Info, 306, "CoroDownloadFileToDestination");
+                    log("File downloaded successfully, saving " + file_name + " to: " + destination, LogLevel::Info, 284, "CoroDownloadFileToDestination");
 
                     downloadedFilePaths[key] = key;
                     downloadedFilePaths[key] = destination;
+
+                    while (true) {
+                        sleep(10000);
+                        array<string> keys = downloadedFilePaths.GetKeys();
+                        for (uint i = 0; i < keys.Length; i++) {
+                            downloadedFilePaths.Delete(keys[i]);
+                        }
+                    }
                 }
             } else {
-                log("Failed to download file. Response code: " + request.ResponseCode(), LogLevel::Info, 309, "CoroDownloadFileToDestination");
+                log("Failed to download file. Response code: " + request.ResponseCode(), LogLevel::Info, 290, "CoroDownloadFileToDestination");
             }
         }
     }
