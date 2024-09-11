@@ -828,7 +828,7 @@ namespace FileExplorer {
                         
                     if (Config.SortingCriteria == SortingCriteria::NameIgnoreFileFolder) {
                         swap = Config.SortingAscending ? Elements[i].Name > Elements[j].Name : Elements[i].Name < Elements[j].Name;
-                    } else if (Config.sortingCriteria == SortingCriteria::Name) {
+                    } else if (Config.SortingAscending == SortingCriteria::Name) {
                         if (Elements[i].IsFolder && !Elements[j].IsFolder) {
                             swap = true;
                         } else if (!Elements[i].IsFolder && Elements[j].IsFolder) {
