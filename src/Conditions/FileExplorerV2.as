@@ -769,22 +769,61 @@ namespace FileExplorer {
             }
         }
 
-        int CompareElements(ElementInfo@ a, ElementInfo@ b) {
-            int result = 0;
+        void SortElements() {
+            Sorter sorter(Config.sortingCriteria, Config.SortingAscending);
+            sorter.Sort(Elements);
+        }
+    }
 
-            if (Config.SortFilesBeforeFolders) {
-                if (a.IsFolder && !b.IsFolder) return 1;
-                if (!a.IsFolder && b.IsFolder) return -1;
-            } else {
-                if (a.IsFolder && !b.IsFolder) return -1;
-                if (!a.IsFolder && b.IsFolder) return 1;
+    class Sorter {
+        SortingCriteria sortingCriteria;
+        bool ascending;
+
+        Sorter(SortingCriteria criteria, bool asc) {
+            sortingCriteria = criteria;
+            ascending = asc;
+        }
+
+        void Sort(array<ElementInfo>@ elements) {
+            QuickSort(elements, 0, elements.Length - 1);
+        }
+
+        void QuickSort(array<ElementInfo>@ elements, int left, int right) {
+            if (left >= right) return;
+
+            ElementInfo@ pivot = elements[(left + right) / 2];
+            int index = Partition(elements, left, right, pivot);
+
+            QuickSort(elements, left, index - 1);
+            QuickSort(elements, index, right);
+        }
+
+        int Partition(array<ElementInfo>@ elements, int left, int right, ElementInfo@ pivot) {
+            while (left <= right) {
+                while (Compare(elements[left], pivot) < 0) left++;
+                while (Compare(elements[right], pivot) > 0) right--;
+                
+                if (left <= right) {
+                    Swap(elements, left, right);
+                    left++;
+                    right--;
+                }
             }
+            return left;
+        }
 
-            switch (Config.sortingCriteria) {
+        void Swap(array<ElementInfo>@ elements, int i, int j) {
+            ElementInfo@ temp = elements[i];
+            @elements[i] = elements[j];
+            @elements[j] = temp;
+        }
+
+        int Compare(ElementInfo@ a, ElementInfo@ b) {
+            int result = 0;
+            switch (sortingCriteria) {
                 case SortingCriteria::Name:
                     result = a.Name < b.Name ? -1 : (a.Name > b.Name ? 1 : 0);
                     break;
-
                 case SortingCriteria::Size:
                     if (!a.IsFolder && !b.IsFolder) {
                         int64 sizeA = a.SizeBytes;
@@ -792,36 +831,19 @@ namespace FileExplorer {
                         result = sizeA < sizeB ? -1 : (sizeA > sizeB ? 1 : 0);
                     }
                     break;
-
                 case SortingCriteria::LastModified:
                     result = a.LastModifiedDate < b.LastModifiedDate ? -1 :
                             (a.LastModifiedDate > b.LastModifiedDate ? 1 : 0);
                     break;
-
                 case SortingCriteria::CreatedDate:
                     result = a.CreationDate < b.CreationDate ? -1 :
                             (a.CreationDate > b.CreationDate ? 1 : 0);
                     break;
 
-                default:
-                    result = 0;
             }
-
-            if (!Config.SortingAscending) {
-                result = -result;
-            }
-
-            return result;
+            return ascending ? result : -result;
         }
-
-        int opCmp(ElementInfo@ a, ElementInfo@ b) {
-            return CompareElements(a, b);
-        }
-
-        void SortElements() {
-            Elements.Sort(this.opCmp);
-        }
-    }
+    };
 
     class Utils {
         FileExplorer@ explorer;
