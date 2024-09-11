@@ -784,21 +784,21 @@ namespace FileExplorer {
             ascending = asc;
         }
 
-        void Sort(array<ElementInfo>@ elements) {
+        void Sort(array<FileExplorer::ElementInfo>@ elements) {
             QuickSort(elements, 0, elements.Length - 1);
         }
 
-        void QuickSort(array<ElementInfo>@ elements, int left, int right) {
+        void QuickSort(array<FileExplorer::ElementInfo>@ elements, int left, int right) {
             if (left >= right) return;
 
-            ElementInfo@ pivot = elements[(left + right) / 2];
+            FileExplorer::ElementInfo@ pivot = elements[(left + right) / 2];
             int index = Partition(elements, left, right, pivot);
 
             QuickSort(elements, left, index - 1);
             QuickSort(elements, index, right);
         }
 
-        int Partition(array<ElementInfo>@ elements, int left, int right, ElementInfo@ pivot) {
+        int Partition(array<FileExplorer::ElementInfo>@ elements, int left, int right, FileExplorer::ElementInfo@ pivot) {
             while (left <= right) {
                 while (Compare(elements[left], pivot) < 0) left++;
                 while (Compare(elements[right], pivot) > 0) right--;
@@ -812,8 +812,8 @@ namespace FileExplorer {
             return left;
         }
 
-        void Swap(array<ElementInfo>@ elements, int i, int j) {
-            ElementInfo@ temp = elements[i];
+        void Swap(array<FileExplorer::ElementInfo>@ elements, int i, int j) {
+            FileExplorer::ElementInfo@ temp = elements[i];
             @elements[i] = elements[j];
             @elements[j] = temp;
         }
