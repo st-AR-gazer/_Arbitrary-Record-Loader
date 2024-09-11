@@ -335,6 +335,7 @@ namespace FileExplorer {
             explorerSettings["MaxElementsPerPage"] = MaxElementsPerPage;
             explorerSettings["SearchBarPadding"] = SearchBarPadding;
             explorerSettings["EnableSearchBar"] = EnableSearchBar;
+            explorerSettings["sortingCriteria"] = explorer.utils.SortingCriteriaToString(sortingCriteria);
             explorerSettings["SortingAscending"] = SortingAscending;
             explorerSettings["SortFilesBeforeFolders"] = SortFilesBeforeFolders;
 
