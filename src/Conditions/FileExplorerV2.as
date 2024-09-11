@@ -252,6 +252,9 @@ namespace FileExplorer {
                         if (explorerSettings.HasKey("EnableSearchBar")) {
                             EnableSearchBar = explorerSettings["EnableSearchBar"];
                         }
+                        if (settings.HasKey("sortingCriteria")) {
+                            sortingCriteria = explorer.utils.StringToSortingCriteria(settings["sortingCriteria"]);
+                        }
                         if (explorerSettings.HasKey("SortingAscending")) {
                             SortingAscending = explorerSettings["SortingAscending"];
                         }
