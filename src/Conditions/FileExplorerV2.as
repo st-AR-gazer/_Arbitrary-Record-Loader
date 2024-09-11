@@ -242,7 +242,7 @@ namespace FileExplorer {
                     SearchBarPadding = settings["SearchBarPadding"];
                 }
                 if (settings.HasKey("sortingCriteria")) {
-                    sortingCriteria = SortingCriteria(settings["sortingCriteria"]);
+                    sortingCriteria = explorer.utils.StringToSortingCriteria(settings["sortingCriteria"]);
                 }
                 if (settings.HasKey("SortingAscending")) {
                     SortingAscending = settings["SortingAscending"];
@@ -766,7 +766,7 @@ namespace FileExplorer {
 
         void SortElements() {
             Elements.Sort(function(a, b) {
-                return explorer.Sorting.CompareElements(a, b);
+                return CompareElements(a, b);
             });
         }
 
@@ -798,8 +798,6 @@ namespace FileExplorer {
                     else if (a.CreationDate > b.CreationDate) result = 1;
                     else result = 0;
                     break;
-                default:
-                    result = 0;
                 default:
                     result = 0;
             }
@@ -1004,6 +1002,14 @@ namespace FileExplorer {
                 case SortingCriteria::CreatedDate: return "Date Created";
             }
             return "Unknown";
+        }
+
+        SortingCriteria StringToSortingCriteria(const string &in str) {
+            if (str == "Name") return SortingCriteria::Name;
+            if (str == "Size") return SortingCriteria::Size;
+            if (str == "Date Modified") return SortingCriteria::LastModified;
+            if (str == "Date Created") return SortingCriteria::CreatedDate;
+            return SortingCriteria::Name;
         }
     }
 
