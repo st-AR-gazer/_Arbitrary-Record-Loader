@@ -296,7 +296,7 @@ namespace FileExplorer {
                 Json::Value newVersion = Json::Object();
                 newVersion["version"] = FILE_EXPLORER_SETTINGS_VERSION;
                 newVersion["settings"] = GetCurrentSettings();
-                settings.InsertLast(newVersion);
+                settings.Add(newVersion);
             }
 
             explorer.utils.WriteFile(settingsFilePath, Json::Write(settings));
