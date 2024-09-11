@@ -329,6 +329,7 @@ namespace FileExplorer {
     }
 
     enum SortingCriteria {
+        NameIgnoreFileFolder,
         Name,
         Size,
         LastModified,
@@ -778,8 +779,17 @@ namespace FileExplorer {
                     } else {
                         swap = !Elements[i].IsFolder && Elements[j].IsFolder;
                     }
-                    if (Config.sortingCriteria == SortingCriteria::Name) {
+                        
+                    if (Config.sortingCriteria == SortingCriteria::NameIgnoreFileFolder) {
                         swap = Config.SortingAscending ? Elements[i].Name > Elements[j].Name : Elements[i].Name < Elements[j].Name;
+                    } else if (Config.sortingCriteria == SortingCriteria::Name) {
+                        if (Elements[i].IsFolder && Elements[j].IsFolder) {
+                            swap = Config.SortingAscending ? Elements[i].Name > Elements[j].Name : Elements[i].Name < Elements[j].Name;
+                        } else if (!Elements[i].IsFolder && !Elements[j].IsFolder) {
+                            swap = Config.SortingAscending ? Elements[i].Name > Elements[j].Name : Elements[i].Name < Elements[j].Name;
+                        } else {
+                            swap = Elements[i].IsFolder;
+                        }
                     } else if (Config.sortingCriteria == SortingCriteria::Size) {
                         swap = Config.SortingAscending ? Elements[i].SizeBytes > Elements[j].SizeBytes : Elements[i].SizeBytes < Elements[j].SizeBytes;
                     } else if (Config.sortingCriteria == SortingCriteria::LastModified) {
@@ -985,6 +995,7 @@ namespace FileExplorer {
 
         string SortingCriteriaToString(SortingCriteria criteria) {
             switch (criteria) {
+                case SortingCriteria::NameIgnoreFileFolder: return "NameIgnoreFileFolder";
                 case SortingCriteria::Name: return "Name";
                 case SortingCriteria::Size: return "Size";
                 case SortingCriteria::LastModified: return "Date Modified";
@@ -994,6 +1005,7 @@ namespace FileExplorer {
         }
 
         SortingCriteria StringToSortingCriteria(const string &in str) {
+            if (str == "NameIgnoreFileFolder") return SortingCriteria::NameIgnoreFileFolder;
             if (str == "Name") return SortingCriteria::Name;
             if (str == "Size") return SortingCriteria::Size;
             if (str == "Date Modified") return SortingCriteria::LastModified;
@@ -1424,7 +1436,10 @@ namespace FileExplorer {
             }
 
             UI::SameLine();
-            if (UI::BeginCombo("Sort By", explorer.utils.SortingCriteriaToString(explorer.Config.sortingCriteria))) {
+
+            if (UI::Button(Icons::Sort)) { UI::OpenPopup("sortMenu"); }
+
+            if (UI::BeginPopup("sortMenu")) {
                 string orderButtonLabel = explorer.Config.SortingAscending ? Icons::ArrowUp : Icons::ArrowDown;
                 if (UI::MenuItem(orderButtonLabel + " Order", "", explorer.Config.SortingAscending)) {
                     explorer.Config.SortingAscending = !explorer.Config.SortingAscending;
@@ -1443,8 +1458,8 @@ namespace FileExplorer {
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
-                if (UI::MenuItem("Name", "", explorer.Config.sortingCriteria == SortingCriteria::Name)) {
-                    explorer.Config.sortingCriteria = SortingCriteria::Name;
+                if (UI::MenuItem("Name (Ignore File/Folder)", "", explorer.Config.sortingCriteria == SortingCriteria::NameIgnoreFileFolder)) {
+                    explorer.Config.sortingCriteria = SortingCriteria::NameIgnoreFileFolder;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
@@ -1463,7 +1478,8 @@ namespace FileExplorer {
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
-                UI::EndCombo();
+
+                UI::EndPopup();
             }
 
             UI::SameLine();
