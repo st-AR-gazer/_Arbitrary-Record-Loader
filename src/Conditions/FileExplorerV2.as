@@ -134,6 +134,8 @@
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
 
+        - Re-do the recursive search functionality, it's not working properly...
+
 */
 namespace FileExplorer {
     bool showInterface = false;
@@ -163,6 +165,9 @@ namespace FileExplorer {
         int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
         bool EnableSearchBar = true;
         int SearchBarPadding = 0;
+
+        SortingCriteria sortingCriteria = SortingCriteria::Name;
+        bool SortingAscending = true;
 
         /*const*/ string settingsDirectory = IO::FromDataFolder("Plugin_FileExplorer_Settings");
         /*const*/ string settingsFilePath = Path::Join(settingsDirectory, "FileExplorerSettings.json");
@@ -236,6 +241,12 @@ namespace FileExplorer {
                 if (settings.HasKey("SearchBarPadding")) {
                     SearchBarPadding = settings["SearchBarPadding"];
                 }
+                if (settings.HasKey("sortingCriteria")) {
+                    sortingCriteria = SortingCriteria(settings["sortingCriteria"]);
+                }
+                if (settings.HasKey("SortingAscending")) {
+                    SortingAscending = settings["SortingAscending"];
+                }
             }
         }
 
@@ -273,6 +284,9 @@ namespace FileExplorer {
             settings["EnableSearchBar"] = EnableSearchBar;
             settings["SearchBarPadding"] = SearchBarPadding;
 
+            settings["sortingCriteria"] = sortingCriteria;
+            settings["SortingAscending"] = SortingAscending;
+
             explorer.utils.WriteFile(settingsFilePath, Json::Write(settings));
 
             // log("Settings saved to: " + settingsFilePath, LogLevel::Info, 276, "SaveSettings");
@@ -307,6 +321,13 @@ namespace FileExplorer {
             bool isActive = IsFilterActive(filter);
             ActiveFilters.Set(filter, !isActive);
         }
+    }
+
+    enum SortingCriteria {
+        Name,
+        Size,
+        LastModified,
+        CreatedDate
     }
 
     enum Icon {
@@ -354,6 +375,7 @@ namespace FileExplorer {
         string Name;
         string Path;
         string Size;
+        int64 SizeBytes;
         string Type;
         int64 LastModifiedDate;
         int64 CreationDate;
@@ -366,10 +388,20 @@ namespace FileExplorer {
 
         uint64 LastClickTime;
 
-        ElementInfo(const string &in _name, const string &in _path, const string &in _size, const string &in _type, int64 _lastModifiedDate, int64 _creationDate, bool _isFolder, Icon _icon, bool _isSelected) {
+        ElementInfo(
+                const string &in _name, 
+                const string &in _path, 
+                const string &in _size, 
+                int64 _sizeBytes, 
+                const string &in _type, 
+                int64 _lastModifiedDate, 
+                int64 _creationDate, 
+                bool _isFolder, 
+                Icon _icon, bool _isSelected) {
             this.Name = _name;
             this.Path = _path;
             this.Size = _size;
+            this.SizeBytes = _sizeBytes;
             this.Type = _type;
             this.LastModifiedDate = _lastModifiedDate;
             this.CreationDate = _creationDate;
@@ -731,6 +763,53 @@ namespace FileExplorer {
                 CurrentPage = Math::Max(TotalPages - 1, 0);
             }
         }
+
+        void SortElements() {
+            Elements.Sort(function(a, b) {
+                return explorer.Sorting.CompareElements(a, b);
+            });
+        }
+
+        int CompareElements(ElementInfo@ a, ElementInfo@ b) {
+            int result = 0;
+
+            if (a.IsFolder && !b.IsFolder) return -1;
+            if (!a.IsFolder && b.IsFolder) return 1;
+
+            switch (Config.sortingCriteria) {
+                case SortingCriteria::Name:
+                    result = a.Name < b.Name ? -1 : (a.Name > b.Name ? 1 : 0);
+                    break;
+
+                case SortingCriteria::Size:
+                    if (!a.IsFolder && !b.IsFolder) {
+                        int64 sizeA = a.SizeBytes;
+                        int64 sizeB = b.SizeBytes;
+                        result = sizeA < sizeB ? -1 : (sizeA > sizeB ? 1 : 0);
+                    }
+                    break;
+                case SortingCriteria::LastModified:
+                    if (a.LastModifiedDate < b.LastModifiedDate) result = -1;
+                    else if (a.LastModifiedDate > b.LastModifiedDate) result = 1;
+                    else result = 0;
+                    break;
+                case SortingCriteria::CreatedDate:
+                    if (a.CreationDate < b.CreationDate) result = -1;
+                    else if (a.CreationDate > b.CreationDate) result = 1;
+                    else result = 0;
+                    break;
+                default:
+                    result = 0;
+                default:
+                    result = 0;
+            }
+
+            if (!Config.SortingAscending) {
+                result = -result;
+            }
+
+            return result;
+        }
     }
 
     class Utils {
@@ -916,6 +995,16 @@ namespace FileExplorer {
                 explorer.Config.SelectedPaths.Resize(maxAllowed);
             }
         }
+
+        string SortingCriteriaToString(SortingCriteria criteria) {
+            switch (criteria) {
+                case SortingCriteria::Name: return "Name";
+                case SortingCriteria::Size: return "Size";
+                case SortingCriteria::LastModified: return "Date Modified";
+                case SortingCriteria::CreatedDate: return "Date Created";
+            }
+            return "Unknown";
+        }
     }
 
     class FileExplorer {
@@ -982,10 +1071,11 @@ namespace FileExplorer {
             string name = isFolder ? explorer.utils.GetDirectoryName(path) : Path::GetFileName(path);
             string type = isFolder ? "folder" : Path::GetExtension(path).SubStr(1);
             string size = isFolder ? "-" : ConvertFileSizeToString(IO::FileSize(path));
+            int64 sizeBytes = IO::FileSize(path);
             int64 lastModified = IO::FileModifiedTime(path);
             int64 creationDate = IO::FileCreatedTime(path);
             Icon icon = GetElementIcon(isFolder, type);
-            ElementInfo@ elementInfo = ElementInfo(name, path, size, type, lastModified, creationDate, isFolder, icon, false);
+            ElementInfo@ elementInfo = ElementInfo(name, path, size, sizeBytes, type, lastModified, creationDate, isFolder, icon, false);
 
             if (type.ToLower() == "gbx") {
                 startnew(CoroutineFuncUserdata(ReadGbxMetadataCoroutine), elementInfo);
@@ -1337,6 +1427,43 @@ namespace FileExplorer {
 
                 UI::EndPopup();
             }
+
+            UI::SameLine();
+            if (UI::BeginCombo(Icons::Sort + " Sort By", explorer.utils.SortingCriteriaToString(explorer.Config.sortingCriteria))) {
+                if (UI::Selectable("Name", explorer.Config.sortingCriteria == SortingCriteria::Name)) {
+                    explorer.Config.sortingCriteria = SortingCriteria::Name;
+                    explorer.tab[0].SortElements();
+                    explorer.Config.SaveSettings();
+                }
+                if (UI::Selectable("Size", explorer.Config.sortingCriteria == SortingCriteria::Size)) {
+                    explorer.Config.sortingCriteria = SortingCriteria::Size;
+                    explorer.tab[0].SortElements();
+                    explorer.Config.SaveSettings();
+                }
+                if (UI::Selectable("Date Modified", explorer.Config.sortingCriteria == SortingCriteria::LastModified)) {
+                    explorer.Config.sortingCriteria = SortingCriteria::LastModified;
+                    explorer.tab[0].SortElements();
+                    explorer.Config.SaveSettings();
+                }
+                if (UI::Selectable("Date Created", explorer.Config.sortingCriteria == SortingCriteria::CreatedDate)) {
+                    explorer.Config.sortingCriteria = SortingCriteria::CreatedDate;
+                    explorer.tab[0].SortElements();
+                    explorer.Config.SaveSettings();
+                }
+                UI::EndCombo();
+            }
+
+            UI::SameLine();
+            string orderButtonLabel = explorer.Config.SortingAscending ? Icons::ArrowUp : Icons::ArrowDown;
+            if (UI::Button(orderButtonLabel + " Order")) {
+                explorer.Config.SortingAscending = !explorer.Config.SortingAscending;
+                explorer.tab[0].SortElements();
+                explorer.Config.SaveSettings();
+            }
+
+            // LAST ELEMENT LEFT SIDE
+            // LARGE SEPERATOR
+            // FIRST ELEMENT RIGHT SIDE
 
             UI::SameLine();
             UI::Dummy(vec2(UI::GetContentRegionAvail().x - 45, 0));
