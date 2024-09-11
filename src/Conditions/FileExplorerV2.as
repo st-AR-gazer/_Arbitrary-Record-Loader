@@ -130,6 +130,9 @@
 
         - Add support for sorting by name, size, date, etc., both ascending and descending
 
+        - Add cannot return specific file types
+        - Add can only return folders / files
+
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
@@ -142,6 +145,8 @@ namespace FileExplorer {
     class Config {
         bool MustReturn;
         vec2 MinMaxReturnAmount;
+        array<string> FileTypeMustBe;
+        int CanOnlyReturn;
 
         string Path;
         string SearchQuery;
@@ -1499,10 +1504,37 @@ namespace FileExplorer {
                                         (explorer.Config.SelectedPaths.Length <= uint(explorer.Config.MinMaxReturnAmount.y) || explorer.Config.MinMaxReturnAmount.y == -1);
 
                 if (validReturnAmount) {
-                    if (UI::Button("Return Selected Paths")) {
-                        explorer.exports.SetSelectionComplete(explorer.Config.SelectedPaths);
-                        explorer.exports.selectionComplete = true;
-                        explorer.Close();
+                    array<string> validSelections;
+                    for (uint i = 0; i < explorer.Config.SelectedPaths.Length; i++) {
+                        ElementInfo@ element = explorer.GetElementInfo(explorer.Config.SelectedPaths[i]);
+
+                        // Validate file type
+                        bool validType = true;
+                        if (!element.IsFolder && explorer.Config.FileTypeMustBe.Length > 0) {
+                            validType = false;
+                            for (uint j = 0; j < explorer.Config.FileTypeMustBe.Length; j++) {
+                                if (element.Type.ToLower() == explorer.Config.FileTypeMustBe[j].ToLower()) {
+                                    validType = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Validate CanOnlyReturn
+                        if ((explorer.Config.CanOnlyReturn == 1 && element.IsFolder) ||
+                            (explorer.Config.CanOnlyReturn == 2 && !element.IsFolder) ||
+                            explorer.Config.CanOnlyReturn == 0) {
+                            if (validType) validSelections.InsertLast(element.Path);
+                        }
+                    }
+
+                    if (validSelections.Length > 0) {
+                        if (UI::Button("Return Selected Paths")) {
+                            explorer.exports.SetSelectionComplete(validSelections);
+                            explorer.Close();
+                        }
+                    } else {
+                        explorer.utils.DisabledButton("Return Selected Paths");
                     }
                 } else {
                     explorer.utils.DisabledButton("Return Selected Paths");
@@ -1804,12 +1836,28 @@ namespace FileExplorer {
         }
 
         void HandleElementSelection(ElementInfo@ element, EnterType enterType, ContextType contextType) {
+            // Enforce selection restrictions
+            bool canAddMore = explorer.Config.SelectedPaths.Length < uint(explorer.Config.MinMaxReturnAmount.y) || explorer.Config.MinMaxReturnAmount.y == -1;
+            // Enforce folder/file only restrictions
+            if (explorer.Config.CanOnlyReturn == 1 && !element.IsFolder) return; // Only folders allowed
+            if (explorer.Config.CanOnlyReturn == 2 && element.IsFolder) return;  // Only files allowed
+            // Enforce file type filtering (if applicable)
+            if (!element.IsFolder && explorer.Config.FileTypeMustBe.Length > 0) {
+                bool validType = false;
+                for (uint i = 0; i < explorer.Config.FileTypeMustBe.Length; i++) {
+                    if (element.Type.ToLower() == explorer.Config.FileTypeMustBe[i].ToLower()) {
+                        validType = true;
+                        break;
+                    }
+                }
+                if (!validType) return;
+            }
+
+            // Handle element click
+            // Handle control-click (for multi-selection) or right-click (for context menu)
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
-            bool canAddMore = explorer.Config.SelectedPaths.Length < uint(explorer.Config.MinMaxReturnAmount.y) || explorer.Config.MinMaxReturnAmount.y == -1;
-
-            // Handle control-click (for multi-selection) or right-click (for context menu)
             if (enterType == EnterType::RightClick || enterType == EnterType::ControlClick) {
                 openContextMenu = true;
                 currentContextType = contextType;
@@ -1935,12 +1983,17 @@ namespace FileExplorer {
         }
     }
 
+    // - Add cannot return specific file types
+    // - Add can only return folders / files
+
     void fe_Start(
         bool _mustReturn = true,
         vec2 _minmaxReturnAmount = vec2(1, -1),
         string _path = "",
         string _searchQuery = "",
-        string[] _filters = array<string>()
+        string[] _filters = array<string>(),
+        string[] _fileTypeMustBe = array<string>(),
+        int _canOnlyReturn = -1
     ) {
         Config config;
         config.MustReturn = _mustReturn;
@@ -1948,6 +2001,8 @@ namespace FileExplorer {
         config.Path = _path;
         config.SearchQuery = _searchQuery;
         config.Filters = _filters;
+        config.FileTypeMustBe = _fileTypeMustBe;
+        config.CanOnlyReturn = _canOnlyReturn;
 
         if (explorer is null) {
             @explorer = FileExplorer(config);
