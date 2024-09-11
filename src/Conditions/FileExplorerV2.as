@@ -828,13 +828,13 @@ namespace FileExplorer {
                         
                     if (Config.SortingCriteria == SortingCriteria::NameIgnoreFileFolder) {
                         swap = Config.SortingAscending ? Elements[i].Name > Elements[j].Name : Elements[i].Name < Elements[j].Name;
-                    } else if (Config.SortingAscending == SortingCriteria::Name) {
-                        if (Elements[i].IsFolder && !Elements[j].IsFolder) {
-                            swap = true;
-                        } else if (!Elements[i].IsFolder && Elements[j].IsFolder) {
-                            swap = false;
-                        } else {
+                    } else if (Config.SortingCriteria == SortingCriteria::Name) {
+                        if (Elements[i].IsFolder && Elements[j].IsFolder) {
                             swap = Config.SortingAscending ? Elements[i].Name > Elements[j].Name : Elements[i].Name < Elements[j].Name;
+                        } else if (!Elements[i].IsFolder && !Elements[j].IsFolder) {
+                            swap = Config.SortingAscending ? Elements[i].Name > Elements[j].Name : Elements[i].Name < Elements[j].Name;
+                        } else {
+                            swap = Elements[i].IsFolder;
                         }
                     } else if (Config.SortingCriteria == SortingCriteria::Size) {
                         swap = Config.SortingAscending ? Elements[i].SizeBytes > Elements[j].SizeBytes : Elements[i].SizeBytes < Elements[j].SizeBytes;
