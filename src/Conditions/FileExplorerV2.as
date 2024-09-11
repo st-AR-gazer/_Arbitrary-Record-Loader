@@ -770,8 +770,16 @@ namespace FileExplorer {
         }
 
         void SortElements() {
-            Elements.Sort(CompareElements);
+            // Create a delegate for the CompareElements method
+            ElementComparatorDelegate@ comparator = ElementComparatorDelegate(this.CompareElements);
+
+            // Sort the elements using the comparator delegate
+            Elements.Sort(comparator, 0, Elements.Length);
         }
+
+
+        // Define a delegate type for the comparison function
+        delegate int ElementComparatorDelegate(ElementInfo@, ElementInfo@);
 
 
         int CompareElements(ElementInfo@ a, ElementInfo@ b) {
