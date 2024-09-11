@@ -770,80 +770,34 @@ namespace FileExplorer {
         }
 
         void SortElements() {
-            Sorter sorter(Config.sortingCriteria, Config.SortingAscending);
-            sorter.Sort(Elements);
-        }
-    }
+            for (uint i = 0; i < Elements.Length - 1; i++) {
+                for (uint j = i + 1; j < Elements.Length; j++) {
+                    bool swap = false;
+                    if (Config.SortFilesBeforeFolders) {
+                        swap = Elements[i].IsFolder && !Elements[j].IsFolder;
+                    } else {
+                        swap = !Elements[i].IsFolder && Elements[j].IsFolder;
+                    }
+                    if (Config.sortingCriteria == SortingCriteria::Name) {
+                        swap = Config.SortingAscending ? Elements[i].Name > Elements[j].Name : Elements[i].Name < Elements[j].Name;
+                    } else if (Config.sortingCriteria == SortingCriteria::Size) {
+                        swap = Config.SortingAscending ? Elements[i].SizeBytes > Elements[j].SizeBytes : Elements[i].SizeBytes < Elements[j].SizeBytes;
+                    } else if (Config.sortingCriteria == SortingCriteria::LastModified) {
+                        swap = Config.SortingAscending ? Elements[i].LastModifiedDate > Elements[j].LastModifiedDate : Elements[i].LastModifiedDate < Elements[j].LastModifiedDate;
+                    } else if (Config.sortingCriteria == SortingCriteria::CreatedDate) {
+                        swap = Config.SortingAscending ? Elements[i].CreationDate > Elements[j].CreationDate : Elements[i].CreationDate < Elements[j].CreationDate;
+                    }
 
-    class Sorter {
-        SortingCriteria sortingCriteria;
-        bool ascending;
-
-        Sorter(SortingCriteria criteria, bool asc) {
-            sortingCriteria = criteria;
-            ascending = asc;
-        }
-
-        void Sort(array<FileExplorer::ElementInfo>@ elements) {
-            QuickSort(elements, 0, elements.Length - 1);
-        }
-
-        void QuickSort(array<FileExplorer::ElementInfo>@ elements, int left, int right) {
-            if (left >= right) return;
-
-            FileExplorer::ElementInfo@ pivot = elements[(left + right) / 2];
-            int index = Partition(elements, left, right, pivot);
-
-            QuickSort(elements, left, index - 1);
-            QuickSort(elements, index, right);
-        }
-
-        int Partition(array<FileExplorer::ElementInfo>@ elements, int left, int right, FileExplorer::ElementInfo@ pivot) {
-            while (left <= right) {
-                while (Compare(elements[left], pivot) < 0) left++;
-                while (Compare(elements[right], pivot) > 0) right--;
-                
-                if (left <= right) {
-                    Swap(elements, left, right);
-                    left++;
-                    right--;
+                    if (swap) {
+                        ElementInfo@ temp = Elements[i];
+                        @Elements[i] = Elements[j];
+                        @Elements[j] = temp;
+                    }
                 }
             }
-            return left;
         }
 
-        void Swap(array<FileExplorer::ElementInfo>@ elements, int i, int j) {
-            FileExplorer::ElementInfo@ temp = elements[i];
-            @elements[i] = elements[j];
-            @elements[j] = temp;
-        }
-
-        int Compare(ElementInfo@ a, ElementInfo@ b) {
-            int result = 0;
-            switch (sortingCriteria) {
-                case SortingCriteria::Name:
-                    result = a.Name < b.Name ? -1 : (a.Name > b.Name ? 1 : 0);
-                    break;
-                case SortingCriteria::Size:
-                    if (!a.IsFolder && !b.IsFolder) {
-                        int64 sizeA = a.SizeBytes;
-                        int64 sizeB = b.SizeBytes;
-                        result = sizeA < sizeB ? -1 : (sizeA > sizeB ? 1 : 0);
-                    }
-                    break;
-                case SortingCriteria::LastModified:
-                    result = a.LastModifiedDate < b.LastModifiedDate ? -1 :
-                            (a.LastModifiedDate > b.LastModifiedDate ? 1 : 0);
-                    break;
-                case SortingCriteria::CreatedDate:
-                    result = a.CreationDate < b.CreationDate ? -1 :
-                            (a.CreationDate > b.CreationDate ? 1 : 0);
-                    break;
-
-            }
-            return ascending ? result : -result;
-        }
-    };
+    }
 
     class Utils {
         FileExplorer@ explorer;
