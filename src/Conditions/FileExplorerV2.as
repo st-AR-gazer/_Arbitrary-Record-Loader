@@ -242,9 +242,9 @@ namespace FileExplorer {
                 if (settings.HasKey("SearchBarPadding")) {
                     SearchBarPadding = settings["SearchBarPadding"];
                 }
-                if (settings.HasKey("sortingCriteria")) {
-                    sortingCriteria = explorer.utils.StringToSortingCriteria(settings["sortingCriteria"]);
-                }
+                //if (settings.HasKey("sortingCriteria")) {
+                  //  sortingCriteria = explorer.utils.StringToSortingCriteria(settings["sortingCriteria"]);
+                //}
                 if (settings.HasKey("SortingAscending")) {
                     SortingAscending = settings["SortingAscending"];
                 }
