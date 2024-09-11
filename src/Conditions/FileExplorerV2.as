@@ -140,6 +140,10 @@
 namespace FileExplorer {
     bool showInterface = false;
     FileExplorer@ explorer;
+
+    // ONLY CHANGE THIS IF A DESTRUCTIVE CHANGE IS MADE TO THE FILE EXPLORER SAVE FILE FORMAT, IDEALY 
+    // THIS SHOULD NEVER 'CHANGE', JUST BE ADDED TOO, BUT FOR SOME FUTURE PROOFING, THIS WAS ADDED...
+    const int FILE_EXPLORER_SETTINGS_VERSION = 1;
     
     class Config {
         bool MustReturn;
@@ -197,59 +201,70 @@ namespace FileExplorer {
             if (IO::FileExists(settingsFilePath)) {
                 string jsonString = explorer.utils.ReadFileToEnd(settingsFilePath);
                 Json::Value settings = Json::Parse(jsonString);
-                
-                if (settings.HasKey("PinnedElements")) {
-                    Json::Value pins = settings["PinnedElements"];
-                    PinnedElements.Resize(pins.Length);
-                    for (uint i = 0; i < pins.Length; i++) {
-                        PinnedElements[i] = pins[i];
+
+                bool foundVersion = false;
+
+                for (uint i = 0; i < settings.Length; i++) {
+                    Json::Value versionedSettings = settings[i];
+                    
+                    if (versionedSettings.HasKey("version") && versionedSettings["version"] == FILE_EXPLORER_SETTINGS_VERSION) {
+                        foundVersion = true;
+                        Json::Value explorerSettings = versionedSettings["settings"];
+
+                        if (explorerSettings.HasKey("PinnedElements")) {
+                            Json::Value pins = explorerSettings["PinnedElements"];
+                            PinnedElements.Resize(pins.Length);
+                            for (uint i = 0; i < pins.Length; i++) {
+                                PinnedElements[i] = pins[i];
+                            }
+                        }
+                        if (explorerSettings.HasKey("HideFiles")) {
+                            HideFiles = explorerSettings["HideFiles"];
+                        }
+                        if (explorerSettings.HasKey("HideFolders")) {
+                            HideFolders = explorerSettings["HideFolders"];
+                        }
+                        if (explorerSettings.HasKey("EnablePagination")) {
+                            EnablePagination = explorerSettings["EnablePagination"];
+                        }
+                        if (explorerSettings.HasKey("UseExtraWarningWhenDeleting")) {
+                            UseExtraWarningWhenDeleting = explorerSettings["UseExtraWarningWhenDeleting"];
+                        }
+                        if (explorerSettings.HasKey("RecursiveSearch")) {
+                            RecursiveSearch = explorerSettings["RecursiveSearch"];
+                        }
+                        if (explorerSettings.HasKey("FileNameDisplayOption")) {
+                            FileNameDisplayOption = explorerSettings["FileNameDisplayOption"];
+                        }
+                        if (explorerSettings.HasKey("ColumnsToShow")) {
+                            Json::Value cols = explorerSettings["ColumnsToShow"];
+                            for (uint i = 0; i < cols.GetKeys().Length; i++) {
+                                string col = cols.GetKeys()[i];
+                                ColumnsToShow.Set(col, bool(cols[col]));
+                            }
+                        }
+                        if (explorerSettings.HasKey("MaxElementsPerPage")) {
+                            MaxElementsPerPage = explorerSettings["MaxElementsPerPage"];
+                        }
+                        if (explorerSettings.HasKey("SearchBarPadding")) {
+                            SearchBarPadding = explorerSettings["SearchBarPadding"];
+                        }
+                        if (explorerSettings.HasKey("EnableSearchBar")) {
+                            EnableSearchBar = explorerSettings["EnableSearchBar"];
+                        }
+                        if (explorerSettings.HasKey("SortingAscending")) {
+                            SortingAscending = explorerSettings["SortingAscending"];
+                        }
+                        if (explorerSettings.HasKey("SortFilesBeforeFolders")) {
+                            SortFilesBeforeFolders = explorerSettings["SortFilesBeforeFolders"];
+                        }
+                        
+                        break;
                     }
                 }
-                if (settings.HasKey("HideFiles")) {
-                    HideFiles = settings["HideFiles"];
-                }
-                if (settings.HasKey("HideFolders")) {
-                    HideFolders = settings["HideFolders"];
-                }
-                if (settings.HasKey("EnablePagination")) {
-                    EnablePagination = settings["EnablePagination"];
-                }
-                if (settings.HasKey("UseExtraWarningWhenDeleting")) {
-                    UseExtraWarningWhenDeleting = settings["UseExtraWarningWhenDeleting"];
-                }
-                if (settings.HasKey("RecursiveSearch")) {
-                    RecursiveSearch = settings["RecursiveSearch"];
-                }
-                if (settings.HasKey("FileNameDisplayOption")) {
-                    FileNameDisplayOption = settings["FileNameDisplayOption"];
-                }
-                if (settings.HasKey("ColumnsToShow")) {
-                    Json::Value cols = settings["ColumnsToShow"];
-                    for (uint i = 0; i < cols.GetKeys().Length; i++) {
-                        string col = cols.GetKeys()[i];
-                        ColumnsToShow.Set(col, bool(cols[col]));
-                    }
-                }
-                if (settings.HasKey("MaxElementsPerPage")) {
-                    MaxElementsPerPage = settings["MaxElementsPerPage"];
-                }
-                if (settings.HasKey("SearchBarPadding")) {
-                    SearchBarPadding = settings["SearchBarPadding"];
-                }
-                if (settings.HasKey("EnableSearchBar")) {
-                    EnableSearchBar = settings["EnableSearchBar"];
-                }
-                if (settings.HasKey("SearchBarPadding")) {
-                    SearchBarPadding = settings["SearchBarPadding"];
-                }
-                if (settings.HasKey("sortingCriteria")) {
-                    sortingCriteria = explorer.utils.StringToSortingCriteria(settings["sortingCriteria"]);
-                }
-                if (settings.HasKey("SortingAscending")) {
-                    SortingAscending = settings["SortingAscending"];
-                }
-                if (settings.HasKey("SortFilesBeforeFolders")) {
-                    SortFilesBeforeFolders = settings["SortFilesBeforeFolders"];
+
+                if (!foundVersion) {
+                    log("Settings version mismatch or not found. Settings cannot be loaded.", LogLevel::Error, 156, "LoadSettings");
                 }
             }
         }
@@ -259,20 +274,51 @@ namespace FileExplorer {
                 IO::CreateFolder(settingsDirectory);
             }
 
-            Json::Value settings = Json::Object();
-            
+            Json::Value settings = Json::Array();
+            if (IO::FileExists(settingsFilePath)) {
+                string jsonString = explorer.utils.ReadFileToEnd(settingsFilePath);
+                settings = Json::Parse(jsonString);
+            }
+
+            bool versionExists = false;
+            for (uint i = 0; i < settings.Length; i++) {
+                if (settings[i].HasKey("version") && settings[i]["version"] == FILE_EXPLORER_SETTINGS_VERSION) {
+                    versionExists = true;
+
+                    Json::Value explorerSettings = settings[i]["settings"];
+                    explorerSettings = GetCurrentSettings();
+                    settings[i]["settings"] = explorerSettings;
+                    break;
+                }
+            }
+
+            if (!versionExists) {
+                Json::Value newVersion = Json::Object();
+                newVersion["version"] = FILE_EXPLORER_SETTINGS_VERSION;
+                newVersion["settings"] = GetCurrentSettings();
+                settings.InsertLast(newVersion);
+            }
+
+            explorer.utils.WriteFile(settingsFilePath, Json::Write(settings));
+
+            // log("Settings saved to: " + settingsFilePath, LogLevel::Info, 276, "SaveSettings");
+        }
+
+        Json::Value GetCurrentSettings() {
+            Json::Value explorerSettings = Json::Object();
+
             Json::Value pins = Json::Array();
             for (uint i = 0; i < PinnedElements.Length; i++) {
                 pins.Add(PinnedElements[i]);
             }
-            settings["PinnedElements"] = pins;
+            explorerSettings["PinnedElements"] = pins;
 
-            settings["HideFiles"] = HideFiles;
-            settings["HideFolders"] = HideFolders;
-            settings["EnablePagination"] = EnablePagination;
-            settings["UseExtraWarningWhenDeleting"] = UseExtraWarningWhenDeleting;
-            settings["RecursiveSearch"] = RecursiveSearch;
-            settings["FileNameDisplayOption"] = FileNameDisplayOption;
+            explorerSettings["HideFiles"] = HideFiles;
+            explorerSettings["HideFolders"] = HideFolders;
+            explorerSettings["EnablePagination"] = EnablePagination;
+            explorerSettings["UseExtraWarningWhenDeleting"] = UseExtraWarningWhenDeleting;
+            explorerSettings["RecursiveSearch"] = RecursiveSearch;
+            explorerSettings["FileNameDisplayOption"] = FileNameDisplayOption;
 
             Json::Value cols = Json::Object();
             array<string> colKeys = ColumnsToShow.GetKeys();
@@ -282,20 +328,16 @@ namespace FileExplorer {
                 ColumnsToShow.Get(col, value);
                 cols[col] = value;
             }
-            settings["ColumnsToShow"] = cols;
-            settings["MaxElementsPerPage"] = MaxElementsPerPage;
-            settings["SearchBarPadding"] = SearchBarPadding;
-            settings["EnableSearchBar"] = EnableSearchBar;
-            settings["SearchBarPadding"] = SearchBarPadding;
+            explorerSettings["ColumnsToShow"] = cols;
+            explorerSettings["MaxElementsPerPage"] = MaxElementsPerPage;
+            explorerSettings["SearchBarPadding"] = SearchBarPadding;
+            explorerSettings["EnableSearchBar"] = EnableSearchBar;
+            explorerSettings["SortingAscending"] = SortingAscending;
+            explorerSettings["SortFilesBeforeFolders"] = SortFilesBeforeFolders;
 
-            settings["sortingCriteria"] = sortingCriteria;
-            settings["SortingAscending"] = SortingAscending;
-            settings["SortFilesBeforeFolders"] = SortFilesBeforeFolders;
-
-            explorer.utils.WriteFile(settingsFilePath, Json::Write(settings));
-
-            // log("Settings saved to: " + settingsFilePath, LogLevel::Info, 276, "SaveSettings");
+            return explorerSettings;
         }
+
 
         void ToggleColumnVisibility(const string &in columnName) {
             if (ColumnsToShow.Exists(columnName)) {
