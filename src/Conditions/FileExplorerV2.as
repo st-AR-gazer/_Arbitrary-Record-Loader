@@ -168,6 +168,7 @@ namespace FileExplorer {
 
         SortingCriteria sortingCriteria = SortingCriteria::Name;
         bool SortingAscending = true;
+        bool SortFilesBeforeFolders = false;
 
         /*const*/ string settingsDirectory = IO::FromDataFolder("Plugin_FileExplorer_Settings");
         /*const*/ string settingsFilePath = Path::Join(settingsDirectory, "FileExplorerSettings.json");
@@ -247,6 +248,9 @@ namespace FileExplorer {
                 if (settings.HasKey("SortingAscending")) {
                     SortingAscending = settings["SortingAscending"];
                 }
+                if (settings.HasKey("SortFilesBeforeFolders")) {
+                    SortFilesBeforeFolders = settings["SortFilesBeforeFolders"];
+                }
             }
         }
 
@@ -286,6 +290,7 @@ namespace FileExplorer {
 
             settings["sortingCriteria"] = sortingCriteria;
             settings["SortingAscending"] = SortingAscending;
+            settings["SortFilesBeforeFolders"] = SortFilesBeforeFolders;
 
             explorer.utils.WriteFile(settingsFilePath, Json::Write(settings));
 
@@ -765,16 +770,20 @@ namespace FileExplorer {
         }
 
         void SortElements() {
-            Elements.Sort(function(a, b) {
-                return CompareElements(a, b);
-            });
+            Elements.Sort(CompareElements);
         }
+
 
         int CompareElements(ElementInfo@ a, ElementInfo@ b) {
             int result = 0;
 
-            if (a.IsFolder && !b.IsFolder) return -1;
-            if (!a.IsFolder && b.IsFolder) return 1;
+            if (Config.SortFilesBeforeFolders) {
+                if (a.IsFolder && !b.IsFolder) return 1;
+                if (!a.IsFolder && b.IsFolder) return -1;
+            } else {
+                if (a.IsFolder && !b.IsFolder) return -1;
+                if (!a.IsFolder && b.IsFolder) return 1;
+            }
 
             switch (Config.sortingCriteria) {
                 case SortingCriteria::Name:
@@ -788,16 +797,17 @@ namespace FileExplorer {
                         result = sizeA < sizeB ? -1 : (sizeA > sizeB ? 1 : 0);
                     }
                     break;
+
                 case SortingCriteria::LastModified:
-                    if (a.LastModifiedDate < b.LastModifiedDate) result = -1;
-                    else if (a.LastModifiedDate > b.LastModifiedDate) result = 1;
-                    else result = 0;
+                    result = a.LastModifiedDate < b.LastModifiedDate ? -1 :
+                            (a.LastModifiedDate > b.LastModifiedDate ? 1 : 0);
                     break;
+
                 case SortingCriteria::CreatedDate:
-                    if (a.CreationDate < b.CreationDate) result = -1;
-                    else if (a.CreationDate > b.CreationDate) result = 1;
-                    else result = 0;
+                    result = a.CreationDate < b.CreationDate ? -1 :
+                            (a.CreationDate > b.CreationDate ? 1 : 0);
                     break;
+
                 default:
                     result = 0;
             }
@@ -1435,23 +1445,41 @@ namespace FileExplorer {
             }
 
             UI::SameLine();
-            if (UI::BeginCombo(Icons::Sort + " Sort By", explorer.utils.SortingCriteriaToString(explorer.Config.sortingCriteria))) {
-                if (UI::Selectable("Name", explorer.Config.sortingCriteria == SortingCriteria::Name)) {
+            if (UI::BeginCombo("Sort By", explorer.utils.SortingCriteriaToString(explorer.Config.sortingCriteria))) {
+                string orderButtonLabel = explorer.Config.SortingAscending ? Icons::ArrowUp : Icons::ArrowDown;
+                if (UI::MenuItem(orderButtonLabel + " Order", "", explorer.Config.SortingAscending)) {
+                    explorer.Config.SortingAscending = !explorer.Config.SortingAscending;
+                    explorer.tab[0].SortElements();
+                    explorer.Config.SaveSettings();
+                }
+                if (UI::MenuItem("Sort Files Before Folders", "", explorer.Config.SortFilesBeforeFolders)) {
+                    explorer.Config.SortFilesBeforeFolders = !explorer.Config.SortFilesBeforeFolders;
+                    explorer.tab[0].SortElements();
+                    explorer.Config.SaveSettings();
+                }
+                UI::Separator();
+
+                if (UI::MenuItem("Name", "", explorer.Config.sortingCriteria == SortingCriteria::Name)) {
                     explorer.Config.sortingCriteria = SortingCriteria::Name;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
-                if (UI::Selectable("Size", explorer.Config.sortingCriteria == SortingCriteria::Size)) {
+                if (UI::MenuItem("Name", "", explorer.Config.sortingCriteria == SortingCriteria::Name)) {
+                    explorer.Config.sortingCriteria = SortingCriteria::Name;
+                    explorer.tab[0].SortElements();
+                    explorer.Config.SaveSettings();
+                }
+                if (UI::MenuItem("Size", "", explorer.Config.sortingCriteria == SortingCriteria::Size)) {
                     explorer.Config.sortingCriteria = SortingCriteria::Size;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
-                if (UI::Selectable("Date Modified", explorer.Config.sortingCriteria == SortingCriteria::LastModified)) {
+                if (UI::MenuItem("Date Modified", "", explorer.Config.sortingCriteria == SortingCriteria::LastModified)) {
                     explorer.Config.sortingCriteria = SortingCriteria::LastModified;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
-                if (UI::Selectable("Date Created", explorer.Config.sortingCriteria == SortingCriteria::CreatedDate)) {
+                if (UI::MenuItem("Date Created", "", explorer.Config.sortingCriteria == SortingCriteria::CreatedDate)) {
                     explorer.Config.sortingCriteria = SortingCriteria::CreatedDate;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
@@ -1460,12 +1488,6 @@ namespace FileExplorer {
             }
 
             UI::SameLine();
-            string orderButtonLabel = explorer.Config.SortingAscending ? Icons::ArrowUp : Icons::ArrowDown;
-            if (UI::Button(orderButtonLabel + " Order")) {
-                explorer.Config.SortingAscending = !explorer.Config.SortingAscending;
-                explorer.tab[0].SortElements();
-                explorer.Config.SaveSettings();
-            }
 
             // LAST ELEMENT LEFT SIDE
             // LARGE SEPERATOR
