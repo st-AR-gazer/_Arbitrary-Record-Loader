@@ -23,6 +23,21 @@ namespace AllowCheck {
         return true;
     }
 
+    string DissalowReason() {
+        auto net = cast<CGameCtnNetwork>(GetApp().Network);
+        auto cnsi = cast<CGameCtnNetServerInfo>(net.ServerInfo);
+        if (!ChesterCheckIsOK) {
+            return "You cannot loab maps in the blacklisted game mode: " + cnsi.ModeName;
+        }
+        if (!MapCommentCheck) {
+            return "Map comment prevents you from using this plugin on this map.";
+        }
+        if (!vAllowdToLoadRecords) {
+            return "General error | you cannot load records on this map.";
+        }
+        return "Unknown reason.";
+    }
+
     namespace Chester {
         bool IsBlacklisted(const string &in mode) {
             for (uint i = 0; i < GameModeBlackList.Length; i++) {

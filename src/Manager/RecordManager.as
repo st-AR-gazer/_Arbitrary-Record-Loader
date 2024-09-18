@@ -301,6 +301,10 @@ namespace RecordManager {
 
 
 void ProcessSelectedFile(const string &in filePath) {
+    startnew(CoroutineFuncUserdataString(Coro_ProcessSelectedFile, filePath));
+}
+
+void Coro_ProcessSelectedFile(const string &in filePath) {
     if (filePath.StartsWith("https://") || filePath.StartsWith("http://") || filePath.Contains("trackmania.io") || filePath.Contains("trackmania.exchange") || filePath.Contains("www.")) {
         _Net::DownloadFileToDestination(filePath, Server::linksFilesDirectory + Path::GetFileName(filePath), "Link");
         startnew(CoroutineFuncUserdataString(ProcessDownloadedFile), "Link");

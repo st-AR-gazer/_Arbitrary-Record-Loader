@@ -834,7 +834,7 @@ namespace FileExplorer {
                         } else if (!Elements[i].IsFolder && !Elements[j].IsFolder) {
                             swap = Config.SortingAscending ? Elements[i].Name > Elements[j].Name : Elements[i].Name < Elements[j].Name;
                         } else {
-                            swap = Elements[i].IsFolder;
+                            swap = Config.SortFilesBeforeFolders ? !Elements[i].IsFolder : Elements[i].IsFolder;
                         }
                     } else if (Config.SortingCriteria == SortingCriteria::Size) {
                         swap = Config.SortingAscending ? Elements[i].SizeBytes > Elements[j].SizeBytes : Elements[i].SizeBytes < Elements[j].SizeBytes;
@@ -843,16 +843,17 @@ namespace FileExplorer {
                     } else if (Config.SortingCriteria == SortingCriteria::CreatedDate) {
                         swap = Config.SortingAscending ? Elements[i].CreationDate > Elements[j].CreationDate : Elements[i].CreationDate < Elements[j].CreationDate;
                     }
-
+        
                     if (swap) {
                         ElementInfo@ temp = Elements[i];
                         @Elements[i] = Elements[j];
                         @Elements[j] = temp;
                     }
+
+                    print("sort");
                 }
             }
         }
-
     }
 
     class Utils {
