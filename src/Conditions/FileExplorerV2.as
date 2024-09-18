@@ -2081,8 +2081,21 @@ namespace FileExplorer {
 
             if (!explorer.Config.CanOnlyReturn.IsEmpty()) {
                 if (!element.IsFolder) {
-                    isValid = explorer.Config.FileTypeMustBe.Find("file") >= 0 ||
-                            explorer.Config.FileTypeMustBe.Find("files") >= 0;
+                    bool isFileTypeValid = false;
+                    if (explorer.Config.FileTypeMustBe.Length > 0) {
+                        for (uint i = 0; i < explorer.Config.FileTypeMustBe.Length; i++) {
+                            if (element.Type.ToLower() == explorer.Config.FileTypeMustBe[i].ToLower()) {
+                                isFileTypeValid = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        isFileTypeValid = explorer.Config.CanOnlyReturn.Find(element.Type.ToLower()) >= 0 ||
+                            explorer.Config.CanOnlyReturn.Find("file") >= 0 ||
+                            explorer.Config.CanOnlyReturn.Find("files") >= 0;
+                    }
+
+                    isValid = isFileTypeValid && isValid;
                 }
                 if (element.IsFolder) {
                     isValid = explorer.Config.CanOnlyReturn.Find("folder") >= 0 ||
@@ -2121,6 +2134,8 @@ namespace FileExplorer {
             if (explorer.Config.CanOnlyReturn.Find("dir") != -1 && element.IsFolder) return;
             if (explorer.Config.CanOnlyReturn.Find("directories") != -1 && element.IsFolder) return;
             if (explorer.Config.CanOnlyReturn.Find("directory") != -1 && element.IsFolder) return;
+
+            if (explorer.Config.CanOnlyReturn.Find(element.Type.ToLower()) == -1) return;
             // Enforce file type filtering (if applicable)
             if (!element.IsFolder && explorer.Config.FileTypeMustBe.Length > 0) {
                 bool validType = false;
