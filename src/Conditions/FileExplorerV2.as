@@ -274,16 +274,16 @@ namespace FileExplorer {
                             SortFilesBeforeFolders = explorerSettings["SortFilesBeforeFolders"];
                         }
                         if (explorerSettings.HasKey("ValidFileColor")) {
-                            ValidFileColor = StringToVec4(settings["ValidFileColor"]);
+                            ValidFileColor = StringToVec4(explorerSettings["ValidFileColor"]);
                         }
                         if (explorerSettings.HasKey("InvalidFileColor")) {
-                            InvalidFileColor = StringToVec4(settings["InvalidFileColor"]);
+                            InvalidFileColor = StringToVec4(explorerSettings["InvalidFileColor"]);
                         }
                         if (explorerSettings.HasKey("ValidFolderColor")) {
-                            ValidFolderColor = StringToVec4(settings["ValidFolderColor"]);
+                            ValidFolderColor = StringToVec4(explorerSettings["ValidFolderColor"]);
                         }
                         if (explorerSettings.HasKey("InvalidFolderColor")) {
-                            InvalidFolderColor = StringToVec4(settings["InvalidFolderColor"]);
+                            InvalidFolderColor = StringToVec4(explorerSettings["InvalidFolderColor"]);
                         }
                         
                         break;
