@@ -2084,6 +2084,7 @@ namespace FileExplorer {
             if (!explorer.Config.CanOnlyReturn.IsEmpty()) {
                 if (!element.IsFolder) {
                     bool isFileTypeValid = false;
+
                     if (explorer.Config.FileTypeMustBe.Length > 0) {
                         for (uint i = 0; i < explorer.Config.FileTypeMustBe.Length; i++) {
                             if (element.Type.ToLower() == explorer.Config.FileTypeMustBe[i].ToLower()) {
@@ -2092,19 +2093,17 @@ namespace FileExplorer {
                             }
                         }
                     } else {
-                        isFileTypeValid = explorer.Config.CanOnlyReturn.Find(element.Type.ToLower()) >= 0 ||
-                            explorer.Config.CanOnlyReturn.Find("file") >= 0 ||
+                        isFileTypeValid = explorer.Config.CanOnlyReturn.Find("file") >= 0 ||
                             explorer.Config.CanOnlyReturn.Find("files") >= 0;
                     }
-
-                    isValid = isFileTypeValid && isValid;
+                    isValid = isFileTypeValid;
                 }
+
                 if (element.IsFolder) {
                     isValid = explorer.Config.CanOnlyReturn.Find("folder") >= 0 ||
                             explorer.Config.CanOnlyReturn.Find("folders") >= 0 ||
                             explorer.Config.CanOnlyReturn.Find("dir") >= 0 || 
-                            explorer.Config.CanOnlyReturn.Find("directories") >= 0 ||
-                            explorer.Config.CanOnlyReturn.Find("directory") >= 0;
+                            explorer.Config.CanOnlyReturn.Find("directories") >= 0;
                 }
 
                 textColor = element.IsFolder
@@ -2112,8 +2111,6 @@ namespace FileExplorer {
                     : (isValid ? explorer.Config.ValidFileColor : explorer.Config.InvalidFileColor);
             }
 
-
-            
             UI::PushStyleColor(UI::Col::Text, textColor);
             UI::Selectable(displayName, element.IsSelected);
             UI::PopStyleColor();
