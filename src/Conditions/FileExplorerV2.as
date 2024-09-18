@@ -97,19 +97,21 @@
 
         if (UI::Begin("Path explorer", true, UI::WindowFlags::AlwaysAutoResize)) {
             if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
-                FileExplorer::fe_Start(                                                                             // Required for the file explorer to work 
-                    true,                                   // Require the user to select and return files          // Required for the file explorer to work
-                    vec2(1, 14),                            // Minimum 1, no effective upper limit on files         // Optional requirement for the file explorer
-                    IO::FromUserGameFolder("Replays/"),     // Initial folder path to open                          // Optional requirement for the file explorer
-                    "",                                     // Optional search query                                // Optional requirement for the file explorer
-                    { "replay", "ghost" }                   // File type filters                                    // Optional requirement for the file explorer
-                );                                                                                                  // Required for the file explorer to work
-            }                                                                                                       // Required for the file explorer to work
+                FileExplorer::fe_Start(                                                                                 // Required for the file explorer to work 
+                    true,                                   // Require the user to select and return files              // Required for the file explorer to work
+                    vec2(1, 14),                            // Minimum 1, no effective upper limit on files             // Optional requirement for the file explorer
+                    IO::FromUserGameFolder("Replays/"),     // Initial folder path to open                              // Optional requirement for the file explorer
+                    "",                                     // Optional search query                                    // Optional requirement for the file explorer
+                    { "replay", "ghost" },                  // File type filters                                        // Optional requirement for the file explorer
+                    { "replay" },                           // The exported file must be of this type                   // Optional requirement for the file explorer
+                    2                                       // The exported file/folder can only be both/file/folder    // Optional requirement for the file explorer
+                );
+            }
 
-            if (FileExplorer::explorer !is null && FileExplorer::explorer.exports.IsSelectionComplete()) {          // Required for checking the file explorer selection
-                array<string> paths = FileExplorer::explorer.exports.GetSelectedPaths();                            // Required for getting the selected paths
-                selectedFiles = paths;                                                                              // Optional requirement for handling the selected paths
-            }                                                                                                       // Required for checking the file explorer selection
+            if (FileExplorer::explorer !is null && FileExplorer::explorer.exports.IsSelectionComplete()) {              // Required for checking the file explorer selection
+                array<string> paths = FileExplorer::explorer.exports.GetSelectedPaths();                                // Required for getting the selected paths
+                selectedFiles = paths;                                                                                  // Optional requirement for handling the selected paths
+            }
 
             
             // This is just an example, you can use the selected files in any way you want
@@ -130,11 +132,16 @@
 
         - Add support for sorting by name, size, date, etc., both ascending and descending
 
+        - Add a starting ID to each opened instance of the file explorer window, so that multiple 
+          instances can be opened at the same time by different plugins (or the same plugin for that matter)
+
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
 
         - Re-do the recursive search functionality, it's not working properly...
+
+        - Game crashes when 'minimize' or 'basesize' buttons are clicked...
 
 */
 namespace FileExplorer {
@@ -149,7 +156,7 @@ namespace FileExplorer {
         bool MustReturn;
         vec2 MinMaxReturnAmount;
         array<string> FileTypeMustBe;
-        int CanOnlyReturn;
+        array<string> CanOnlyReturn;
 
         string Path;
         string SearchQuery;
@@ -169,6 +176,11 @@ namespace FileExplorer {
         int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
         bool EnableSearchBar = true;
         int SearchBarPadding = 0;
+
+        vec4 ValidFileColor = vec4(1, 1, 1, 1);     // Default: White
+        vec4 InvalidFileColor = vec4(1, 0, 0, 1);   // Default: Red
+        vec4 ValidFolderColor = vec4(1, 1, 1, 1);   // Default: White
+        vec4 InvalidFolderColor = vec4(1, 0, 0, 1); // Default: Red
 
         SortingCriteria SortingCriteria = SortingCriteria::Name;
         bool SortingAscending = true;
@@ -261,6 +273,18 @@ namespace FileExplorer {
                         if (explorerSettings.HasKey("SortFilesBeforeFolders")) {
                             SortFilesBeforeFolders = explorerSettings["SortFilesBeforeFolders"];
                         }
+                        if (settings.HasKey("ValidFileColor")) {
+                            ValidFileColor = StringToVec4(settings["ValidFileColor"]);
+                        }
+                        if (settings.HasKey("InvalidFileColor")) {
+                            InvalidFileColor = StringToVec4(settings["InvalidFileColor"]);
+                        }
+                        if (settings.HasKey("ValidFolderColor")) {
+                            ValidFolderColor = StringToVec4(settings["ValidFolderColor"]);
+                        }
+                        if (settings.HasKey("InvalidFolderColor")) {
+                            InvalidFolderColor = StringToVec4(settings["InvalidFolderColor"]);
+                        }
                         
                         break;
                     }
@@ -339,6 +363,11 @@ namespace FileExplorer {
             explorerSettings["SortingAscending"] = SortingAscending;
             explorerSettings["SortFilesBeforeFolders"] = SortFilesBeforeFolders;
 
+            explorerSettings["ValidFileColor"] = Vec4ToString(ValidFileColor);
+            explorerSettings["InvalidFileColor"] = Vec4ToString(InvalidFileColor);
+            explorerSettings["ValidFolderColor"] = Vec4ToString(ValidFolderColor);
+            explorerSettings["InvalidFolderColor"] = Vec4ToString(InvalidFolderColor);
+
             return explorerSettings;
         }
 
@@ -371,6 +400,18 @@ namespace FileExplorer {
         void ToggleFilterActive(const string &in filter) {
             bool isActive = IsFilterActive(filter);
             ActiveFilters.Set(filter, !isActive);
+        }
+
+        string Vec4ToString(vec4 color) {
+            return color.x + "," + color.y + "," + color.z + "," + color.w;
+        }
+
+        vec4 StringToVec4(const string &in colorStr) {
+            array<string> parts = colorStr.Split(",");
+            if (parts.Length == 4) {
+                return vec4(Text::ParseFloat(parts[0]), Text::ParseFloat(parts[1]), Text::ParseFloat(parts[2]), Text::ParseFloat(parts[3]));
+            }
+            return vec4(1, 1, 1, 1);
         }
     }
 
@@ -1620,6 +1661,23 @@ namespace FileExplorer {
 
                 UI::Separator();
 
+                if (UI::BeginMenu("Valid/Invalid File Colors")) {
+                    if (UI::MenuItem("Valid File Color", "", false, true)) {
+                        explorer.Config.ValidFileColor = UI::InputColor4("Valid File Color", explorer.Config.ValidFileColor);
+                    }
+                    if (UI::MenuItem("Invalid File Color", "", false, true)) {
+                        explorer.Config.InvalidFileColor = UI::InputColor4("Invalid File Color", explorer.Config.InvalidFileColor);
+                    }
+                    if (UI::MenuItem("Valid Folder Color", "", false, true)) {
+                        explorer.Config.ValidFolderColor = UI::InputColor4("Valid Folder Color", explorer.Config.ValidFolderColor);
+                    }
+                    if (UI::MenuItem("Invalid Folder Color", "", false, true)) {
+                        explorer.Config.InvalidFolderColor = UI::InputColor4("Invalid Folder Color", explorer.Config.InvalidFolderColor);
+                    }
+                }
+                UI::End();
+
+
                 explorer.Config.SaveSettings();
 
                 UI::EndPopup();
@@ -1715,9 +1773,12 @@ namespace FileExplorer {
                         }
 
                         // Validate CanOnlyReturn
-                        if ((explorer.Config.CanOnlyReturn == 1 && element.IsFolder) ||
-                            (explorer.Config.CanOnlyReturn == 2 && !element.IsFolder) ||
-                            explorer.Config.CanOnlyReturn == 0) {
+                        if ((explorer.Config.CanOnlyReturn.Find("file") >= 0 && !element.IsFolder) ||
+                            (explorer.Config.CanOnlyReturn.Find("files") >= 0 && !element.IsFolder) ||
+                            (explorer.Config.CanOnlyReturn.Find("dir") >= 0 && element.IsFolder) ||
+                            (explorer.Config.CanOnlyReturn.Find("directories") >= 0 && element.IsFolder) ||
+                            (explorer.Config.CanOnlyReturn.Find("directory") >= 0 && element.IsFolder) ||
+                            explorer.Config.CanOnlyReturn.IsEmpty()) {
                             if (validType) validSelections.InsertLast(element.Path);
                         }
                     }
@@ -2019,7 +2080,22 @@ namespace FileExplorer {
                     displayName = element.Name;
             }
 
+            bool isValid = true;
+            if (!element.IsFolder) {
+                isValid = explorer.Config.FileTypeMustBe.Find(element.Type.ToLower()) >= 0;
+            }
+            if (element.IsFolder) {
+                isValid = explorer.Config.CanOnlyReturn.Find("dir") >= 0 || explorer.Config.CanOnlyReturn.Find("directory") >= 0;
+            }
+
+            vec4 textColor = element.IsFolder
+                ? (isValid ? explorer.Config.ValidFolderColor : explorer.Config.InvalidFolderColor)
+                : (isValid ? explorer.Config.ValidFileColor : explorer.Config.InvalidFileColor);
+            
+            UI::PushStyleColor(UI::Col::Text, textColor);
             UI::Selectable(displayName, element.IsSelected);
+            UI::PopStyleColor();
+
             if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && (UI::IsKeyDown(UI::Key::LeftCtrl) || UI::IsKeyDown(UI::Key::RightCtrl))) {
                 HandleElementSelection(element, EnterType::ControlClick, contextType);
             } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Right)) {
@@ -2033,8 +2109,11 @@ namespace FileExplorer {
             // Enforce selection restrictions
             bool canAddMore = explorer.Config.SelectedPaths.Length < uint(explorer.Config.MinMaxReturnAmount.y) || explorer.Config.MinMaxReturnAmount.y == -1;
             // Enforce folder/file only restrictions
-            if (explorer.Config.CanOnlyReturn == 1 && !element.IsFolder) return; // Only folders allowed
-            if (explorer.Config.CanOnlyReturn == 2 && element.IsFolder) return;  // Only files allowed
+            if (explorer.Config.CanOnlyReturn.Find("file") && !element.IsFolder) return;
+            if (explorer.Config.CanOnlyReturn.Find("files") && !element.IsFolder) return;
+            if (explorer.Config.CanOnlyReturn.Find("dir") && element.IsFolder) return;
+            if (explorer.Config.CanOnlyReturn.Find("directories") && element.IsFolder) return;
+            if (explorer.Config.CanOnlyReturn.Find("directory") && element.IsFolder) return;
             // Enforce file type filtering (if applicable)
             if (!element.IsFolder && explorer.Config.FileTypeMustBe.Length > 0) {
                 bool validType = false;
@@ -2187,7 +2266,7 @@ namespace FileExplorer {
         string _searchQuery = "",
         string[] _filters = array<string>(),
         string[] _fileTypeMustBe = array<string>(),
-        int _canOnlyReturn = -1
+        string _canOnlyReturn = ""
     ) {
         Config config;
         config.MustReturn = _mustReturn;
@@ -2441,10 +2520,12 @@ void FILE_EXPLORER_BASE_RENDERER() {
 void OpenFileExplorerExample() {
     FileExplorer::fe_Start(
         true, // _mustReturn
-        vec2(1, 99999), // _minmaxReturnAmount
+        vec2(1, -1), // _minmaxReturnAmount
         IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
         "", // searchQuery
-        { "replay" } // filters
+        { "replay" }, // filters
+        { "replay" }, // fileTypeMustBe
+        { "files" } // canOnlyReturn
     );
 }
 
