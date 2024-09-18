@@ -1772,8 +1772,10 @@ namespace FileExplorer {
                         if ((explorer.Config.CanOnlyReturn.Find("file") >= 0 && !element.IsFolder) ||
                             (explorer.Config.CanOnlyReturn.Find("files") >= 0 && !element.IsFolder) ||
                             (explorer.Config.CanOnlyReturn.Find("dir") >= 0 && element.IsFolder) ||
+                            (explorer.Config.CanOnlyReturn.Find("dirs") >= 0 && element.IsFolder) ||
                             (explorer.Config.CanOnlyReturn.Find("directories") >= 0 && element.IsFolder) ||
                             (explorer.Config.CanOnlyReturn.Find("directory") >= 0 && element.IsFolder) ||
+                            
                             explorer.Config.CanOnlyReturn.IsEmpty()) {
                             if (validType) validSelections.InsertLast(element.Path);
                         }
@@ -2125,17 +2127,22 @@ namespace FileExplorer {
             }
         }
 
+        bool FolderAndFileRestrictions(ElementInfo@ element) {
+            if (explorer.Config.CanOnlyReturn.Find("file") != -1 && !element.IsFolder) return false;
+            if (explorer.Config.CanOnlyReturn.Find("files") != -1 && !element.IsFolder) return false;
+            if (explorer.Config.CanOnlyReturn.Find("dir") != -1 && element.IsFolder) return false;
+            if (explorer.Config.CanOnlyReturn.Find("dirs") != -1 && element.IsFolder) return false;
+            if (explorer.Config.CanOnlyReturn.Find("directories") != -1 && element.IsFolder) return false;
+            if (explorer.Config.CanOnlyReturn.Find("directory") != -1 && element.IsFolder) return false;
+            return true;
+        }
+
         void HandleElementSelection(ElementInfo@ element, EnterType enterType, ContextType contextType) {
             // Enforce selection restrictions
             bool canAddMore = explorer.Config.SelectedPaths.Length < uint(explorer.Config.MinMaxReturnAmount.y) || explorer.Config.MinMaxReturnAmount.y == -1;
             // Enforce folder/file only restrictions
-            if (explorer.Config.CanOnlyReturn.Find("file") != -1 && !element.IsFolder) return;
-            if (explorer.Config.CanOnlyReturn.Find("files") != -1 && !element.IsFolder) return;
-            if (explorer.Config.CanOnlyReturn.Find("dir") != -1 && element.IsFolder) return;
-            if (explorer.Config.CanOnlyReturn.Find("directories") != -1 && element.IsFolder) return;
-            if (explorer.Config.CanOnlyReturn.Find("directory") != -1 && element.IsFolder) return;
+            if (!FolderAndFileRestrictions(element)) return;
 
-            if (explorer.Config.CanOnlyReturn.Find(element.Type.ToLower()) == -1) return;
             // Enforce file type filtering (if applicable)
             if (!element.IsFolder && explorer.Config.FileTypeMustBe.Length > 0) {
                 bool validType = false;
