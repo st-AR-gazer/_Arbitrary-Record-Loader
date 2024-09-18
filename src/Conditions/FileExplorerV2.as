@@ -2096,6 +2096,8 @@ namespace FileExplorer {
                         isFileTypeValid = explorer.Config.CanOnlyReturn.Find("file") >= 0 ||
                             explorer.Config.CanOnlyReturn.Find("files") >= 0;
                     }
+                    print(explorer.Config.CanOnlyReturn.Find("files"));
+
                     isValid = isFileTypeValid;
                 }
 
