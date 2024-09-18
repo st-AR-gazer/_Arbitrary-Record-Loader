@@ -2077,21 +2077,27 @@ namespace FileExplorer {
             }
 
             bool isValid = true;
-            if (!element.IsFolder) {
-                isValid = explorer.Config.FileTypeMustBe.Find("file") >= 0 ||
-                          explorer.Config.FileTypeMustBe.Find("files") >= 0;
-            }
-            if (element.IsFolder) {
-                isValid = explorer.Config.CanOnlyReturn.Find("folder") >= 0 ||
-                          explorer.Config.CanOnlyReturn.Find("folders") >= 0 ||
-                          explorer.Config.CanOnlyReturn.Find("dir") >= 0 || 
-                          explorer.Config.CanOnlyReturn.Find("directories") >= 0 ||
-                          explorer.Config.CanOnlyReturn.Find("directory") >= 0;
+            vec4 textColor = explorer.Config.ValidFolderColor;
+
+            if (!explorer.Config.CanOnlyReturn.IsEmpty()) {
+                if (!element.IsFolder) {
+                    isValid = explorer.Config.FileTypeMustBe.Find("file") >= 0 ||
+                            explorer.Config.FileTypeMustBe.Find("files") >= 0;
+                }
+                if (element.IsFolder) {
+                    isValid = explorer.Config.CanOnlyReturn.Find("folder") >= 0 ||
+                            explorer.Config.CanOnlyReturn.Find("folders") >= 0 ||
+                            explorer.Config.CanOnlyReturn.Find("dir") >= 0 || 
+                            explorer.Config.CanOnlyReturn.Find("directories") >= 0 ||
+                            explorer.Config.CanOnlyReturn.Find("directory") >= 0;
+                }
+
+                textColor = element.IsFolder
+                    ? (isValid ? explorer.Config.ValidFolderColor : explorer.Config.InvalidFolderColor)
+                    : (isValid ? explorer.Config.ValidFileColor : explorer.Config.InvalidFileColor);
             }
 
-            vec4 textColor = element.IsFolder
-                ? (isValid ? explorer.Config.ValidFolderColor : explorer.Config.InvalidFolderColor)
-                : (isValid ? explorer.Config.ValidFileColor : explorer.Config.InvalidFileColor);
+
             
             UI::PushStyleColor(UI::Col::Text, textColor);
             UI::Selectable(displayName, element.IsSelected);
