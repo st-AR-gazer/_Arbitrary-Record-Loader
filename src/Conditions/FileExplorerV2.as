@@ -2083,21 +2083,8 @@ namespace FileExplorer {
 
             if (!explorer.Config.CanOnlyReturn.IsEmpty()) {
                 if (!element.IsFolder) {
-                    bool isFileTypeValid = false;
-
-                    if (explorer.Config.FileTypeMustBe.Length > 0) {
-                        for (uint i = 0; i < explorer.Config.FileTypeMustBe.Length; i++) {
-                            if (element.Type.ToLower() == explorer.Config.FileTypeMustBe[i].ToLower()) {
-                                isFileTypeValid = true;
-                                break;
-                            }
-                        }
-                    } else {
-                        isFileTypeValid = explorer.Config.CanOnlyReturn.Find("file") >= 0 ||
-                            explorer.Config.CanOnlyReturn.Find("files") >= 0;
-                        print(isFileTypeValid);
-                    }
-
+                    bool isFileTypeValid = explorer.Config.CanOnlyReturn.Find("file") >= 0 ||
+                                        explorer.Config.CanOnlyReturn.Find("files") >= 0;
                     isValid = isFileTypeValid;
                 }
 
@@ -2109,8 +2096,8 @@ namespace FileExplorer {
                 }
 
                 textColor = element.IsFolder
-                    ? (isValid ? explorer.Config.ValidFolderColor : explorer.Config.InvalidFolderColor)
-                    : (isValid ? explorer.Config.ValidFileColor : explorer.Config.InvalidFileColor);
+                            ? (isValid ? explorer.Config.ValidFolderColor : explorer.Config.InvalidFolderColor)
+                            : (isValid ? explorer.Config.ValidFileColor : explorer.Config.InvalidFileColor);
             }
 
             UI::PushStyleColor(UI::Col::Text, textColor);
