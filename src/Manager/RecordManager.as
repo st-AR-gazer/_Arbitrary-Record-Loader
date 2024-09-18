@@ -301,7 +301,7 @@ namespace RecordManager {
 
 
 void ProcessSelectedFile(const string &in filePath) {
-    startnew(CoroutineFuncUserdataString(Coro_ProcessSelectedFile, filePath));
+    startnew(CoroutineFuncUserdataString(Coro_ProcessSelectedFile), filePath);
 }
 
 void Coro_ProcessSelectedFile(const string &in filePath) {

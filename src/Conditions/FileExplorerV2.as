@@ -2109,11 +2109,11 @@ namespace FileExplorer {
             // Enforce selection restrictions
             bool canAddMore = explorer.Config.SelectedPaths.Length < uint(explorer.Config.MinMaxReturnAmount.y) || explorer.Config.MinMaxReturnAmount.y == -1;
             // Enforce folder/file only restrictions
-            if (explorer.Config.CanOnlyReturn.Find("file") && !element.IsFolder) return;
-            if (explorer.Config.CanOnlyReturn.Find("files") && !element.IsFolder) return;
-            if (explorer.Config.CanOnlyReturn.Find("dir") && element.IsFolder) return;
-            if (explorer.Config.CanOnlyReturn.Find("directories") && element.IsFolder) return;
-            if (explorer.Config.CanOnlyReturn.Find("directory") && element.IsFolder) return;
+            if (explorer.Config.CanOnlyReturn.Find("file") != -1 && !element.IsFolder) return;
+            if (explorer.Config.CanOnlyReturn.Find("files") != -1 && !element.IsFolder) return;
+            if (explorer.Config.CanOnlyReturn.Find("dir") != -1 && element.IsFolder) return;
+            if (explorer.Config.CanOnlyReturn.Find("directories") != -1 && element.IsFolder) return;
+            if (explorer.Config.CanOnlyReturn.Find("directory") != -1 && element.IsFolder) return;
             // Enforce file type filtering (if applicable)
             if (!element.IsFolder && explorer.Config.FileTypeMustBe.Length > 0) {
                 bool validType = false;
@@ -2266,7 +2266,7 @@ namespace FileExplorer {
         string _searchQuery = "",
         string[] _filters = array<string>(),
         string[] _fileTypeMustBe = array<string>(),
-        string _canOnlyReturn = ""
+        string[] _canOnlyReturn = array<string>()
     ) {
         Config config;
         config.MustReturn = _mustReturn;
