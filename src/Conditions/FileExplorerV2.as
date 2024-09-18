@@ -1662,11 +1662,11 @@ namespace FileExplorer {
                 UI::Separator();
 
                 if (UI::BeginMenu("Valid/Invalid File Colors")) {
+                    explorer.Config.ValidFileColor = UI::InputColor4("Valid File Color", explorer.Config.ValidFileColor);
                     if (UI::MenuItem("Valid File Color", "", false, true)) {
-                        explorer.Config.ValidFileColor = UI::InputColor4("Valid File Color", explorer.Config.ValidFileColor);
                     }
-                    if (UI::MenuItem("Invalid File Color", "", false, true)) {
                         explorer.Config.InvalidFileColor = UI::InputColor4("Invalid File Color", explorer.Config.InvalidFileColor);
+                    if (UI::MenuItem("Invalid File Color", "", false, true)) {
                     }
                     if (UI::MenuItem("Valid Folder Color", "", false, true)) {
                         explorer.Config.ValidFolderColor = UI::InputColor4("Valid Folder Color", explorer.Config.ValidFolderColor);
