@@ -3,38 +3,38 @@ namespace Server {
     const string HOSTNAME = "127.0.0.1";
 
     const string HTTP_BASE_URL = "http://" + HOSTNAME + ":" + PORT + "/";
-    const string serverDirectory = IO::FromStorageFolder("Server/");
+
+
+    const string serverDirectory = IO::FromUserGameFolder("Server/");
     
-    const string serverDirectoryAutoMove = IO::FromStorageFolder("Server/AutoMove/");
+    const string serverDirectoryAutoMove = IO::FromUserGameFolder("Server/AutoMove/");
     
-    const string savedFilesDirectory = IO::FromStorageFolder("Server/Saved/Files/");
-    const string savedJsonDirectory = IO::FromStorageFolder("Server/Saved/JsonData/");
+    const string savedFilesDirectory = IO::FromUserGameFolder("Server/Saved/Files/");
+    const string savedJsonDirectory = IO::FromUserGameFolder("Server/Saved/JsonData/");
     
-    const string currentMapRecords = IO::FromStorageFolder("Server/CurrentMapRecords/");
-    const string currentMapRecordsValidationReplay = IO::FromStorageFolder("Server/CurrentMapRecords/ValidationReplay/");
-    const string currentMapRecordsGPS = IO::FromStorageFolder("Server/CurrentMapRecords/GPS/");
-    const string currentMapRecordsChampionMedal = IO::FromStorageFolder("Server/CurrentMapRecords/ChampionMedal/");
+    const string currentMapRecords = IO::FromUserGameFolder("Server/CurrentMapRecords/");
+    const string currentMapRecordsValidationReplay = IO::FromUserGameFolder("Server/CurrentMapRecords/ValidationReplay/");
+    const string currentMapRecordsGPS = IO::FromUserGameFolder("Server/CurrentMapRecords/GPS/");
+    const string currentMapRecordsChampionMedal = IO::FromUserGameFolder("Server/CurrentMapRecords/ChampionMedal/");
 
-    const string serverDirectoryMedal = IO::FromStorageFolder("Server/Medal/");
+    const string serverDirectoryMedal = IO::FromUserGameFolder("Server/Medal/");
 
-    const string specificDownloaded = IO::FromStorageFolder("Server/Downloaded/");
-    const string specificDownloadedFilesDirectory = IO::FromStorageFolder("Server/Downloaded/Files/");
-    const string specificDownloadedJsonFilesDirectory = IO::FromStorageFolder("Server/Downloaded/JsonData/");
-    const string specificDownloadedCreatedProfilesDirectory = IO::FromStorageFolder("Server/Downloaded/CreatedProfiles/");
+    const string specificDownloaded = IO::FromUserGameFolder("Server/Downloaded/");
+    const string specificDownloadedFilesDirectory = IO::FromUserGameFolder("Server/Downloaded/Files/");
+    const string specificDownloadedJsonFilesDirectory = IO::FromUserGameFolder("Server/Downloaded/JsonData/");
+    const string specificDownloadedCreatedProfilesDirectory = IO::FromUserGameFolder("Server/Downloaded/CreatedProfiles/");
 
-    const string linksDirectory = IO::FromStorageFolder("Server/Links/");
-    const string linksFilesDirectory = IO::FromStorageFolder("Server/Links/Files/");
+    const string linksDirectory = IO::FromUserGameFolder("Server/Links/");
+    const string linksFilesDirectory = IO::FromUserGameFolder("Server/Links/Files/");
 
-    const string officialFilesDirectory = IO::FromStorageFolder("Server/Official/Files/");
-    const string officialInfoFilesDirectory = IO::FromStorageFolder("Server/Official/Info/");
-    const string officialJsonFilesDirectory = IO::FromStorageFolder("Server/Official/JsonData/");
+    const string officialFilesDirectory = IO::FromUserGameFolder("Server/Official/Files/");
+    const string officialInfoFilesDirectory = IO::FromUserGameFolder("Server/Official/Info/");
+    const string officialJsonFilesDirectory = IO::FromUserGameFolder("Server/Official/JsonData/");
 
     const string replayARL = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/");
     const string replayARLTmp = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Tmp/");
     const string replayARLDummy = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Dummy/");
     const string replayARLAutoMove = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/AutoMove/");
-
-
 
 
     HttpServer@ server = null;
@@ -67,7 +67,7 @@ namespace Server {
         try {
             auto key = Net::UrlDecode(route.Replace("/get_ghost/", ""));
             log('loading ghost: ' + key, LogLevel::Info, 69, "StartHttpServer");
-            string filePath = serverDirectoryAutoMove + key;
+            string filePath = serverDirectory + key;
             if (!IO::FileExists(filePath)) return _404_Response;
             auto buf = _IO::File::ReadFileToEnd(filePath);
             log('got buf: ' + buf.Length, LogLevel::Info, 73, "StartHttpServer");

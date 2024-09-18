@@ -137,7 +137,7 @@ namespace OtherManager {
                 UpdateBlockedGamemodes(manifest);
                 SetStoredVersion(version);
             } else {
-                log("No new version available.", LogLevel::Info, 138, "ParseManifest");
+                log("No new version available.", LogLevel::Info, 140, "ParseManifest");
             }
         }
 
@@ -154,7 +154,7 @@ namespace OtherManager {
                 string path = Server::specificDownloadedJsonFilesDirectory + filename;
 
                 if (shouldDownloadFilesIfTheyAreAleadyDownloaded || !IO::FileExists(path)) {
-                    log("Downloading: " + filename, LogLevel::Info, 167, "DownloadFiles");
+                    log("Downloading: " + filename, LogLevel::Info, 157, "DownloadFiles");
 
                     _Net::DownloadFileToDestination(url, path, "other", Path::GetFileName(filename));
                 }
@@ -170,9 +170,9 @@ namespace OtherManager {
                     GameModeBlackList.InsertLast(blockedList[i]);
                 }
 
-                log("Blocked gamemodes updated.", LogLevel::Info, 190, "UpdateBlockedGamemodes");
+                log("Blocked gamemodes updated.", LogLevel::Info, 173, "UpdateBlockedGamemodes");
             } else {
-                log("No blocked gamemodes in manifest.", LogLevel::Info, 193, "UpdateBlockedGamemodes");
+                log("No blocked gamemodes in manifest.", LogLevel::Info, 175, "UpdateBlockedGamemodes");
             }
         }
 

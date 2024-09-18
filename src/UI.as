@@ -20,31 +20,31 @@ void RenderInterface() {
                 RenderTab_LocalFiles();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Users + Icons::Info + "Current Loaded Records")) {
+            if (UI::BeginTabItem(Icons::Users + Icons::Info + " Loaded")) {
                 RenderTab_CurrentLoadedRecords();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Users + " " + Icons::Kenney::Save + " Saved Records")) {
+            if (UI::BeginTabItem(Icons::Users + " " + Icons::Kenney::Save + " Saved")) {
                 RenderTab_SavedGhostsAndReplays();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Users + " " + Icons::Link + " Load record from link")) {
+            if (UI::BeginTabItem(Icons::Users + " " + Icons::Link + " Link")) {
                 RenderTab_Link();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Users + " " + Icons::Download + " Load record from other")) {
+            if (UI::BeginTabItem(Icons::Users + " " + Icons::Download + " Predetermined Set")) {
                 RenderTab_OtherSpecificUIDs();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Map + " " + Icons::Download + " Load record from any Map")) {
+            if (UI::BeginTabItem(Icons::Map + " " + Icons::Download + " Any Map")) {
                 RenderTab_LoadGhostFromMap();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Map + " " + Icons::Globe + " Official Maps")) {
+            if (UI::BeginTabItem(Icons::Map + " " + Icons::Globe + " Official")) {
                 RenderTab_OfficialMaps();
                 UI::EndTabItem();
             }
-            if (UI::BeginTabItem(Icons::Map + " Current Map Ghost")) {
+            if (UI::BeginTabItem(Icons::Map + " Current Map")) {
                 RenderTab_CurrentMapGhost();
                 UI::EndTabItem();
             }
@@ -402,6 +402,10 @@ void RenderTab_LoadGhostFromMap() {
 
     if (UI::Button("Set MapUID to current map")) {
         mapUID = get_CurrentMap();
+    }
+    UI::SameLine();
+    if (UI::Button("Set Ghost Position to top 1")) {
+        ghostPosition = "0";
     }
 
     mapUID = UI::InputText("Map UID", mapUID);
