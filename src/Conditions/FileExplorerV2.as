@@ -135,6 +135,8 @@
         - Add a starting ID to each opened instance of the file explorer window, so that multiple 
           instances can be opened at the same time by different plugins (or the same plugin for that matter)
 
+        - Remove support for fileTypeMustBe, CanOnlyReturn is better in every way
+
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
@@ -178,9 +180,9 @@ namespace FileExplorer {
         int SearchBarPadding = 0;
 
         vec4 ValidFileColor = vec4(1, 1, 1, 1);     // Default: White
-        vec4 InvalidFileColor = vec4(1, 0, 0, 1);   // Default: Red
+        vec4 InvalidFileColor = vec4(1, 1, 1, 0.4);   // Default: Gray
         vec4 ValidFolderColor = vec4(1, 1, 1, 1);   // Default: White
-        vec4 InvalidFolderColor = vec4(1, 0, 0, 1); // Default: Red
+        vec4 InvalidFolderColor = vec4(1, 1, 1, 0.4); // Default: Gray
 
         SortingCriteria SortingCriteria = SortingCriteria::Name;
         bool SortingAscending = true;
@@ -464,12 +466,15 @@ namespace FileExplorer {
         // }
     }
 
+
+    // Element info is set in "GetElementInfo" in the FE class
     class ElementInfo {
         string Name;
         string Path;
         string Size;
         int64 SizeBytes;
         string Type;
+        string GbxType;
         int64 LastModifiedDate;
         int64 CreationDate;
         bool IsFolder;
@@ -487,6 +492,7 @@ namespace FileExplorer {
                 const string &in _size, 
                 int64 _sizeBytes, 
                 const string &in _type, 
+                const string &in _gbxType,
                 int64 _lastModifiedDate, 
                 int64 _creationDate, 
                 bool _isFolder, 
@@ -496,6 +502,7 @@ namespace FileExplorer {
             this.Size = _size;
             this.SizeBytes = _sizeBytes;
             this.Type = _type;
+            this.GbxType = _gbxType;
             this.LastModifiedDate = _lastModifiedDate;
             this.CreationDate = _creationDate;
             this.IsFolder = _isFolder;
@@ -814,10 +821,13 @@ namespace FileExplorer {
                     for (uint j = 0; j < Config.Filters.Length; j++) {
                         string filter = Config.Filters[j];
                         if (Config.IsFilterActive(filter)) {
-                            if (element.Type.ToLower() == filter.ToLower()) {
+
+                            string elementGbxType = element.GbxType;
+                            
+                            if (elementGbxType.ToLower() == filter.ToLower()) {
                                 found = true;
                                 break;
-                            } else if (filter.ToLower() == "replay" && element.Path.ToLower().Contains(".replay.gbx")) {
+                            } else if (filter.ToLower() == elementGbxType.ToLower()) {
                                 found = true;
                                 break;
                             }
@@ -1100,6 +1110,23 @@ namespace FileExplorer {
             if (str == "Date Created") return SortingCriteria::CreatedDate;
             return SortingCriteria::Name;
         }
+
+        string GetGbxFileType(const string &in path) {
+            string ext = Path::GetExtension(path).SubStr(1).ToLower();
+            if (ext == "gbx") {
+                string fileName = Path::GetFileName(path);
+                
+                string trimmedPath = fileName;
+                int index = trimmedPath.LastIndexOf(".");
+                trimmedPath = trimmedPath.SubStr(0, index);
+                int index2 = trimmedPath.LastIndexOf(".");
+
+                string gbxFileType = trimmedPath.SubStr(index2 + 1);
+
+                return gbxFileType;
+            }
+            return "";
+        }
     }
 
     class FileExplorer {
@@ -1165,12 +1192,13 @@ namespace FileExplorer {
             bool isFolder = explorer.utils.IsDirectory(path);
             string name = isFolder ? explorer.utils.GetDirectoryName(path) : Path::GetFileName(path);
             string type = isFolder ? "folder" : Path::GetExtension(path).SubStr(1);
+            string gbxType = isFolder ? "" : explorer.utils.GetGbxFileType(path);
             string size = isFolder ? "-" : ConvertFileSizeToString(IO::FileSize(path));
             int64 sizeBytes = IO::FileSize(path);
             int64 lastModified = IO::FileModifiedTime(path);
             int64 creationDate = IO::FileCreatedTime(path);
             Icon icon = GetElementIcon(isFolder, type);
-            ElementInfo@ elementInfo = ElementInfo(name, path, size, sizeBytes, type, lastModified, creationDate, isFolder, icon, false);
+            ElementInfo@ elementInfo = ElementInfo(name, path, size, sizeBytes, type, gbxType, lastModified, creationDate, isFolder, icon, false);
 
             if (type.ToLower() == "gbx") {
                 startnew(CoroutineFuncUserdata(ReadGbxMetadataCoroutine), elementInfo);
@@ -2538,9 +2566,9 @@ void OpenFileExplorerExample() {
         vec2(1, -1), // _minmaxReturnAmount
         IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
         "", // searchQuery
-        { "replay" }, // filters
+        { "replay", "ghost" }, // filters
         { "replay" }, // fileTypeMustBe
-        { "files" } // canOnlyReturn
+        { "dir" } // canOnlyReturn
     );
 }
 
