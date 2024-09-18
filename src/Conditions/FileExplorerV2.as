@@ -1662,18 +1662,15 @@ namespace FileExplorer {
                 UI::Separator();
 
                 if (UI::BeginMenu("Valid/Invalid File Colors")) {
-                    explorer.Config.ValidFileColor = UI::InputColor4("Valid File Color", explorer.Config.ValidFileColor);
-                    if (UI::MenuItem("Valid File Color", "", false, true)) {
-                    }
-                        explorer.Config.InvalidFileColor = UI::InputColor4("Invalid File Color", explorer.Config.InvalidFileColor);
-                    if (UI::MenuItem("Invalid File Color", "", false, true)) {
-                    }
-                    if (UI::MenuItem("Valid Folder Color", "", false, true)) {
-                        explorer.Config.ValidFolderColor = UI::InputColor4("Valid Folder Color", explorer.Config.ValidFolderColor);
-                    }
-                    if (UI::MenuItem("Invalid Folder Color", "", false, true)) {
-                        explorer.Config.InvalidFolderColor = UI::InputColor4("Invalid Folder Color", explorer.Config.InvalidFolderColor);
-                    }
+                    UI::Text("Valid File Color");
+                    explorer.Config.ValidFileColor = UI::InputColor4("##", explorer.Config.ValidFileColor);
+                    UI::Text("Invalid File Color");
+                    explorer.Config.InvalidFileColor = UI::InputColor4("##", explorer.Config.InvalidFileColor);
+                    UI::Text("Valid Folder Color");
+                    explorer.Config.ValidFolderColor = UI::InputColor4("##", explorer.Config.ValidFolderColor);
+                    UI::Text("Invalid Folder Color");
+                    explorer.Config.InvalidFolderColor = UI::InputColor4("##", explorer.Config.InvalidFolderColor);
+
                     UI::EndMenu();
                 }
 
@@ -2081,10 +2078,15 @@ namespace FileExplorer {
 
             bool isValid = true;
             if (!element.IsFolder) {
-                isValid = explorer.Config.FileTypeMustBe.Find(element.Type.ToLower()) >= 0;
+                isValid = explorer.Config.FileTypeMustBe.Find("file") >= 0 ||
+                          explorer.Config.FileTypeMustBe.Find("files") >= 0;
             }
             if (element.IsFolder) {
-                isValid = explorer.Config.CanOnlyReturn.Find("dir") >= 0 || explorer.Config.CanOnlyReturn.Find("directory") >= 0;
+                isValid = explorer.Config.CanOnlyReturn.Find("folder") >= 0 ||
+                          explorer.Config.CanOnlyReturn.Find("folders") >= 0 ||
+                          explorer.Config.CanOnlyReturn.Find("dir") >= 0 || 
+                          explorer.Config.CanOnlyReturn.Find("directories") >= 0 ||
+                          explorer.Config.CanOnlyReturn.Find("directory") >= 0;
             }
 
             vec4 textColor = element.IsFolder
