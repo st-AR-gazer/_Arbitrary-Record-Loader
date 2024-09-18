@@ -1674,9 +1674,8 @@ namespace FileExplorer {
                     if (UI::MenuItem("Invalid Folder Color", "", false, true)) {
                         explorer.Config.InvalidFolderColor = UI::InputColor4("Invalid Folder Color", explorer.Config.InvalidFolderColor);
                     }
+                    UI::EndMenu();
                 }
-                UI::End();
-
 
                 explorer.Config.SaveSettings();
 
