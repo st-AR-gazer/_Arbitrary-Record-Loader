@@ -71,14 +71,16 @@ void RenderTab_LocalFiles() {
     if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
         FileExplorer::fe_Start(
             true,
+            "Local Files",
             vec2(1, -1),
             IO::FromUserGameFolder("Replays/"),
             "",
             { "replay", "ghost" }
         );
     }
-    if (FileExplorer::explorer !is null && FileExplorer::explorer.exports.IsSelectionComplete()) {
-        array<string> paths = FileExplorer::explorer.exports.GetSelectedPaths();
+    auto explorer = FileExplorer::GetExplorerById("Local Files");
+    if (explorer !is null && explorer.exports.IsSelectionComplete()) {
+        array<string> paths = explorer.exports.GetSelectedPaths();
         selectedFiles = paths;
     }
 
