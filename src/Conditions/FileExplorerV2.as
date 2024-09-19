@@ -13,7 +13,7 @@
 //
 //   Made for use in Trackmania Plugins using Openplanet and AngelScript
 
-// Required Openplanet version 1.26.31
+// Required Openplanet version 1.26.32
 
 /** 
  * IMPORTANT:
@@ -148,8 +148,6 @@
 
         - Add a starting ID to each opened instance of the file explorer window, so that multiple 
           instances can be opened at the same time by different plugins (or the same plugin for that matter)
-
-        - You should not be able to select elements if canOnlyReturn is set to 'folders'(or equivalent) and the element is a file
 
         - Add a 'reset settings' button to the burger menu
 
@@ -393,6 +391,9 @@ namespace FileExplorer {
             return explorerSettings;
         }
 
+        void ResetSettings() {
+            IO::Delete(settingsFilePath);
+        }
 
         void ToggleColumnVisibility(const string &in columnName) {
             if (columnsToShow.Exists(columnName)) {
@@ -1798,6 +1799,14 @@ namespace FileExplorer {
                     UI::Text("Invalid Folder Color");
                     explorer.Config.invalidFolderColor = UI::InputColor4("##", explorer.Config.invalidFolderColor);
 
+                    UI::EndMenu();
+                }
+
+                if (UI::BeginMenu("Reset Settings")) {
+                    if (UI::MenuItem("Reset All Settings")) {
+                        explorer.Config.ResetSettings();
+                        explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+                    }
                     UI::EndMenu();
                 }
 
