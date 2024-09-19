@@ -2202,8 +2202,8 @@ namespace FileExplorer {
                 HandleElementSelection(element, EnterType::LeftClick, contextType);
             } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Right)) {
                 HandleElementSelection(element, EnterType::RightClick, contextType);
-            } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left)) {
-                HandleElementSelection(element, EnterType::LeftClick, contextType);
+            } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && UI::IsKeyDown(UI::Key::Control)) {
+                HandleElementSelection(element, EnterType::ControlClick, contextType);
             }
         }
 
