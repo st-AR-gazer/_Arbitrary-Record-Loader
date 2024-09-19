@@ -2216,6 +2216,17 @@ namespace FileExplorer {
 
             // Handle right- and control-click (context menu)
             if (enterType == EnterType::RightClick || enterType == EnterType::ControlClick) {
+                // Set as normal click first (to fix selection issues), then right click
+                if (contextType == ContextType::mainArea) {
+                    for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
+                        explorer.tab[0].Elements[i].isSelected = false;
+                    }
+                    element.isSelected = true;
+                    element.lastSelectedTime = currentTime;
+                    element.lastClickTime = currentTime;
+                    @explorer.CurrentSelectedElement = element;
+                }
+
                 openContextMenu = true;
                 currentContextType = contextType;
                 @explorer.CurrentSelectedElement = element;
