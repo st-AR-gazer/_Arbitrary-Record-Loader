@@ -60,7 +60,7 @@ namespace AllowCheck {
 
             if (IsBlacklisted(mode)) {
                 NotifyWarn("Loading records on the current map is disabled due to playing in the blacklisted mode: '" + mode + "'");
-                log("Map loading disabled due to blacklisted mode: " + mode + "'", LogLevel::Warn, 48, "OnMapLoad");
+                log("Map loading disabled due to blacklisted mode: " + mode + "'", LogLevel::Warn, 63, "OnMapLoad");
                 vAllowdToLoadRecords = false;
                 return;
             }
@@ -135,22 +135,22 @@ namespace AllowCheck {
 
             switch (setting) {
                 case MapperSetting::Hide:
-                    log("Map loading disabled due to ARL Hide setting.", LogLevel::Warn, 123, "OnMapLoad");
+                    log("Map loading disabled due to ARL Hide setting.", LogLevel::Warn, 138, "OnMapLoad");
                     MapCommentCheck = false;
                     return;
                 
                 case MapperSetting::HideUCI:
-                    log("Map loading disabled due to UCI Hide setting.", LogLevel::Warn, 128, "OnMapLoad");
+                    log("Map loading disabled due to UCI Hide setting.", LogLevel::Warn, 143, "OnMapLoad");
                     MapCommentCheck = false;
                     return;
 
                 case MapperSetting::Order:
-                    log("Map loaded with UCI Order setting.", LogLevel::Info, 133, "OnMapLoad");
+                    log("Map loaded with UCI Order setting.", LogLevel::Info, 148, "OnMapLoad");
                     MapCommentCheck = true;
                     break;
 
                 case MapperSetting::Xdd:
-                    log("Map loaded with UCI Xdd setting.", LogLevel::Info, 138, "OnMapLoad");
+                    log("Map loaded with UCI Xdd setting.", LogLevel::Info, 153, "OnMapLoad");
                     MapCommentCheck = true;
                     break;
 

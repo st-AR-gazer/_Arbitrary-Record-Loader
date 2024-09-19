@@ -1,5 +1,19 @@
-// :Yayy: FileExplorerV2 go brrrrr
-// Required version 1.26.31
+//    ______ _ _         _____              _
+//   |  ___(_) |        |  ___|            | |
+//   | |_   _| | ___    | |____  ___ _____ | | ___  _ __  ___  _ __ 
+//   |  _| | | |/ _ \   |  __\ \/ / | ___ \| |/ _ \| '__|/ _ \| '__|
+//   | |   | | |  __/   | |___>  <| | |_/ /| | (_) | |  |  __/| | 
+//   \_|   |_|_|\___|   \____/_/\_\_| ___/ |_|\___/|_|   \___||_|
+//                                  | |
+//                                  |_|
+//                                                                     
+//   FILE EXPLORER for AngelScript
+//   Version 0.1.0
+//   https://github.com/st-AR-gazer/_file-explorer
+//
+//   Made for use in Trackmania Plugins using Openplanet and AngelScript
+
+// Required Openplanet version 1.26.31
 
 /** 
  * IMPORTANT:
@@ -155,56 +169,56 @@ namespace FileExplorer {
     const int FILE_EXPLORER_SETTINGS_VERSION = 1;
     
     class Config {
-        bool MustReturn;
-        vec2 MinMaxReturnAmount;
-        array<string> FileTypeMustBe;
-        array<string> CanOnlyReturn;
+        bool mustReturn;
+        vec2 minMaxReturnAmount;
+        array<string> fileTypeMustBe;
+        array<string> canOnlyReturn;
 
-        string Path;
-        string SearchQuery;
-        array<string> Filters;
-        dictionary ActiveFilters;
-        array<string> SelectedPaths;
-        array<string> PinnedElements;
+        string path;
+        string searchQuery;
+        array<string> filters;
+        dictionary activeFilters;
+        array<string> selectedPaths;
+        array<string> pinnedElements;
 
         // UI-related settings
-        bool HideFiles = false;
-        bool HideFolders = false;
-        bool EnablePagination = false;
-        bool UseExtraWarningWhenDeleting = true;
-        bool RecursiveSearch = false;
-        int MaxElementsPerPage = 30;
-        dictionary ColumnsToShow;
-        int FileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
-        bool EnableSearchBar = true;
-        int SearchBarPadding = 0;
+        bool hideFiles = false;
+        bool hideFolders = false;
+        bool enablePagination = false;
+        bool useExtraWarningWhenDeleting = true;
+        bool recursiveSearch = false;
+        int maxElementsPerPage = 30;
+        dictionary columnsToShow;
+        int fileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
+        bool enableSearchBar = true;
+        int searchBarPadding = 0;
 
-        vec4 ValidFileColor = vec4(1, 1, 1, 1);     // Default: White
-        vec4 InvalidFileColor = vec4(1, 1, 1, 0.4);   // Default: Gray
-        vec4 ValidFolderColor = vec4(1, 1, 1, 1);   // Default: White
-        vec4 InvalidFolderColor = vec4(1, 1, 1, 0.4); // Default: Gray
+        vec4 validFileColor = vec4(1, 1, 1, 1);     // Default: White
+        vec4 invalidFileColor = vec4(1, 1, 1, 0.4);   // Default: Gray
+        vec4 validFolderColor = vec4(1, 1, 1, 1);   // Default: White
+        vec4 invalidFolderColor = vec4(1, 1, 1, 0.4); // Default: Gray
 
-        SortingCriteria SortingCriteria = SortingCriteria::Name;
-        bool SortingAscending = true;
-        bool SortFilesBeforeFolders = false;
+        SortingCriteria sortingCriteria = SortingCriteria::Name;
+        bool sortingAscending = true;
+        bool sortFilesBeforeFolders = false;
 
         /*const*/ string settingsDirectory = IO::FromDataFolder("Plugin_FileExplorer_Settings");
         /*const*/ string settingsFilePath = Path::Join(settingsDirectory, "FileExplorerSettings.json");
 
         Config() {
-            MustReturn = false;
-            Path = "";
-            SearchQuery = "";
-            Filters = array<string>();
-            SelectedPaths = array<string>();
-            PinnedElements = array<string>();
+            mustReturn = false;
+            path = "";
+            searchQuery = "";
+            filters = array<string>();
+            selectedPaths = array<string>();
+            pinnedElements = array<string>();
 
-            ColumnsToShow.Set("ico", true);
-            ColumnsToShow.Set("name", true);
-            ColumnsToShow.Set("type", true);
-            ColumnsToShow.Set("size", true);
-            ColumnsToShow.Set("lastModified", true);
-            ColumnsToShow.Set("createdDate", true);
+            columnsToShow.Set("ico", true);
+            columnsToShow.Set("name", true);
+            columnsToShow.Set("type", true);
+            columnsToShow.Set("size", true);
+            columnsToShow.Set("lastModified", true);
+            columnsToShow.Set("createdDate", true);
         }
 
         void LoadSettings() {
@@ -227,65 +241,65 @@ namespace FileExplorer {
 
                         if (explorerSettings.HasKey("PinnedElements")) {
                             Json::Value pins = explorerSettings["PinnedElements"];
-                            PinnedElements.Resize(pins.Length);
+                            pinnedElements.Resize(pins.Length);
                             for (uint i = 0; i < pins.Length; i++) {
-                                PinnedElements[i] = pins[i];
+                                pinnedElements[i] = pins[i];
                             }
                         }
                         if (explorerSettings.HasKey("HideFiles")) {
-                            HideFiles = explorerSettings["HideFiles"];
+                            hideFiles = explorerSettings["HideFiles"];
                         }
                         if (explorerSettings.HasKey("HideFolders")) {
-                            HideFolders = explorerSettings["HideFolders"];
+                            hideFolders = explorerSettings["HideFolders"];
                         }
                         if (explorerSettings.HasKey("EnablePagination")) {
-                            EnablePagination = explorerSettings["EnablePagination"];
+                            enablePagination = explorerSettings["EnablePagination"];
                         }
                         if (explorerSettings.HasKey("UseExtraWarningWhenDeleting")) {
-                            UseExtraWarningWhenDeleting = explorerSettings["UseExtraWarningWhenDeleting"];
+                            useExtraWarningWhenDeleting = explorerSettings["UseExtraWarningWhenDeleting"];
                         }
                         if (explorerSettings.HasKey("RecursiveSearch")) {
-                            RecursiveSearch = explorerSettings["RecursiveSearch"];
+                            recursiveSearch = explorerSettings["RecursiveSearch"];
                         }
                         if (explorerSettings.HasKey("FileNameDisplayOption")) {
-                            FileNameDisplayOption = explorerSettings["FileNameDisplayOption"];
+                            fileNameDisplayOption = explorerSettings["FileNameDisplayOption"];
                         }
                         if (explorerSettings.HasKey("ColumnsToShow")) {
                             Json::Value cols = explorerSettings["ColumnsToShow"];
                             for (uint i = 0; i < cols.GetKeys().Length; i++) {
                                 string col = cols.GetKeys()[i];
-                                ColumnsToShow.Set(col, bool(cols[col]));
+                                columnsToShow.Set(col, bool(cols[col]));
                             }
                         }
                         if (explorerSettings.HasKey("MaxElementsPerPage")) {
-                            MaxElementsPerPage = explorerSettings["MaxElementsPerPage"];
+                            maxElementsPerPage = explorerSettings["MaxElementsPerPage"];
                         }
                         if (explorerSettings.HasKey("SearchBarPadding")) {
-                            SearchBarPadding = explorerSettings["SearchBarPadding"];
+                            searchBarPadding = explorerSettings["SearchBarPadding"];
                         }
                         if (explorerSettings.HasKey("EnableSearchBar")) {
-                            EnableSearchBar = explorerSettings["EnableSearchBar"];
+                            enableSearchBar = explorerSettings["EnableSearchBar"];
                         }
                         if (explorerSettings.HasKey("SortingCriteria")) {
-                            SortingCriteria = explorer.utils.StringToSortingCriteria(explorerSettings["SortingCriteria"]);
+                            sortingCriteria = explorer.utils.StringToSortingCriteria(explorerSettings["SortingCriteria"]);
                         }
                         if (explorerSettings.HasKey("SortingAscending")) {
-                            SortingAscending = explorerSettings["SortingAscending"];
+                            sortingAscending = explorerSettings["SortingAscending"];
                         }
                         if (explorerSettings.HasKey("SortFilesBeforeFolders")) {
-                            SortFilesBeforeFolders = explorerSettings["SortFilesBeforeFolders"];
+                            sortFilesBeforeFolders = explorerSettings["SortFilesBeforeFolders"];
                         }
                         if (explorerSettings.HasKey("ValidFileColor")) {
-                            ValidFileColor = StringToVec4(explorerSettings["ValidFileColor"]);
+                            validFileColor = StringToVec4(explorerSettings["ValidFileColor"]);
                         }
                         if (explorerSettings.HasKey("InvalidFileColor")) {
-                            InvalidFileColor = StringToVec4(explorerSettings["InvalidFileColor"]);
+                            invalidFileColor = StringToVec4(explorerSettings["InvalidFileColor"]);
                         }
                         if (explorerSettings.HasKey("ValidFolderColor")) {
-                            ValidFolderColor = StringToVec4(explorerSettings["ValidFolderColor"]);
+                            validFolderColor = StringToVec4(explorerSettings["ValidFolderColor"]);
                         }
                         if (explorerSettings.HasKey("InvalidFolderColor")) {
-                            InvalidFolderColor = StringToVec4(explorerSettings["InvalidFolderColor"]);
+                            invalidFolderColor = StringToVec4(explorerSettings["InvalidFolderColor"]);
                         }
                         
                         break;
@@ -293,7 +307,7 @@ namespace FileExplorer {
                 }
 
                 if (!foundVersion) {
-                    log("Settings version mismatch or not found. Settings cannot be loaded.", LogLevel::Error, 156, "LoadSettings");
+                    log("Settings version mismatch or not found. Settings cannot be loaded.", LogLevel::Error, 310, "LoadSettings");
                 }
             }
         }
@@ -330,62 +344,62 @@ namespace FileExplorer {
 
             explorer.utils.WriteFile(settingsFilePath, Json::Write(settings));
 
-            // log("Settings saved to: " + settingsFilePath, LogLevel::Info, 276, "SaveSettings");
+            // log("Settings saved to: " + settingsFilePath, LogLevel::Info, 347, "SaveSettings");
         }
 
         Json::Value GetCurrentSettings() {
             Json::Value explorerSettings = Json::Object();
 
             Json::Value pins = Json::Array();
-            for (uint i = 0; i < PinnedElements.Length; i++) {
-                pins.Add(PinnedElements[i]);
+            for (uint i = 0; i < pinnedElements.Length; i++) {
+                pins.Add(pinnedElements[i]);
             }
             explorerSettings["PinnedElements"] = pins;
 
-            explorerSettings["HideFiles"] = HideFiles;
-            explorerSettings["HideFolders"] = HideFolders;
-            explorerSettings["EnablePagination"] = EnablePagination;
-            explorerSettings["UseExtraWarningWhenDeleting"] = UseExtraWarningWhenDeleting;
-            explorerSettings["RecursiveSearch"] = RecursiveSearch;
-            explorerSettings["FileNameDisplayOption"] = FileNameDisplayOption;
+            explorerSettings["HideFiles"] = hideFiles;
+            explorerSettings["HideFolders"] = hideFolders;
+            explorerSettings["EnablePagination"] = enablePagination;
+            explorerSettings["UseExtraWarningWhenDeleting"] = useExtraWarningWhenDeleting;
+            explorerSettings["RecursiveSearch"] = recursiveSearch;
+            explorerSettings["FileNameDisplayOption"] = fileNameDisplayOption;
 
             Json::Value cols = Json::Object();
-            array<string> colKeys = ColumnsToShow.GetKeys();
+            array<string> colKeys = columnsToShow.GetKeys();
             for (uint i = 0; i < colKeys.Length; i++) {
                 string col = colKeys[i];
                 bool value = false;
-                ColumnsToShow.Get(col, value);
+                columnsToShow.Get(col, value);
                 cols[col] = value;
             }
             explorerSettings["ColumnsToShow"] = cols;
-            explorerSettings["MaxElementsPerPage"] = MaxElementsPerPage;
-            explorerSettings["SearchBarPadding"] = SearchBarPadding;
-            explorerSettings["EnableSearchBar"] = EnableSearchBar;
-            explorerSettings["SortingCriteria"] = explorer.utils.SortingCriteriaToString(SortingCriteria);
-            explorerSettings["SortingAscending"] = SortingAscending;
-            explorerSettings["SortFilesBeforeFolders"] = SortFilesBeforeFolders;
+            explorerSettings["MaxElementsPerPage"] = maxElementsPerPage;
+            explorerSettings["SearchBarPadding"] = searchBarPadding;
+            explorerSettings["EnableSearchBar"] = enableSearchBar;
+            explorerSettings["SortingCriteria"] = explorer.utils.SortingCriteriaToString(sortingCriteria);
+            explorerSettings["SortingAscending"] = sortingAscending;
+            explorerSettings["SortFilesBeforeFolders"] = sortFilesBeforeFolders;
 
-            explorerSettings["ValidFileColor"] = Vec4ToString(ValidFileColor);
-            explorerSettings["InvalidFileColor"] = Vec4ToString(InvalidFileColor);
-            explorerSettings["ValidFolderColor"] = Vec4ToString(ValidFolderColor);
-            explorerSettings["InvalidFolderColor"] = Vec4ToString(InvalidFolderColor);
+            explorerSettings["ValidFileColor"] = Vec4ToString(validFileColor);
+            explorerSettings["InvalidFileColor"] = Vec4ToString(invalidFileColor);
+            explorerSettings["ValidFolderColor"] = Vec4ToString(validFolderColor);
+            explorerSettings["InvalidFolderColor"] = Vec4ToString(invalidFolderColor);
 
             return explorerSettings;
         }
 
 
         void ToggleColumnVisibility(const string &in columnName) {
-            if (ColumnsToShow.Exists(columnName)) {
+            if (columnsToShow.Exists(columnName)) {
                 bool isVisible;
-                ColumnsToShow.Get(columnName, isVisible);
-                ColumnsToShow.Set(columnName, !isVisible);
+                columnsToShow.Get(columnName, isVisible);
+                columnsToShow.Set(columnName, !isVisible);
             }
         }
 
         bool IsColumnVisible(const string &in columnName) const {
-            if (ColumnsToShow.Exists(columnName)) {
+            if (columnsToShow.Exists(columnName)) {
                 bool isVisible;
-                ColumnsToShow.Get(columnName, isVisible);
+                columnsToShow.Get(columnName, isVisible);
                 return isVisible;
             }
             return false;
@@ -393,15 +407,15 @@ namespace FileExplorer {
 
         bool IsFilterActive(const string &in filter) const {
             bool isActive = true;
-            if (ActiveFilters.Exists(filter)) {
-                ActiveFilters.Get(filter, isActive);
+            if (activeFilters.Exists(filter)) {
+                activeFilters.Get(filter, isActive);
             }
             return isActive;
         }
 
         void ToggleFilterActive(const string &in filter) {
             bool isActive = IsFilterActive(filter);
-            ActiveFilters.Set(filter, !isActive);
+            activeFilters.Set(filter, !isActive);
         }
 
         string Vec4ToString(vec4 color) {
@@ -418,28 +432,28 @@ namespace FileExplorer {
     }
 
     enum SortingCriteria {
-        NameIgnoreFileFolder,
-        Name,
-        Size,
-        LastModified,
-        CreatedDate
+        nameIgnoreFileFolder,
+        name,
+        size,
+        lastModified,
+        createdDate
     }
 
-    enum Icon {
-        Folder,
-        FolderOpen,
-        File,
-        FileText,
-        FilePdf,
-        FileWord,
-        FileExcel,
-        FilePowerpoint,
-        FileImage,
-        FileArchive,
-        FileAudio,
-        FileVideo,
-        FileCode,
-        FileEpub
+    enum _Icon {
+        folder,
+        folderOpen,
+        file,
+        fileText,
+        filePdf,
+        fileWord,
+        fileExcel,
+        filePowerpoint,
+        fileImage,
+        fileArchive,
+        fileAudio,
+        fileVideo,
+        fileCode,
+        fileEpub
     }
 
     class Exports {
@@ -469,22 +483,22 @@ namespace FileExplorer {
 
     // Element info is set in "GetElementInfo" in the FE class
     class ElementInfo {
-        string Name;
-        string Path;
-        string Size;
-        int64 SizeBytes;
-        string Type;
-        string GbxType;
-        int64 LastModifiedDate;
-        int64 CreationDate;
-        bool IsFolder;
-        Icon Icon;
-        bool IsSelected;
-        uint64 LastSelectedTime;
-        dictionary GbxMetadata;
+        string name;
+        string path;
+        string size;
+        int64 sizeBytes;
+        string type;
+        string gbxType;
+        int64 lastModifiedDate;
+        int64 creationDate;
+        bool isFolder;
+        Icon icon;
+        bool isSelected;
+        uint64 lastSelectedTime;
+        dictionary gbxMetadata;
         bool shouldShow;
 
-        uint64 LastClickTime;
+        uint64 lastClickTime;
 
         ElementInfo(
                 const string &in _name, 
@@ -497,24 +511,24 @@ namespace FileExplorer {
                 int64 _creationDate, 
                 bool _isFolder, 
                 Icon _icon, bool _isSelected) {
-            this.Name = _name;
-            this.Path = _path;
-            this.Size = _size;
-            this.SizeBytes = _sizeBytes;
-            this.Type = _type;
-            this.GbxType = _gbxType;
-            this.LastModifiedDate = _lastModifiedDate;
-            this.CreationDate = _creationDate;
-            this.IsFolder = _isFolder;
-            this.Icon = _icon;
-            this.IsSelected = _isSelected;
-            this.LastSelectedTime = 0;
+            this.name = _name;
+            this.path = _path;
+            this.size = _size;
+            this.sizeBytes = _sizeBytes;
+            this.type = _type;
+            this.gbxType = _gbxType;
+            this.lastModifiedDate = _lastModifiedDate;
+            this.creationDate = _creationDate;
+            this.isFolder = _isFolder;
+            this.icon = _icon;
+            this.isSelected = _isSelected;
+            this.lastSelectedTime = 0;
             this.shouldShow = true;
-            this.LastClickTime = 0;
+            this.lastClickTime = 0;
         }
 
         void SetGbxMetadata(dictionary@ metadata) {
-            GbxMetadata = metadata;
+            gbxMetadata = metadata;
         }
     }
 
@@ -524,7 +538,7 @@ namespace FileExplorer {
 
         Navigation(FileExplorer@ fe) {
             @explorer = fe;
-            CurrentPath = fe.Config.Path;
+            CurrentPath = fe.Config.path;
         }
 
         void SetPath(const string &in path) {
@@ -541,7 +555,7 @@ namespace FileExplorer {
 
         void MoveUpOneDirectory() {
             string path = explorer.tab[0].Navigation.GetPath();
-            log("Current path before moving up: " + path, LogLevel::Info, 410, "MoveUpOneDirectory");
+            log("Current path before moving up: " + path, LogLevel::Info, 558, "MoveUpOneDirectory");
 
             UpdateHistory(path);
 
@@ -560,7 +574,7 @@ namespace FileExplorer {
                 path += "/";
             }
 
-            log("New path after moving up: " + path, LogLevel::Info, 429, "MoveUpOneDirectory");
+            log("New path after moving up: " + path, LogLevel::Info, 577, "MoveUpOneDirectory");
 
             explorer.tab[0].LoadDirectory(path);
         }
@@ -569,15 +583,15 @@ namespace FileExplorer {
             ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             // ElementInfo@ selectedElement = explorer.ui.GetSelectedElement();
 
-            if (selectedElement !is null && selectedElement.IsFolder) {
-                if (!selectedElement.Path.StartsWith(explorer.tab[0].Navigation.GetPath())) {
-                    log("Folder is not in the current folder, cannot move into it.", LogLevel::Warn, 440, "MoveIntoSelectedDirectory");
+            if (selectedElement !is null && selectedElement.isFolder) {
+                if (!selectedElement.path.StartsWith(explorer.tab[0].Navigation.GetPath())) {
+                    log("Folder is not in the current folder, cannot move into it.", LogLevel::Warn, 588, "MoveIntoSelectedDirectory");
                 } else {
-                    UpdateHistory(selectedElement.Path);
-                    explorer.tab[0].LoadDirectory(selectedElement.Path);
+                    UpdateHistory(selectedElement.path);
+                    explorer.tab[0].LoadDirectory(selectedElement.path);
                 }
             } else {
-                log("No folder selected or selected element is not a folder.", LogLevel::Warn, 446, "MoveIntoSelectedDirectory");
+                log("No folder selected or selected element is not a folder.", LogLevel::Warn, 594, "MoveIntoSelectedDirectory");
             }
         }
 
@@ -643,7 +657,7 @@ namespace FileExplorer {
             @explorer = fe;
             @Navigation = fe.nav;
             
-            LoadDirectory(Config.Path);
+            LoadDirectory(Config.path);
         }
 
         void LoadDirectory(const string &in path) {
@@ -672,15 +686,15 @@ namespace FileExplorer {
             tab.Elements.Resize(0);
             tab.explorer.IsIndexing = true;
             string startPath = tab.Navigation.GetPath();
-            bool recursive = tab.Config.RecursiveSearch;
-            log((recursive ? "Recursive " : "") + "Indexing started for path: " + startPath, LogLevel::Info, 542, "IndexFilesCoroutine");
+            bool recursive = tab.Config.recursiveSearch;
+            log((recursive ? "Recursive " : "") + "Indexing started for path: " + startPath, LogLevel::Info, 690, "IndexFilesCoroutine");
 
             // Incase I change my mind and want to add recursive search back in at a later date... (it's not fully working, so it's commented out for now, but I'm probably not gonna do anything with it... way too slow)
             // array<string> elements = recursive ? PerformRecursiveIndexing(tab, startPath) : tab.explorer.GetFiles(startPath, false);
             array<string> elements = tab.explorer.GetFiles(startPath, false);
 
             if (elements.Length == 0) {
-                log("No files found in directory: " + startPath, LogLevel::Info, 549, "IndexFilesCoroutine");
+                log("No files found in directory: " + startPath, LogLevel::Info, 697, "IndexFilesCoroutine");
             }
 
             const uint batchSize = 1000;
@@ -713,7 +727,7 @@ namespace FileExplorer {
             tab.ApplyVisibilitySettings();
             tab.explorer.IsIndexing = false;
 
-            log((recursive ? "Recursive " : "") + "Indexing completed. Number of elements: " + tab.Elements.Length, LogLevel::Info, 582, "IndexFilesCoroutine");
+            log((recursive ? "Recursive " : "") + "Indexing completed. Number of elements: " + tab.Elements.Length, LogLevel::Info, 730, "IndexFilesCoroutine");
 
             explorer.UpdateCurrentSelectedElement();
         }
@@ -748,14 +762,14 @@ namespace FileExplorer {
         // }
 
         void ApplyFiltersAndSearch() {
-            if (explorer.Config.RecursiveSearch) {
+            if (explorer.Config.recursiveSearch) {
                 ApplyRecursiveSearch();
             } else {
                 ApplyNonRecursiveSearch();
             }
 
             ApplyFilters();
-            if (explorer.Config.EnablePagination) {
+            if (explorer.Config.enablePagination) {
                 UpdatePagination();
             } else {
                 explorer.tab[0].TotalPages = 1;
@@ -768,7 +782,7 @@ namespace FileExplorer {
             Elements.Resize(0);
 
             for (uint i = 0; i < tempElements.Length; i++) {
-                if (Config.SearchQuery == "" || tempElements[i].Name.ToLower().Contains(Config.SearchQuery.ToLower())) {
+                if (Config.searchQuery == "" || tempElements[i].name.ToLower().Contains(Config.searchQuery.ToLower())) {
                     Elements.InsertLast(tempElements[i]);
                 }
             }
@@ -779,7 +793,7 @@ namespace FileExplorer {
             Elements.Resize(0);
 
             for (uint i = 0; i < tempElements.Length; i++) {
-                if (Config.SearchQuery == "" || tempElements[i].Name.ToLower().Contains(Config.SearchQuery.ToLower())) {
+                if (Config.searchQuery == "" || tempElements[i].name.ToLower().Contains(Config.searchQuery.ToLower())) {
                     Elements.InsertLast(tempElements[i]);
                 }
             }
@@ -793,8 +807,8 @@ namespace FileExplorer {
                 if (elementInfo !is null) {
                     elementList.InsertLast(elementInfo);
                 }
-                if (elementInfo.IsFolder) {
-                    array<ElementInfo@> subElements = LoadAllElementsRecursively(elementInfo.Path);
+                if (elementInfo.isFolder) {
+                    array<ElementInfo@> subElements = LoadAllElementsRecursively(elementInfo.path);
                     for (uint j = 0; j < subElements.Length; j++) {
                         elementList.InsertLast(subElements[j]);
                     }
@@ -805,8 +819,8 @@ namespace FileExplorer {
 
         void ApplyFilters() {
             bool anyActiveFilters = false;
-            for (uint i = 0; i < Config.Filters.Length; i++) {
-                if (Config.IsFilterActive(Config.Filters[i])) {
+            for (uint i = 0; i < Config.filters.Length; i++) {
+                if (Config.IsFilterActive(Config.filters[i])) {
                     anyActiveFilters = true;
                     break;
                 }
@@ -816,13 +830,13 @@ namespace FileExplorer {
                 ElementInfo@ element = Elements[i];
                 element.shouldShow = true;
 
-                if (anyActiveFilters && !element.IsFolder) {
+                if (anyActiveFilters && !element.isFolder) {
                     bool found = false;
-                    for (uint j = 0; j < Config.Filters.Length; j++) {
-                        string filter = Config.Filters[j];
+                    for (uint j = 0; j < Config.filters.Length; j++) {
+                        string filter = Config.filters[j];
                         if (Config.IsFilterActive(filter)) {
 
-                            string elementGbxType = element.GbxType;
+                            string elementGbxType = element.gbxType;
                             
                             if (elementGbxType.ToLower() == filter.ToLower()) {
                                 found = true;
@@ -841,10 +855,10 @@ namespace FileExplorer {
         void ApplyVisibilitySettings() {
             for (uint i = 0; i < Elements.Length; i++) {
                 ElementInfo@ element = Elements[i];
-                if (Config.HideFiles && !element.IsFolder) {
+                if (Config.hideFiles && !element.isFolder) {
                     element.shouldShow = false;
                 }
-                if (Config.HideFolders && element.IsFolder) {
+                if (Config.hideFolders && element.isFolder) {
                     element.shouldShow = false;
                 }
             }
@@ -852,7 +866,7 @@ namespace FileExplorer {
 
         ElementInfo@ GetSelectedElement() {
             for (uint i = 0; i < Elements.Length; i++) {
-                if (Elements[i].IsSelected) {
+                if (Elements[i].isSelected) {
                     return Elements[i];
                 }
             }
@@ -861,7 +875,7 @@ namespace FileExplorer {
 
         void UpdatePagination() {
             uint totalElements = Elements.Length;
-            TotalPages = uint(Math::Ceil(float(totalElements) / Config.MaxElementsPerPage));
+            TotalPages = uint(Math::Ceil(float(totalElements) / Config.maxElementsPerPage));
             if (CurrentPage >= TotalPages) {
                 CurrentPage = Math::Max(TotalPages - 1, 0);
             }
@@ -871,28 +885,28 @@ namespace FileExplorer {
             for (uint i = 0; i < Elements.Length - 1; i++) {
                 for (uint j = i + 1; j < Elements.Length; j++) {
                     bool swap = false;
-                    if (Config.SortFilesBeforeFolders) {
-                        swap = Elements[i].IsFolder && !Elements[j].IsFolder;
+                    if (Config.sortFilesBeforeFolders) {
+                        swap = Elements[i].isFolder && !Elements[j].isFolder;
                     } else {
-                        swap = !Elements[i].IsFolder && Elements[j].IsFolder;
+                        swap = !Elements[i].isFolder && Elements[j].isFolder;
                     }
                         
-                    if (Config.SortingCriteria == SortingCriteria::NameIgnoreFileFolder) {
-                        swap = Config.SortingAscending ? Elements[i].Name > Elements[j].Name : Elements[i].Name < Elements[j].Name;
-                    } else if (Config.SortingCriteria == SortingCriteria::Name) {
-                        if (Elements[i].IsFolder && Elements[j].IsFolder) {
-                            swap = Config.SortingAscending ? Elements[i].Name > Elements[j].Name : Elements[i].Name < Elements[j].Name;
-                        } else if (!Elements[i].IsFolder && !Elements[j].IsFolder) {
-                            swap = Config.SortingAscending ? Elements[i].Name > Elements[j].Name : Elements[i].Name < Elements[j].Name;
+                    if (Config.sortingCriteria == SortingCriteria::NameIgnoreFileFolder) {
+                        swap = Config.sortingAscending ? Elements[i].name > Elements[j].name : Elements[i].name < Elements[j].name;
+                    } else if (Config.sortingCriteria == SortingCriteria::Name) {
+                        if (Elements[i].isFolder && Elements[j].isFolder) {
+                            swap = Config.sortingAscending ? Elements[i].name > Elements[j].name : Elements[i].name < Elements[j].name;
+                        } else if (!Elements[i].isFolder && !Elements[j].isFolder) {
+                            swap = Config.sortingAscending ? Elements[i].name > Elements[j].name : Elements[i].name < Elements[j].name;
                         } else {
-                            swap = Config.SortFilesBeforeFolders ? !Elements[i].IsFolder : Elements[i].IsFolder;
+                            swap = Config.sortFilesBeforeFolders ? !Elements[i].isFolder : Elements[i].isFolder;
                         }
-                    } else if (Config.SortingCriteria == SortingCriteria::Size) {
-                        swap = Config.SortingAscending ? Elements[i].SizeBytes > Elements[j].SizeBytes : Elements[i].SizeBytes < Elements[j].SizeBytes;
-                    } else if (Config.SortingCriteria == SortingCriteria::LastModified) {
-                        swap = Config.SortingAscending ? Elements[i].LastModifiedDate > Elements[j].LastModifiedDate : Elements[i].LastModifiedDate < Elements[j].LastModifiedDate;
-                    } else if (Config.SortingCriteria == SortingCriteria::CreatedDate) {
-                        swap = Config.SortingAscending ? Elements[i].CreationDate > Elements[j].CreationDate : Elements[i].CreationDate < Elements[j].CreationDate;
+                    } else if (Config.sortingCriteria == SortingCriteria::Size) {
+                        swap = Config.sortingAscending ? Elements[i].sizeBytes > Elements[j].sizeBytes : Elements[i].sizeBytes < Elements[j].sizeBytes;
+                    } else if (Config.sortingCriteria == SortingCriteria::LastModified) {
+                        swap = Config.sortingAscending ? Elements[i].lastModifiedDate > Elements[j].lastModifiedDate : Elements[i].lastModifiedDate < Elements[j].lastModifiedDate;
+                    } else if (Config.sortingCriteria == SortingCriteria::CreatedDate) {
+                        swap = Config.sortingAscending ? Elements[i].creationDate > Elements[j].creationDate : Elements[i].creationDate < Elements[j].creationDate;
                     }
         
                     if (swap) {
@@ -940,23 +954,23 @@ namespace FileExplorer {
 
         void RefreshCurrentDirectory() {
             string currentPath = explorer.tab[0].Navigation.GetPath();
-            log("Refreshing directory: " + currentPath, LogLevel::Info, 767, "RefreshCurrentDirectory");
+            log("Refreshing directory: " + currentPath, LogLevel::Info, 957, "RefreshCurrentDirectory");
             explorer.tab[0].LoadDirectory(currentPath);
         }
 
         void OpenSelectedFolderInNativeFileExplorer() {
             ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
-            if (selectedElement !is null && selectedElement.IsFolder) {
-                log("Opening folder: " + selectedElement.Path, LogLevel::Info, 774, "OpenSelectedFolderInNativeFileExplorer");
-                OpenExplorerPath(selectedElement.Path);
+            if (selectedElement !is null && selectedElement.isFolder) {
+                log("Opening folder: " + selectedElement.path, LogLevel::Info, 964, "OpenSelectedFolderInNativeFileExplorer");
+                OpenExplorerPath(selectedElement.path);
             } else {
-                log("No folder selected or selected element is not a folder.", LogLevel::Error, 777, "OpenSelectedFolderInNativeFileExplorer");
+                log("No folder selected or selected element is not a folder.", LogLevel::Error, 967, "OpenSelectedFolderInNativeFileExplorer");
             }
         }
 
         void OpenCurrentFolderInNativeFileExplorer() {
             string currentPath = explorer.tab[0].Navigation.GetPath();
-            log("Opening folder: " + currentPath, LogLevel::Info, 783, "OpenCurrentFolderInNativeFileExplorer");
+            log("Opening folder: " + currentPath, LogLevel::Info, 973, "OpenCurrentFolderInNativeFileExplorer");
             OpenExplorerPath(currentPath);
         }
 
@@ -1028,18 +1042,18 @@ namespace FileExplorer {
         void DeleteSelectedElement() {
             ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             if (selectedElement !is null) {
-                if (selectedElement.IsFolder) {
-                    array<string> folderContents = IO::IndexFolder(selectedElement.Path, false);
+                if (selectedElement.isFolder) {
+                    array<string> folderContents = IO::IndexFolder(selectedElement.path, false);
                     if (folderContents.Length > 0) {
                         explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = true;
                     } else {
-                        log("Deleting empty folder: " + selectedElement.Path, LogLevel::Info, 860, "DeleteSelectedElement");
-                        IO::DeleteFolder(selectedElement.Path);
+                        log("Deleting empty folder: " + selectedElement.path, LogLevel::Info, 1050, "DeleteSelectedElement");
+                        IO::DeleteFolder(selectedElement.path);
                         explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                     }
                 } else {
-                    log("Deleting file: " + selectedElement.Path, LogLevel::Info, 865, "DeleteSelectedElement");
-                    IO::Delete(selectedElement.Path);
+                    log("Deleting file: " + selectedElement.path, LogLevel::Info, 1055, "DeleteSelectedElement");
+                    IO::Delete(selectedElement.path);
                     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                 }
             }
@@ -1050,12 +1064,12 @@ namespace FileExplorer {
             ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             if (selectedElement is null) return;
 
-            string currentPath = selectedElement.Path;
+            string currentPath = selectedElement.path;
             string newPath;
 
             string sanitizedNewName = Path::SanitizeFileName(newName);
 
-            if (selectedElement.IsFolder) {
+            if (selectedElement.isFolder) {
                 while (currentPath.EndsWith("/") || currentPath.EndsWith("\\")) {
                     currentPath = currentPath.SubStr(0, currentPath.Length - 1);
                 }
@@ -1076,18 +1090,18 @@ namespace FileExplorer {
         void PinSelectedElement() {
             ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             if (selectedElement !is null) {
-                if (explorer.Config.PinnedElements.Find(selectedElement.Path) == -1) {
-                    log("Pinning element: " + selectedElement.Path, LogLevel::Info, 904, "PinSelectedElement");
-                    explorer.Config.PinnedElements.InsertLast(selectedElement.Path);
+                if (explorer.Config.pinnedElements.Find(selectedElement.path) == -1) {
+                    log("Pinning element: " + selectedElement.path, LogLevel::Info, 1094, "PinSelectedElement");
+                    explorer.Config.pinnedElements.InsertLast(selectedElement.path);
                     explorer.Config.SaveSettings();
                 }
             }
         }
 
         void TruncateSelectedPathsIfNeeded() {
-            uint maxAllowed = uint(explorer.Config.MinMaxReturnAmount.y);
-            if (explorer.Config.MinMaxReturnAmount.y != -1 && explorer.Config.SelectedPaths.Length > maxAllowed) {
-                explorer.Config.SelectedPaths.Resize(maxAllowed);
+            uint maxAllowed = uint(explorer.Config.minMaxReturnAmount.y);
+            if (explorer.Config.minMaxReturnAmount.y != -1 && explorer.Config.selectedPaths.Length > maxAllowed) {
+                explorer.Config.selectedPaths.Resize(maxAllowed);
             }
         }
 
@@ -1156,7 +1170,7 @@ namespace FileExplorer {
 
             @CurrentSelectedElement = null;
 
-            nav.UpdateHistory(cfg.Path);
+            nav.UpdateHistory(cfg.path);
         }
 
         void UpdateCurrentSelectedElement() {
@@ -1166,7 +1180,7 @@ namespace FileExplorer {
         void Open(Config@ config) {
             @Config = config;
 
-            nav.SetPath(Config.Path);
+            nav.SetPath(Config.path);
             explorer.Config.LoadSettings();
             explorer.exports.selectionComplete = false;
             showInterface = true;
@@ -1197,7 +1211,7 @@ namespace FileExplorer {
             int64 sizeBytes = IO::FileSize(path);
             int64 lastModified = IO::FileModifiedTime(path);
             int64 creationDate = IO::FileCreatedTime(path);
-            Icon icon = GetElementIcon(isFolder, type);
+            _Icon icon = GetElementIcon(isFolder, type);
             ElementInfo@ elementInfo = ElementInfo(name, path, size, sizeBytes, type, gbxType, lastModified, creationDate, isFolder, icon, false);
 
             if (type.ToLower() == "gbx") {
@@ -1211,7 +1225,7 @@ namespace FileExplorer {
             ElementInfo@ elementInfo = cast<ElementInfo@>(r);
             if (elementInfo is null) return;
 
-            string path = elementInfo.Path;
+            string path = elementInfo.path;
             dictionary gbxMetadata = ReadGbxHeader(path);
             elementInfo.SetGbxMetadata(gbxMetadata);
         }
@@ -1223,46 +1237,46 @@ namespace FileExplorer {
             else return (size / (1024 * 1024 * 1024)) + " GB";
         }
 
-        Icon GetElementIcon(bool isFolder, const string &in type) {
-            if (isFolder) return Icon::Folder;
+        _Icon GetElementIcon(bool isFolder, const string &in type) {
+            if (isFolder) return _Icon::folder;
             string ext = type.ToLower();
-            if (ext == "txt" || ext == "rtf" || ext == "csv" || ext == "json") return Icon::FileText;
-            if (ext == "pdf") return Icon::FilePdf;
-            if (ext == "doc" || ext == "docx") return Icon::FileWord;
-            if (ext == "xls" || ext == "xlsx") return Icon::FileExcel;
-            if (ext == "ppt" || ext == "pptx") return Icon::FilePowerpoint;
-            if (ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "gif") return Icon::FileImage;
-            if (ext == "rar" || ext == "zip" || ext == "7z") return Icon::FileArchive;
-            if (ext == "ogg" || ext == "mp3" || ext == "wav") return Icon::FileAudio;
-            if (ext == "mp4" || ext == "mov") return Icon::FileVideo;
-            if (ext == "cs" || ext == "cpp" || ext == "js" || ext == "java" || ext == "py") return Icon::FileCode;
-            if (ext == "epub") return Icon::FileEpub;
-            return Icon::File;
+            if (ext == "txt" || ext == "rtf" || ext == "csv" || ext == "json") return _Icon::fileText;
+            if (ext == "pdf") return _Icon::filePdf;
+            if (ext == "doc" || ext == "docx") return _Icon::fileWord;
+            if (ext == "xls" || ext == "xlsx") return _Icon::fileExcel;
+            if (ext == "ppt" || ext == "pptx") return _Icon::filePowerpoint;
+            if (ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "gif") return _Icon::fileImage;
+            if (ext == "rar" || ext == "zip" || ext == "7z") return _Icon::fileArchive;
+            if (ext == "ogg" || ext == "mp3" || ext == "wav") return _Icon::fileAudio;
+            if (ext == "mp4" || ext == "mov") return _Icon::fileVideo;
+            if (ext == "cs" || ext == "cpp" || ext == "js" || ext == "java" || ext == "py") return _Icon::fileCode;
+            if (ext == "epub") return _Icon::fileEpub;
+            return _Icon::file;
         }
 
-        string GetElementIconString(Icon icon, bool isSelected) {
+        string GetElementIconString(_Icon icon, bool isSelected) {
             switch(icon) {
-                case Icon::Folder: return isSelected ? "\\$FD4"+Icons::FolderOpenO+"\\$g" : "\\$FD4"+Icons::FolderO+"\\$g";
-                case Icon::FileText: return Icons::FileTextO;
-                case Icon::FilePdf: return Icons::FilePdfO;
-                case Icon::FileWord: return Icons::FileWordO;
-                case Icon::FileExcel: return Icons::FileExcelO;
-                case Icon::FilePowerpoint: return Icons::FilePowerpointO;
-                case Icon::FileImage: return Icons::FileImageO;
-                case Icon::FileArchive: return Icons::FileArchiveO;
-                case Icon::FileAudio: return Icons::FileAudioO;
-                case Icon::FileVideo: return Icons::FileVideoO;
-                case Icon::FileCode: return Icons::FileCodeO;
-                case Icon::FileEpub: return Icons::FileEpub;
+                case _Icon::folder: return isSelected ? "\\$FD4"+Icons::FolderOpenO+"\\$g" : "\\$FD4"+Icons::FolderO+"\\$g";
+                case _Icon::fileText: return Icons::FileTextO;
+                case _Icon::filePdf: return Icons::FilePdfO;
+                case _Icon::fileWord: return Icons::FileWordO;
+                case _Icon::fileExcel: return Icons::FileExcelO;
+                case _Icon::filePowerpoint: return Icons::FilePowerpointO;
+                case _Icon::fileImage: return Icons::FileImageO;
+                case _Icon::fileArchive: return Icons::FileArchiveO;
+                case _Icon::fileAudio: return Icons::FileAudioO;
+                case _Icon::fileVideo: return Icons::FileVideoO;
+                case _Icon::fileCode: return Icons::FileCodeO;
+                case _Icon::fileEpub: return Icons::FileEpub;
                 default: return Icons::FileO;
             }
         }
     }
 
     enum ContextType {
-        MainArea,
-        SelectedElements,
-        PinnedElements
+        mainArea,
+        selectedElements,
+        pinnedElements
     }
 
     class UserInterface {
@@ -1286,13 +1300,13 @@ namespace FileExplorer {
             Render_DeleteConfirmationPopup();
 
             switch (currentContextType) {
-                case ContextType::MainArea:
+                case ContextType::mainArea:
                     Render_Context_MainArea();
                     break;
-                case ContextType::SelectedElements:
+                case ContextType::selectedElements:
                     Render_Context_SelectedElements();
                     break;
-                case ContextType::PinnedElements:
+                case ContextType::pinnedElements:
                     Render_Context_PinnedElements();
                     break;
             }
@@ -1352,7 +1366,7 @@ namespace FileExplorer {
             uint totalPages = explorer.tab[0].TotalPages;
             string text = ("\\$AAA" + currentPage + "/" + totalPages + "\\$g");
 
-            if (explorer.Config.EnablePagination) {
+            if (explorer.Config.enablePagination) {
                 if (UI::Button(text, buttonSize)) {}
             } else {
                 if (UI::Button("##", buttonSize)) {}
@@ -1386,8 +1400,8 @@ namespace FileExplorer {
             float totalWidth = UI::GetContentRegionAvail().x;
             float pathWidth = (totalWidth * 0.8f - buttonWidth * 3);
     
-            if (explorer.Config.EnableSearchBar) {
-                pathWidth += explorer.Config.SearchBarPadding;
+            if (explorer.Config.enableSearchBar) {
+                pathWidth += explorer.Config.searchBarPadding;
             }
 
             float searchWidth = totalWidth - pathWidth - buttonWidth * 3;
@@ -1420,8 +1434,8 @@ namespace FileExplorer {
             
             if (
                 explorer.tab[0].GetSelectedElement() !is null
-            &&  explorer.tab[0].GetSelectedElement().IsFolder
-            &&  explorer.tab[0].GetSelectedElement().IsSelected
+            &&  explorer.tab[0].GetSelectedElement().isFolder
+            &&  explorer.tab[0].GetSelectedElement().isSelected
             ) {
                 if (UI::Button(Icons::ArrowDown)) { explorer.tab[0].Navigation.MoveIntoSelectedDirectory(); }
             } else {
@@ -1437,15 +1451,15 @@ namespace FileExplorer {
             }
             UI::PopItemWidth();
 
-            if (explorer.Config.EnableSearchBar) {
+            if (explorer.Config.enableSearchBar) {
                 UI::SameLine();
                 UI::PushItemWidth(searchWidth - 110);
 
                 UI::Text(Icons::Search + "");
                 UI::SameLine();
-                string newSearchQuery = UI::InputText("##SearchInput", explorer.Config.SearchQuery);
-                if (UI::IsKeyPressed(UI::Key::Enter) && newSearchQuery != explorer.Config.SearchQuery) {
-                    explorer.Config.SearchQuery = newSearchQuery;
+                string newSearchQuery = UI::InputText("##SearchInput", explorer.Config.searchQuery);
+                if (UI::IsKeyPressed(UI::Key::Enter) && newSearchQuery != explorer.Config.searchQuery) {
+                    explorer.Config.searchQuery = newSearchQuery;
                     explorer.tab[0].ApplyFiltersAndSearch();
                 }
 
@@ -1457,7 +1471,7 @@ namespace FileExplorer {
 
         string newFilter = "";
         void Render_ActionBar() {
-            if (!explorer.Config.EnablePagination) {
+            if (!explorer.Config.enablePagination) {
                 explorer.utils.DisabledButton(Icons::ChevronLeft);
                 UI::SameLine();
                 explorer.utils.DisabledButton(Icons::ChevronRight);
@@ -1518,19 +1532,19 @@ namespace FileExplorer {
                 newFilter = UI::InputText("##", newFilter);
                 UI::SameLine();
                 if (UI::Button("Add")) {
-                    explorer.Config.Filters.InsertLast(newFilter.ToLower());
+                    explorer.Config.filters.InsertLast(newFilter.ToLower());
                     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                 }
                 UI::Separator();
-                UI::Text("Filter length: " + explorer.Config.Filters.Length);
+                UI::Text("Filter length: " + explorer.Config.filters.Length);
 
                 if (UI::Button("Remove All Filters")) {
-                    explorer.Config.Filters.Resize(0);
+                    explorer.Config.filters.Resize(0);
                     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                 }
 
-                for (uint i = 0; i < explorer.Config.Filters.Length; i++) {
-                    string filter = explorer.Config.Filters[i];
+                for (uint i = 0; i < explorer.Config.filters.Length; i++) {
+                    string filter = explorer.Config.filters[i];
                     bool isActive = explorer.Config.IsFilterActive(filter);
 
                     if (UI::BeginMenu(filter + (isActive ? "\\$888 (Active)" : "\\$888 (Inactive)"))) {
@@ -1540,8 +1554,8 @@ namespace FileExplorer {
                         }
                         
                         if (UI::MenuItem("Remove Filter")) {
-                            explorer.Config.Filters.RemoveAt(i);
-                            explorer.Config.ActiveFilters.Delete(filter);
+                            explorer.Config.filters.RemoveAt(i);
+                            explorer.Config.activeFilters.Delete(filter);
                             explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                         }
                         UI::EndMenu();
@@ -1556,41 +1570,41 @@ namespace FileExplorer {
             if (UI::Button(Icons::Sort)) { UI::OpenPopup("sortMenu"); }
 
             if (UI::BeginPopup("sortMenu")) {
-                string orderButtonLabel = explorer.Config.SortingAscending ? Icons::ArrowUp : Icons::ArrowDown;
-                if (UI::MenuItem(orderButtonLabel + " Order", "", explorer.Config.SortingAscending)) {
-                    explorer.Config.SortingAscending = !explorer.Config.SortingAscending;
+                string orderButtonLabel = explorer.Config.sortingAscending ? Icons::ArrowUp : Icons::ArrowDown;
+                if (UI::MenuItem(orderButtonLabel + " Order", "", explorer.Config.sortingAscending)) {
+                    explorer.Config.sortingAscending = !explorer.Config.sortingAscending;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
-                if (UI::MenuItem("Sort Files Before Folders", "", explorer.Config.SortFilesBeforeFolders)) {
-                    explorer.Config.SortFilesBeforeFolders = !explorer.Config.SortFilesBeforeFolders;
+                if (UI::MenuItem("Sort Files Before Folders", "", explorer.Config.sortFilesBeforeFolders)) {
+                    explorer.Config.sortFilesBeforeFolders = !explorer.Config.sortFilesBeforeFolders;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
                 UI::Separator();
 
-                if (UI::MenuItem("Name", "", explorer.Config.SortingCriteria == SortingCriteria::Name)) {
-                    explorer.Config.SortingCriteria = SortingCriteria::Name;
+                if (UI::MenuItem("Name", "", explorer.Config.sortingCriteria == SortingCriteria::name)) {
+                    explorer.Config.sortingCriteria = SortingCriteria::name;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
-                if (UI::MenuItem("Name (Ignore File/Folder)", "", explorer.Config.SortingCriteria == SortingCriteria::NameIgnoreFileFolder)) {
-                    explorer.Config.SortingCriteria = SortingCriteria::NameIgnoreFileFolder;
+                if (UI::MenuItem("Name (Ignore File/Folder)", "", explorer.Config.sortingCriteria == SortingCriteria::nameIgnoreFileFolder)) {
+                    explorer.Config.sortingCriteria = SortingCriteria::nameIgnoreFileFolder;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
-                if (UI::MenuItem("Size", "", explorer.Config.SortingCriteria == SortingCriteria::Size)) {
-                    explorer.Config.SortingCriteria = SortingCriteria::Size;
+                if (UI::MenuItem("Size", "", explorer.Config.sortingCriteria == SortingCriteria::size)) {
+                    explorer.Config.sortingCriteria = SortingCriteria::size;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
-                if (UI::MenuItem("Date Modified", "", explorer.Config.SortingCriteria == SortingCriteria::LastModified)) {
-                    explorer.Config.SortingCriteria = SortingCriteria::LastModified;
+                if (UI::MenuItem("Date Modified", "", explorer.Config.sortingCriteria == SortingCriteria::lastModified)) {
+                    explorer.Config.sortingCriteria = SortingCriteria::lastModified;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
-                if (UI::MenuItem("Date Created", "", explorer.Config.SortingCriteria == SortingCriteria::CreatedDate)) {
-                    explorer.Config.SortingCriteria = SortingCriteria::CreatedDate;
+                if (UI::MenuItem("Date Created", "", explorer.Config.sortingCriteria == SortingCriteria::createdDate)) {
+                    explorer.Config.sortingCriteria = SortingCriteria::createdDate;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
@@ -1610,38 +1624,38 @@ namespace FileExplorer {
             if (UI::Button(Icons::Bars)) { UI::OpenPopup("burgerMenu"); }
 
             if (UI::BeginPopup("burgerMenu")) {
-                if (UI::MenuItem("Hide Files", "", explorer.Config.HideFiles)) {
-                    explorer.Config.HideFiles = !explorer.Config.HideFiles;
+                if (UI::MenuItem("Hide Files", "", explorer.Config.hideFiles)) {
+                    explorer.Config.hideFiles = !explorer.Config.hideFiles;
                     explorer.tab[0].ApplyVisibilitySettings();
                     explorer.utils.RefreshCurrentDirectory();
                 }
-                if (UI::MenuItem("Hide Folders", "", explorer.Config.HideFolders)) {
-                    explorer.Config.HideFolders = !explorer.Config.HideFolders;
+                if (UI::MenuItem("Hide Folders", "", explorer.Config.hideFolders)) {
+                    explorer.Config.hideFolders = !explorer.Config.hideFolders;
                     explorer.tab[0].ApplyVisibilitySettings();
                     explorer.utils.RefreshCurrentDirectory();
                 }
 
                 if (UI::BeginMenu("Pagination")) {
-                    if (UI::MenuItem("Enable Pagination", "", explorer.Config.EnablePagination)) {
-                        explorer.Config.EnablePagination = !explorer.Config.EnablePagination;
+                    if (UI::MenuItem("Enable Pagination", "", explorer.Config.enablePagination)) {
+                        explorer.Config.enablePagination = !explorer.Config.enablePagination;
                         explorer.utils.RefreshCurrentDirectory();
                     }
 
-                    if (explorer.Config.EnablePagination) {
-                        explorer.Config.MaxElementsPerPage = UI::SliderInt("Max Elements Per Page", explorer.Config.MaxElementsPerPage, 1, 100);
+                    if (explorer.Config.enablePagination) {
+                        explorer.Config.maxElementsPerPage = UI::SliderInt("Max Elements Per Page", explorer.Config.maxElementsPerPage, 1, 100);
                     }
 
                     UI::EndMenu();
                 }
 
                 if (UI::BeginMenu("Search Bar")) {
-                    if (UI::MenuItem("Enable Search Bar", "", explorer.Config.EnableSearchBar)) {
-                        explorer.Config.EnableSearchBar = !explorer.Config.EnableSearchBar;
+                    if (UI::MenuItem("Enable Search Bar", "", explorer.Config.enableSearchBar)) {
+                        explorer.Config.enableSearchBar = !explorer.Config.enableSearchBar;
                         explorer.utils.RefreshCurrentDirectory();
                     }
 
-                    if (explorer.Config.EnableSearchBar) {
-                        explorer.Config.SearchBarPadding = UI::SliderInt("Search Bar Padding", explorer.Config.SearchBarPadding, -200, 100);
+                    if (explorer.Config.enableSearchBar) {
+                        explorer.Config.searchBarPadding = UI::SliderInt("Search Bar Padding", explorer.Config.searchBarPadding, -200, 100);
                     }
 
                     // if (UI::MenuItem("Enable Recursive Search" + "\\$0f0 " + "Warning \\$g Extremely laggy, use with causion", "", explorer.Config.RecursiveSearch)) {
@@ -1652,8 +1666,8 @@ namespace FileExplorer {
                     UI::EndMenu();
                 }
 
-                if (UI::MenuItem("Use Extra Warning When Deleting", "", explorer.Config.UseExtraWarningWhenDeleting)) {
-                    explorer.Config.UseExtraWarningWhenDeleting = !explorer.Config.UseExtraWarningWhenDeleting;
+                if (UI::MenuItem("Use Extra Warning When Deleting", "", explorer.Config.useExtraWarningWhenDeleting)) {
+                    explorer.Config.useExtraWarningWhenDeleting = !explorer.Config.useExtraWarningWhenDeleting;
                 }
                 
                 UI::Separator();
@@ -1672,16 +1686,16 @@ namespace FileExplorer {
                 }
 
                 if (UI::BeginMenu("File Name Display Options")) {
-                    if (UI::MenuItem("Default File Name", "", explorer.Config.FileNameDisplayOption == 0)) {
-                        explorer.Config.FileNameDisplayOption = 0;
+                    if (UI::MenuItem("Default File Name", "", explorer.Config.fileNameDisplayOption == 0)) {
+                        explorer.Config.fileNameDisplayOption = 0;
                         explorer.utils.RefreshCurrentDirectory();
                     }
-                    if (UI::MenuItem("No Formatting", "", explorer.Config.FileNameDisplayOption == 1)) {
-                        explorer.Config.FileNameDisplayOption = 1;
+                    if (UI::MenuItem("No Formatting", "", explorer.Config.fileNameDisplayOption == 1)) {
+                        explorer.Config.fileNameDisplayOption = 1;
                         explorer.utils.RefreshCurrentDirectory();
                     }
-                    if (UI::MenuItem("ManiaPlanet Formatting", "", explorer.Config.FileNameDisplayOption == 2)) {
-                        explorer.Config.FileNameDisplayOption = 2;
+                    if (UI::MenuItem("ManiaPlanet Formatting", "", explorer.Config.fileNameDisplayOption == 2)) {
+                        explorer.Config.fileNameDisplayOption = 2;
                         explorer.utils.RefreshCurrentDirectory();
                     }
                     UI::EndMenu();
@@ -1691,13 +1705,13 @@ namespace FileExplorer {
 
                 if (UI::BeginMenu("Valid/Invalid File Colors")) {
                     UI::Text("Valid File Color");
-                    explorer.Config.ValidFileColor = UI::InputColor4("##", explorer.Config.ValidFileColor);
+                    explorer.Config.validFileColor = UI::InputColor4("##", explorer.Config.validFileColor);
                     UI::Text("Invalid File Color");
-                    explorer.Config.InvalidFileColor = UI::InputColor4("##", explorer.Config.InvalidFileColor);
+                    explorer.Config.invalidFileColor = UI::InputColor4("##", explorer.Config.invalidFileColor);
                     UI::Text("Valid Folder Color");
-                    explorer.Config.ValidFolderColor = UI::InputColor4("##", explorer.Config.ValidFolderColor);
+                    explorer.Config.validFolderColor = UI::InputColor4("##", explorer.Config.validFolderColor);
                     UI::Text("Invalid Folder Color");
-                    explorer.Config.InvalidFolderColor = UI::InputColor4("##", explorer.Config.InvalidFolderColor);
+                    explorer.Config.invalidFolderColor = UI::InputColor4("##", explorer.Config.invalidFolderColor);
 
                     UI::EndMenu();
                 }
@@ -1735,14 +1749,14 @@ namespace FileExplorer {
         }
 
         void Render_DeleteConfirmationPopup() {
-            if (explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG && explorer.Config.UseExtraWarningWhenDeleting) {
+            if (explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG && explorer.Config.useExtraWarningWhenDeleting) {
                 UI::OpenPopup("DeleteConfirmationPopup");
-            } else if (explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG && !explorer.Config.UseExtraWarningWhenDeleting) {
+            } else if (explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG && !explorer.Config.useExtraWarningWhenDeleting) {
                 ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
 
-                if (selectedElement !is null && selectedElement.IsFolder) {
-                    log("Deleting folder with contents: " + selectedElement.Path, LogLevel::Info, 1463, "Render_DeleteConfirmationPopup");
-                    IO::DeleteFolder(selectedElement.Path, true);
+                if (selectedElement !is null && selectedElement.isFolder) {
+                    log("Deleting folder with contents: " + selectedElement.path, LogLevel::Info, 1758, "Render_DeleteConfirmationPopup");
+                    IO::DeleteFolder(selectedElement.path, true);
                     explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
                     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                 }
@@ -1754,13 +1768,13 @@ namespace FileExplorer {
                 UI::Text("Are you sure you want to delete this folder and all its contents?");
                 UI::Separator();
                 if (UI::Button("Yes, delete all")) {
-                    if (selectedElement !is null && selectedElement.IsFolder) {
-                        log("Deleting folder with contents: " + selectedElement.Path, LogLevel::Info, 1477, "Render_DeleteConfirmationPopup");
-                        IO::DeleteFolder(selectedElement.Path, true);
+                    if (selectedElement !is null && selectedElement.isFolder) {
+                        log("Deleting folder with contents: " + selectedElement.path, LogLevel::Info, 1772, "Render_DeleteConfirmationPopup");
+                        IO::DeleteFolder(selectedElement.path, true);
                         explorer.utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
                         explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                     } else {
-                        log("No selected element or element is not a folder.", LogLevel::Error, 1482, "Render_DeleteConfirmationPopup");
+                        log("No selected element or element is not a folder.", LogLevel::Error, 1777, "Render_DeleteConfirmationPopup");
                     }
                     UI::CloseCurrentPopup();
                 }
@@ -1775,21 +1789,21 @@ namespace FileExplorer {
 
 
         void Render_ReturnBar() {
-            if (explorer.Config.MustReturn) {
-                bool validReturnAmount = explorer.Config.SelectedPaths.Length >= uint(explorer.Config.MinMaxReturnAmount.x) &&
-                                        (explorer.Config.SelectedPaths.Length <= uint(explorer.Config.MinMaxReturnAmount.y) || explorer.Config.MinMaxReturnAmount.y == -1);
+            if (explorer.Config.mustReturn) {
+                bool validReturnAmount = explorer.Config.selectedPaths.Length >= uint(explorer.Config.minMaxReturnAmount.x) &&
+                                        (explorer.Config.selectedPaths.Length <= uint(explorer.Config.minMaxReturnAmount.y) || explorer.Config.minMaxReturnAmount.y == -1);
 
                 if (validReturnAmount) {
                     array<string> validSelections;
-                    for (uint i = 0; i < explorer.Config.SelectedPaths.Length; i++) {
-                        ElementInfo@ element = explorer.GetElementInfo(explorer.Config.SelectedPaths[i]);
+                    for (uint i = 0; i < explorer.Config.selectedPaths.Length; i++) {
+                        ElementInfo@ element = explorer.GetElementInfo(explorer.Config.selectedPaths[i]);
 
                         // Validate file type
                         bool validType = true;
-                        if (!element.IsFolder && explorer.Config.FileTypeMustBe.Length > 0) {
+                        if (!element.isFolder && explorer.Config.fileTypeMustBe.Length > 0) {
                             validType = false;
-                            for (uint j = 0; j < explorer.Config.FileTypeMustBe.Length; j++) {
-                                if (element.Type.ToLower() == explorer.Config.FileTypeMustBe[j].ToLower()) {
+                            for (uint j = 0; j < explorer.Config.fileTypeMustBe.Length; j++) {
+                                if (element.type.ToLower() == explorer.Config.fileTypeMustBe[j].ToLower()) {
                                     validType = true;
                                     break;
                                 }
@@ -1797,15 +1811,15 @@ namespace FileExplorer {
                         }
 
                         // Validate CanOnlyReturn
-                        if ((explorer.Config.CanOnlyReturn.Find("file") >= 0 && !element.IsFolder) ||
-                            (explorer.Config.CanOnlyReturn.Find("files") >= 0 && !element.IsFolder) ||
-                            (explorer.Config.CanOnlyReturn.Find("dir") >= 0 && element.IsFolder) ||
-                            (explorer.Config.CanOnlyReturn.Find("dirs") >= 0 && element.IsFolder) ||
-                            (explorer.Config.CanOnlyReturn.Find("directories") >= 0 && element.IsFolder) ||
-                            (explorer.Config.CanOnlyReturn.Find("directory") >= 0 && element.IsFolder) ||
+                        if ((explorer.Config.canOnlyReturn.Find("file") >= 0 && !element.isFolder) ||
+                            (explorer.Config.canOnlyReturn.Find("files") >= 0 && !element.isFolder) ||
+                            (explorer.Config.canOnlyReturn.Find("dir") >= 0 && element.isFolder) ||
+                            (explorer.Config.canOnlyReturn.Find("dirs") >= 0 && element.isFolder) ||
+                            (explorer.Config.canOnlyReturn.Find("directories") >= 0 && element.isFolder) ||
+                            (explorer.Config.canOnlyReturn.Find("directory") >= 0 && element.isFolder) ||
                             
-                            explorer.Config.CanOnlyReturn.IsEmpty()) {
-                            if (validType) validSelections.InsertLast(element.Path);
+                            explorer.Config.canOnlyReturn.IsEmpty()) {
+                            if (validType) validSelections.InsertLast(element.path);
                         }
                     }
 
@@ -1821,7 +1835,7 @@ namespace FileExplorer {
                     explorer.utils.DisabledButton("Return Selected Paths");
                 }
                 UI::SameLine();
-                UI::Text("Selected element amount: " + explorer.Config.SelectedPaths.Length);
+                UI::Text("Selected element amount: " + explorer.Config.selectedPaths.Length);
                 UI::Separator();
             }
         }
@@ -1887,17 +1901,17 @@ namespace FileExplorer {
         }
 
         void Render_PinnedElements() {
-            if (explorer.Config.PinnedElements.Length == 0) {
-                // UI::Text("No pinned elements.");
+            if (explorer.Config.pinnedElements.Length == 0) {
+                UI::Text("\\$888" + "No pinned elements.");
             } else {
-                for (uint i = 0; i < explorer.Config.PinnedElements.Length; i++) {
-                    string path = explorer.Config.PinnedElements[i];
+                for (uint i = 0; i < explorer.Config.pinnedElements.Length; i++) {
+                    string path = explorer.Config.pinnedElements[i];
                     ElementInfo@ element = explorer.GetElementInfo(path);
 
                     if (element !is null) {
-                        SelectableWithClickCheck(element, ContextType::PinnedElements);
+                        SelectableWithClickCheck(element, ContextType::pinnedElements);
                     } else {
-                        explorer.Config.PinnedElements.RemoveAt(i);
+                        explorer.Config.pinnedElements.RemoveAt(i);
                         explorer.Config.SaveSettings();
                         i--;
                     }
@@ -1915,16 +1929,16 @@ namespace FileExplorer {
                 ElementInfo@ element = explorer.tab[0].GetSelectedElement();
                 if (element !is null) {
                     if (UI::MenuItem("Add to Selected Elements")) {
-                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
-                            explorer.Config.SelectedPaths.InsertLast(element.Path);
+                        if (explorer.Config.selectedPaths.Find(element.path) == -1) {
+                            explorer.Config.selectedPaths.InsertLast(element.path);
                             explorer.utils.TruncateSelectedPathsIfNeeded();
                         }
                     }
 
                     if (UI::MenuItem("Remove from Pinned Elements")) {
-                        int index = explorer.Config.PinnedElements.Find(element.Path);
+                        int index = explorer.Config.pinnedElements.Find(element.path);
                         if (index != -1) {
-                            explorer.Config.PinnedElements.RemoveAt(index);
+                            explorer.Config.pinnedElements.RemoveAt(index);
                             explorer.Config.SaveSettings();
                         }
                     }
@@ -1933,19 +1947,19 @@ namespace FileExplorer {
                         explorer.utils.RENDER_RENAME_POPUP_FLAG = true;
                     }
                 } else {
-                    int pinnedPath = explorer.Config.PinnedElements.Find(element.Path);
-                    explorer.Config.PinnedElements.RemoveAt(pinnedPath);
+                    int pinnedPath = explorer.Config.pinnedElements.Find(element.path);
+                    explorer.Config.pinnedElements.RemoveAt(pinnedPath);
                 }
                 UI::EndPopup();
             }
         }
 
         void Render_SelectedElements() {
-            for (uint i = 0; i < explorer.Config.SelectedPaths.Length; i++) {
-                string path = explorer.Config.SelectedPaths[i];
+            for (uint i = 0; i < explorer.Config.selectedPaths.Length; i++) {
+                string path = explorer.Config.selectedPaths[i];
                 ElementInfo@ element = explorer.GetElementInfo(path);
 
-                SelectableWithClickCheck(element, ContextType::SelectedElements);
+                SelectableWithClickCheck(element, ContextType::selectedElements);
             }
         }
 
@@ -1959,9 +1973,9 @@ namespace FileExplorer {
                 ElementInfo@ element = explorer.tab[0].GetSelectedElement();
                 if (element !is null) {
                     if (UI::MenuItem("Remove from Selected Elements")) {
-                        int index = explorer.Config.SelectedPaths.Find(element.Path);
+                        int index = explorer.Config.selectedPaths.Find(element.path);
                         if (index != -1) {
-                            explorer.Config.SelectedPaths.RemoveAt(index);
+                            explorer.Config.selectedPaths.RemoveAt(index);
                         }
                     }
 
@@ -2004,8 +2018,8 @@ namespace FileExplorer {
 
                     UI::TableHeadersRow();
 
-                    uint startIndex = explorer.Config.EnablePagination ? explorer.tab[0].CurrentPage * explorer.Config.MaxElementsPerPage : 0;
-                    uint endIndex = explorer.Config.EnablePagination ? Math::Min(startIndex + explorer.Config.MaxElementsPerPage, explorer.tab[0].Elements.Length) : explorer.tab[0].Elements.Length;
+                    uint startIndex = explorer.Config.enablePagination ? explorer.tab[0].CurrentPage * explorer.Config.maxElementsPerPage : 0;
+                    uint endIndex = explorer.Config.enablePagination ? Math::Min(startIndex + explorer.Config.maxElementsPerPage, explorer.tab[0].Elements.Length) : explorer.tab[0].Elements.Length;
 
                     for (uint i = startIndex; i < endIndex; i++) {
                         if (i >= explorer.tab[0].Elements.Length) { break; }
@@ -2022,17 +2036,17 @@ namespace FileExplorer {
                                 
                                 // FIXME: The column size is not set on first load, this has to be done manually by the user, which is not ideal...
                                 if (col == "ico") {
-                                    UI::Text(explorer.GetElementIconString(element.Icon, element.IsSelected));
+                                    UI::Text(explorer.GetElementIconString(element.icon, element.isSelected));
                                 } else if (col == "name") {
-                                    SelectableWithClickCheck(element, ContextType::MainArea);
+                                    SelectableWithClickCheck(element, ContextType::mainArea);
                                 } else if (col == "type") {
-                                    UI::Text(element.Type);
+                                    UI::Text(element.type);
                                 } else if (col == "size") {
-                                    UI::Text(element.IsFolder ? "-" : element.Size);
+                                    UI::Text(element.isFolder ? "-" : element.size);
                                 } else if (col == "lastModified") {
-                                    UI::Text(Time::FormatString("%Y-%m-%d %H:%M:%S", element.LastModifiedDate));
+                                    UI::Text(Time::FormatString("%Y-%m-%d %H:%M:%S", element.lastModifiedDate));
                                 } else if (col == "createdDate") {
-                                    UI::Text(Time::FormatString("%Y-%m-%d %H:%M:%S", element.CreationDate));
+                                    UI::Text(Time::FormatString("%Y-%m-%d %H:%M:%S", element.creationDate));
                                 }
                             }
                         }
@@ -2054,12 +2068,12 @@ namespace FileExplorer {
             if (UI::BeginPopup("MainElementContextMenu")) {
                 ElementInfo@ element = explorer.tab[0].GetSelectedElement();
                 if (element !is null) {
-                    bool canAddMore = explorer.Config.SelectedPaths.Length < uint(explorer.Config.MinMaxReturnAmount.y) || explorer.Config.MinMaxReturnAmount.y == -1;
+                    bool canAddMore = explorer.Config.selectedPaths.Length < uint(explorer.Config.minMaxReturnAmount.y) || explorer.Config.minMaxReturnAmount.y == -1;
 
                     if (canAddMore) {
                         if (UI::MenuItem("Add to Selected Elements", "", false)) {
-                            if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
-                                explorer.Config.SelectedPaths.InsertLast(element.Path);
+                            if (explorer.Config.selectedPaths.Find(element.path) == -1) {
+                                explorer.Config.selectedPaths.InsertLast(element.path);
                                 explorer.utils.TruncateSelectedPathsIfNeeded();
                             }
                         }
@@ -2069,7 +2083,7 @@ namespace FileExplorer {
 
                     if (canAddMore) {
                         if (UI::MenuItem("Quick return")) {
-                            explorer.exports.SetSelectionComplete( { element.Path } );
+                            explorer.exports.SetSelectionComplete( { element.path } );
                             explorer.exports.selectionComplete = true;
                             explorer.Close();
                         }
@@ -2095,41 +2109,41 @@ namespace FileExplorer {
 
         void SelectableWithClickCheck(ElementInfo@ element, ContextType contextType) {
             string displayName;
-            switch (explorer.Config.FileNameDisplayOption) {
+            switch (explorer.Config.fileNameDisplayOption) {
                 case 1:
-                    displayName = Text::StripFormatCodes(element.Name);
+                    displayName = Text::StripFormatCodes(element.name);
                     break;
                 case 2:
-                    displayName = element.Name.Replace("$", "\\$");
+                    displayName = element.name.Replace("$", "\\$");
                     break;
                 default:
-                    displayName = element.Name;
+                    displayName = element.name;
             }
 
             bool isValid = true;
-            vec4 textColor = explorer.Config.ValidFolderColor;
+            vec4 textColor = explorer.Config.validFolderColor;
 
-            if (!explorer.Config.CanOnlyReturn.IsEmpty()) {
-                if (!element.IsFolder) {
-                    bool isFileTypeValid = explorer.Config.CanOnlyReturn.Find("file") >= 0 ||
-                                        explorer.Config.CanOnlyReturn.Find("files") >= 0;
+            if (!explorer.Config.canOnlyReturn.IsEmpty()) {
+                if (!element.isFolder) {
+                    bool isFileTypeValid = explorer.Config.canOnlyReturn.Find("file") >= 0 ||
+                                        explorer.Config.canOnlyReturn.Find("files") >= 0;
                     isValid = isFileTypeValid;
                 }
 
-                if (element.IsFolder) {
-                    isValid = explorer.Config.CanOnlyReturn.Find("folder") >= 0 ||
-                            explorer.Config.CanOnlyReturn.Find("folders") >= 0 ||
-                            explorer.Config.CanOnlyReturn.Find("dir") >= 0 || 
-                            explorer.Config.CanOnlyReturn.Find("directories") >= 0;
+                if (element.isFolder) {
+                    isValid = explorer.Config.canOnlyReturn.Find("folder") >= 0 ||
+                            explorer.Config.canOnlyReturn.Find("folders") >= 0 ||
+                            explorer.Config.canOnlyReturn.Find("dir") >= 0 || 
+                            explorer.Config.canOnlyReturn.Find("directories") >= 0;
                 }
 
-                textColor = element.IsFolder
-                            ? (isValid ? explorer.Config.ValidFolderColor : explorer.Config.InvalidFolderColor)
-                            : (isValid ? explorer.Config.ValidFileColor : explorer.Config.InvalidFileColor);
+                textColor = element.isFolder
+                            ? (isValid ? explorer.Config.validFolderColor : explorer.Config.invalidFolderColor)
+                            : (isValid ? explorer.Config.validFileColor : explorer.Config.invalidFileColor);
             }
 
             UI::PushStyleColor(UI::Col::Text, textColor);
-            UI::Selectable(displayName, element.IsSelected);
+            UI::Selectable(displayName, element.isSelected);
             UI::PopStyleColor();
 
             if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && (UI::IsKeyDown(UI::Key::LeftCtrl) || UI::IsKeyDown(UI::Key::RightCtrl))) {
@@ -2142,26 +2156,26 @@ namespace FileExplorer {
         }
 
         bool FolderAndFileRestrictions(ElementInfo@ element) {
-            if (explorer.Config.CanOnlyReturn.Find("file") != -1 && !element.IsFolder) return false;
-            if (explorer.Config.CanOnlyReturn.Find("files") != -1 && !element.IsFolder) return false;
-            if (explorer.Config.CanOnlyReturn.Find("dir") != -1 && element.IsFolder) return false;
-            if (explorer.Config.CanOnlyReturn.Find("dirs") != -1 && element.IsFolder) return false;
-            if (explorer.Config.CanOnlyReturn.Find("directories") != -1 && element.IsFolder) return false;
-            if (explorer.Config.CanOnlyReturn.Find("directory") != -1 && element.IsFolder) return false;
+            if (explorer.Config.canOnlyReturn.Find("file") != -1 && !element.isFolder) return false;
+            if (explorer.Config.canOnlyReturn.Find("files") != -1 && !element.isFolder) return false;
+            if (explorer.Config.canOnlyReturn.Find("dir") != -1 && element.isFolder) return false;
+            if (explorer.Config.canOnlyReturn.Find("dirs") != -1 && element.isFolder) return false;
+            if (explorer.Config.canOnlyReturn.Find("directories") != -1 && element.isFolder) return false;
+            if (explorer.Config.canOnlyReturn.Find("directory") != -1 && element.isFolder) return false;
             return true;
         }
 
         void HandleElementSelection(ElementInfo@ element, EnterType enterType, ContextType contextType) {
             // Enforce selection restrictions
-            bool canAddMore = explorer.Config.SelectedPaths.Length < uint(explorer.Config.MinMaxReturnAmount.y) || explorer.Config.MinMaxReturnAmount.y == -1;
+            bool canAddMore = explorer.Config.selectedPaths.Length < uint(explorer.Config.minMaxReturnAmount.y) || explorer.Config.minMaxReturnAmount.y == -1;
             // Enforce folder/file only restrictions
             if (!FolderAndFileRestrictions(element)) return;
 
             // Enforce file type filtering (if applicable)
-            if (!element.IsFolder && explorer.Config.FileTypeMustBe.Length > 0) {
+            if (!element.isFolder && explorer.Config.fileTypeMustBe.Length > 0) {
                 bool validType = false;
-                for (uint i = 0; i < explorer.Config.FileTypeMustBe.Length; i++) {
-                    if (element.Type.ToLower() == explorer.Config.FileTypeMustBe[i].ToLower()) {
+                for (uint i = 0; i < explorer.Config.fileTypeMustBe.Length; i++) {
+                    if (element.type.ToLower() == explorer.Config.fileTypeMustBe[i].ToLower()) {
                         validType = true;
                         break;
                     }
@@ -2180,37 +2194,37 @@ namespace FileExplorer {
                 @explorer.CurrentSelectedElement = element;
             } 
             // Handle double-click
-            else if (contextType == ContextType::PinnedElements || element.IsSelected) {
-                if (currentTime - element.LastClickTime <= doubleClickThreshold) {
-                    if (contextType == ContextType::PinnedElements) {
-                        if (canAddMore && explorer.Config.SelectedPaths.Find(element.Path) == -1) {
-                            explorer.Config.SelectedPaths.InsertLast(element.Path);
+            else if (contextType == ContextType::pinnedElements || element.isSelected) {
+                if (currentTime - element.lastClickTime <= doubleClickThreshold) {
+                    if (contextType == ContextType::pinnedElements) {
+                        if (canAddMore && explorer.Config.selectedPaths.Find(element.path) == -1) {
+                            explorer.Config.selectedPaths.InsertLast(element.path);
                             explorer.utils.TruncateSelectedPathsIfNeeded();
                         }
                         @explorer.CurrentSelectedElement = element;
-                    } else if (element.IsFolder) {
+                    } else if (element.isFolder) {
                         explorer.tab[0].Navigation.MoveIntoSelectedDirectory();
                     } else if (canAddMore) {
-                        if (explorer.Config.SelectedPaths.Find(element.Path) == -1) {
-                            explorer.Config.SelectedPaths.InsertLast(element.Path);
+                        if (explorer.Config.selectedPaths.Find(element.path) == -1) {
+                            explorer.Config.selectedPaths.InsertLast(element.path);
                             explorer.utils.TruncateSelectedPathsIfNeeded();
                         }
                         @explorer.CurrentSelectedElement = element;
                     }
                 } else {
-                    element.LastClickTime = currentTime;
+                    element.lastClickTime = currentTime;
                 }
             } 
             // Normal left-click to select an element
             else if (enterType == EnterType::LeftClick) {
-                if (contextType != ContextType::PinnedElements) {
+                if (contextType != ContextType::pinnedElements) {
                     for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
-                        explorer.tab[0].Elements[i].IsSelected = false;
+                        explorer.tab[0].Elements[i].isSelected = false;
                     }
                 }
-                element.IsSelected = true;
-                element.LastSelectedTime = currentTime;
-                element.LastClickTime = currentTime;
+                element.isSelected = true;
+                element.lastSelectedTime = currentTime;
+                element.lastClickTime = currentTime;
                 @explorer.CurrentSelectedElement = element;
             }
         }
@@ -2223,25 +2237,25 @@ namespace FileExplorer {
             if (selectedElement !is null) {
                 UI::Text("Selected Element Details");
                 UI::Separator();
-                UI::Text("ICO: " + explorer.GetElementIconString(selectedElement.Icon, selectedElement.IsSelected));
-                UI::Text("Name: " + selectedElement.Name);
-                UI::Text("Path: " + selectedElement.Path);
-                UI::Text("Size: " + selectedElement.Size);
-                UI::Text("Type: " + selectedElement.Type);
-                UI::Text("Last Modified: " + Time::FormatString("%Y-%m-%d %H:%M:%S", selectedElement.LastModifiedDate));
-                UI::Text("Selected Time: " + selectedElement.LastSelectedTime);
+                UI::Text("ICO: " + explorer.GetElementIconString(selectedElement.icon, selectedElement.isSelected));
+                UI::Text("Name: " + selectedElement.name);
+                UI::Text("Path: " + selectedElement.path);
+                UI::Text("Size: " + selectedElement.size);
+                UI::Text("Type: " + selectedElement.type);
+                UI::Text("Last Modified: " + Time::FormatString("%Y-%m-%d %H:%M:%S", selectedElement.lastModifiedDate));
+                UI::Text("Selected Time: " + selectedElement.lastSelectedTime);
 
-                if (selectedElement.Type.ToLower() == "gbx") {
+                if (selectedElement.type.ToLower() == "gbx") {
                     UI::Separator();
                     UI::Text("GBX File Detected - Displaying GBX Info");
 
-                    dictionary gbxMetadata = selectedElement.GbxMetadata;
+                    dictionary gbxMetadata = selectedElement.gbxMetadata;
 
                     if (gbxMetadata.IsEmpty()) {
                         UI::Text("No metadata found.");
                     }
 
-                    if (true) UI::Text("Selected element " + selectedElement.Path);
+                    if (true) UI::Text("Selected element " + selectedElement.path);
 
                     string value;
                     if (gbxMetadata.Get("type", value)) UI::Text("Type: " + value);
@@ -2312,13 +2326,13 @@ namespace FileExplorer {
         string[] _canOnlyReturn = array<string>()
     ) {
         Config config;
-        config.MustReturn = _mustReturn;
-        config.MinMaxReturnAmount = _minmaxReturnAmount;
-        config.Path = _path;
-        config.SearchQuery = _searchQuery;
-        config.Filters = _filters;
-        config.FileTypeMustBe = _fileTypeMustBe;
-        config.CanOnlyReturn = _canOnlyReturn;
+        config.mustReturn = _mustReturn;
+        config.minMaxReturnAmount = _minmaxReturnAmount;
+        config.path = _path;
+        config.searchQuery = _searchQuery;
+        config.filters = _filters;
+        config.fileTypeMustBe = _fileTypeMustBe;
+        config.canOnlyReturn = _canOnlyReturn;
 
         if (explorer is null) {
             @explorer = FileExplorer(config);
@@ -2383,7 +2397,7 @@ dictionary ReadGbxHeader(const string &in path) {
         }
 
         if (Time::Now - startTime > 300) {
-            log("Error: Timeout while reading GBX header for file: " + path, LogLevel::Error, 2015, "ReadGbxHeader");
+            log("Error: Timeout while reading GBX header for file: " + path, LogLevel::Error, 2400, "ReadGbxHeader");
             mapFile.Close();
             return metadata;
         }
@@ -2416,7 +2430,7 @@ dictionary ReadGbxHeader(const string &in path) {
                 metadata["playermodel_id"] = playermodelNode.Attribute("id");
             }
         } else {
-            log("Error: Missing header node in GBX file: " + path, LogLevel::Error, 2048, "ReadGbxHeader");
+            log("Error: Missing header node in GBX file: " + path, LogLevel::Error, 2433, "ReadGbxHeader");
         }
     }
 
