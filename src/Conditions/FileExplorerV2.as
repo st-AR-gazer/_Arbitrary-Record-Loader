@@ -2198,10 +2198,9 @@ namespace FileExplorer {
             UI::Selectable(displayName, element.isSelected);
             UI::PopStyleColor();
 
-            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && UI::IsKeyDown(UI::Key::LeftCtrl || UI::Key::RightCtrl)) {
+            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && (UI::IsKeyDown(UI::Key::LeftCtrl) || UI::IsKeyDown(UI::Key::RightCtrl)) ) {
                 HandleElementSelection(element, EnterType::ControlClick, contextType);
-            } else
-            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left)) {
+            } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left)) {
                 HandleElementSelection(element, EnterType::LeftClick, contextType);
             } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Right)) {
                 HandleElementSelection(element, EnterType::RightClick, contextType);
