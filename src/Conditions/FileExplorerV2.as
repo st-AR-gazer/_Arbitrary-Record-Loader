@@ -2623,7 +2623,7 @@ void OpenFileExplorerExample() {
         IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
         "", // searchQuery
         { "replay", "ghost" }, // filters
-        { "replay", "ghost" } // canOnlyReturn
+        { "", "ghost" } // canOnlyReturn
     );
 }
 
