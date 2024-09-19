@@ -151,6 +151,8 @@
 
         - You should not be able to select elements if canOnlyReturn is set to 'folders'(or equivalent) and the element is a file
 
+        - Add a 'reset settings' button to the burger menu
+
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
@@ -932,6 +934,10 @@ namespace FileExplorer {
             @explorer = fe;
         }
 
+        // ------------------------------------------------
+        // Directory and Path Operations
+        // ------------------------------------------------
+
         bool IsDirectory(const string &in path) {
             if (path.EndsWith("/") || path.EndsWith("\\")) return true;
             return false;
@@ -939,11 +945,11 @@ namespace FileExplorer {
 
         string GetDirectoryName(const string &in path) {
             string trimmedPath = path;
-            
+
             while (trimmedPath.EndsWith("/") || trimmedPath.EndsWith("\\")) {
                 trimmedPath = trimmedPath.SubStr(0, trimmedPath.Length - 1);
             }
-            
+
             int index = trimmedPath.LastIndexOf("/");
             int index2 = trimmedPath.LastIndexOf("\\");
 
@@ -955,6 +961,10 @@ namespace FileExplorer {
 
             return trimmedPath.SubStr(index + 1);
         }
+
+        // ------------------------------------------------
+        // File/Folder Loading and Operations
+        // ------------------------------------------------
 
         void RefreshCurrentDirectory() {
             string currentPath = explorer.tab[0].Navigation.GetPath();
@@ -983,6 +993,10 @@ namespace FileExplorer {
             return selectedElement !is null;
         }
 
+        // ------------------------------------------------
+        // File I/O Operations
+        // ------------------------------------------------
+
         string ReadFileToEnd(const string &in path) {
             IO::File file(path, IO::FileMode::Read);
             string content = file.ReadToEnd();
@@ -997,15 +1011,24 @@ namespace FileExplorer {
             file.Close();
         }
 
-        void DisabledButton(const string &in text, const vec2 &in size = vec2 ( )) {
+        // ------------------------------------------------
+        // UI Helper Functions
+        // ------------------------------------------------
+
+        void DisabledButton(const string &in text, const vec2 &in size = vec2()) {
             UI::BeginDisabled();
             UI::Button(text, size);
             UI::EndDisabled();
         }
 
+        // ------------------------------------------------
+        // Window Management Functions
+        // ------------------------------------------------
+
         vec2 originalPos;
         vec2 originalSize;
         bool isMaximized = false;
+
         void MaximizeWindow() {
             vec2 screenSize = vec2(Draw::GetWidth(), Draw::GetHeight());
             if (isMaximized) {
@@ -1015,7 +1038,7 @@ namespace FileExplorer {
             } else {
                 originalPos = UI::GetWindowPos();
                 originalSize = UI::GetWindowSize();
-                
+
                 vec2 maximizedSize = vec2(screenSize.x * 0.97, screenSize.y * 0.97);
                 vec2 maximizedPos = vec2(screenSize.x * 0.015, screenSize.y * 0.015);
 
@@ -1042,7 +1065,12 @@ namespace FileExplorer {
             UI::SetWindowSize(vec2(1650, 800));
         }
 
+        // ------------------------------------------------
+        // File and Folder Manipulation
+        // ------------------------------------------------
+
         bool RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
+
         void DeleteSelectedElement() {
             ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             if (selectedElement !is null) {
@@ -1064,6 +1092,7 @@ namespace FileExplorer {
         }
 
         bool RENDER_RENAME_POPUP_FLAG;
+
         void RenameSelectedElement(const string &in newName) {
             ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             if (selectedElement is null) return;
@@ -1109,6 +1138,10 @@ namespace FileExplorer {
             }
         }
 
+        // ------------------------------------------------
+        // Sorting Functions
+        // ------------------------------------------------
+
         string SortingCriteriaToString(SortingCriteria criteria) {
             switch (criteria) {
                 case SortingCriteria::nameIgnoreFileFolder: return "NameIgnoreFileFolder";
@@ -1129,11 +1162,15 @@ namespace FileExplorer {
             return SortingCriteria::name;
         }
 
+        // ------------------------------------------------
+        // File Type Handling
+        // ------------------------------------------------
+
         string GetGbxFileType(const string &in path) {
             string ext = Path::GetExtension(path).SubStr(1).ToLower();
             if (ext == "gbx") {
                 string fileName = Path::GetFileName(path);
-                
+
                 string trimmedPath = fileName;
                 int index = trimmedPath.LastIndexOf(".");
                 trimmedPath = trimmedPath.SubStr(0, index);
@@ -1144,6 +1181,50 @@ namespace FileExplorer {
                 return gbxFileType;
             }
             return "";
+        }
+
+        // ------------------------------------------------
+        // Validation Functions
+        // ------------------------------------------------
+
+        bool IsValidReturnElement(ElementInfo@ element) {
+            bool canReturn = true;
+
+            if (element.isFolder) {
+                canReturn = !(explorer.Config.canOnlyReturn.Find("file") >= 0 || 
+                            explorer.Config.canOnlyReturn.Find("files") >= 0);
+            } else {
+                canReturn = !(explorer.Config.canOnlyReturn.Find("folder") >= 0 || 
+                            explorer.Config.canOnlyReturn.Find("folders") >= 0 || 
+                            explorer.Config.canOnlyReturn.Find("dir") >= 0 || 
+                            explorer.Config.canOnlyReturn.Find("directories") >= 0);
+            }
+
+            if (!element.isFolder && explorer.Config.canOnlyReturn.Length > 0) {
+                bool isValidFileType = false;
+
+                if (element.type.ToLower() == "gbx" && element.gbxType.Length > 0) {
+                    for (uint i = 0; i < explorer.Config.canOnlyReturn.Length; i++) {
+                        if (element.gbxType.ToLower() == explorer.Config.canOnlyReturn[i].ToLower()) {
+                            isValidFileType = true;
+                            break;
+                        }
+                    }
+                } else {
+                    for (uint i = 0; i < explorer.Config.canOnlyReturn.Length; i++) {
+                        if (element.type.ToLower() == explorer.Config.canOnlyReturn[i].ToLower()) {
+                            isValidFileType = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!isValidFileType) {
+                    canReturn = false;
+                }
+            }
+
+            return canReturn;
         }
     }
 
@@ -1802,28 +1883,8 @@ namespace FileExplorer {
                     for (uint i = 0; i < explorer.Config.selectedPaths.Length; i++) {
                         ElementInfo@ element = explorer.GetElementInfo(explorer.Config.selectedPaths[i]);
 
-                        // Validate file type
-                        bool validType = true;
-                        if (!element.isFolder && explorer.Config.fileTypeMustBe.Length > 0) {
-                            validType = false;
-                            for (uint j = 0; j < explorer.Config.fileTypeMustBe.Length; j++) {
-                                if (element.type.ToLower() == explorer.Config.fileTypeMustBe[j].ToLower()) {
-                                    validType = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        // Validate CanOnlyReturn
-                        if ((explorer.Config.canOnlyReturn.Find("file") >= 0 && !element.isFolder) ||
-                            (explorer.Config.canOnlyReturn.Find("files") >= 0 && !element.isFolder) ||
-                            (explorer.Config.canOnlyReturn.Find("dir") >= 0 && element.isFolder) ||
-                            (explorer.Config.canOnlyReturn.Find("dirs") >= 0 && element.isFolder) ||
-                            (explorer.Config.canOnlyReturn.Find("directories") >= 0 && element.isFolder) ||
-                            (explorer.Config.canOnlyReturn.Find("directory") >= 0 && element.isFolder) ||
-                            
-                            explorer.Config.canOnlyReturn.IsEmpty()) {
-                            if (validType) validSelections.InsertLast(element.path);
+                        if (explorer.utils.IsValidReturnElement(element)) {
+                            validSelections.InsertLast(element.path);
                         }
                     }
 
@@ -1838,6 +1899,7 @@ namespace FileExplorer {
                 } else {
                     explorer.utils.DisabledButton("Return Selected Paths");
                 }
+
                 UI::SameLine();
                 UI::Text("Selected element amount: " + explorer.Config.selectedPaths.Length);
                 UI::Separator();
@@ -2112,7 +2174,7 @@ namespace FileExplorer {
         }
 
         void SelectableWithClickCheck(ElementInfo@ element, ContextType contextType) {
-            string displayName;
+            string displayName = element.name;
             switch (explorer.Config.fileNameDisplayOption) {
                 case 1:
                     displayName = Text::StripFormatCodes(element.name);
@@ -2124,70 +2186,28 @@ namespace FileExplorer {
                     displayName = element.name;
             }
 
-            bool isValid = true;
-            vec4 textColor = explorer.Config.validFolderColor;
+            bool isValid = explorer.utils.IsValidReturnElement(element);
 
-            if (!explorer.Config.canOnlyReturn.IsEmpty()) {
-                if (!element.isFolder) {
-                    bool isFileTypeValid = explorer.Config.canOnlyReturn.Find("file") >= 0 ||
-                                        explorer.Config.canOnlyReturn.Find("files") >= 0;
-                    isValid = isFileTypeValid;
-                }
-
-                if (element.isFolder) {
-                    isValid = explorer.Config.canOnlyReturn.Find("folder") >= 0 ||
-                            explorer.Config.canOnlyReturn.Find("folders") >= 0 ||
-                            explorer.Config.canOnlyReturn.Find("dir") >= 0 || 
-                            explorer.Config.canOnlyReturn.Find("directories") >= 0;
-                }
-
-                textColor = element.isFolder
+            vec4 textColor = element.isFolder
                             ? (isValid ? explorer.Config.validFolderColor : explorer.Config.invalidFolderColor)
                             : (isValid ? explorer.Config.validFileColor : explorer.Config.invalidFileColor);
-            }
 
             UI::PushStyleColor(UI::Col::Text, textColor);
             UI::Selectable(displayName, element.isSelected);
             UI::PopStyleColor();
 
-            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left) && (UI::IsKeyDown(UI::Key::LeftCtrl) || UI::IsKeyDown(UI::Key::RightCtrl))) {
-                HandleElementSelection(element, EnterType::ControlClick, contextType);
-            } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Right)) {
-                HandleElementSelection(element, EnterType::RightClick, contextType);
-            } else if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left)) {
+            if (UI::IsItemHovered() && UI::IsMouseClicked(UI::MouseButton::Left)) {
                 HandleElementSelection(element, EnterType::LeftClick, contextType);
             }
-        }
-
-        bool FolderAndFileRestrictions(ElementInfo@ element) {
-            if (explorer.Config.canOnlyReturn.Find("file") != -1 && !element.isFolder) return false;
-            if (explorer.Config.canOnlyReturn.Find("files") != -1 && !element.isFolder) return false;
-            if (explorer.Config.canOnlyReturn.Find("dir") != -1 && element.isFolder) return false;
-            if (explorer.Config.canOnlyReturn.Find("dirs") != -1 && element.isFolder) return false;
-            if (explorer.Config.canOnlyReturn.Find("directories") != -1 && element.isFolder) return false;
-            if (explorer.Config.canOnlyReturn.Find("directory") != -1 && element.isFolder) return false;
-            return true;
         }
 
         void HandleElementSelection(ElementInfo@ element, EnterType enterType, ContextType contextType) {
             // Enforce selection restrictions
             bool canAddMore = explorer.Config.selectedPaths.Length < uint(explorer.Config.minMaxReturnAmount.y) || explorer.Config.minMaxReturnAmount.y == -1;
             // Enforce folder/file only restrictions
-            if (!FolderAndFileRestrictions(element)) return;
+            if (!explorer.utils.IsValidReturnElement(element)) return;
 
-            // Enforce file type filtering (if applicable)
-            if (!element.isFolder && explorer.Config.fileTypeMustBe.Length > 0) {
-                bool validType = false;
-                for (uint i = 0; i < explorer.Config.fileTypeMustBe.Length; i++) {
-                    if (element.type.ToLower() == explorer.Config.fileTypeMustBe[i].ToLower()) {
-                        validType = true;
-                        break;
-                    }
-                }
-                if (!validType) return;
-            }
-
-            // Handle element click
+            //// Handle element click
             // Handle control-click (for multi-selection) or right-click (for context menu)
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
