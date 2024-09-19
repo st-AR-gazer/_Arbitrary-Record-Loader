@@ -1,11 +1,11 @@
-//    ______ _ _         _____              _
-//   |  ___(_) |        |  ___|            | |
-//   | |_   _| | ___    | |____  ___ _____ | | ___  _ __  ___  _ __ 
-//   |  _| | | |/ _ \   |  __\ \/ / | ___ \| |/ _ \| '__|/ _ \| '__|
-//   | |   | | |  __/   | |___>  <| | |_/ /| | (_) | |  |  __/| | 
-//   \_|   |_|_|\___|   \____/_/\_\_| ___/ |_|\___/|_|   \___||_|
-//                                  | |
-//                                  |_|
+//    ______ _ _         ______              _
+//   |  ___(_) |        |  ____\            | |
+//   | |_   _| | ___    | |___ __  __ _____ | | ___  _ __  ___  _ __ 
+//   |  _| | | |/ _ \   |  __| \ \/ /| ___ \| |/ _ \| '__|/ _ \| '__|
+//   | |   | | |  __/   | |____ >  < | |_/ /| | (_) | |  |  __/| | 
+//   \_|   |_|_|\___|   \_____ /_/\_\| ___/ |_|\___/|_|   \___||_|
+//                                   | |
+//                                   |_|
 //                                                                     
 //   FILE EXPLORER for AngelScript
 //   Version 0.1.0
@@ -198,7 +198,7 @@ namespace FileExplorer {
         vec4 validFolderColor = vec4(1, 1, 1, 1);   // Default: White
         vec4 invalidFolderColor = vec4(1, 1, 1, 0.4); // Default: Gray
 
-        SortingCriteria sortingCriteria = SortingCriteria::Name;
+        SortingCriteria sortingCriteria = SortingCriteria::name;
         bool sortingAscending = true;
         bool sortFilesBeforeFolders = false;
 
@@ -492,7 +492,7 @@ namespace FileExplorer {
         int64 lastModifiedDate;
         int64 creationDate;
         bool isFolder;
-        Icon icon;
+        _Icon icon;
         bool isSelected;
         uint64 lastSelectedTime;
         dictionary gbxMetadata;
@@ -510,7 +510,7 @@ namespace FileExplorer {
                 int64 _lastModifiedDate, 
                 int64 _creationDate, 
                 bool _isFolder, 
-                Icon _icon, bool _isSelected) {
+                _Icon _icon, bool _isSelected) {
             this.name = _name;
             this.path = _path;
             this.size = _size;
@@ -891,9 +891,9 @@ namespace FileExplorer {
                         swap = !Elements[i].isFolder && Elements[j].isFolder;
                     }
                         
-                    if (Config.sortingCriteria == SortingCriteria::NameIgnoreFileFolder) {
+                    if (Config.sortingCriteria == SortingCriteria::nameIgnoreFileFolder) {
                         swap = Config.sortingAscending ? Elements[i].name > Elements[j].name : Elements[i].name < Elements[j].name;
-                    } else if (Config.sortingCriteria == SortingCriteria::Name) {
+                    } else if (Config.sortingCriteria == SortingCriteria::name) {
                         if (Elements[i].isFolder && Elements[j].isFolder) {
                             swap = Config.sortingAscending ? Elements[i].name > Elements[j].name : Elements[i].name < Elements[j].name;
                         } else if (!Elements[i].isFolder && !Elements[j].isFolder) {
@@ -901,11 +901,11 @@ namespace FileExplorer {
                         } else {
                             swap = Config.sortFilesBeforeFolders ? !Elements[i].isFolder : Elements[i].isFolder;
                         }
-                    } else if (Config.sortingCriteria == SortingCriteria::Size) {
+                    } else if (Config.sortingCriteria == SortingCriteria::size) {
                         swap = Config.sortingAscending ? Elements[i].sizeBytes > Elements[j].sizeBytes : Elements[i].sizeBytes < Elements[j].sizeBytes;
-                    } else if (Config.sortingCriteria == SortingCriteria::LastModified) {
+                    } else if (Config.sortingCriteria == SortingCriteria::lastModified) {
                         swap = Config.sortingAscending ? Elements[i].lastModifiedDate > Elements[j].lastModifiedDate : Elements[i].lastModifiedDate < Elements[j].lastModifiedDate;
-                    } else if (Config.sortingCriteria == SortingCriteria::CreatedDate) {
+                    } else if (Config.sortingCriteria == SortingCriteria::createdDate) {
                         swap = Config.sortingAscending ? Elements[i].creationDate > Elements[j].creationDate : Elements[i].creationDate < Elements[j].creationDate;
                     }
         
@@ -1107,22 +1107,22 @@ namespace FileExplorer {
 
         string SortingCriteriaToString(SortingCriteria criteria) {
             switch (criteria) {
-                case SortingCriteria::NameIgnoreFileFolder: return "NameIgnoreFileFolder";
-                case SortingCriteria::Name: return "Name";
-                case SortingCriteria::Size: return "Size";
-                case SortingCriteria::LastModified: return "Date Modified";
-                case SortingCriteria::CreatedDate: return "Date Created";
+                case SortingCriteria::nameIgnoreFileFolder: return "NameIgnoreFileFolder";
+                case SortingCriteria::name: return "Name";
+                case SortingCriteria::size: return "Size";
+                case SortingCriteria::lastModified: return "Date Modified";
+                case SortingCriteria::createdDate: return "Date Created";
             }
             return "Unknown";
         }
 
         SortingCriteria StringToSortingCriteria(const string &in str) {
-            if (str == "NameIgnoreFileFolder") return SortingCriteria::NameIgnoreFileFolder;
-            if (str == "Name") return SortingCriteria::Name;
-            if (str == "Size") return SortingCriteria::Size;
-            if (str == "Date Modified") return SortingCriteria::LastModified;
-            if (str == "Date Created") return SortingCriteria::CreatedDate;
-            return SortingCriteria::Name;
+            if (str == "NameIgnoreFileFolder") return SortingCriteria::nameIgnoreFileFolder;
+            if (str == "Name") return SortingCriteria::name;
+            if (str == "Size") return SortingCriteria::size;
+            if (str == "Date Modified") return SortingCriteria::lastModified;
+            if (str == "Date Created") return SortingCriteria::createdDate;
+            return SortingCriteria::name;
         }
 
         string GetGbxFileType(const string &in path) {
