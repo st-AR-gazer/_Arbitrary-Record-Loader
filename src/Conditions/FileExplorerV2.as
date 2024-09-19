@@ -149,8 +149,6 @@
         - Add a starting ID to each opened instance of the file explorer window, so that multiple 
           instances can be opened at the same time by different plugins (or the same plugin for that matter)
 
-        - Remove support for fileTypeMustBe, CanOnlyReturn is better in every way
-
         - You should not be able to select elements if canOnlyReturn is set to 'folders'(or equivalent) and the element is a file
 
     FIXME: 
