@@ -151,6 +151,8 @@
 
         - Remove support for fileTypeMustBe, CanOnlyReturn is better in every way
 
+        - You should not be able to select elements if canOnlyReturn is set to 'folders'(or equivalent) and the element is a file
+
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
@@ -169,38 +171,42 @@ namespace FileExplorer {
     const int FILE_EXPLORER_SETTINGS_VERSION = 1;
     
     class Config {
+        // FileExplorer settings
+
+        // Passed to Config
         bool mustReturn;
         vec2 minMaxReturnAmount;
-        array<string> fileTypeMustBe;
-        array<string> canOnlyReturn;
-
         string path;
         string searchQuery;
         array<string> filters;
+        array<string> canOnlyReturn;
+
+        // Internal settings
         dictionary activeFilters;
         array<string> selectedPaths;
         array<string> pinnedElements;
+        // Internal color
+        vec4 validFileColor = vec4(1, 1, 1, 1);       // Default: White
+        vec4 invalidFileColor = vec4(1, 1, 1, 0.4);   // Default: Gray
+        vec4 validFolderColor = vec4(1, 1, 1, 1);     // Default: White
+        vec4 invalidFolderColor = vec4(1, 1, 1, 0.4); // Default: Gray
+
 
         // UI-related settings
+        int maxElementsPerPage = 30;
+        int fileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
+        int searchBarPadding = 0;
         bool hideFiles = false;
         bool hideFolders = false;
         bool enablePagination = false;
-        bool useExtraWarningWhenDeleting = true;
         bool recursiveSearch = false;
-        int maxElementsPerPage = 30;
-        dictionary columnsToShow;
-        int fileNameDisplayOption = 0; // 0: Default, 1: No Formatting, 2: ManiaPlanet Formatting
+        bool useExtraWarningWhenDeleting = true;
         bool enableSearchBar = true;
-        int searchBarPadding = 0;
-
-        vec4 validFileColor = vec4(1, 1, 1, 1);     // Default: White
-        vec4 invalidFileColor = vec4(1, 1, 1, 0.4);   // Default: Gray
-        vec4 validFolderColor = vec4(1, 1, 1, 1);   // Default: White
-        vec4 invalidFolderColor = vec4(1, 1, 1, 0.4); // Default: Gray
-
-        SortingCriteria sortingCriteria = SortingCriteria::name;
         bool sortingAscending = true;
         bool sortFilesBeforeFolders = false;
+        dictionary columnsToShow;
+
+        SortingCriteria sortingCriteria = SortingCriteria::name;
 
         /*const*/ string settingsDirectory = IO::FromDataFolder("Plugin_FileExplorer_Settings");
         /*const*/ string settingsFilePath = Path::Join(settingsDirectory, "FileExplorerSettings.json");
@@ -2322,7 +2328,6 @@ namespace FileExplorer {
         string _path = "",
         string _searchQuery = "",
         string[] _filters = array<string>(),
-        string[] _fileTypeMustBe = array<string>(),
         string[] _canOnlyReturn = array<string>()
     ) {
         Config config;
@@ -2331,7 +2336,6 @@ namespace FileExplorer {
         config.path = _path;
         config.searchQuery = _searchQuery;
         config.filters = _filters;
-        config.fileTypeMustBe = _fileTypeMustBe;
         config.canOnlyReturn = _canOnlyReturn;
 
         if (explorer is null) {
@@ -2342,6 +2346,7 @@ namespace FileExplorer {
         
         explorer.Open(config);
     }
+
 
     void fe_ForceClose() {
         if (explorer !is null) {
@@ -2581,8 +2586,7 @@ void OpenFileExplorerExample() {
         IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
         "", // searchQuery
         { "replay", "ghost" }, // filters
-        { "replay" }, // fileTypeMustBe
-        { "dir" } // canOnlyReturn
+        { "replay", "ghost" } // canOnlyReturn
     );
 }
 
