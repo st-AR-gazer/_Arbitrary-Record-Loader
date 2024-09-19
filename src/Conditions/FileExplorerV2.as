@@ -2135,8 +2135,10 @@ namespace FileExplorer {
                 ElementInfo@ element = explorer.tab[0].GetSelectedElement();
                 if (element !is null) {
                     bool canAddMore = explorer.Config.selectedPaths.Length < uint(explorer.Config.minMaxReturnAmount.y) || explorer.Config.minMaxReturnAmount.y == -1;
+                    
+                    bool isValidElement = explorer.utils.IsValidReturnElement(element);
 
-                    if (canAddMore) {
+                    if (canAddMore && isValidElement) {
                         if (UI::MenuItem("Add to Selected Elements", "", false)) {
                             if (explorer.Config.selectedPaths.Find(element.path) == -1) {
                                 explorer.Config.selectedPaths.InsertLast(element.path);
@@ -2147,9 +2149,9 @@ namespace FileExplorer {
                         UI::MenuItem("Add to Selected Elements", "", false, false);
                     }
 
-                    if (canAddMore) {
+                    if (canAddMore && isValidElement) {
                         if (UI::MenuItem("Quick return")) {
-                            explorer.exports.SetSelectionComplete( { element.path } );
+                            explorer.exports.SetSelectionComplete({ element.path });
                             explorer.exports.selectionComplete = true;
                             explorer.Close();
                         }
@@ -2206,23 +2208,24 @@ namespace FileExplorer {
         }
 
         void HandleElementSelection(ElementInfo@ element, EnterType enterType, ContextType contextType) {
-            // Enforce selection restrictions
             bool canAddMore = explorer.Config.selectedPaths.Length < uint(explorer.Config.minMaxReturnAmount.y) || explorer.Config.minMaxReturnAmount.y == -1;
-            // Enforce folder/file only restrictions
-            if (!explorer.utils.IsValidReturnElement(element)) return;
+            bool isValidForSelection = explorer.utils.IsValidReturnElement(element);
 
-            //// Handle element click
-            // Handle control-click (for multi-selection) or right-click (for context menu)
             uint64 currentTime = Time::Now;
             const uint64 doubleClickThreshold = 600; // 0.6 seconds
 
+            // Handle right- and control-click (context menu)
             if (enterType == EnterType::RightClick || enterType == EnterType::ControlClick) {
                 openContextMenu = true;
                 currentContextType = contextType;
                 @explorer.CurrentSelectedElement = element;
-            } 
-            // Handle double-click
-            else if (contextType == ContextType::pinnedElements || element.isSelected) {
+                return;
+            }
+
+            if (!isValidForSelection) return;
+
+            // Handle double-click for selection or folder navigation
+            if (contextType == ContextType::pinnedElements || element.isSelected) {
                 if (currentTime - element.lastClickTime <= doubleClickThreshold) {
                     if (contextType == ContextType::pinnedElements) {
                         if (canAddMore && explorer.Config.selectedPaths.Find(element.path) == -1) {
@@ -2243,7 +2246,7 @@ namespace FileExplorer {
                     element.lastClickTime = currentTime;
                 }
             } 
-            // Normal left-click to select an element
+            // Handle normal left-click for selection
             else if (enterType == EnterType::LeftClick) {
                 if (contextType != ContextType::pinnedElements) {
                     for (uint i = 0; i < explorer.tab[0].Elements.Length; i++) {
