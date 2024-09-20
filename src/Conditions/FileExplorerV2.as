@@ -162,7 +162,7 @@
 */
 
 namespace FileExplorer {
-    bool showInterface = false;
+    // bool showInterface = false;
     // FileExplorer@ explorer;
     Utils@ utils;
 
@@ -1236,6 +1236,7 @@ namespace FileExplorer {
 
     class FileExplorer {
         string sessionId;
+        bool showInterface = false;
 
         Config@ Config;
         // Utils@ utils;
@@ -1304,13 +1305,13 @@ namespace FileExplorer {
             nav.SetPath(Config.path);
             Config.LoadSettings(sessionKey);
             exports.selectionComplete = false;
-            showInterface = true;
+            this.showInterface = true;
         }
 
         void Close() {
             Config.SaveSettings();
             CloseCurrentSession();
-            showInterface = false;
+            this.showInterface = false;
         }
 
         private void CloseCurrentSession() {
@@ -1415,8 +1416,6 @@ namespace FileExplorer {
         }
 
         void Render_FileExplorer() {
-            if (!showInterface) return;
-
             Render_Rows();
             Render_Columns();
 
@@ -2419,8 +2418,8 @@ namespace FileExplorer {
                     string sessionId = sessionKey.SubStr(pluginName.Length + 2); // Skip "pluginName::"
                     string windowTitle = "File Explorer " + sessionId;
 
-                    if (!showInterface) return;
-                    if (UI::Begin(windowTitle, showInterface, UI::WindowFlags::NoTitleBar)) {
+                    if (!explorer.showInterface) return;
+                    if (UI::Begin(windowTitle, explorer.showInterface, UI::WindowFlags::NoTitleBar)) {
                         explorer.ui.Render_FileExplorer();
                     }
                     UI::End();
