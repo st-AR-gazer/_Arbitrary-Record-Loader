@@ -760,13 +760,11 @@ namespace FileExplorer {
             explorer.tab[0].Elements.Resize(0);
             explorer.CurrentIndexingPath = explorer.tab[0].Navigation.GetPath();
             
-            startnew(CoroutineFuncUserdata(RecursiveSearchCoroutine), this);
+            startnew(CoroutineFuncUserdata(RecursiveSearchCoroutine));
         }
 
 
-        void RecursiveSearchCoroutine(ref@ r) {
-
-
+        void RecursiveSearchCoroutine() {
             int elementCount = 0;
             array<string> dirsToProcess = { Navigation.GetPath() };
 
