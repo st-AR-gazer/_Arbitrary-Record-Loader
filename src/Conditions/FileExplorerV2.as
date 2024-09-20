@@ -664,8 +664,7 @@ namespace FileExplorer {
     }
 
     class FileTab {
-        uint currentSelectedTab = 0; // Decided to only go with one tab for now, but might add more in the future...
-
+        uint currentSelectedTab = 0;
         Navigation@ Navigation;
         array<ElementInfo@> Elements;
         Config@ Config;
@@ -675,98 +674,82 @@ namespace FileExplorer {
         uint CurrentPage = 0;
         uint TotalPages = 1;
 
-
         FileTab(Config@ cfg, FileExplorer@ fe) {
             @Config = cfg;
             @explorer = fe;
             @Navigation = fe.nav;
-            
+
             LoadDirectory(Config.path);
         }
 
         void LoadDirectory(const string &in path) {
             Elements.Resize(0);
-
             explorer.nav.UpdateHistory(path);
             explorer.nav.SetPath(path);
 
-            StartIndexingFiles(path);
+            if (Config.recursiveSearch) {
+                StartRecursiveSearch();
+            } else {
+                StartIndexingFiles(path);
+            }
+
             CurrentPage = 0;
             UpdatePagination();
         }
 
-        void StartIndexingFiles(const string &in path, bool recursive = false) {
+        // Start non-recursive indexing
+        void StartIndexingFiles(const string &in path) {
             explorer.IsIndexing = true;
-            explorer.IndexingMessage = recursive ? "Recursive search in progress..." : "Folder is being indexed...";
+            explorer.IndexingMessage = "Folder is being indexed...";
             explorer.CurrentIndexingPath = path;
 
             startnew(CoroutineFuncUserdata(IndexFilesCoroutine), this);
         }
 
+        // Non recursive search
         void IndexFilesCoroutine(ref@ r) {
             FileTab@ tab = cast<FileTab@>(r);
             if (tab is null) return;
 
             tab.Elements.Resize(0);
-            tab.explorer.IsIndexing = true;
-            string startPath = tab.Navigation.GetPath();
-            bool recursive = tab.Config.recursiveSearch;
-            log((recursive ? "Recursive " : "") + "Indexing started for path: " + startPath, LogLevel::Info, 704, "IndexFilesCoroutine");
+            array<string> elements = IO::IndexFolder(tab.Navigation.GetPath(), false);
 
-            array<string> elements = tab.explorer.GetFiles(startPath, false);
+            for (uint i = 0; i < elements.Length; i++) {
+                ElementInfo@ elementInfo = explorer.GetElementInfo(elements[i]);
 
-            if (elements.Length == 0) {
-                log("No files found in directory: " + startPath, LogLevel::Info, 711, "IndexFilesCoroutine");
-            }
-
-            const uint batchSize = 1000;
-            uint totalFiles = elements.Length;
-            uint processedFiles = 0;
-
-            for (uint i = 0; i < totalFiles; i++) {
-                string path = elements[i];
-                if (path.Contains("\\/")) {
-                    path = path.Replace("\\/", "/");
-                }
-
-                ElementInfo@ elementInfo = tab.explorer.GetElementInfo(path);
-                if (elementInfo !is null) {
+                if (elementInfo !is null && (Config.searchQuery == "" || elementInfo.name.ToLower().Contains(Config.searchQuery.ToLower()))) {
                     tab.Elements.InsertLast(elementInfo);
                 }
 
-                processedFiles++;
-
-                if (processedFiles % batchSize == 0) {
-                    tab.explorer.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
+                if (i % 537 == 0) {
+                    explorer.IndexingMessage = "Indexed " + tostring(i + 1) + " files...";
                     yield();
                 }
             }
 
-            tab.explorer.IndexingMessage = "Indexing element " + processedFiles + " out of " + totalFiles;
-            yield();
-
-            tab.ApplyFiltersAndSearch();
-            tab.ApplyVisibilitySettings();
-            tab.explorer.IsIndexing = false;
-
-            log((recursive ? "Recursive " : "") + "Indexing completed. Number of elements: " + tab.Elements.Length, LogLevel::Info, 744, "IndexFilesCoroutine");
-
-            explorer.UpdateCurrentSelectedElement();
+            explorer.IsIndexing = false;
+            ApplyFiltersAndSearch();
         }
 
+        // Start recursive indexing
         void StartRecursiveSearch() {
             explorer.IsIndexing = true;
             explorer.IndexingMessage = "Recursive search in progress...";
-            explorer.tab[0].Elements.Resize(0);
-            explorer.CurrentIndexingPath = explorer.tab[0].Navigation.GetPath();
-            
-            startnew(CoroutineFunc(RecursiveSearchCoroutine));
+            Elements.Resize(0);
+            explorer.CurrentIndexingPath = Navigation.GetPath();
+
+            startnew(CoroutineFuncUserdata(RecursiveSearchCoroutine), this);
         }
 
+        // Recursive search
+        void RecursiveSearchCoroutine(ref@ r) {
+            FileTab@ tab = cast<FileTab@>(r);
+            if (tab is null) return;
 
-        void RecursiveSearchCoroutine() {
             int elementCount = 0;
             array<string> dirsToProcess = { Navigation.GetPath() };
+            const int batchSize = 5000;
+            int processedSinceLastYield = 0;
 
             while (dirsToProcess.Length > 0) {
                 string currentDir = dirsToProcess[dirsToProcess.Length - 1];
@@ -780,15 +763,17 @@ namespace FileExplorer {
                     } else {
                         ElementInfo@ elementInfo = explorer.GetElementInfo(elements[i]);
 
-                        if (elementInfo !is null && (explorer.Config.searchQuery == "" || elementInfo.name.ToLower().Contains(explorer.Config.searchQuery.ToLower()))) {
+                        if (elementInfo !is null && (Config.searchQuery == "" || elementInfo.name.ToLower().Contains(Config.searchQuery.ToLower()))) {
                             Elements.InsertLast(elementInfo);
                         }
                     }
 
                     elementCount++;
+                    processedSinceLastYield++;
 
-                    if (elementCount % 137 == 0) {
+                    if (processedSinceLastYield >= batchSize) {
                         explorer.IndexingMessage = "Indexed " + tostring(elementCount) + " files from " + currentDir;
+                        processedSinceLastYield = 0;
                         yield();
                     }
                 }
@@ -797,24 +782,20 @@ namespace FileExplorer {
                 yield();
             }
 
-            ApplyFiltersAndSearch();
             explorer.IsIndexing = false;
+            ApplyFiltersAndSearch();
         }
 
         void ApplyFiltersAndSearch() {
-            if (explorer.Config.recursiveSearch) {
+            if (Config.recursiveSearch) {
                 ApplyRecursiveSearch();
             } else {
                 ApplyNonRecursiveSearch();
             }
 
             ApplyFilters();
-            if (explorer.Config.enablePagination) {
-                UpdatePagination();
-            } else {
-                explorer.tab[0].TotalPages = 1;
-                explorer.tab[0].CurrentPage = 0;
-            }
+            ApplyVisibilitySettings();
+            UpdatePagination();
         }
 
         void ApplyNonRecursiveSearch() {
@@ -829,7 +810,7 @@ namespace FileExplorer {
         }
 
         void ApplyRecursiveSearch() {
-            array<ElementInfo@> tempElements = LoadAllElementsRecursively(Navigation.GetPath());
+            array<ElementInfo@> tempElements = Elements;
             Elements.Resize(0);
 
             for (uint i = 0; i < tempElements.Length; i++) {
@@ -837,24 +818,6 @@ namespace FileExplorer {
                     Elements.InsertLast(tempElements[i]);
                 }
             }
-        }
-
-        array<ElementInfo@> LoadAllElementsRecursively(const string &in path) {
-            array<ElementInfo@> elementList;
-            array<string> elementNames = explorer.GetFiles(path, true);
-            for (uint i = 0; i < elementNames.Length; i++) {
-                ElementInfo@ elementInfo = explorer.GetElementInfo(elementNames[i]);
-                if (elementInfo !is null) {
-                    elementList.InsertLast(elementInfo);
-                }
-                if (elementInfo.isFolder) {
-                    array<ElementInfo@> subElements = LoadAllElementsRecursively(elementInfo.path);
-                    for (uint j = 0; j < subElements.Length; j++) {
-                        elementList.InsertLast(subElements[j]);
-                    }
-                }
-            }
-            return elementList;
         }
 
         void ApplyFilters() {
@@ -874,17 +837,9 @@ namespace FileExplorer {
                     bool found = false;
                     for (uint j = 0; j < Config.filters.Length; j++) {
                         string filter = Config.filters[j];
-                        if (Config.IsFilterActive(filter)) {
-
-                            string elementGbxType = element.gbxType;
-                            
-                            if (elementGbxType.ToLower() == filter.ToLower()) {
-                                found = true;
-                                break;
-                            } else if (filter.ToLower() == elementGbxType.ToLower()) {
-                                found = true;
-                                break;
-                            }
+                        if (Config.IsFilterActive(filter) && (element.gbxType.ToLower() == filter.ToLower())) {
+                            found = true;
+                            break;
                         }
                     }
                     element.shouldShow = found;
@@ -930,7 +885,7 @@ namespace FileExplorer {
                     } else {
                         swap = !Elements[i].isFolder && Elements[j].isFolder;
                     }
-                        
+
                     if (Config.sortingCriteria == SortingCriteria::nameIgnoreFileFolder) {
                         swap = Config.sortingAscending ? Elements[i].name > Elements[j].name : Elements[i].name < Elements[j].name;
                     } else if (Config.sortingCriteria == SortingCriteria::name) {
@@ -948,7 +903,7 @@ namespace FileExplorer {
                     } else if (Config.sortingCriteria == SortingCriteria::createdDate) {
                         swap = Config.sortingAscending ? Elements[i].creationDate > Elements[j].creationDate : Elements[i].creationDate < Elements[j].creationDate;
                     }
-        
+
                     if (swap) {
                         ElementInfo@ temp = Elements[i];
                         @Elements[i] = Elements[j];
@@ -1367,11 +1322,12 @@ namespace FileExplorer {
             explorersByPlugin.Delete(sessionKey);
         }
 
-        void StartIndexingFiles(const string &in path) {
+        void StartIndexingFiles(const string &in path, bool recursive = false) {
             IsIndexing = true;
-            IndexingMessage = "Folder is being indexed...";
+            IndexingMessage = recursive ? "Recursive search in progress..." : "Folder is being indexed...";
             CurrentIndexingPath = path;
-            tab[0].StartIndexingFiles(path);
+
+            startnew(CoroutineFuncUserdata(IndexFilesCoroutine), this);
         }
 
         array<string> GetFiles(const string &in path, bool recursive) {
