@@ -1238,7 +1238,7 @@ namespace FileExplorer {
 
         FileExplorer(Config@ cfg, const string &in id) {
             sessionId = id;
-            
+
             @Config = cfg;
             @utils = Utils(this);
             @nav = Navigation(this);
@@ -1247,10 +1247,6 @@ namespace FileExplorer {
             @ui = UserInterface(this);
             @exports = Exports(this);
 
-            @CurrentSelectedElement = null;
-
-            nav.UpdateHistory(cfg.path);
-            
             @CurrentSelectedElement = null;
 
             nav.UpdateHistory(cfg.path);
@@ -1327,7 +1323,7 @@ namespace FileExplorer {
             IndexingMessage = recursive ? "Recursive search in progress..." : "Folder is being indexed...";
             CurrentIndexingPath = path;
 
-            startnew(CoroutineFuncUserdata(IndexFilesCoroutine), this);
+            tab[0].StartIndexingFiles(path, recursive);
         }
 
         array<string> GetFiles(const string &in path, bool recursive) {
