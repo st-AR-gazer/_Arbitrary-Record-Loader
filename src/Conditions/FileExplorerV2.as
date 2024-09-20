@@ -230,7 +230,7 @@ namespace FileExplorer {
         }
 
         void LoadSettings(string sessionId) {
-            FileExplorer@ explorer = GetExplorerById(sessionId);
+            FileExplorer@ explorer = fe_GetExplorerById(sessionId);
             if (explorer is null) return;
 
             if (!IO::FolderExists(settingsDirectory)) {
