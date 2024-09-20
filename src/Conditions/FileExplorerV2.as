@@ -29,6 +29,12 @@
  */
 
 /**
+ * IMPORTANT:
+ * Any changes not made by me (ar) will not (nessecarily) be documented here. Please refer to any external sources the 
+ * other developer has linked.
+ */
+
+/**
  * How to Integrate and Use the FileExplorer:
  * 
  * To integrate the FileExplorer into your plugin, follow the steps below:
@@ -166,6 +172,9 @@ namespace FileExplorer {
     // ONLY CHANGE THIS IF A DESTRUCTIVE CHANGE IS MADE TO THE FILE EXPLORER SAVE FILE FORMAT, IDEALY 
     // THIS SHOULD NEVER 'CHANGE', JUST BE ADDED TOO, BUT FOR SOME FUTURE PROOFING, THIS WAS ADDED...
     const int FILE_EXPLORER_SETTINGS_VERSION = 1;
+
+    // Change this if you need more than 150 yield calls to get the file explorer information (shouldn't ever be needed, but nice to know I guess xdd)
+    const int FILE_EXPLORER_EXPORT_YIELD_AMOUNT = 150;
     
     class Config {
         // FileExplorer settings
@@ -704,8 +713,6 @@ namespace FileExplorer {
             bool recursive = tab.Config.recursiveSearch;
             log((recursive ? "Recursive " : "") + "Indexing started for path: " + startPath, LogLevel::Info, 704, "IndexFilesCoroutine");
 
-            // Incase I change my mind and want to add recursive search back in at a later date... (it's not fully working, so it's commented out for now, but I'm probably not gonna do anything with it... way too slow)
-            // array<string> elements = recursive ? PerformRecursiveIndexing(tab, startPath) : tab.explorer.GetFiles(startPath, false);
             array<string> elements = tab.explorer.GetFiles(startPath, false);
 
             if (elements.Length == 0) {
@@ -747,34 +754,54 @@ namespace FileExplorer {
             explorer.UpdateCurrentSelectedElement();
         }
 
-        // Incase I change my mind and want to add recursive search back in at a later date... (it's not fully working, so it's commented out for now, but I'm probably not gonna do anything with it... way too slow)
-        // array<string> PerformRecursiveIndexing(FileTab@ tab, const string &in startPath) {
-        //     array<string> results;
-        //     array<string> dirsToProcess = { startPath };
+        void StartRecursiveSearch() {
+            explorer.IsIndexing = true;
+            explorer.IndexingMessage = "Recursive search in progress...";
+            explorer.tab[0].Elements.Resize(0);
+            explorer.CurrentIndexingPath = explorer.tab[0].Navigation.GetPath();
+            
+            startnew(CoroutineFuncUserdata(RecursiveSearchCoroutine), this);
+        }
 
-        //     while (dirsToProcess.Length > 0) {
-        //         string currentDir = dirsToProcess[dirsToProcess.Length - 1];
-        //         dirsToProcess.RemoveLast();
 
-        //         array<string> elements = IO::IndexFolder(currentDir, false);
+        void RecursiveSearchCoroutine(ref@ r) {
 
-        //         for (uint i = 0; i < elements.Length; i++) {
-        //             if (utils.IsDirectory(elements[i])) {
-        //                 dirsToProcess.InsertLast(elements[i]);
-        //             } else {
-        //                 results.InsertLast(elements[i]);
-        //             }
 
-        //             tab.explorer.IndexingMessage = "Indexed " + tostring(results.Length) + " files from " + currentDir;
+            int elementCount = 0;
+            array<string> dirsToProcess = { Navigation.GetPath() };
 
-        //             if (results.Length % 100 == 0) {
-        //                 yield();
-        //             }
-        //         }
-        //     }
+            while (dirsToProcess.Length > 0) {
+                string currentDir = dirsToProcess[dirsToProcess.Length - 1];
+                dirsToProcess.RemoveLast();
 
-        //     return results;
-        // }
+                array<string> elements = IO::IndexFolder(currentDir, false);
+
+                for (uint i = 0; i < elements.Length; i++) {
+                    if (utils.IsDirectory(elements[i])) {
+                        dirsToProcess.InsertLast(elements[i]);
+                    } else {
+                        ElementInfo@ elementInfo = explorer.GetElementInfo(elements[i]);
+
+                        if (elementInfo !is null && (explorer.Config.searchQuery == "" || elementInfo.name.ToLower().Contains(explorer.Config.searchQuery.ToLower()))) {
+                            Elements.InsertLast(elementInfo);
+                        }
+                    }
+
+                    elementCount++;
+
+                    if (elementCount % 137 == 0) {
+                        explorer.IndexingMessage = "Indexed " + tostring(elementCount) + " files from " + currentDir;
+                        yield();
+                    }
+                }
+
+                explorer.IndexingMessage = "Indexing: " + dirsToProcess.Length + " directories left...";
+                yield();
+            }
+
+            ApplyFiltersAndSearch();
+            explorer.IsIndexing = false;
+        }
 
         void ApplyFiltersAndSearch() {
             if (explorer.Config.recursiveSearch) {
@@ -1321,7 +1348,7 @@ namespace FileExplorer {
         }
 
         private void DelayedCleanup() {
-            yield(150);
+            yield(FILE_EXPLORER_EXPORT_YIELD_AMOUNT);
             if (this.locked) {
                 MarkForDeletion();
             }
@@ -1611,7 +1638,12 @@ namespace FileExplorer {
                 string newSearchQuery = UI::InputText("##SearchInput", explorer.Config.searchQuery);
                 if (UI::IsKeyPressed(UI::Key::Enter) && newSearchQuery != explorer.Config.searchQuery) {
                     explorer.Config.searchQuery = newSearchQuery;
-                    explorer.tab[0].ApplyFiltersAndSearch();
+
+                    if (explorer.Config.recursiveSearch) {
+                        explorer.tab[0].StartRecursiveSearch();
+                    } else {
+                        explorer.tab[0].ApplyNonRecursiveSearch();
+                    }
                 }
 
                 UI::PopItemWidth();
@@ -2796,4 +2828,4 @@ void Render() {
 |   | ,'  `---'  `--` `---'.|    ---`-'                   \   \  /          
 `----'                  `---`                              `----'          
 */
-// Made with ❤️ by ar......
+// Made with ❤️ by ar
