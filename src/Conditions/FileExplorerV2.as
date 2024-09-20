@@ -474,6 +474,12 @@ namespace FileExplorer {
         bool selectionComplete = false;
         array<string> selectedPaths;
 
+        FileExplorer@ explorer;
+
+        Exports(FileExplorer@ fe) {
+            @explorer = fe;
+        }
+
         void SetSelectionComplete(array<string>@ paths) {
             selectedPaths = paths;
             selectionComplete = true;
@@ -486,15 +492,13 @@ namespace FileExplorer {
         array<string>@ GetSelectedPaths() {
             selectionComplete = false;
             utils.TruncateSelectedPathsIfNeeded();
+            
+            explorer.MarkForDeletion();
+            
             return selectedPaths;
         }
-        
-        // void MarkSelectionComplete() {
-        //     selectionComplete = true;
-        // }
     }
-
-
+    
     // Element info is set in "GetElementInfo" in the FE class
     class ElementInfo {
         string name;
@@ -1237,6 +1241,8 @@ namespace FileExplorer {
     class FileExplorer {
         string sessionId;
         bool showInterface = false;
+        int64 closeTime = -1;
+        bool locked = false;
 
         Config@ Config;
         // Utils@ utils;
@@ -1310,8 +1316,23 @@ namespace FileExplorer {
 
         void Close() {
             Config.SaveSettings();
-            CloseCurrentSession();
             this.showInterface = false;
+            this.closeTime = Time::Now;
+            this.locked = true;
+
+            startnew(CoroutineFunc(this.DelayedCleanup));
+        }
+
+        private void DelayedCleanup() {
+            yield(150);
+            if (this.locked) {
+                MarkForDeletion();
+            }
+        }
+
+        void MarkForDeletion() {
+            yield();
+            CloseCurrentSession();
         }
 
         private void CloseCurrentSession() {
