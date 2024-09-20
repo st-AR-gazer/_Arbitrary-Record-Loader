@@ -1235,6 +1235,8 @@ namespace FileExplorer {
     }
 
     class FileExplorer {
+        string sessionId;
+
         Config@ Config;
         // Utils@ utils;
         array<FileTab@> tab;
@@ -1250,7 +1252,9 @@ namespace FileExplorer {
 
         ElementInfo@ CurrentSelectedElement;
 
-        FileExplorer(Config@ cfg) {
+        FileExplorer(Config@ cfg, const string &in id) {
+            sessionId = id;
+            
             @Config = cfg;
             @utils = Utils(this);
             @nav = Navigation(this);
@@ -1305,7 +1309,14 @@ namespace FileExplorer {
 
         void Close() {
             Config.SaveSettings();
+            CloseCurrentSession();
             showInterface = false;
+        }
+
+        private void CloseCurrentSession() {
+            string pluginName = Meta::ExecutingPlugin().Name;
+            string sessionKey = pluginName + "::" + sessionId;
+            explorersByPlugin.Delete(sessionKey);
         }
 
         void StartIndexingFiles(const string &in path) {
@@ -2447,7 +2458,7 @@ namespace FileExplorer {
         config.filters = _filters;
         config.canOnlyReturn = _canOnlyReturn;
 
-        FileExplorer@ newExplorer = FileExplorer(config);
+        FileExplorer@ newExplorer = FileExplorer(config, id);
 
         explorersByPlugin.Set(sessionKey, @newExplorer);
 
