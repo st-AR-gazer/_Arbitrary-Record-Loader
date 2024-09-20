@@ -760,7 +760,7 @@ namespace FileExplorer {
             explorer.tab[0].Elements.Resize(0);
             explorer.CurrentIndexingPath = explorer.tab[0].Navigation.GetPath();
             
-            startnew(CoroutineFuncUserdata(RecursiveSearchCoroutine));
+            startnew(CoroutineFunc(RecursiveSearchCoroutine));
         }
 
 
