@@ -1516,39 +1516,38 @@ namespace FileExplorer {
         }
 
         void Render_NavigationBar() {
-            float buttonWidth = 30.0;
             float totalWidth = UI::GetContentRegionAvail().x;
-            float pathWidth = (totalWidth * 0.8f - buttonWidth * 3);
+            float pathWidth = (totalWidth * 0.8f - 30.0f * 3);
     
             if (explorer.Config.enableSearchBar) {
                 pathWidth += explorer.Config.searchBarPadding;
             }
 
-            float searchWidth = totalWidth - pathWidth - buttonWidth * 3;
+            float searchWidth = totalWidth - pathWidth - 30.0f * 3;
 
             // Navigation Buttons
             if (explorer.tab[0].Navigation.HistoryIndex > 0) {
-                if (UI::Button(Icons::ArrowLeft, vec2(buttonWidth, 0))) {
+                if (UI::Button(Icons::ArrowLeft)) {
                     explorer.tab[0].Navigation.NavigateBack();
                 }
             } else {
-                utils.DisabledButton(Icons::ArrowLeft, vec2(buttonWidth, 0));
+                utils.DisabledButton(Icons::ArrowLeft);
             }
             UI::SameLine();
             if (explorer.tab[0].Navigation.HistoryIndex < int(explorer.tab[0].Navigation.History.Length) - 1) {
-                if (UI::Button(Icons::ArrowRight, vec2(buttonWidth, 0))) {
+                if (UI::Button(Icons::ArrowRight)) {
                     explorer.tab[0].Navigation.NavigateForward();
                 }
             } else {
-                utils.DisabledButton(Icons::ArrowRight, vec2(buttonWidth, 0));
+                utils.DisabledButton(Icons::ArrowRight);
             }
             UI::SameLine();
             if (explorer.tab[0].Navigation.CanMoveUpDirectory()) {
-                if (UI::Button(Icons::ArrowUp, vec2(buttonWidth, 0))) {
+                if (UI::Button(Icons::ArrowUp)) {
                     explorer.tab[0].Navigation.MoveUpOneDirectory();
                 }
             } else {
-                utils.DisabledButton(Icons::ArrowUp, vec2(buttonWidth, 0));
+                utils.DisabledButton(Icons::ArrowUp);
             }
             UI::SameLine();
             
