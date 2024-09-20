@@ -1268,7 +1268,7 @@ namespace FileExplorer {
             tab.Resize(1);
             @tab[0] = FileTab(cfg, this);
             @ui = UserInterface(this);
-            @exports = Exports();
+            @exports = Exports(this);
 
             @CurrentSelectedElement = null;
 
