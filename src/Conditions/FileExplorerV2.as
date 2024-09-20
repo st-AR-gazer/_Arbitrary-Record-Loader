@@ -148,8 +148,6 @@
     TODO: 
         - Add support for multiple tabs (not planned)
 
-        - Add support for sorting by name, size, date, etc., both ascending and descending
-
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
