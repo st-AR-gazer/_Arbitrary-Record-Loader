@@ -1318,14 +1318,6 @@ namespace FileExplorer {
             explorersByPlugin.Delete(sessionKey);
         }
 
-        void StartIndexingFiles(const string &in path, bool recursive = false) {
-            IsIndexing = true;
-            IndexingMessage = recursive ? "Recursive search in progress..." : "Folder is being indexed...";
-            CurrentIndexingPath = path;
-
-            tab[0].StartIndexingFiles(path, recursive);
-        }
-
         array<string> GetFiles(const string &in path, bool recursive) {
             return IO::IndexFolder(path, recursive);
         }
