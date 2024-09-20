@@ -146,9 +146,6 @@
 
         - Add support for sorting by name, size, date, etc., both ascending and descending
 
-        - Add a starting ID to each opened instance of the file explorer window, so that multiple 
-          instances can be opened at the same time by different plugins (or the same plugin for that matter)
-
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
@@ -156,8 +153,6 @@
         - Re-do the recursive search functionality, it's not working properly...
 
         - Game crashes when 'minimize' buttons are clicked...
-
-        - When closing the file explorer we shold only close the correct instance (currently it just closes all instances which is not ideal...)
 
 */
 
