@@ -1839,10 +1839,10 @@ namespace FileExplorer {
                         explorer.Config.searchBarPadding = UI::SliderInt("Search Bar Padding", explorer.Config.searchBarPadding, -200, 100);
                     }
 
-                    // if (UI::MenuItem("Enable Recursive Search" + "\\$0f0 " + "Warning \\$g Extremely laggy, use with causion", "", explorer.Config.RecursiveSearch)) {
-                    //     explorer.Config.RecursiveSearch = !explorer.Config.RecursiveSearch;
-                    //     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
-                    // }
+                    if (UI::MenuItem("Enable Recursive Search", "", explorer.Config.recursiveSearch)) {
+                        explorer.Config.recursiveSearch = !explorer.Config.recursiveSearch;
+                        explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+                    }
 
                     UI::EndMenu();
                 }
