@@ -318,7 +318,7 @@ namespace FileExplorer {
                 }
 
                 if (!foundVersion) {
-                    log("Settings version mismatch or not found. Settings cannot be loaded.", LogLevel::Error, 310, "LoadSettings");
+                    log("Settings version mismatch or not found. Settings cannot be loaded.", LogLevel::Error, 321, "LoadSettings");
                 }
             }
         }
@@ -355,7 +355,7 @@ namespace FileExplorer {
 
             utils.WriteFile(settingsFilePath, Json::Write(settings));
 
-            // log("Settings saved to: " + settingsFilePath, LogLevel::Info, 347, "SaveSettings");
+            // log("Settings saved to: " + settingsFilePath, LogLevel::Info, 358, "SaveSettings");
         }
 
         Json::Value GetCurrentSettings() {
@@ -569,7 +569,7 @@ namespace FileExplorer {
 
         void MoveUpOneDirectory() {
             string path = explorer.tab[0].Navigation.GetPath();
-            log("Current path before moving up: " + path, LogLevel::Info, 558, "MoveUpOneDirectory");
+            log("Current path before moving up: " + path, LogLevel::Info, 572, "MoveUpOneDirectory");
 
             UpdateHistory(path);
 
@@ -588,7 +588,7 @@ namespace FileExplorer {
                 path += "/";
             }
 
-            log("New path after moving up: " + path, LogLevel::Info, 577, "MoveUpOneDirectory");
+            log("New path after moving up: " + path, LogLevel::Info, 591, "MoveUpOneDirectory");
 
             explorer.tab[0].LoadDirectory(path);
         }
@@ -599,13 +599,13 @@ namespace FileExplorer {
 
             if (selectedElement !is null && selectedElement.isFolder) {
                 if (!selectedElement.path.StartsWith(explorer.tab[0].Navigation.GetPath())) {
-                    log("Folder is not in the current folder, cannot move into it.", LogLevel::Warn, 588, "MoveIntoSelectedDirectory");
+                    log("Folder is not in the current folder, cannot move into it.", LogLevel::Warn, 602, "MoveIntoSelectedDirectory");
                 } else {
                     UpdateHistory(selectedElement.path);
                     explorer.tab[0].LoadDirectory(selectedElement.path);
                 }
             } else {
-                log("No folder selected or selected element is not a folder.", LogLevel::Warn, 594, "MoveIntoSelectedDirectory");
+                log("No folder selected or selected element is not a folder.", LogLevel::Warn, 608, "MoveIntoSelectedDirectory");
             }
         }
 
@@ -701,14 +701,14 @@ namespace FileExplorer {
             tab.explorer.IsIndexing = true;
             string startPath = tab.Navigation.GetPath();
             bool recursive = tab.Config.recursiveSearch;
-            log((recursive ? "Recursive " : "") + "Indexing started for path: " + startPath, LogLevel::Info, 690, "IndexFilesCoroutine");
+            log((recursive ? "Recursive " : "") + "Indexing started for path: " + startPath, LogLevel::Info, 704, "IndexFilesCoroutine");
 
             // Incase I change my mind and want to add recursive search back in at a later date... (it's not fully working, so it's commented out for now, but I'm probably not gonna do anything with it... way too slow)
             // array<string> elements = recursive ? PerformRecursiveIndexing(tab, startPath) : tab.explorer.GetFiles(startPath, false);
             array<string> elements = tab.explorer.GetFiles(startPath, false);
 
             if (elements.Length == 0) {
-                log("No files found in directory: " + startPath, LogLevel::Info, 697, "IndexFilesCoroutine");
+                log("No files found in directory: " + startPath, LogLevel::Info, 711, "IndexFilesCoroutine");
             }
 
             const uint batchSize = 1000;
@@ -741,7 +741,7 @@ namespace FileExplorer {
             tab.ApplyVisibilitySettings();
             tab.explorer.IsIndexing = false;
 
-            log((recursive ? "Recursive " : "") + "Indexing completed. Number of elements: " + tab.Elements.Length, LogLevel::Info, 730, "IndexFilesCoroutine");
+            log((recursive ? "Recursive " : "") + "Indexing completed. Number of elements: " + tab.Elements.Length, LogLevel::Info, 744, "IndexFilesCoroutine");
 
             explorer.UpdateCurrentSelectedElement();
         }
@@ -974,23 +974,23 @@ namespace FileExplorer {
 
         void RefreshCurrentDirectory() {
             string currentPath = explorer.tab[0].Navigation.GetPath();
-            log("Refreshing directory: " + currentPath, LogLevel::Info, 957, "RefreshCurrentDirectory");
+            log("Refreshing directory: " + currentPath, LogLevel::Info, 977, "RefreshCurrentDirectory");
             explorer.tab[0].LoadDirectory(currentPath);
         }
 
         void OpenSelectedFolderInNativeFileExplorer() {
             ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             if (selectedElement !is null && selectedElement.isFolder) {
-                log("Opening folder: " + selectedElement.path, LogLevel::Info, 964, "OpenSelectedFolderInNativeFileExplorer");
+                log("Opening folder: " + selectedElement.path, LogLevel::Info, 984, "OpenSelectedFolderInNativeFileExplorer");
                 OpenExplorerPath(selectedElement.path);
             } else {
-                log("No folder selected or selected element is not a folder.", LogLevel::Error, 967, "OpenSelectedFolderInNativeFileExplorer");
+                log("No folder selected or selected element is not a folder.", LogLevel::Error, 987, "OpenSelectedFolderInNativeFileExplorer");
             }
         }
 
         void OpenCurrentFolderInNativeFileExplorer() {
             string currentPath = explorer.tab[0].Navigation.GetPath();
-            log("Opening folder: " + currentPath, LogLevel::Info, 973, "OpenCurrentFolderInNativeFileExplorer");
+            log("Opening folder: " + currentPath, LogLevel::Info, 993, "OpenCurrentFolderInNativeFileExplorer");
             OpenExplorerPath(currentPath);
         }
 
@@ -1085,12 +1085,12 @@ namespace FileExplorer {
                     if (folderContents.Length > 0) {
                         utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = true;
                     } else {
-                        log("Deleting empty folder: " + selectedElement.path, LogLevel::Info, 1050, "DeleteSelectedElement");
+                        log("Deleting empty folder: " + selectedElement.path, LogLevel::Info, 1088, "DeleteSelectedElement");
                         IO::DeleteFolder(selectedElement.path);
                         explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                     }
                 } else {
-                    log("Deleting file: " + selectedElement.path, LogLevel::Info, 1055, "DeleteSelectedElement");
+                    log("Deleting file: " + selectedElement.path, LogLevel::Info, 1093, "DeleteSelectedElement");
                     IO::Delete(selectedElement.path);
                     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                 }
@@ -1130,7 +1130,7 @@ namespace FileExplorer {
             ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
             if (selectedElement !is null) {
                 if (explorer.Config.pinnedElements.Find(selectedElement.path) == -1) {
-                    log("Pinning element: " + selectedElement.path, LogLevel::Info, 1094, "PinSelectedElement");
+                    log("Pinning element: " + selectedElement.path, LogLevel::Info, 1133, "PinSelectedElement");
                     explorer.Config.pinnedElements.InsertLast(selectedElement.path);
                     explorer.Config.SaveSettings();
                 }
@@ -1278,24 +1278,24 @@ namespace FileExplorer {
 
             FileExplorer@ explorer;
             if (!explorersByPlugin.Get(sessionKey, @explorer)) {
-                log("Explorer not found for sessionKey: " + sessionKey, LogLevel::Error);
+                log("Explorer not found for sessionKey: " + sessionKey, LogLevel::Error, 1281, "Open");
                 return;
             }
 
             @Config = config;
-            log("Config initialized with path: " + Config.path, LogLevel::Info);
+            log("Config initialized with path: " + Config.path, LogLevel::Info, 1286, "Open");
 
             if (nav is null) {
                 @nav = Navigation(this);
-                log("Navigation initialized", LogLevel::Info);
+                log("Navigation initialized", LogLevel::Info, 1290, "Open");
             }
 
             if (nav is null) {
-                log("Navigation is null after initialization.", LogLevel::Error);
+                log("Navigation is null after initialization.", LogLevel::Error, 1294, "Open");
                 return;
             }
 
-            log("Setting navigation path to: " + Config.path, LogLevel::Info);
+            log("Setting navigation path to: " + Config.path, LogLevel::Info, 1298, "Open");
 
             nav.SetPath(Config.path);
             Config.LoadSettings(sessionKey);
@@ -1882,7 +1882,7 @@ namespace FileExplorer {
                 ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
 
                 if (selectedElement !is null && selectedElement.isFolder) {
-                    log("Deleting folder with contents: " + selectedElement.path, LogLevel::Info, 1758, "Render_DeleteConfirmationPopup");
+                    log("Deleting folder with contents: " + selectedElement.path, LogLevel::Info, 1885, "Render_DeleteConfirmationPopup");
                     IO::DeleteFolder(selectedElement.path, true);
                     utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
                     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
@@ -1896,12 +1896,12 @@ namespace FileExplorer {
                 UI::Separator();
                 if (UI::Button("Yes, delete all")) {
                     if (selectedElement !is null && selectedElement.isFolder) {
-                        log("Deleting folder with contents: " + selectedElement.path, LogLevel::Info, 1772, "Render_DeleteConfirmationPopup");
+                        log("Deleting folder with contents: " + selectedElement.path, LogLevel::Info, 1899, "Render_DeleteConfirmationPopup");
                         IO::DeleteFolder(selectedElement.path, true);
                         utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
                         explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                     } else {
-                        log("No selected element or element is not a folder.", LogLevel::Error, 1777, "Render_DeleteConfirmationPopup");
+                        log("No selected element or element is not a folder.", LogLevel::Error, 1904, "Render_DeleteConfirmationPopup");
                     }
                     UI::CloseCurrentPopup();
                 }
@@ -2387,7 +2387,7 @@ namespace FileExplorer {
     }
 /* ------------------------ End Handle Button Clicks ------------------------ */
 
-    FileExplorer@ GetExplorerById(const string &in id) {
+    FileExplorer@ fe_GetExplorerById(const string &in id) {
         string pluginName = Meta::ExecutingPlugin().Name;
         string sessionKey = pluginName + "::" + id;
         FileExplorer@ explorer;
@@ -2470,7 +2470,7 @@ namespace FileExplorer {
                     explorersByPlugin.Delete(sessionKey);
                 }
             }
-            log("All file explorer instances for this plugin have been closed.", LogLevel::Error);
+            log("All file explorer instances for this plugin have been closed.", LogLevel::Error, 2473, "fe_ForceClose");
             return;
         }
 
@@ -2479,7 +2479,7 @@ namespace FileExplorer {
         if (explorersByPlugin.Get(sessionKey, @explorer)) {
             explorer.Close();
             explorersByPlugin.Delete(sessionKey);
-            log("File explorer instance '" + id + "' has been closed.");
+            log("File explorer instance '" + id + "' has been closed.", LogLevel::Info, 2482, "fe_ForceClose");
         } else {
             NotifyError("Error", "Session ID '" + id + "' not found for this plugin.", 20000);
         }
@@ -2531,7 +2531,7 @@ dictionary ReadGbxHeader(const string &in path) {
         }
 
         if (Time::Now - startTime > 300) {
-            log("Error: Timeout while reading GBX header for file: " + path, LogLevel::Error, 2400, "ReadGbxHeader");
+            log("Error: Timeout while reading GBX header for file: " + path, LogLevel::Error, 2534, "ReadGbxHeader");
             mapFile.Close();
             return metadata;
         }
@@ -2564,7 +2564,7 @@ dictionary ReadGbxHeader(const string &in path) {
                 metadata["playermodel_id"] = playermodelNode.Attribute("id");
             }
         } else {
-            log("Error: Missing header node in GBX file: " + path, LogLevel::Error, 2433, "ReadGbxHeader");
+            log("Error: Missing header node in GBX file: " + path, LogLevel::Error, 2567, "ReadGbxHeader");
         }
     }
 
