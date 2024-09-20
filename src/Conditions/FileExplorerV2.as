@@ -1,4 +1,4 @@
-//    ______ _ _         ______              _
+//    _____   _          ______              _
 //   |  ___(_) |        |  ____\            | |
 //   | |_   _| | ___    | |___ __  __ _____ | | ___  _ __  ___  _ __ 
 //   |  _| | | |/ _ \   |  __| \ \/ /| ___ \| |/ _ \| '__|/ _ \| '__|
@@ -11,7 +11,11 @@
 //   Version 0.1.0
 //   https://github.com/st-AR-gazer/_file-explorer
 //
-//   Made for use in Trackmania Plugins using Openplanet and AngelScript
+//   Made with ❤️ by ar (AR / ar...... / AR_-_ / .ar / A---------ar / st-AR-gazer) 
+//   for use in Trackmania Plugins using Openplanet and AngelScript
+//   
+//   License: The Unilicence
+//   (Though if you want to credit me, that'd be nice :])
 
 // Required Openplanet version 1.26.32
 
@@ -182,10 +186,10 @@ namespace FileExplorer {
         array<string> selectedPaths;
         array<string> pinnedElements;
         // Internal color
-        vec4 validFileColor = vec4(1, 1, 1, 1);       // Default: White
-        vec4 invalidFileColor = vec4(1, 1, 1, 0.4);   // Default: Gray
-        vec4 validFolderColor = vec4(1, 1, 1, 1);     // Default: White
-        vec4 invalidFolderColor = vec4(1, 1, 1, 0.4); // Default: Gray
+        vec4 validFileColor = vec4(1, 1, 1, 1);           // Default: White
+        vec4 invalidFileColor = vec4(0.4, 0.4, 0.4, 1);   // Default: Gray
+        vec4 validFolderColor = vec4(1, 1, 1, 1);         // Default: White
+        vec4 invalidFolderColor = vec4(0.4, 0.4, 0.4, 1); // Default: Gray
 
 
         // UI-related settings
@@ -199,7 +203,7 @@ namespace FileExplorer {
         bool useExtraWarningWhenDeleting = true;
         bool enableSearchBar = true;
         bool sortingAscending = true;
-        bool sortFilesBeforeFolders = false;
+        bool sortFoldersBeforeFiles = true;
         dictionary columnsToShow;
 
         SortingCriteria sortingCriteria = SortingCriteria::name;
@@ -292,8 +296,8 @@ namespace FileExplorer {
                         if (explorerSettings.HasKey("SortingAscending")) {
                             sortingAscending = explorerSettings["SortingAscending"];
                         }
-                        if (explorerSettings.HasKey("SortFilesBeforeFolders")) {
-                            sortFilesBeforeFolders = explorerSettings["SortFilesBeforeFolders"];
+                        if (explorerSettings.HasKey("SortFoldersBeforeFiles")) {
+                            sortFoldersBeforeFiles = explorerSettings["SortFoldersBeforeFiles"];
                         }
                         if (explorerSettings.HasKey("ValidFileColor")) {
                             validFileColor = StringToVec4(explorerSettings["ValidFileColor"]);
@@ -383,7 +387,7 @@ namespace FileExplorer {
             explorerSettings["EnableSearchBar"] = enableSearchBar;
             explorerSettings["SortingCriteria"] = utils.SortingCriteriaToString(sortingCriteria);
             explorerSettings["SortingAscending"] = sortingAscending;
-            explorerSettings["SortFilesBeforeFolders"] = sortFilesBeforeFolders;
+            explorerSettings["SortFoldersBeforeFiles"] = sortFoldersBeforeFiles;
 
             explorerSettings["ValidFileColor"] = Vec4ToString(validFileColor);
             explorerSettings["InvalidFileColor"] = Vec4ToString(invalidFileColor);
@@ -898,7 +902,7 @@ namespace FileExplorer {
             for (uint i = 0; i < Elements.Length - 1; i++) {
                 for (uint j = i + 1; j < Elements.Length; j++) {
                     bool swap = false;
-                    if (Config.sortFilesBeforeFolders) {
+                    if (Config.sortFoldersBeforeFiles) {
                         swap = Elements[i].isFolder && !Elements[j].isFolder;
                     } else {
                         swap = !Elements[i].isFolder && Elements[j].isFolder;
@@ -912,7 +916,7 @@ namespace FileExplorer {
                         } else if (!Elements[i].isFolder && !Elements[j].isFolder) {
                             swap = Config.sortingAscending ? Elements[i].name > Elements[j].name : Elements[i].name < Elements[j].name;
                         } else {
-                            swap = Config.sortFilesBeforeFolders ? !Elements[i].isFolder : Elements[i].isFolder;
+                            swap = Config.sortFoldersBeforeFiles ? !Elements[i].isFolder : Elements[i].isFolder;
                         }
                     } else if (Config.sortingCriteria == SortingCriteria::size) {
                         swap = Config.sortingAscending ? Elements[i].sizeBytes > Elements[j].sizeBytes : Elements[i].sizeBytes < Elements[j].sizeBytes;
@@ -1725,8 +1729,8 @@ namespace FileExplorer {
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
-                if (UI::MenuItem("Sort Files Before Folders", "", explorer.Config.sortFilesBeforeFolders)) {
-                    explorer.Config.sortFilesBeforeFolders = !explorer.Config.sortFilesBeforeFolders;
+                if (UI::MenuItem("Sort Folders Before Files", "", explorer.Config.sortFoldersBeforeFiles)) {
+                    explorer.Config.sortFoldersBeforeFiles = !explorer.Config.sortFoldersBeforeFiles;
                     explorer.tab[0].SortElements();
                     explorer.Config.SaveSettings();
                 }
@@ -2765,3 +2769,33 @@ void Render() {
     }
     UI::End();
 }
+
+/* 
+    ,---,.           ,--,                                                   
+  ,'  .' |  ,--,   ,--.'|                                                   
+,---.'   |,--.'|   |  | :                                                   
+|   |   .'|  |,    :  : '                                                   
+:   :  :  `--'_    |  ' |      ,---.                                        
+:   |  |-,,' ,'|   '  | |     /     \                                       
+|   :  ;/|'  | |   |  | :    /    /  |                                      
+|   |   .'|  | :   '  : |__ .    ' / |                                      
+'   :  '  '  : |__ |  | '.'|'   ;   /|                                      
+|   |  |  |  | '.'|;  :    ;'   |  / |                                      
+|   :  \  ;  :    ;|  ,   / |   :    |                                      
+|   | ,'  |  ,   /  ---`-'   \   \  /                                       
+`----'     ---`-'             `----'                                        
+    ,---,.                        ,--,                                      
+  ,'  .' |            ,-.----.  ,--.'|                                      
+,---.'   |            \    /  \ |  | :     ,---.    __  ,-.          __  ,-.
+|   |   .' ,--,  ,--, |   :    |:  : '    '   ,'\ ,' ,'/ /|        ,' ,'/ /|
+:   :  |-, |'. \/ .`| |   | .\ :|  ' |   /   /   |'  | |' | ,---.  '  | |' |
+:   |  ;/| '  \/  / ; .   : |: |'  | |  .   ; ,. :|  |   ,'/     \ |  |   ,'
+|   :   .'  \  \.' /  |   |  \ :|  | :  '   | |: :'  :  / /    /  |'  :  /  
+|   |  |-,   \  ;  ;  |   : .  |'  : |__'   | .; :|  | ' .    ' / ||  | '   
+'   :  ;/|  / \  \  \ :     |`-'|  | '.'|   :    |;  : | '   ;   /|;  : |   
+|   |    \./__;   ;  \:   : :   ;  :    ;\   \  / |  , ; '   |  / ||  , ;   
+|   :   .'|   :/\  \ ;|   | :   |  ,   /  `----'   ---'  |   :    | ---'    
+|   | ,'  `---'  `--` `---'.|    ---`-'                   \   \  /          
+`----'                  `---`                              `----'          
+*/
+// Made with ❤️ by ar......
