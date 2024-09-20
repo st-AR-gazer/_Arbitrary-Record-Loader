@@ -493,7 +493,7 @@ namespace FileExplorer {
             selectionComplete = false;
             utils.TruncateSelectedPathsIfNeeded();
             
-            explorer.MarkForDeletion();
+            explorer.MarkForDeletionCoro();
             
             return selectedPaths;
         }
@@ -1330,7 +1330,11 @@ namespace FileExplorer {
             }
         }
 
-        void MarkForDeletion() {
+        void MarkForDeletionCoro() {
+            startnew(CoroutineFunc(MarkForDeletion));
+        }
+
+        private void MarkForDeletion() {
             yield();
             CloseCurrentSession();
         }
