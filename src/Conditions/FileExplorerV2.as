@@ -21,11 +21,12 @@
 
 /** 
  * IMPORTANT:
- * This file is meant to be used together with "logging.as" as this contains that logging functionality needed to make 
- * custom log messages work properly. If you do not want to include this, please ctrl + h (or ctrl + f and click the 
- * dropdown) and add ` log\(([^,]+),.*\); ` to find, and and ` print($1); ` to replace, this will convert all the fancy 
- * log messages to normal print messages. You must also enable 'regex search' for this to work. (In vscode this can be 
- * done by pressing ctrl + f and selecting the |.*| icon in the search bar)
+ * This file is meant to be used together with "logging.as" as this contains that logging functionality needed to make custom 
+ * log messages work properly. If you do not want to include this, please ctrl + h (or ctrl + f and click the dropdown) and add: 
+ * ` log\("([^"]*)",\s*LogLevel::(Error|Warn|[A-Za-z]+),.* ` to find, and add ` ${2/^(Error|Warn)$/(?1error:warn)/trace}("$1") ` 
+ * to replace, this will convert all the fancy log messages to normal 'trace'/'warn'/'error' messages. 
+ * NOTE: You must also enable 'regex search' for this find/replace to work. (In vscode this can be done by pressing ctrl + f 
+ * and selecting the |.*| icon in the search bar)
  */
 
 /**
