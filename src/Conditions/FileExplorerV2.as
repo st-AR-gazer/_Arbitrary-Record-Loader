@@ -170,7 +170,6 @@
 
         - When fe_Start is called, restrictions on the return elements are applied globally accross all instances for some reason, 
           this should be fixed so that each instance can have it's own restrictions
-            - Config instances aren't retrived properly (see line 250 LoadConfig for details)
 
 */
 
@@ -2891,7 +2890,7 @@ namespace FileExplorer {
         string sessionKey = pluginName + "::" + _id;
 
         if (explorersByPlugin.Exists(sessionKey)) {
-            NotifyError("Error", "Session ID '" + _id + "' already in use by this plugin. Please contact the plugin developer if this is a signed plugin (or if you are the dev, please fix :peepoShy:).", 20000);
+            NotifyError("Session ID '" + _id + "' is already in use by this plugin. \nThis will happen if you try to open the file explorer less than " + FILE_EXPLORER_EXPORT_YIELD_AMOUNT + " frames after closing the fil explorer. If this error has appeared whilst you've waited for more than " + FILE_EXPLORER_EXPORT_YIELD_AMOUNT + " you should contact this plugins developer: (" + Meta::ExecutingPlugin().Name + ") or the creator of the file explorer ('@ar___' on discord).", "Error : " + Meta::ExecutingPlugin().Name, 25000);
             return;
         }
 
