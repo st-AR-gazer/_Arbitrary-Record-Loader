@@ -157,6 +157,8 @@
         - Recursive search works, but it doesn't display elements as soon as it's loaded (only after the search is done)
           this behaviour should be changed to display elements as soon as they are found.
 
+        - Change what is returned when the user returns a file, (we should send the entire element info, not just the paths)
+
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
