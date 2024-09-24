@@ -346,28 +346,10 @@ namespace FileExplorer {
                         if (explorerSettings.HasKey("BlacklistedRecursiveSearchPaths")) {
                             Json::Value blacklistedPaths = explorerSettings["BlacklistedRecursiveSearchPaths"];
 
-                            print(blacklistedPaths.Length);
-
-                            // for (uint i = 0; i < cols.GetKeys().Length; i++) {
-                            //     string col = cols.GetKeys()[i];
-                            //     columnsToShow.Set(col, bool(cols[col]));
-                            // }
+                            for (uint i = 0; i < blacklistedPaths.Length; i++) {
+                                blacklistedRecursiveSearchPaths.InsertLast(blacklistedPaths[i]);
+                            }
                         }
-                        else {
-                            print("no blacklisted paths");
-                        }
-
-
-                        
-                        // if (explorerSettings.HasKey("BlacklistedRecursiveSearchPaths")) {
-                        //     Json::Value blacklistedPaths = explorerSettings["BlacklistedRecursiveSearchPaths"];
-                        //     print(blacklistedPaths.Length);
-
-                        //     blacklistedRecursiveSearchPaths.Resize(blacklistedPaths.Length);
-                        //     for (uint i = 0; i < blacklistedPaths.Length; i++) {
-                        //         blacklistedRecursiveSearchPaths[i] = blacklistedPaths[i];
-                        //     }
-                        // }
                         break;
                     }
                 }
@@ -451,8 +433,6 @@ namespace FileExplorer {
                 blacklistedPaths.Add(blacklistedRecursiveSearchPaths[i]);
             }
             explorerSettings["BlacklistedRecursiveSearchPaths"] = blacklistedPaths;
-
-            // if (explorerSettings["BlacklistedRecursiveSearchPaths"].Length > 0) print(explorerSettings["BlacklistedRecursiveSearchPaths"][0]);
 
             return explorerSettings;
         }
@@ -1627,7 +1607,7 @@ namespace FileExplorer {
 
             FileExplorer@ explorer;
             if (!explorersByPlugin.Get(sessionKey, @explorer)) {
-                log("Explorer not found for sessionKey: " + sessionKey, LogLevel::Error, 1266, "Open");
+                log("Explorer not found for sessionKey: " + sessionKey, LogLevel::Error, 1286, "Open");
                 return;
             }
 
@@ -1647,7 +1627,7 @@ namespace FileExplorer {
             log("Setting navigation path to: " + Config.path, LogLevel::Info, 1283, "Open");
 
             nav.SetPath(Config.path);
-            Config.LoadSettings(sessionKey);
+            Config.LoadSettings(config.id);
             exports.selectionComplete = false;
             this.showInterface = true;
         }
@@ -2944,7 +2924,6 @@ namespace FileExplorer {
                     if (explorersByPlugin.Get(sessionKey, @explorer)) {
                         explorer.Close();
                     }
-                    explorersByPlugin.Delete(sessionKey);
                 }
             }
             log("All file explorer instances for this plugin have been closed.", LogLevel::Error, 2479, "fe_ForceClose");
