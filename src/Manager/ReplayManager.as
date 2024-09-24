@@ -25,10 +25,12 @@ namespace ReplayLoader {
                 log("Failed to move replay file to the target directory!", LogLevel::Error, 25, "LoadReplayFromPath");
                 return;
             }
+        // File is not properly moved to the target directory
         }
 
         auto task = GetApp().Network.ClientManiaAppPlayground.DataFileMgr.Replay_Load(Server::replayARLAutoMove + Path::GetFileName(path));
         
+
         while (task.IsProcessing) { yield(); }
 
         if (task.HasFailed || !task.HasSucceeded) {

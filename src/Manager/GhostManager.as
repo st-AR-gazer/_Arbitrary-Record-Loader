@@ -26,25 +26,25 @@ namespace GhostLoader {
 
 
 
-        Net::HttpRequest req;
-        req.Method = Net::HttpMethod::Get;
-        req.Url = "http://127.0.0.1:29918/get_ghost/file.ghost.gbx";
-        req.Start();
+        // Net::HttpRequest req;
+        // req.Method = Net::HttpMethod::Get;
+        // req.Url = "http://127.0.0.1:29918/get_ghost/file.ghost.gbx";
+        // req.Start();
 
-        while (!req.Finished()) {
-            yield();
-        }
-        print(req.ResponseCode());
+        // while (!req.Finished()) {
+        //     yield();
+        // }
+        // print(req.ResponseCode());
 
-        print(req.String());
+        // print(req.String());
         
-        return;
+        // return;
 
         print(url);
 
 
         CGameDataFileManagerScript@ dfm = ps.DataFileMgr;
-        CWebServicesTaskResult_GhostScript@ task = dfm.Ghost_Download("", "http://127.0.0.1:29918/get_ghost/file.ghost.gbx");
+        CWebServicesTaskResult_GhostScript@ task = dfm.Ghost_Download("file.ghost.gbx", "http://127.0.0.1:29918/get_ghost/file.ghost.gbx");
 
         while (task.IsProcessing) {
             yield();

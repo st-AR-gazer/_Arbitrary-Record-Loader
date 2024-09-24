@@ -154,17 +154,20 @@
     TODO: 
         - Add support for multiple tabs (not planned)
 
-        - Recursive search works, but it doesn't display elements as soon as it's loaded (only after the search is done)
-          this behaviour should be changed to display elements as soon as they are found.
+        - Add ability to export ElementInfo instead of just Paths
+
+        - Create blacklisted recursive paths for folder (like archivist since it's so gaud damn large...)
+
 
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
 
-        - Game crashes when 'minimize' buttons are clicked...
+        - Game crashes when 'minimize' button are clicked...
 
         - When fe_Start is called, restrictions on the return elements are applied globally accross all instances for some reason, 
           this should be fixed so that each instance can have it's own restrictions
+            - Config instances aren't retrived properly (see line 250 LoadConfig for details)
 
 */
 
@@ -217,6 +220,9 @@ namespace FileExplorer {
         bool sortFoldersBeforeFiles = true;
         dictionary columnsToShow;
 
+        int recursiveSearchBatchSize = 7;
+        array<string> blacklistedRecursiveSearchPaths;
+
         SortingCriteria sortingCriteria = SortingCriteria::name;
 
         /*const*/ string settingsDirectory = IO::FromDataFolder("Plugin_FileExplorer_Settings");
@@ -241,11 +247,17 @@ namespace FileExplorer {
 
         void LoadSettings(string sessionId) {
             FileExplorer@ explorer = fe_GetExplorerById(sessionId);
+            // print(sessionId);
+            print(Json::Write(explorersByPlugin.GetKeys().ToJson(), true));
             if (explorer is null) return;
 
             if (!IO::FolderExists(settingsDirectory)) {
                 IO::CreateFolder(settingsDirectory);
             }
+            print("yek");
+
+            print(settingsFilePath);
+            
 
             if (IO::FileExists(settingsFilePath)) {
                 string jsonString = utils.ReadFileToEnd(settingsFilePath);
@@ -259,6 +271,7 @@ namespace FileExplorer {
                     if (versionedSettings.HasKey("version") && versionedSettings["version"] == FILE_EXPLORER_SETTINGS_VERSION) {
                         foundVersion = true;
                         Json::Value explorerSettings = versionedSettings["settings"];
+
 
                         if (explorerSettings.HasKey("PinnedElements")) {
                             Json::Value pins = explorerSettings["PinnedElements"];
@@ -323,6 +336,35 @@ namespace FileExplorer {
                             invalidFolderColor = StringToVec4(explorerSettings["InvalidFolderColor"]);
                         }
 
+                        if (explorerSettings.HasKey("RecursiveSearchBatchSize")) {
+                            recursiveSearchBatchSize = explorerSettings["RecursiveSearchBatchSize"];
+                        }
+
+                        if (explorerSettings.HasKey("BlacklistedRecursiveSearchPaths")) {
+                            Json::Value blacklistedPaths = explorerSettings["BlacklistedRecursiveSearchPaths"];
+
+                            print(blacklistedPaths.Length);
+
+                            // for (uint i = 0; i < cols.GetKeys().Length; i++) {
+                            //     string col = cols.GetKeys()[i];
+                            //     columnsToShow.Set(col, bool(cols[col]));
+                            // }
+                        }
+                        else {
+                            print("no blacklisted paths");
+                        }
+
+
+                        
+                        // if (explorerSettings.HasKey("BlacklistedRecursiveSearchPaths")) {
+                        //     Json::Value blacklistedPaths = explorerSettings["BlacklistedRecursiveSearchPaths"];
+                        //     print(blacklistedPaths.Length);
+
+                        //     blacklistedRecursiveSearchPaths.Resize(blacklistedPaths.Length);
+                        //     for (uint i = 0; i < blacklistedPaths.Length; i++) {
+                        //         blacklistedRecursiveSearchPaths[i] = blacklistedPaths[i];
+                        //     }
+                        // }
                         break;
                     }
                 }
@@ -339,11 +381,6 @@ namespace FileExplorer {
             }
 
             Json::Value settings = Json::Array();
-            if (IO::FileExists(settingsFilePath)) {
-                string jsonString = utils.ReadFileToEnd(settingsFilePath);
-                settings = Json::Parse(jsonString);
-            }
-
             bool versionExists = false;
             for (uint i = 0; i < settings.Length; i++) {
                 if (settings[i].HasKey("version") && settings[i]["version"] == FILE_EXPLORER_SETTINGS_VERSION) {
@@ -364,8 +401,6 @@ namespace FileExplorer {
             }
 
             utils.WriteFile(settingsFilePath, Json::Write(settings));
-
-            // log("Settings saved to: " + settingsFilePath, LogLevel::Info, 365, "SaveSettings");
         }
 
         Json::Value GetCurrentSettings() {
@@ -393,6 +428,7 @@ namespace FileExplorer {
                 cols[col] = value;
             }
             explorerSettings["ColumnsToShow"] = cols;
+
             explorerSettings["MaxElementsPerPage"] = maxElementsPerPage;
             explorerSettings["SearchBarPadding"] = searchBarPadding;
             explorerSettings["EnableSearchBar"] = enableSearchBar;
@@ -404,6 +440,16 @@ namespace FileExplorer {
             explorerSettings["InvalidFileColor"] = Vec4ToString(invalidFileColor);
             explorerSettings["ValidFolderColor"] = Vec4ToString(validFolderColor);
             explorerSettings["InvalidFolderColor"] = Vec4ToString(invalidFolderColor);
+
+            explorerSettings["RecursiveSearchBatchSize"] = recursiveSearchBatchSize;
+
+            Json::Value blacklistedPaths = Json::Array();
+            for (uint i = 0; i < blacklistedRecursiveSearchPaths.Length; i++) {
+                blacklistedPaths.Add(blacklistedRecursiveSearchPaths[i]);
+            }
+            explorerSettings["BlacklistedRecursiveSearchPaths"] = blacklistedPaths;
+
+            // if (explorerSettings["BlacklistedRecursiveSearchPaths"].Length > 0) print(explorerSettings["BlacklistedRecursiveSearchPaths"][0]);
 
             return explorerSettings;
         }
@@ -675,11 +721,6 @@ namespace FileExplorer {
         FileExplorer@ explorer;
         uint SelectedElementIndex;
 
-        dictionary FolderProgressBars;
-        array<string> folderProgressOrder;
-
-        array<string> activePathStack;
-
         uint CurrentPage = 0;
         uint TotalPages = 1;
 
@@ -708,10 +749,28 @@ namespace FileExplorer {
 
         // Start non-recursive indexing
         void StartIndexingFiles(const string &in path) {
-            explorer.IsIndexing = true;
-            explorer.IndexingMessage = "Folder is being indexed...";
-            explorer.IndexingProgress = 0;
-            explorer.CurrentIndexingPath = path;
+            isIndexing = true;
+            indexingMessage = "Folder is being indexed...";
+            totalIndexingProgress = 0.0f;
+            Elements.Resize(0);
+            currentIndexingPath = path;
+
+            folderProgressBars.DeleteAll();
+            folderProgressOrder.Resize(0);
+            folderSubfolderTotalCount.DeleteAll();
+            folderSubfolderProcessedCount.DeleteAll();
+
+            string normalizedMainPath = NormalizePath(Navigation.GetPath());
+            folderProgressBars[normalizedMainPath] = 0.0f;
+            folderProgressOrder.InsertLast(normalizedMainPath);
+            folderSubfolderTotalCount[normalizedMainPath] = 0;
+            folderSubfolderProcessedCount[normalizedMainPath] = 0;
+
+            activePathStack.Resize(0);
+            activePathStack.InsertLast(Navigation.GetPath());
+
+            totalTasks = 0;
+            processedTasks = 0;
 
             startnew(CoroutineFuncUserdata(IndexFilesCoroutine), this);
         }
@@ -732,40 +791,88 @@ namespace FileExplorer {
                     tab.Elements.InsertLast(elementInfo);
                 }
 
-                if (i % 237 == 0) {
-                    explorer.IndexingMessage = "Indexed " + tostring(i + 1) + " files...";
-                    explorer.IndexingProgress = float(i + 1) / float(totalElements);
+                if (i % 237 == 0 || i == elements.Length - 1) {
+                    indexingMessage = "Indexed " + tostring(i + 1) + " files...";
+                    totalIndexingProgress = float(i + 1) / float(totalElements);
                     yield();
                 }
             }
 
-            explorer.IsIndexing = false;
-            explorer.IndexingProgress = 1.0;
+            isIndexing = false;
+            totalIndexingProgress = 1.0f;
+            indexingMessage = "Indexing complete.";
             ApplyFiltersAndSearch();
         }
 
-        // Start recursive indexing
-        void StartRecursiveSearch() {
-            explorer.IsIndexing = true;
-            explorer.IndexingMessage = "Recursive search in progress...";
-            explorer.IndexingProgress = 0;
-            Elements.Resize(0);
-            explorer.CurrentIndexingPath = Navigation.GetPath();
 
-            explorer.FolderProgressBars.DeleteAll();
+        bool isIndexing = false;
+        string indexingMessage = "";
+        float totalIndexingProgress = 0.0f;
+        string currentIndexingPath;
+
+        string currentLogState = "";
+
+        dictionary folderProgressBars;
+        array<string> folderProgressOrder;
+
+        array<string> activePathStack;
+
+        int totalTasks = 0;
+        int processedTasks = 0;
+
+        dictionary directoryProgressMap;
+        dictionary normalizedPathCache;
+
+        dictionary folderSubfolderTotalCount;
+        dictionary folderSubfolderProcessedCount;
+
+        dictionary folderFileTotalCount;
+        dictionary folderFileProcessedCount;
+        dictionary folderFileWeight;
+        dictionary folderElementsProcessed;
+        dictionary folderHasEarlySubfolder;
+
+        bool forceStopRecursiveSearch = false;
+
+
+        void StartRecursiveSearch() {
+            isIndexing = true;
+            indexingMessage = "Recursive search in progress...";
+            totalIndexingProgress = 0.0f;
+            Elements.Resize(0);
+            currentIndexingPath = Navigation.GetPath();
+
+            folderProgressBars.DeleteAll();
             folderProgressOrder.Resize(0);
+            folderSubfolderTotalCount.DeleteAll();
+            folderSubfolderProcessedCount.DeleteAll();
+            folderFileTotalCount.DeleteAll();
+            folderFileProcessedCount.DeleteAll();
+            folderFileWeight.DeleteAll();
+            folderElementsProcessed.DeleteAll();
+            folderHasEarlySubfolder.DeleteAll();
 
             string normalizedMainPath = NormalizePath(Navigation.GetPath());
-            explorer.FolderProgressBars[normalizedMainPath] = 0.0f;
+            folderProgressBars.Set(normalizedMainPath, 0.0f);
             folderProgressOrder.InsertLast(normalizedMainPath);
+            folderSubfolderTotalCount.Set(normalizedMainPath, 0);
+            folderSubfolderProcessedCount.Set(normalizedMainPath, 0);
+            folderFileTotalCount.Set(normalizedMainPath, 0);
+            folderFileProcessedCount.Set(normalizedMainPath, 0);
+            folderFileWeight.Set(normalizedMainPath, 0.0f);
+            folderElementsProcessed.Set(normalizedMainPath, 0);
+            folderHasEarlySubfolder.Set(normalizedMainPath, false);
 
             activePathStack.Resize(0);
             activePathStack.InsertLast(Navigation.GetPath());
 
+            totalTasks = 0;
+            processedTasks = 0;
+
             startnew(CoroutineFuncUserdata(RecursiveSearchCoroutine), this);
         }
 
-        // Recursive search
+        // Recursive search coroutine
         void RecursiveSearchCoroutine(ref@ r) {
             FileTab@ tab = cast<FileTab@>(r);
             if (tab is null) return;
@@ -773,27 +880,18 @@ namespace FileExplorer {
             array<string> dirsToProcess;
             dirsToProcess.InsertLast(Navigation.GetPath());
 
-            const int batchSize = 7;
+            const int batchSize = Config.recursiveSearchBatchSize;
             int processedSinceLastYield = 0;
 
-            dictionary folderFileProcessedCount;
-            dictionary folderFileTotalCount;
-            dictionary folderSubfolderProcessedCount;
-            dictionary folderSubfolderTotalCount;
-
-            explorer.FolderProgressBars.DeleteAll();
-            folderProgressOrder.Resize(0);
-
-            string normalizedMainPath = NormalizePath(Navigation.GetPath());
-            explorer.FolderProgressBars[normalizedMainPath] = 0.0f;
-            folderProgressOrder.InsertLast(normalizedMainPath);
-
-            tab.activePathStack.Resize(0);
-            tab.activePathStack.InsertLast(Navigation.GetPath());
-
             while (dirsToProcess.Length > 0) {
-                string currentDir = dirsToProcess[dirsToProcess.Length - 1];
-                dirsToProcess.RemoveLast();
+                if (forceStopRecursiveSearch) {
+                    forceStopRecursiveSearch = false;
+                    break;
+                }
+
+                int lastDirIndex = dirsToProcess.Length - 1;
+                string currentDir = dirsToProcess[lastDirIndex];
+                dirsToProcess.RemoveAt(lastDirIndex);
 
                 bool returningFromSubfolders = false;
                 if (currentDir.StartsWith("*")) {
@@ -803,6 +901,20 @@ namespace FileExplorer {
                     dirsToProcess.InsertLast("*" + currentDir);
                 }
 
+                string normalizedCurrentDir = NormalizePath(currentDir);
+
+                bool isBlacklisted = false;
+                for (uint i = 0; i < explorer.Config.blacklistedRecursiveSearchPaths.Length; i++) {
+                    if (normalizedCurrentDir == NormalizePath(explorer.Config.blacklistedRecursiveSearchPaths[i])) {
+                        isBlacklisted = true;
+                        break;
+                    }
+                }
+
+                if (isBlacklisted) {
+                    continue;
+                }
+
                 if (!returningFromSubfolders) {
                     array<string> elements = IO::IndexFolder(currentDir, false);
 
@@ -810,47 +922,71 @@ namespace FileExplorer {
                     array<string> files;
 
                     for (uint i = 0; i < elements.Length; i++) {
-                        if (utils.IsDirectory(elements[i])) {
-                            subfolders.InsertLast(elements[i]);
+                        string itemPath = elements[i];
+                        if (_IO::Directory::IsDirectory(itemPath)) {
+                            subfolders.InsertLast(itemPath);
                         } else {
-                            files.InsertLast(elements[i]);
+                            files.InsertLast(itemPath);
                         }
                     }
 
-                    folderFileTotalCount.Set(currentDir, files.Length);
-                    folderFileProcessedCount.Set(currentDir, 0);
-
-                    folderSubfolderTotalCount.Set(currentDir, subfolders.Length);
-                    folderSubfolderProcessedCount.Set(currentDir, 0);
-
                     string normalizedCurrentDir = NormalizePath(currentDir);
+                    folderSubfolderTotalCount.Set(normalizedCurrentDir, subfolders.Length);
+                    folderSubfolderProcessedCount.Set(normalizedCurrentDir, 0);
+                    folderFileTotalCount.Set(normalizedCurrentDir, files.Length);
+                    folderFileProcessedCount.Set(normalizedCurrentDir, 0);
+                    folderFileWeight.Set(normalizedCurrentDir, 0.0f);
+                    folderElementsProcessed.Set(normalizedCurrentDir, 0);
+                    folderHasEarlySubfolder.Set(normalizedCurrentDir, false);
 
-                    explorer.FolderProgressBars[normalizedCurrentDir] = 0.0f;
+                    if (files.Length == 0) {
+                        folderFileWeight.Set(normalizedCurrentDir, 0.0f);
+                    }
+                    else if (files.Length < 10) {
+                        folderFileWeight.Set(normalizedCurrentDir, 0.05f);
+                    }
+                    else {
+                        folderFileWeight.Set(normalizedCurrentDir, 0.25f);
+                    }
 
-                    if (folderProgressOrder.Find(normalizedCurrentDir) < 0) {
+                    if (!folderProgressBars.Exists(normalizedCurrentDir)) {
+                        folderProgressBars.Set(normalizedCurrentDir, 0.0f);
                         folderProgressOrder.InsertLast(normalizedCurrentDir);
+
+                        UpdateState("Added folder to progress tracking: " + utils.GetDirectoryName(normalizedCurrentDir));
                     }
 
-                    if (tab.activePathStack.Find(currentDir) < 0) {
-                        tab.activePathStack.InsertLast(currentDir);
-                    }
+                    totalTasks += subfolders.Length;
 
                     for (uint i = 0; i < files.Length; i++) {
-                        ElementInfo@ elementInfo = explorer.GetElementInfo(files[i]);
+                        string filePath = files[i];
+                        ElementInfo@ elementInfo = explorer.GetElementInfo(filePath);
                         if (elementInfo !is null && (Config.searchQuery == "" || elementInfo.name.ToLower().Contains(Config.searchQuery.ToLower()))) {
                             Elements.InsertLast(elementInfo);
                         }
 
                         int filesProcessed = 0;
-                        folderFileProcessedCount.Get(currentDir, filesProcessed);
-                        filesProcessed++;
-                        folderFileProcessedCount.Set(currentDir, filesProcessed);
+                        folderFileProcessedCount.Get(normalizedCurrentDir, filesProcessed);
+                        filesProcessed += 1;
+                        folderFileProcessedCount.Set(normalizedCurrentDir, filesProcessed);
 
-                        UpdateFolderProgress(currentDir, folderFileProcessedCount, folderFileTotalCount, folderSubfolderProcessedCount, folderSubfolderTotalCount);
+                        int elementsProcessed = 0;
+                        folderElementsProcessed.Get(normalizedCurrentDir, elementsProcessed);
+                        elementsProcessed += 1;
+                        folderElementsProcessed.Set(normalizedCurrentDir, elementsProcessed);
+
+                        if (elementsProcessed == 50 && !folderHasEarlySubfolder.Get(normalizedCurrentDir, false) && files.Length >= 10) {
+                            folderFileWeight.Set(normalizedCurrentDir, 0.85f);
+                            UpdateState("Adjusted file weight to 85% for folder: " + utils.GetDirectoryName(normalizedCurrentDir));
+                            UpdateFolderProgress(normalizedCurrentDir);
+                        }
+
+                        UpdateFolderProgress(normalizedCurrentDir);
 
                         processedSinceLastYield++;
                         if (processedSinceLastYield >= batchSize) {
-                            explorer.IndexingMessage = "Processing files in " + utils.GetDirectoryName(currentDir) + ": " + tostring(filesProcessed) + "/" + tostring(files.Length);
+                            indexingMessage = "Processing files in " + utils.GetDirectoryName(currentDir) + ": " + tostring(i + 1) + "/" + tostring(files.Length);
+                            UpdateState(indexingMessage);
                             processedSinceLastYield = 0;
                             yield();
                         }
@@ -861,77 +997,145 @@ namespace FileExplorer {
                     }
 
                     if (subfolders.Length == 0) {
-                        folderSubfolderProcessedCount.Set(currentDir, 0);
-                        folderSubfolderTotalCount.Set(currentDir, 0);
-                        UpdateFolderProgress(currentDir, folderFileProcessedCount, folderFileTotalCount, folderSubfolderProcessedCount, folderSubfolderTotalCount);
+                        UpdateFolderProgress(normalizedCurrentDir);
+                    }
+
+                    processedSinceLastYield++;
+                    if (processedSinceLastYield >= batchSize) {
+                        indexingMessage = "Processing directory: " + utils.GetDirectoryName(currentDir);
+                        UpdateState(indexingMessage);
+                        processedSinceLastYield = 0;
+                        yield();
                     }
                 } else {
                     string parentDir = utils.GetParentDirectoryName(currentDir);
+                    parentDir = NormalizePath(parentDir);
 
                     if (parentDir != "") {
                         int subfoldersProcessed = 0;
-                        folderSubfolderProcessedCount.Get(parentDir, subfoldersProcessed);
-                        subfoldersProcessed++;
+                        if (folderSubfolderProcessedCount.Get(parentDir, subfoldersProcessed)) {
+                            subfoldersProcessed += 1;
+                        } else {
+                            subfoldersProcessed = 1;
+                        }
                         folderSubfolderProcessedCount.Set(parentDir, subfoldersProcessed);
 
-                        UpdateFolderProgress(parentDir, folderFileProcessedCount, folderFileTotalCount, folderSubfolderProcessedCount, folderSubfolderTotalCount);
+                        int subfoldersTotal = 0;
+                        folderSubfolderTotalCount.Get(parentDir, subfoldersTotal);
+
+                        indexingMessage = "Updating parent folder: " + utils.GetDirectoryName(parentDir) + 
+                                            " | Subfolders Processed: " + tostring(subfoldersProcessed) + "/" + tostring(subfoldersTotal);
+                        UpdateState(indexingMessage);
+
+                        UpdateFolderProgress(parentDir);
+
+                        processedTasks++;
+                        UpdateOverallProgress();
                     }
 
-                    int removeIndex = tab.activePathStack.Find(currentDir);
+                    int removeIndex = activePathStack.Find(currentDir);
                     if (removeIndex >= 0) {
-                        tab.activePathStack.RemoveAt(removeIndex);
+                        activePathStack.RemoveAt(removeIndex);
                     }
 
                     string normalizedCurrentDir = NormalizePath(currentDir);
-                    explorer.FolderProgressBars.Delete(normalizedCurrentDir);
-
+                    folderProgressBars.Delete(normalizedCurrentDir);
                     int index = folderProgressOrder.Find(normalizedCurrentDir);
                     if (index >= 0) {
                         folderProgressOrder.RemoveAt(index);
                     }
 
-                    explorer.IndexingMessage = "Finished indexing: " + utils.GetDirectoryName(currentDir);
+                    indexingMessage = "Finished indexing: " + utils.GetDirectoryName(currentDir);
+                    UpdateState(indexingMessage);
                     yield();
                 }
             }
 
-            explorer.IsIndexing = false;
-            explorer.IndexingProgress = 1.0f;
+            isIndexing = false;
+            totalIndexingProgress = 1.0f;
+            indexingMessage = "Recursive search complete.";
+            UpdateState(indexingMessage);
             ApplyFiltersAndSearch();
         }
 
-        void UpdateFolderProgress(const string &in folderPath,
-                                    dictionary &in folderFileProcessedCount, dictionary &in folderFileTotalCount,
-                                    dictionary &in folderSubfolderProcessedCount, dictionary &in folderSubfolderTotalCount) {
-                int filesProcessed = 0, filesTotal = 0;
-                int subfoldersProcessed = 0, subfoldersTotal = 0;
 
-                folderFileProcessedCount.Get(folderPath, filesProcessed);
-                folderFileTotalCount.Get(folderPath, filesTotal);
 
-                folderSubfolderProcessedCount.Get(folderPath, subfoldersProcessed);
-                folderSubfolderTotalCount.Get(folderPath, subfoldersTotal);
+        void UpdateFolderProgress(const string &in folderPath) {
+            string normalizedFolderPath = NormalizePath(folderPath);
 
-                float fileProgress = filesTotal > 0 ? float(filesProcessed) / float(filesTotal) : 1.0f;
+            int subfoldersTotal = 0;
+            folderSubfolderTotalCount.Get(normalizedFolderPath, subfoldersTotal);
 
-                float subfolderProgress = subfoldersTotal > 0 ? float(subfoldersProcessed) / float(subfoldersTotal) : 1.0f;
+            int subfoldersProcessed = 0;
+            folderSubfolderProcessedCount.Get(normalizedFolderPath, subfoldersProcessed);
 
-                float totalProgress = (fileProgress * 0.25f) + (subfolderProgress * 0.75f);
+            int filesTotal = 0;
+            folderFileTotalCount.Get(normalizedFolderPath, filesTotal);
 
-                string normalizedFolderPath = NormalizePath(folderPath);
+            int filesProcessed = 0;
+            folderFileProcessedCount.Get(normalizedFolderPath, filesProcessed);
 
-                explorer.FolderProgressBars[normalizedFolderPath] = totalProgress;
+            float fileWeight = 0.0f;
+            folderFileWeight.Get(normalizedFolderPath, fileWeight);
+
+            float fileProgress = (filesTotal > 0) ? float(filesProcessed) / float(filesTotal) : 1.0f;
+            float subfolderProgress = (subfoldersTotal > 0) ? float(subfoldersProcessed) / float(subfoldersTotal) : 1.0f;
+
+            float progress = (fileProgress * fileWeight) + (subfolderProgress * (1.0f - fileWeight));
+
+            folderProgressBars.Set(normalizedFolderPath, progress);
+
+            UpdateOverallProgress();
+
+            indexingMessage = "Folder: " + utils.GetDirectoryName(folderPath) + 
+                                " | Files: " + tostring(filesProcessed) + "/" + tostring(filesTotal) + 
+                                " | Subfolders: " + tostring(subfoldersProcessed) + "/" + tostring(subfoldersTotal) + 
+                                " | Progress: " + tostring(int(progress * 100)) + "%";
+            UpdateState(indexingMessage);
+
+            if (progress >= 1.0f) {
+                folderProgressBars.Delete(normalizedFolderPath);
+                int orderIndex = folderProgressOrder.Find(normalizedFolderPath);
+                if (orderIndex >= 0) {
+                    folderProgressOrder.RemoveAt(orderIndex);
+                }
+                indexingMessage = "Completed: " + utils.GetDirectoryName(folderPath);
+                UpdateState(indexingMessage);
             }
+        }
 
+        void UpdateOverallProgress() {
+            if (totalTasks > 0) {
+                totalIndexingProgress = (float(processedTasks) / float(totalTasks));
+                indexingMessage = "Overall Progress: " + tostring(int(totalIndexingProgress * 100)) + "% (" + tostring(processedTasks) + "/" + tostring(totalTasks) + ")";
+            } else {
+                totalIndexingProgress = 1.0f;
+                indexingMessage = "Overall Progress: 100% (0/0)";
+            }
+            UpdateState(indexingMessage);
+        }
 
         string NormalizePath(const string &in path) {
             string normalized = path.Replace("\\", "/");
             while (normalized.Contains("//")) {
                 normalized = normalized.Replace("//", "/");
             }
+            if (normalized.EndsWith("/")) {
+                normalized = normalized.SubStr(0, normalized.Length - 1);
+            }
             return normalized;
         }
 
+        void UpdateState(const string &in message) {
+            currentLogState = message;
+        }
+
+
+
+
+        void ForceStopRecursiveSearch() {
+            forceStopRecursiveSearch = true;
+        }
 
 
         void ApplyFiltersAndSearch() {
@@ -1385,19 +1589,13 @@ namespace FileExplorer {
         Config@ Config;
         // Utils@ utils;
         array<FileTab@> tab;
-        array<string> PinnedElements;
         UserInterface@ ui;
         Exports@ exports;
         Navigation@ nav;
 
-        bool IsIndexing = false;
-        string IndexingMessage = "";
-        dictionary FolderProgressBars;
-        float IndexingProgress = 0;
 
+        array<string> PinnedElements;
         array<ElementInfo@> CurrentElements;
-        string CurrentIndexingPath;
-
         ElementInfo@ CurrentSelectedElement;
 
         FileExplorer(Config@ cfg, const string &in id) {
@@ -1457,19 +1655,12 @@ namespace FileExplorer {
             this.closeTime = Time::Now;
             this.locked = true;
 
-            StopRecursiveSearch();
+            tab[0].ForceStopRecursiveSearch();
 
             startnew(CoroutineFunc(this.DelayedCleanup));
         }
 
-        void StopRecursiveSearch() {
-            if (IsIndexing) {
-                IsIndexing = false;
-                IndexingMessage = "Indexing stopped.";
-                IndexingProgress = 0;
-                FolderProgressBars.DeleteAll();
-            }
-        }
+
 
         private void DelayedCleanup() {
             yield(FILE_EXPLORER_EXPORT_YIELD_AMOUNT);
@@ -1769,6 +1960,7 @@ namespace FileExplorer {
         }
 
         string newFilter = "";
+        string newBlacklistPath = "";
         void Render_ActionBar() {
             if (!explorer.Config.enablePagination) {
                 utils.DisabledButton(Icons::ChevronLeft);
@@ -1925,11 +2117,13 @@ namespace FileExplorer {
             if (UI::BeginPopup("burgerMenu")) {
                 if (UI::MenuItem("Hide Files", "", explorer.Config.hideFiles)) {
                     explorer.Config.hideFiles = !explorer.Config.hideFiles;
+                    explorer.Config.SaveSettings();
                     explorer.tab[0].ApplyVisibilitySettings();
                     utils.RefreshCurrentDirectory();
                 }
                 if (UI::MenuItem("Hide Folders", "", explorer.Config.hideFolders)) {
                     explorer.Config.hideFolders = !explorer.Config.hideFolders;
+                    explorer.Config.SaveSettings();
                     explorer.tab[0].ApplyVisibilitySettings();
                     utils.RefreshCurrentDirectory();
                 }
@@ -1937,6 +2131,7 @@ namespace FileExplorer {
                 if (UI::BeginMenu("Pagination")) {
                     if (UI::MenuItem("Enable Pagination", "", explorer.Config.enablePagination)) {
                         explorer.Config.enablePagination = !explorer.Config.enablePagination;
+                        explorer.Config.SaveSettings();
                         utils.RefreshCurrentDirectory();
                     }
 
@@ -1950,6 +2145,7 @@ namespace FileExplorer {
                 if (UI::BeginMenu("Search Bar")) {
                     if (UI::MenuItem("Enable Search Bar", "", explorer.Config.enableSearchBar)) {
                         explorer.Config.enableSearchBar = !explorer.Config.enableSearchBar;
+                        explorer.Config.SaveSettings();
                         utils.RefreshCurrentDirectory();
                     }
 
@@ -1959,8 +2155,47 @@ namespace FileExplorer {
 
                     if (UI::MenuItem("Enable Recursive Search", "", explorer.Config.recursiveSearch)) {
                         explorer.Config.recursiveSearch = !explorer.Config.recursiveSearch;
+                        explorer.Config.SaveSettings();
                         explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                     }
+
+                    explorer.Config.recursiveSearchBatchSize = UI::SliderInt("##BatchSize", explorer.Config.recursiveSearchBatchSize, 1, 37);
+                    UI::Text("Note: Recursive search cannot be changed while a search is in progress.");
+
+                    if (UI::BeginMenu("Blacklisted recursive search paths")) {
+                        UI::Text("Blacklisted Paths for recursive search");
+                        UI::Separator();
+
+                        UI::Text("Add a path to the blacklist:");
+                        newBlacklistPath = UI::InputText("##NewPath", newBlacklistPath);
+                        
+                        if (UI::Button("Add Path") && newBlacklistPath != "") {
+                            if (explorer.Config.blacklistedRecursiveSearchPaths.Find(newBlacklistPath) == -1) {
+                                explorer.Config.blacklistedRecursiveSearchPaths.InsertLast(newBlacklistPath);
+                                explorer.Config.SaveSettings();
+                                newBlacklistPath = "";
+                            } else {
+                                UI::Text("Path is already blacklisted.");
+                            }
+                        }
+
+                        UI::Separator();
+
+                        for (uint i = 0; i < explorer.Config.blacklistedRecursiveSearchPaths.Length; i++) {
+                            string path = explorer.Config.blacklistedRecursiveSearchPaths[i];
+                            UI::Text(path);
+
+                            UI::SameLine();
+                            if (UI::Button("Remove##" + i)) {
+                                explorer.Config.blacklistedRecursiveSearchPaths.RemoveAt(i);
+                                explorer.Config.SaveSettings();
+                                explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
+                            }
+                        }
+
+                        UI::EndMenu();
+                    }
+
 
                     UI::EndMenu();
                 }
@@ -2023,7 +2258,7 @@ namespace FileExplorer {
                     UI::EndMenu();
                 }
 
-                explorer.Config.SaveSettings();
+                // explorer.Config.SaveSettings();
 
                 UI::EndPopup();
             }
@@ -2276,29 +2511,55 @@ namespace FileExplorer {
         }
 
         void Render_MainAreaBar() {
-            if (explorer.IsIndexing) {
-                UI::Text("Overall Progress:");
-                UI::ProgressBar(explorer.IndexingProgress, vec2(-1, 0), "Total");
+            FileTab@ currentTab = explorer.tab[0];
 
-                for (uint i = 0; i < explorer.tab[0].folderProgressOrder.Length; i++) {
-                    string folderPath = explorer.tab[0].folderProgressOrder[i];
-                    folderPath = explorer.tab[0].NormalizePath(folderPath);
+            if (currentTab.isIndexing) {
+
+                UI::Text("Indexing in progress...");
+                UI::Text(currentTab.currentLogState);
+                
+                UI::Separator();
+
+                UI::Text("Overall Progress:");
+                UI::ProgressBar(currentTab.totalIndexingProgress, vec2(-1, 0), "Total");
+
+                UI::Separator();
+
+                UI::Text("Indexing Details:");
+
+                for (uint i = 0; i < currentTab.folderProgressOrder.Length; i++) {
+                    string folderPath = currentTab.folderProgressOrder[i];
+                    folderPath = currentTab.NormalizePath(folderPath);
 
                     float progress = 0.0f;
-                    bool found = explorer.FolderProgressBars.Get(folderPath, progress);
+                    bool found = currentTab.folderProgressBars.Get(folderPath, progress);
                     if (!found) {
                         progress = 0.0f;
                     }
 
-                    string displayName = folderPath.Replace(explorer.tab[0].Navigation.GetPath(), "");
+                    string mainPath = currentTab.NormalizePath(currentTab.Navigation.GetPath());
+                    string displayName = folderPath.Replace(mainPath, "");
+                    if (displayName.StartsWith("/")) {
+                        displayName = displayName.SubStr(1);
+                    }
                     if (displayName == "") {
                         displayName = utils.GetDirectoryName(folderPath);
                     }
 
-                    UI::Text("Indexing: " + displayName);
+                    int depth = 0;
+                    if (displayName != "") {
+                        depth = displayName.Split("/").Length - 1;
+                    }
+
+                    string indent = "";
+                    for (int d = 0; d < depth; d++) {
+                        indent += "    ";
+                    }
+
+                    UI::Text(indent + "Indexing: " + displayName);
                     UI::ProgressBar(progress, vec2(-1, 0), tostring(int(progress * 100)) + "%");
                 }
-            } else if (explorer.tab[0].Elements.Length == 0) {
+            } else if (currentTab.Elements.Length == 0) {
                 UI::Text("No elements to display.");
             } else {
                 array<string> orderedColumns = { "ico", "name", "type", "size", "lastModified", "createdDate" };
@@ -2522,13 +2783,25 @@ namespace FileExplorer {
                 UI::Text("Selected Element Details");
                 UI::Separator();
                 UI::Text("ICO: " + explorer.GetElementIconString(selectedElement.icon, selectedElement.isSelected));
-                UI::Text("Name: " + selectedElement.name);
-                UI::Text("Path: " + selectedElement.path);
-                UI::Text("Size: " + selectedElement.size);
-                UI::Text("Type: " + selectedElement.type);
-                UI::Text("Last Modified: " + Time::FormatString("%Y-%m-%d %H:%M:%S", selectedElement.lastModifiedDate));
-                UI::Text("Selected Time: " + selectedElement.lastSelectedTime);
-
+                if (UI::Selectable("Name: " + selectedElement.name, false)) {
+                    IO::SetClipboard(selectedElement.name);
+                }
+                if (UI::Selectable("Path: " + selectedElement.path, false)) {
+                    IO::SetClipboard(selectedElement.path);
+                }
+                if (UI::Selectable("Size: " + selectedElement.size, false)) {
+                    IO::SetClipboard(selectedElement.size);
+                }
+                if (UI::Selectable("Type: " + selectedElement.type, false)) {
+                    IO::SetClipboard(selectedElement.type);
+                }
+                if (UI::Selectable("Last modified: " + Time::FormatString("%Y-%m-%d %H:%M:%S", selectedElement.lastModifiedDate), false)) {
+                    IO::SetClipboard(Time::FormatString("%Y-%m-%d %H:%M:%S", selectedElement.lastModifiedDate));
+                }
+                if (UI::Selectable("Last selected: " + selectedElement.lastSelectedTime, false)) {
+                    IO::SetClipboard(Time::FormatString("%Y-%m-%d %H:%M:%S", selectedElement.lastSelectedTime));
+                }
+                
                 if (selectedElement.type.ToLower() == "gbx") {
                     UI::Separator();
                     UI::Text("GBX File Detected - Displaying GBX Info");
@@ -2542,28 +2815,28 @@ namespace FileExplorer {
                     if (true) UI::Text("Selected element " + selectedElement.path);
 
                     string value;
-                    if (gbxMetadata.Get("type", value)) UI::Text("Type: " + value);
-                    if (gbxMetadata.Get("exever", value)) UI::Text("Exe Version: " + value);
-                    if (gbxMetadata.Get("exebuild", value)) UI::Text("Exe Build: " + value);
-                    if (gbxMetadata.Get("title", value)) UI::Text("Title: " + value);
+                    if (gbxMetadata.Get("type", value)) { if (UI::Selectable("Type: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("exever", value)) { if (UI::Selectable("Exe Version: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("exebuild", value)) { if (UI::Selectable("Exe Build: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("title", value)) { if (UI::Selectable("Title: " + value, false)) { IO::SetClipboard(value); } }
 
-                    if (gbxMetadata.Get("map_uid", value)) UI::Text("Map UID: " + value);
-                    if (gbxMetadata.Get("map_name", value)) UI::Text("Map Name: " + Text::StripFormatCodes(value));
-                    if (gbxMetadata.Get("map_author", value)) UI::Text("Map Author: " + value);
-                    if (gbxMetadata.Get("map_authorzone", value)) UI::Text("Map Author Zone: " + value);
+                    if (gbxMetadata.Get("map_uid", value)) { if (UI::Selectable("Map UID: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("map_name", value)) { if (UI::Selectable("Map Name: " + Text::StripFormatCodes(value), false)) { IO::SetClipboard(Text::StripFormatCodes(value)); } }
+                    if (gbxMetadata.Get("map_author", value)) { if (UI::Selectable("Map Author: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("map_authorzone", value)) { if (UI::Selectable("Map Author Zone: " + value, false)) { IO::SetClipboard(value); } }
 
-                    if (gbxMetadata.Get("desc_envir", value)) UI::Text("Environment: " + value);
-                    if (gbxMetadata.Get("desc_mood", value)) UI::Text("Mood: " + value);
-                    if (gbxMetadata.Get("desc_maptype", value)) UI::Text("Map Type: " + value);
-                    if (gbxMetadata.Get("desc_mapstyle", value)) UI::Text("Map Style: " + value);
-                    if (gbxMetadata.Get("desc_displaycost", value)) UI::Text("Display Cost: " + value);
-                    if (gbxMetadata.Get("desc_mod", value)) UI::Text("Mod: " + value);
+                    if (gbxMetadata.Get("desc_envir", value)) { if (UI::Selectable("Environment: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("desc_mood", value)) { if (UI::Selectable("Mood: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("desc_maptype", value)) { if (UI::Selectable("Map Type: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("desc_mapstyle", value)) { if (UI::Selectable("Map Style: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("desc_displaycost", value)) { if (UI::Selectable("Display Cost: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("desc_mod", value)) { if (UI::Selectable("Mod: " + value, false)) { IO::SetClipboard(value); } }
 
-                    if (gbxMetadata.Get("times_bronze", value)) UI::Text("Bronze Time: " + value);
-                    if (gbxMetadata.Get("times_silver", value)) UI::Text("Silver Time: " + value);
-                    if (gbxMetadata.Get("times_gold", value)) UI::Text("Gold Time: " + value);
-                    if (gbxMetadata.Get("times_authortime", value)) UI::Text("Author Time: " + value);
-                    if (gbxMetadata.Get("times_authorscore", value)) UI::Text("Author Score: " + value);
+                    if (gbxMetadata.Get("times_bronze", value)) { if (UI::Selectable("Bronze Time: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("times_silver", value)) { if (UI::Selectable("Silver Time: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("times_gold", value)) { if (UI::Selectable("Gold Time: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("times_authortime", value)) { if (UI::Selectable("Author Time: " + value, false)) { IO::SetClipboard(value); } }
+                    if (gbxMetadata.Get("times_authorscore", value)) { if (UI::Selectable("Author Score: " + value, false)) { IO::SetClipboard(value); } }
 
                     uint depIndex = 0;
                     while (gbxMetadata.Get("dep_file_" + tostring(depIndex), value)) {
@@ -2622,7 +2895,8 @@ namespace FileExplorer {
 
     void fe_Start(
         bool _mustReturn,
-        string id,
+        string _id,
+        // string _returnType = "path", // Possible "path", ElementInfo
         vec2 _minmaxReturnAmount = vec2(1, -1),
         string _path = "",
         string _searchQuery = "",
@@ -2631,23 +2905,23 @@ namespace FileExplorer {
     ) {
         string pluginName = Meta::ExecutingPlugin().Name;
 
-        string sessionKey = pluginName + "::" + id;
+        string sessionKey = pluginName + "::" + _id;
 
         if (explorersByPlugin.Exists(sessionKey)) {
-            NotifyError("Error", "Session ID '" + id + "' already in use by this plugin. Please contact the plugin developer if this is a signed plugin (or if you are the dev, please fix :peepoShy:).", 20000);
+            NotifyError("Error", "Session ID '" + _id + "' already in use by this plugin. Please contact the plugin developer if this is a signed plugin (or if you are the dev, please fix :peepoShy:).", 20000);
             return;
         }
 
         Config config;
         config.mustReturn = _mustReturn;
-        config.id = id;
+        config.id = _id;
         config.minMaxReturnAmount = _minmaxReturnAmount;
         config.path = _path;
         config.searchQuery = _searchQuery;
         config.filters = _filters;
         config.canOnlyReturn = _canOnlyReturn;
 
-        FileExplorer@ newExplorer = FileExplorer(config, id);
+        FileExplorer@ newExplorer = FileExplorer(config, _id);
 
         explorersByPlugin.Set(sessionKey, @newExplorer);
 
