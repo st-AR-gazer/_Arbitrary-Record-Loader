@@ -171,6 +171,9 @@
         - When fe_Start is called, restrictions on the return elements are applied globally accross all instances for some reason, 
           this should be fixed so that each instance can have it's own restrictions
 
+        - Closing an older instance will close both (and reopen the new instance shortly after)
+        - Older / Newer instances can mess with each other's settings (like the return restrictions) in mysterious ways (needs more testing)
+
 */
 
 namespace FileExplorer {
