@@ -157,9 +157,6 @@
 
         - Add ability to export ElementInfo instead of just Paths
 
-        - Create blacklisted recursive paths for folder (like archivist since it's so gaud damn large...)
-
-
         - Change what is returned when the user returns a file, (we should send the entire element info, not just the paths)
 
     FIXME: 
