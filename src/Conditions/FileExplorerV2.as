@@ -2863,7 +2863,7 @@ namespace FileExplorer {
                     string sessionId = sessionKey.SubStr(pluginName.Length + 2); // Skip "pluginName::"
                     string windowTitle = "File Explorer " + sessionId;
 
-                    if (!explorer.showInterface) return;
+                    if (!explorer.showInterface) continue;
                     if (UI::Begin(windowTitle, explorer.showInterface, UI::WindowFlags::NoTitleBar)) {
                         explorer.ui.Render_FileExplorer();
                     }
