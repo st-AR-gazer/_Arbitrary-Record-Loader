@@ -2272,20 +2272,22 @@ namespace FileExplorer {
         }
 
         void Render_DeleteConfirmationPopup() {
+            string popupName = "DeleteConfirmationPopup_" + explorer.sessionId;
+
             if (utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG && explorer.Config.useExtraWarningWhenDeleting) {
-                UI::OpenPopup("DeleteConfirmationPopup");
+                UI::OpenPopup(popupName);
             } else if (utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG && !explorer.Config.useExtraWarningWhenDeleting) {
                 ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
 
                 if (selectedElement !is null && selectedElement.isFolder) {
-                    log("Deleting folder with contents: " + selectedElement.path, LogLevel::Info, 1891, "Render_DeleteConfirmationPopup");
-                    IO::DeleteFolder(selectedElement.path, true);
+                    log("Deleting empty folder: " + selectedElement.path, LogLevel::Info, 1070, "DeleteSelectedElement");
+                    IO::DeleteFolder(selectedElement.path);
                     utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG = false;
                     explorer.tab[0].LoadDirectory(explorer.tab[0].Navigation.GetPath());
                 }
             }
 
-            if (UI::BeginPopupModal("DeleteConfirmationPopup", utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG, UI::WindowFlags::AlwaysAutoResize)) {
+            if (UI::BeginPopupModal(popupName, utils.RENDER_DELETE_CONFIRMATION_POPUP_FLAG, UI::WindowFlags::AlwaysAutoResize)) {
                 ElementInfo@ selectedElement = explorer.tab[0].GetSelectedElement();
 
                 UI::Text("Are you sure you want to delete this folder and all its contents?");
@@ -2424,12 +2426,14 @@ namespace FileExplorer {
         }
 
         void Render_Context_PinnedElements() {
+            string popupName = "PinnedElementContextMenu_" + explorer.sessionId;
+
             if (explorer.ui.openContextMenu) {
-                UI::OpenPopup("PinnedElementContextMenu");
+                UI::OpenPopup(popupName);
                 explorer.ui.openContextMenu = false;
             }
 
-            if (UI::BeginPopup("PinnedElementContextMenu")) {
+            if (UI::BeginPopup(popupName)) {
                 ElementInfo@ element = explorer.tab[0].GetSelectedElement();
                 if (element !is null) {
                     if (UI::MenuItem("Add to Selected Elements")) {
@@ -2468,12 +2472,14 @@ namespace FileExplorer {
         }
 
         void Render_Context_SelectedElements() {
+            string popupName = "SelectedElementContextMenu_" + explorer.sessionId;
+
             if (openContextMenu) {
-                UI::OpenPopup("SelectedElementContextMenu");
+                UI::OpenPopup(popupName);
                 openContextMenu = false;
             }
 
-            if (UI::BeginPopup("SelectedElementContextMenu")) {
+            if (UI::BeginPopup(popupName)) {
                 ElementInfo@ element = explorer.tab[0].GetSelectedElement();
                 if (element !is null) {
                     if (UI::MenuItem("Remove from Selected Elements")) {
@@ -2554,7 +2560,8 @@ namespace FileExplorer {
                 }
 
                 if (columnCount > 0) {
-                    UI::BeginTable("FilesTable", columnCount, UI::TableFlags::Resizable | UI::TableFlags::Borders | UI::TableFlags::SizingFixedSame);
+                    string tableId = "FilesTable_" + explorer.sessionId;
+                    UI::BeginTable(tableId, columnCount, UI::TableFlags::Resizable | UI::TableFlags::Borders | UI::TableFlags::SizingFixedSame);
 
                     for (uint i = 0; i < orderedColumns.Length; i++) {
                         if (explorer.Config.IsColumnVisible(orderedColumns[i])) {
@@ -2610,12 +2617,14 @@ namespace FileExplorer {
         }
 
         void Render_Context_MainArea() {
+            string popupName = "MainElementContextMenu_" + explorer.sessionId;
+
             if (openContextMenu) {
-                UI::OpenPopup("MainElementContextMenu");
+                UI::OpenPopup(popupName);
                 openContextMenu = false;
             }
 
-            if (UI::BeginPopup("MainElementContextMenu")) {
+            if (UI::BeginPopup(popupName)) {
                 ElementInfo@ element = explorer.tab[0].GetSelectedElement();
                 if (element !is null) {
                     bool canAddMore = explorer.Config.selectedPaths.Length < uint(explorer.Config.minMaxReturnAmount.y) || explorer.Config.minMaxReturnAmount.y == -1;
