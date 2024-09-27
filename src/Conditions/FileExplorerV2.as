@@ -164,12 +164,7 @@
           (only .replay .map and .challenge should be supported)
 
         - Game crashes when 'minimize' button are clicked...
-
-        - When fe_Start is called, restrictions on the return elements are applied globally accross all instances for some reason, 
-          this should be fixed so that each instance can have it's own restrictions
         
-        - Older / Newer instances can mess with each other's settings (like the return restrictions) in mysterious ways (needs more testing)
-
 */
 
 namespace FileExplorer {
@@ -2881,7 +2876,7 @@ namespace FileExplorer {
         }
 
         InstanceConfig instConfig;
-        instConfig.id;
+        instConfig.id = _id;
         instConfig.mustReturn = _mustReturn;
         instConfig.returnType = _returnType;
         instConfig.minMaxReturnAmount = _minmaxReturnAmount;
