@@ -70,8 +70,9 @@ void RenderTab_LocalFiles() {
 
     if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
         FileExplorer::fe_Start(
-            true,
             "Local Files",
+            true,
+            "path",
             vec2(1, -1),
             IO::FromUserGameFolder("Replays/"),
             "",

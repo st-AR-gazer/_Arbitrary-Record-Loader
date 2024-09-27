@@ -35,17 +35,17 @@ namespace ReplayLoader {
 
         if (task.HasFailed || !task.HasSucceeded) {
             NotifyError("Failed to load replay file!");
-            log("Failed to load replay file!", LogLevel::Error, 36, "LoadReplayFromPath");
-            log(task.ErrorCode, LogLevel::Error, 37, "LoadReplayFromPath");
-            log(task.ErrorDescription, LogLevel::Error, 38, "LoadReplayFromPath");
-            log(task.ErrorType, LogLevel::Error, 39, "LoadReplayFromPath");
-            log(tostring(task.Ghosts.Length), LogLevel::Error, 40, "LoadReplayFromPath");
+            log("Failed to load replay file!", LogLevel::Error, 38, "LoadReplayFromPath");
+            log(task.ErrorCode, LogLevel::Error, 39, "LoadReplayFromPath");
+            log(task.ErrorDescription, LogLevel::Error, 40, "LoadReplayFromPath");
+            log(task.ErrorType, LogLevel::Error, 41, "LoadReplayFromPath");
+            log(tostring(task.Ghosts.Length), LogLevel::Error, 42, "LoadReplayFromPath");
             return;
         } else {
-            log(task.ErrorCode, LogLevel::Info, 43, "LoadReplayFromPath");
-            log(task.ErrorDescription, LogLevel::Info, 44, "LoadReplayFromPath");
-            log(task.ErrorType, LogLevel::Info, 45, "LoadReplayFromPath");
-            log(tostring(task.Ghosts.Length), LogLevel::Info, 46, "LoadReplayFromPath");
+            log(task.ErrorCode, LogLevel::Info, 45, "LoadReplayFromPath");
+            log(task.ErrorDescription, LogLevel::Info, 46, "LoadReplayFromPath");
+            log(task.ErrorType, LogLevel::Info, 47, "LoadReplayFromPath");
+            log(tostring(task.Ghosts.Length), LogLevel::Info, 48, "LoadReplayFromPath");
         }
 
 
@@ -56,9 +56,9 @@ namespace ReplayLoader {
 
         if (task.Ghosts.Length == 0) {
             NotifyWarn("No ghosts found in the replay file!");
-            log("No ghosts found in the replay file!", LogLevel::Warn, 57, "LoadReplayFromPath");
+            log("No ghosts found in the replay file!", LogLevel::Warn, 59, "LoadReplayFromPath");
             return;
         }
-        log("Replay loaded successfully with " + task.Ghosts.Length + " ghosts!", LogLevel::Info, 60, "LoadReplayFromPath");
+        log("Replay loaded successfully with " + task.Ghosts.Length + " ghosts!", LogLevel::Info, 62, "LoadReplayFromPath");
     }
 }
