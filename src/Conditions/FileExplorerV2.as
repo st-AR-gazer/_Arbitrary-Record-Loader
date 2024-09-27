@@ -162,8 +162,6 @@
     FIXME: 
         - GBX parsing currently only works for .Replay.Gbx files, this should work for all GBX files 
           (only .replay .map and .challenge should be supported)
-
-        - Game crashes when 'minimize' button are clicked...
         
 */
 
@@ -1334,22 +1332,26 @@ namespace FileExplorer {
         // Window Management Functions
         // ------------------------------------------------
 
-        vec2 originalPos;
-        vec2 originalSize;
+        vec2 originalWindowPos;
+        vec2 originalWindowSize;
+
         bool isMaximized = false;
 
         void MaximizeWindow() {
             vec2 screenSize = vec2(Draw::GetWidth(), Draw::GetHeight());
             if (isMaximized) {
-                UI::SetWindowPos(originalPos);
-                UI::SetWindowSize(originalSize);
+                UI::SetWindowPos(originalWindowPos);
+                UI::SetWindowSize(originalWindowSize);
                 isMaximized = false;
             } else {
-                originalPos = UI::GetWindowPos();
-                originalSize = UI::GetWindowSize();
+                originalWindowPos = UI::GetWindowPos();
+                originalWindowSize = UI::GetWindowSize();
 
-                vec2 maximizedSize = vec2(screenSize.x * 0.97, screenSize.y * 0.97);
                 vec2 maximizedPos = vec2(screenSize.x * 0.015, screenSize.y * 0.015);
+                vec2 maximizedSize = vec2(screenSize.x * 0.97, screenSize.y * 0.97);
+
+                print(maximizedPos);
+                print(maximizedSize);
 
                 UI::SetWindowPos(maximizedPos);
                 UI::SetWindowSize(maximizedSize);
@@ -1358,12 +1360,12 @@ namespace FileExplorer {
         }
 
         void MinimizeWindow() {
-            originalPos = UI::GetWindowPos();
-            originalSize = UI::GetWindowSize();
+            vec2 screenSize = vec2(Draw::GetWidth(), Draw::GetHeight());
+            
             isMaximized = false;
 
-            vec2 minimizedPos = vec2(30, Draw::GetHeight() - 70);
-            vec2 minimizedSize = vec2(325, 40);
+            vec2 minimizedPos = vec2(screenSize.x * 0.015, screenSize.y * 0.92);
+            vec2 minimizedSize = vec2(562.4, 38);
 
             UI::SetWindowPos(minimizedPos);
             UI::SetWindowSize(minimizedSize);
@@ -1758,27 +1760,26 @@ namespace FileExplorer {
         }
 
         void Render_Columns() {
-            UI::BeginTable("FileExplorerTable", 3, UI::TableFlags::Resizable | UI::TableFlags::Borders);
             
-            // Left Sidebar (Hardcoded Paths, Pinned Elements, Selected Elements)
-            UI::TableNextColumn();
-            UI::BeginChild("LeftSidebar", vec2(0, 0), true);
-            Render_LeftSidebar();
-            UI::EndChild();
-            
-            // Main Area (File listing, with some inforamtion about each file)
-            UI::TableNextColumn();
-            UI::BeginChild("MainArea", vec2(0, 0), true);
-            Render_MainAreaBar();
-            UI::EndChild();
-            
-            // Details Bar (Selected file details, more information about the selected file)
-            UI::TableNextColumn();
-            UI::BeginChild("DetailBar", vec2(0, 0), true);
-            Render_DetailBar();
-            UI::EndChild();
-            
-            UI::EndTable();
+            if (UI::GetWindowSize().x > 250 && UI::GetWindowSize().y > 155) {
+                UI::BeginTable("FileExplorerTable", 3, UI::TableFlags::Resizable | UI::TableFlags::Borders);
+                UI::TableNextColumn();
+                    UI::BeginChild("LeftSidebar", vec2(0, 0), true);
+                    Render_LeftSidebar();
+                    UI::EndChild();
+                UI::TableNextColumn();
+                    UI::BeginChild("MainArea", vec2(0, 0), true);
+                    Render_MainAreaBar();
+                    UI::EndChild();
+                UI::TableNextColumn();
+                    UI::BeginChild("DetailBar", vec2(0, 0), true);
+                    Render_DetailBar();
+                    UI::EndChild();
+                UI::EndTable();
+            } else {
+                UI::Text("Window too small to \nrender columns (it \nwill crash your game \nif it is rendered any \nsmaller).");
+            }
+
         }
 
         void Render_TopBar() {
@@ -2871,7 +2872,14 @@ namespace FileExplorer {
         string sessionKey = pluginName + "::" + _id;
 
         if (explorersByPlugin.Exists(sessionKey)) {
-            NotifyError("Session ID '" + _id + "' is already in use by this plugin. \nThis will happen if you try to open the file explorer less than " + FILE_EXPLORER_EXPORT_YIELD_AMOUNT + " frames after closing the fil explorer. If this error has appeared whilst you've waited for more than " + FILE_EXPLORER_EXPORT_YIELD_AMOUNT + " you should contact this plugins developer: (" + Meta::ExecutingPlugin().Name + ") or the creator of the file explorer ('@ar___' on discord).", "Error : " + Meta::ExecutingPlugin().Name, 25000);
+            NotifyError(
+            "The session ID '" + _id + "' is already in use by this plugin. This can happen if you try to open another instance of the same file explorer, or if you attempt "+
+            "to re-open the same file explorer window less than " + FILE_EXPLORER_EXPORT_YIELD_AMOUNT + " frames after closing the file explorer with the same sessionId it with the "+
+            "same session ID. If you have waited more than " + FILE_EXPLORER_EXPORT_YIELD_AMOUNT + " frames and are not trying to open the same session, please contact the plugin "+
+            "developer (" + Meta::ExecutingPlugin().Name + ") or the creator of the file explorer ('@ar___' on Discord).", 
+            "Error: " + Meta::ExecutingPlugin().Name, 
+            25000
+            );
             return;
         }
 
