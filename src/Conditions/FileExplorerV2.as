@@ -1565,12 +1565,12 @@ namespace FileExplorer {
 
         FileExplorer(InstanceConfig@ instCfg, const string &in id) {
             sessionId = id;
-
             @explorer = this;
 
             @instConfig = instCfg;
-            @config = Config(this);
             @utils = Utils(this);
+            @config = Config(this);
+
             @nav = Navigation(this);
             tab.Resize(1);
             @tab[0] = FileTab(this);
