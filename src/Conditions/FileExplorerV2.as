@@ -301,9 +301,9 @@
             }
 
             // Handle Path Selection
-            FileExplorer@ pathExplorer = FileExplorer::fe_GetExplorerById("Local Files");
+            auto pathExplorer = FileExplorer::fe_GetExplorerById("Local Files");
             if (pathExplorer !is null && pathExplorer.exports.IsSelectionComplete()) {
-                array<string>@ paths = pathExplorer.exports.GetSelectedPaths();
+                auto paths = pathExplorer.exports.GetSelectedPaths();
                 if (paths !is null) {
                     selectedFiles = paths;
                     // Additional processing if needed
@@ -311,10 +311,12 @@
                 pathExplorer.exports.SetSelectionComplete();
             }
 
+
+            // IMPORTANT: When creating "auto elements" it's important to use "array<FileExplorer::ElementInfo> elements;" auto does not work in this case when in the global namespace.
             // Handle ElementInfo Selection
-            FileExplorer@ elementExplorer = FileExplorer::fe_GetExplorerById("ElementInfo Session");
+            auto elementExplorer = FileExplorer::fe_GetExplorerById("ElementInfo Session");
             if (elementExplorer !is null && elementExplorer.exports.IsSelectionComplete()) {
-                array<ElementInfo@>@ elements = elementExplorer.exports.GetSelectedElements();
+                auto elements = elementExplorer.exports.GetSelectedElements();
                 if (elements !is null) {
                     selectedElements = elements;
                     // Optionally, extract paths or handle ElementInfo objects as needed
@@ -459,12 +461,21 @@ namespace FileExplorer {
 
         SortingCriteria sortingCriteria = SortingCriteria::name;
 
-        /*const*/ string settingsDirectory = IO::FromDataFolder("Plugin_FileExplorer_Settings");
+        /*const*/ string settingsDirectory = IO::FromDataFolder("Plugin_FileExplorer");
         /*const*/ string settingsFilePath = Path::Join(settingsDirectory, "FileExplorerSettings.json");
 
         Config(FileExplorer@ fe) {
             @explorer = fe;
             @utils = fe.utils;
+
+            if (!IO::FileExists(settingsFilePath)) {
+                columnsToShow.Set("ico", true);
+                columnsToShow.Set("name", true);
+                columnsToShow.Set("type", true);
+                columnsToShow.Set("size", true);
+                columnsToShow.Set("lastModified", true);
+                columnsToShow.Set("createdDate", true);
+            }
 
             if (!IO::FolderExists(settingsDirectory)) {
                 IO::CreateFolder(settingsDirectory);
@@ -3486,6 +3497,8 @@ void OpenFileExplorerExample() {
     );
 }
 
+array<FileExplorer::ElementInfo> selectedElements;
+
 // Remove after testing
 void Render() {
     FILE_EXPLORER_BASE_RENDERER();
@@ -3501,6 +3514,36 @@ void Render() {
         }
         UI::Text("Control proper: " + tostring(UI::IsKeyDown(UI::Key::LeftCtrl)));
         UI::Text("Control proper: " + tostring(UI::IsKeyDown(UI::Key::RightCtrl)));
+    
+    
+        auto explorer = FileExplorer::fe_GetExplorerById("example");
+        if (explorer !is null && explorer.exports.IsSelectionComplete()) {
+            auto paths = explorer.exports.GetSelectedElements();
+            if (paths !is null) {
+                selectedElements = paths;
+                explorer.exports.SetSelectionComplete();
+            }
+        }
+        auto elementExplorer = FileExplorer::fe_GetExplorerById("ElementInfo Session");
+        if (elementExplorer !is null && elementExplorer.exports.IsSelectionComplete()) {
+            auto elements = elementExplorer.exports.GetSelectedElements();
+            if (elements !is null) {
+                selectedElements = elements;
+            }
+            elementExplorer.exports.SetSelectionComplete();
+        }
+
+        // Display selected ElementInfo objects
+        if (selectedElements.Length > 0) {
+            UI::Text("Selected Elements: " + selectedElements.Length);
+            for (uint i = 0; i < selectedElements.Length; i++) {
+                auto elem = selectedElements[i];
+                UI::PushItemWidth(1100);
+                UI::InputText("Element Name " + (i + 1), elem.name);
+                UI::InputText("Element Path " + (i + 1), elem.path);
+                UI::PopItemWidth();
+            }
+        }
     }
     UI::End();
 }
