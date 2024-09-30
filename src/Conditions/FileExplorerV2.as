@@ -1092,10 +1092,10 @@ namespace FileExplorer {
                     dirsToProcess.InsertLast("*" + currentDir);
                 }
 
-                string normalizedCurrentDir = NormalizePath(currentDir);
 
                 bool isBlacklisted = false;
                 for (uint i = 0; i < explorer.config.blacklistedRecursiveSearchPaths.Length; i++) {
+                    string normalizedCurrentDir = NormalizePath(currentDir);
                     if (normalizedCurrentDir == NormalizePath(explorer.config.blacklistedRecursiveSearchPaths[i])) {
                         isBlacklisted = true;
                         break;
