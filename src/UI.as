@@ -65,7 +65,7 @@ void RenderInterface() {
 array<string> selectedFiles;
 
 void RenderTab_LocalFiles() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
     UI::Separator();
 
     if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
@@ -124,7 +124,7 @@ MwId selectedRecordID;
 bool isDropdownOpen = false;
 
 void RenderTab_CurrentLoadedRecords() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
     UI::Separator();
 
     if (UI::Button("Remove All Records")) {
@@ -195,7 +195,7 @@ void RenderTab_CurrentLoadedRecords() {
 //////////////////// Render Saved Ghosts and Replays Tab /////////////////////
 
 void RenderTab_SavedGhostsAndReplays() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
     UI::Separator();
 
     if (UI::Button(Icons::Folder + "Open Saved Folder")) {
@@ -266,7 +266,7 @@ void RenderTab_SavedGhostsAndReplays() {
 string link;
 
 void RenderTab_Link() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
     UI::Separator();
 
     link = UI::InputText("Link", link);
@@ -291,7 +291,7 @@ string newJsonName;
 int otherOffset = 0;
 
 void RenderTab_OtherSpecificUIDs() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
     UI::Separator();
 
     string downloadPath;
@@ -401,7 +401,7 @@ void RenderTab_OtherSpecificUIDs() {
 string ghostPosition;
 
 void RenderTab_LoadGhostFromMap() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
     UI::Separator();
 
     UI::Text("Build a request: ");
@@ -440,7 +440,7 @@ array<string> seasons;
 array<string> maps;
 
 void RenderTab_OfficialMaps() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
     UI::Separator();
 
     if (UI::Button("Reset Selections")) {
@@ -526,7 +526,7 @@ CurrentMapRecords::WarriorMedal warriorMedal;
 CurrentMapRecords::SBVilleMedal sbVilleMedal;
 
 void RenderTab_CurrentMapGhost() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "LOADING A GHOST THAT CHANGES CAR ON THE CURRENT MAP WILL CRASH THE GAME IF THERE ARE NO CARSWAP GATES ON THE CURRENT MAP.");
+    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
     UI::Separator();
 
     UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles, this will not be possible for maps older than October 1st 2022");
