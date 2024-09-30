@@ -2706,11 +2706,19 @@ namespace FileExplorer {
         }
 
         void Render_SelectedElements() {
-            for (uint i = 0; i < instConfig.selectedPaths.Length; i++) {
-                string path = instConfig.selectedPaths[i];
-                ElementInfo@ element = explorer.GetElementInfo(path);
+            if (instConfig.returnType == "path") {
+                for (uint i = 0; i < instConfig.selectedPaths.Length; i++) {
+                    string path = instConfig.selectedPaths[i];
+                    ElementInfo@ element = explorer.GetElementInfo(path);
 
-                SelectableWithClickCheck(element, ContextType::selectedElements);
+                    SelectableWithClickCheck(element, ContextType::selectedElements);
+                }
+            } else if (instConfig.returnType == "ElementInfo") {
+                for (uint i = 0; i < instConfig.selectedElements.Length; i++) {
+                    ElementInfo@ element = instConfig.selectedElements[i];
+
+                    SelectableWithClickCheck(element, ContextType::selectedElements);
+                }
             }
         }
 
