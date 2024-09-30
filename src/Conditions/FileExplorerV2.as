@@ -726,6 +726,15 @@ namespace FileExplorer {
         void SetSelectionComplete() {
             selectionComplete = true;
         }
+
+        void SetSelectionComplete(array<string>@ paths, array<ElementInfo@>@ elements) {
+            if (instConfig.returnType == "path" && paths !is null) {
+                selectedPaths = paths;
+            } else if (instConfig.returnType == "ElementInfo" && elements !is null) {
+                selectedElements = elements;
+            }
+            selectionComplete = true;
+        }
     }
     
     // Element info is set in "GetElementInfo" in the FE class
