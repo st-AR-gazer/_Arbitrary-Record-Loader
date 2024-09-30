@@ -31,7 +31,7 @@
 
 /**
  * IMPORTANT:
- * Any changes not made by me (ar) will not (nessecarily) be documented here. Please refer to any external sources the 
+ * Any changes not made by me (ar) will not (necessarily) be documented here. Please refer to any external sources the 
  * other developer has linked.
  */
 
@@ -45,9 +45,8 @@
  *    functionalities required in your plugin.
  * 
  * 2. **Render the FileExplorer:**
- *    To ensure the FileExplorer renders correctly, you must add the `FILE_EXPLORER_BASE_RENDERER()` function to your 
- *    plugin's main render loop. This function should be included in either the `Render()` or `RenderInterface()` 
- *    method of your plugin.
+ *    To ensure the FileExplorer renders correctly, you must add the `FILE_EXPLORER_BASE_RENDERER()` function to the start 
+ *    of your plugin's main render loop. This is usually either one of the the `Render()` or `RenderInterface()` functions. 
  *    
  *    Example:
  *    ```angelscript
@@ -55,97 +54,299 @@
  *        FILE_EXPLORER_BASE_RENDERER();  // This ensures the FileExplorer is rendered properly.
  *    }
  *    ```
- *    **NOTE**: The `FILE_EXPLORER_BASE_RENDERER()` function should be called at the start of your render loop.
  * 
  * 3. **Open the FileExplorer:**
- *    To display the FileExplorer UI and allow users to select files, you should call the `FileExplorer::fe_Start()` 
+ *    To display the FileExplorer UI and allow users to select elements, you should call the `FileExplorer::fe_Start()` 
  *    function. This function configures and opens the FileExplorer based on the parameters you provide.
  *    
  *    Example:
  *    ```angelscript
  *    void OpenFileExplorerExample() {
  *        FileExplorer::fe_Start(
- *            true,                               // _mustReturn: Require the user to select and return files.
- *            vec2(1, 99999),                     // _minmaxReturnAmount: Minimum and maximum number of files to return.
- *            IO::FromUserGameFolder("Replays/"), // _path: The initial folder path to open.
- *            "",                                 // _searchQuery: Optional search query to filter files.
- *            { "replay" }                        // _filters: File type filters (e.g., "replay" to show only replay files).
+ *            "Local Files",                       // Unique session ID
+ *            true,                                // _mustReturn: Require the user to select and return elements
+ *            "path",                              // _returnType: "path" or "ElementInfo"
+ *            vec2(1, -1),                         // _minmaxReturnAmount: Minimum and maximum number of selections
+ *            IO::FromUserGameFolder("Replays/"),  // _path: The initial folder path to open
+ *            "",                                  // _searchQuery: Optional search query to filter the elements (based on name)
+ *            { "replay", "ghost" },               // _filters: File type filters (e.g., "replay" to show only replay files) (based on file extension)
+ *            { "replay", "ghost" }                // _canOnlyReturn: The exported file must be of these types (e.g., "replay" to only allow replay files)
  *        );
  *    }
  *    ```
- *    This example opens the FileExplorer in the "Replays/" folder and filters to show only replay files.
+ *    This example opens the FileExplorer in the "Replays/" folder and filters to show only replay and ghost files.
  *    
- *    **Note:** The FileExplorer will close itself automatically when the user has selected the required files and 
- *    clicks the "Return Selected Paths" button.
+ *    **Note:** The FileExplorer will close itself automatically when the user has selected the required files/elements 
+ *    and clicks the "Return Selected Paths/Elements" button. This also locks that specific FileExplorer instance until
+ *    the selected data is retrieved externally or for a set amount of frames (default: 150).
  * 
- * 4. **Retrieve Selected File Paths:**
- *    Once the user has selected files and clicked "Return Selected Paths," you can retrieve the selected file paths 
- *    from `FileExplorer::exports.GetSelectedPaths()` in your plugin's main loop or event handler.
+ * 4. **Retrieve Selected Data Externally:**
+ *    After the user has made a selection and the FileExplorer has closed, you should retrieve the selected data externally 
+ *    using the `fe_GetExplorerById` function.
  *    
  *    Example:
  *    ```angelscript
- *    void MonitorFileExplorerSelection() {
- *        if (FileExplorer::exports.IsSelectionComplete()) {
- *            array<string> selectedPaths = FileExplorer::exports.GetSelectedPaths();
- *            // Handle the selected file paths here.
- *            for (uint i = 0; i < selectedPaths.Length; i++) {
- *                print("Selected Path: " + selectedPaths[i]);
+ *    // Global or appropriately scoped variable to store selected data
+ *    array<string> selectedFiles;
+ *    array<ElementInfo@> selectedElements;
+ *    
+ *    void SomeRenderFunction() {
+ *        if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
+ *            FileExplorer::fe_Start(
+ *                "Local Files",                       // Unique session ID
+ *                true,                                // _mustReturn: Require selection
+ *                "path",                              // _returnType: "path" or "ElementInfo"
+ *                vec2(1, -1),                         // _minmaxReturnAmount: Min and max selections
+ *                IO::FromUserGameFolder("Replays/"),  // _path: Initial folder path
+ *                "",                                  // _searchQuery: Optional search query
+ *                { "replay", "ghost" },               // _filters: File type filters
+ *                { "replay", "ghost" }                // _canOnlyReturn: Allowed types for export
+ *            );
+ *        }
+ *        
+ *        FileExplorer@ explorer = FileExplorer::fe_GetExplorerById("Local Files");
+ *        if (explorer !is null && explorer.exports.IsSelectionComplete()) {
+ *            array<ElementInfo@>@ elements = explorer.exports.GetSelectedElements();
+ *            if (elements !is null) {
+ *                selectedElements = elements;
+ *            }
+ *        }
+ * 
+ *        if (selectedElements.Length > 0) {
+ *            UI::Text("Selected Elements: " + selectedElements.Length);
+ *            for (uint i = 0; i < selectedElements.Length; i++) {
+ *                ElementInfo@ elem = selectedElements[i];
+ *                UI::PushItemWidth(1100);
+ *                UI::InputText("Element Name " + (i + 1), elem.name);
+ *                UI::InputText("Element Path " + (i + 1), elem.path);
+ *                UI::PopItemWidth();
+ *            }
+ *        }
+ * 
+ *        // and if you only want to get the paths you can do this instead:
+ * 
+ *        if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
+ *            FileExplorer::fe_Start(
+ *                "Local Files",                       // Unique session ID
+ *                true,                                // _mustReturn: Require selection
+ *                "path",                              // _returnType: "path" or "ElementInfo"
+ *                vec2(1, -1),                         // _minmaxReturnAmount: Min and max selections
+ *                IO::FromUserGameFolder("Replays/"),  // _path: Initial folder path
+ *                "",                                  // _searchQuery: Optional search query
+ *                { "replay", "ghost" },               // _filters: File type filters
+ *                { "replay", "ghost" }                // _canOnlyReturn: Allowed types for export
+ *            );
+ *        }
+ *        
+ *        FileExplorer@ explorer = FileExplorer::fe_GetExplorerById("Local Files");
+ *        if (explorer !is null && explorer.exports.IsSelectionComplete()) {
+ *            array<string>@ paths = explorer.exports.GetSelectedPaths();
+ *            if (paths !is null) {
+ *                selectedFiles = paths;
+ *            }
+ *        }
+ *    
+ *        if (selectedFiles.Length > 0) {
+ *            UI::Text("Selected Files: " + selectedFiles.Length);
+ *            for (uint i = 0; i < selectedFiles.Length; i++) {
+ *                UI::PushItemWidth(1100);
+ *                selectedFiles[i] = UI::InputText("File Path " + (i + 1), selectedFiles[i]);
+ *                UI::PopItemWidth();
  *            }
  *        }
  *    }
  *    ```
- *    This function checks if the selection process is complete and then processes the selected file paths.
- *  
- *    For a full example implementation see NOTE 1.
+ *    
+ *    **Explanation:**
+ *    - **Opening the FileExplorer:**
+ *      - The "Open File Explorer" button initiates the FileExplorer with a unique session ID ("Local Files") and specifies the return type ("path" or "ElementInfo").
+ *    
+ *    - **Retrieving the Explorer Instance:**
+ *      - `fe_GetExplorerById("Local Files")` retrieves the specific `FileExplorer` instance associated with the session ID.
+ *      - It checks if the selection is complete using `explorer.exports.IsSelectionComplete()`.
+ *    
+ *    - **Processing the Exported Data:**
+ *      - Depending on the `returnType`, it retrieves either the selected paths or `ElementInfo` objects.
+ *      - The selected data is stored in `selectedFiles` or `selectedElements` arrays for further processing.
+ *    
+ *    - **Resetting Selection:**
+ *      - After processing set the selection to be complete so that the explorer is imediatly cleared (if this is not done it will automatically be cleared after 150 frames).
  * 
+ * 5. **Handling Multiple FileExplorer Instances:**
+ *    If your plugin requires multiple FileExplorer instances simultaneously, ensure each has a unique session ID when calling `fe_Start()`. Retrieve and handle each instance separately using their respective session IDs.
+ *    
+ *    Example:
+ *    ```angelscript
+ *    void OpenMultipleExplorers() {
+ *        FileExplorer::fe_Start(
+ *            "Replays Explorer",
+ *            true,
+ *            "path",
+ *            vec2(1, -1),
+ *            IO::FromUserGameFolder("Replays/"),
+ *            "",
+ *            { "replay" },
+ *            { "replay" }
+ *        );
+ *    
+ *        FileExplorer::fe_Start(
+ *            "Ghosts Explorer",
+ *            true,
+ *            "ElementInfo",
+ *            vec2(1, -1),
+ *            IO::FromUserGameFolder("Ghosts/"),
+ *            "",
+ *            { "ghost" },
+ *            { "ghost" }
+ *        );
+ *    }
+ *    
+ *    void HandleMultipleExports() {
+ *        FileExplorer@ replaysExplorer = FileExplorer::fe_GetExplorerById("Replays Explorer");
+ *        if (replaysExplorer !is null && replaysExplorer.exports.IsSelectionComplete()) {
+ *            array<string>@ replayPaths = replaysExplorer.exports.GetSelectedPaths();
+ *            if (replayPaths !is null) {
+ *                // Process replay paths
+ *            }
+ *            replaysExplorer.exports.selectionComplete = false;
+ *        }
+ *    
+ *        // Handle Ghosts Explorer
+ *        FileExplorer@ ghostsExplorer = FileExplorer::fe_GetExplorerById("Ghosts Explorer");
+ *        if (ghostsExplorer !is null && ghostsExplorer.exports.IsSelectionComplete()) {
+ *            array<ElementInfo@>@ ghostElements = ghostsExplorer.exports.GetSelectedElements();
+ *            if (ghostElements !is null) {
+ *                // Process ghost ElementInfo objects
+ *            }
+ *            ghostsExplorer.exports.selectionComplete = false;
+ *        }
+ *    }
+ *    ```
  * 
- * **Summary:**
- * - **Rendering:** Add `FILE_EXPLORER_BASE_RENDERER()` to your `Render()` or `RenderInterface()` method.
- * - **Opening:** Use `FileExplorer::fe_Start()` to open the FileExplorer.
- * - **File Selection:** Retrieve the selected paths using `FileExplorer::exports.GetSelectedPaths()` after the user 
- *   has made their selection.
+ * 6. **Advanced Handling of `ElementInfo` Objects:**
+ *    When using `returnType` as `"ElementInfo"`, you can access various metadata associated with each element. This allows for more detailed processing based on the selected elements' properties.
+ *    
+ *    Example:
+ *    ```angelscript
+ *    void ProcessSelectedElements() {
+ *        FileExplorer@ explorer = FileExplorer::fe_GetExplorerById("ElementInfo Session");
+ *        if (explorer !is null && explorer.exports.IsSelectionComplete()) {
+ *            array<ElementInfo@>@ elements = explorer.exports.GetSelectedElements();
+ *            if (elements !is null) {
+ *                for (uint i = 0; i < elements.Length; i++) {
+ *                    ElementInfo@ elem = elements[i];
+
+ *                    string name = elem.name;
+ *                    string path = elem.path;
+ *                    string type = elem.type;
+
+ *                    print("Element Name: " + name + ", Path: " + path + ", Type: " + type);
+ *                }
+ *            }
+ *            explorer.exports.selectionComplete = false;
+ *        }
+ *    }
+ *    ```
  * 
- * With these steps, the FileExplorer will be fully integrated into your plugin, and it should allow users easily 
- * navigate directories and select and return different paths with relative ease files.
+ * 7. **Summary:**
+ * - **Rendering:** Add `FILE_EXPLORER_BASE_RENDERER()` to your rendering pipeline (usially the `Render()` or `RenderInterface()` method).
+ * - **Opening:** Use `FileExplorer::fe_Start()` with a unique session ID and specify the `returnType` ("path" or "ElementInfo").
+ * - **Export Handling:** Retrieve the specific `FileExplorer` instance using `fe_GetExplorerById(sessionId)` and process the exported data externally.
+ * - **Multiple Instances:** Assign unique session IDs for handling multiple FileExplorer instances concurrently.
+ * - **Advanced Usage:** Leverage `ElementInfo` objects for detailed metadata handling when `returnType` is set to `"ElementInfo"`.
+ * 
+ * With these steps, the FileExplorer will be fully integrated into your plugin, allowing users to easily navigate directories and select files or elements with relative ease.
  * 
  * 
  * **NOTE 1:**
  *
  * This is a full example implementation of how to use the FileExplorer in your plugin. This example includes all the
- * necessary steps to integrate the FileExplorer and handle the selected file paths.
+ * necessary steps to integrate the FileExplorer and handle the selected file paths or elements.
  * 
  *  ```angelscript
-    string[] selectedFiles;
+    // Global or appropriately scoped variables to store selected data
+    array<string> selectedFiles;
+    array<ElementInfo@> selectedElements;
 
     void RenderInterface() {
         FILE_EXPLORER_BASE_RENDERER();  // This ensures the FileExplorer is rendered properly.
 
         if (UI::Begin("Path explorer", true, UI::WindowFlags::AlwaysAutoResize)) {
+            // Button to open the File Explorer for Paths
             if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
-                FileExplorer::fe_Start(                                                                                 // Required for the file explorer to work 
-                    true,                                   // Require the user to select and return files              // Required for the file explorer to work
-                    vec2(1, 14),                            // Minimum 1, no effective upper limit on files             // Optional requirement for the file explorer
-                    IO::FromUserGameFolder("Replays/"),     // Initial folder path to open                              // Optional requirement for the file explorer
-                    "",                                     // Optional search query                                    // Optional requirement for the file explorer
-                    { "replay", "ghost" },                  // File type filters                                        // Optional requirement for the file explorer
-                    { "replay" },                           // The exported file must be of this type                   // Optional requirement for the file explorer
-                    2                                       // The exported file/folder can only be both/file/folder    // Optional requirement for the file explorer
+                FileExplorer::fe_Start(
+                    "Local Files",                       // Unique session ID
+                    true,                                // _mustReturn: Require selection
+                    "path",                              // _returnType: "path" or "ElementInfo"
+                    vec2(1, -1),                         // _minmaxReturnAmount: Min and max selections
+                    IO::FromUserGameFolder("Replays/"),  // _path: Initial folder path
+                    "",                                  // _searchQuery: Optional search query
+                    { "replay", "ghost" },               // _filters: File type filters
+                    { "replay", "ghost" }                // _canOnlyReturn: Allowed types for export
                 );
             }
 
-            if (FileExplorer::explorer !is null && FileExplorer::explorer.exports.IsSelectionComplete()) {              // Required for checking the file explorer selection
-                array<string> paths = FileExplorer::explorer.exports.GetSelectedPaths();                                // Required for getting the selected paths
-                selectedFiles = paths;                                                                                  // Optional requirement for handling the selected paths
+            // Button to open the File Explorer for ElementInfo
+            if (UI::Button(Icons::Info + " Open Element Explorer")) {
+                FileExplorer::fe_Start(
+                    "ElementInfo Session",               // Unique session ID
+                    true,                                // _mustReturn: Require selection
+                    "ElementInfo",                       // _returnType: "path" or "ElementInfo"
+                    vec2(1, -1),                         // _minmaxReturnAmount: Min and max selections
+                    IO::FromUserGameFolder("Replays/"),  // _path: Initial folder path
+                    "",                                  // _searchQuery: Optional search query
+                    { "replay", "ghost" },               // _filters: File type filters
+                    { "replay", "ghost" }                // _canOnlyReturn: Allowed types for export
+                );
             }
 
-            
-            // This is just an example, you can use the selected files in any way you want
-            // Here I just display them in the UI
-            UI::Text("Selected Files: " + selectedFiles.Length);                            
-            for (uint i = 0; i < selectedFiles.Length; i++) {                               
-                selectedFiles[i] = UI::InputText("File Path " + (i + 1), selectedFiles[i]);
+            // Handle Path Selection
+            FileExplorer@ pathExplorer = FileExplorer::fe_GetExplorerById("Local Files");
+            if (pathExplorer !is null && pathExplorer.exports.IsSelectionComplete()) {
+                array<string>@ paths = pathExplorer.exports.GetSelectedPaths();
+                if (paths !is null) {
+                    selectedFiles = paths;
+                    // Additional processing if needed
+                }
+                pathExplorer.exports.SetSelectionComplete();
             }
+
+            // Handle ElementInfo Selection
+            FileExplorer@ elementExplorer = FileExplorer::fe_GetExplorerById("ElementInfo Session");
+            if (elementExplorer !is null && elementExplorer.exports.IsSelectionComplete()) {
+                array<ElementInfo@>@ elements = elementExplorer.exports.GetSelectedElements();
+                if (elements !is null) {
+                    selectedElements = elements;
+                    // Optionally, extract paths or handle ElementInfo objects as needed
+                }
+                elementExplorer.exports.SetSelectionComplete();
+            }
+
+            // Display selected file paths
+            if (selectedFiles.Length > 0) {
+                UI::Text("Selected Files: " + selectedFiles.Length);
+                for (uint i = 0; i < selectedFiles.Length; i++) {
+                    UI::PushItemWidth(1100);
+                    selectedFiles[i] = UI::InputText("File Path " + (i + 1), selectedFiles[i]);
+                    UI::PopItemWidth();
+                }
+            }
+
+            // Display selected ElementInfo objects
+            if (selectedElements.Length > 0) {
+                UI::Text("Selected Elements: " + selectedElements.Length);
+                for (uint i = 0; i < selectedElements.Length; i++) {
+                    ElementInfo@ elem = selectedElements[i];
+                    UI::PushItemWidth(1100);
+                    UI::InputText("Element Name " + (i + 1), elem.name);
+                    UI::InputText("Element Path " + (i + 1), elem.path);
+                    UI::PopItemWidth();
+                }
+            }
+
+            UI::End();
         }
+    }
  *  ```
  */
 
@@ -181,7 +382,7 @@ namespace FileExplorer {
         // Passed to settings
         string id;
         bool mustReturn;
-        string returnType;
+        string returnType; // "path" or "ElementInfo"
         vec2 minMaxReturnAmount;
         string path;
         string searchQuery;
@@ -191,6 +392,7 @@ namespace FileExplorer {
         // Reset on each start
         dictionary activeFilters;
         array<string> selectedPaths;
+        array<ElementInfo@> selectedElements;
 
         InstanceConfig() {
             id = "";
@@ -203,6 +405,7 @@ namespace FileExplorer {
 
             activeFilters = dictionary();
             selectedPaths = array<string>();
+            selectedElements = array<ElementInfo@>();
         }
 
         bool IsFilterActive(const string &in filter) const {
@@ -216,6 +419,11 @@ namespace FileExplorer {
         void ToggleFilterActive(const string &in filter) {
             bool isActive = IsFilterActive(filter);
             activeFilters.Set(filter, !isActive);
+        }
+        
+        void ClearSelections() {
+            selectedPaths.Resize(0);
+            selectedElements.Resize(0);
         }
     }
     
@@ -477,18 +685,16 @@ namespace FileExplorer {
     class Exports {
         bool selectionComplete = false;
         array<string> selectedPaths;
+        array<ElementInfo@> selectedElements;
 
         FileExplorer@ explorer;
         Utils@ utils;
+        InstanceConfig@ instConfig;
 
         Exports(FileExplorer@ fe) {
             @explorer = fe;
             @utils = fe.utils;
-        }
-
-        void SetSelectionComplete(array<string>@ paths) {
-            selectedPaths = paths;
-            selectionComplete = true;
+            @instConfig = fe.instConfig;
         }
 
         bool IsSelectionComplete() {
@@ -496,12 +702,29 @@ namespace FileExplorer {
         }
 
         array<string>@ GetSelectedPaths() {
+            if (instConfig.returnType != "path") { log("Return type is not 'path'. Cannot get selected paths.", LogLevel::Warn, 1001, "GetSelectedPaths"); return null; }
+            
             selectionComplete = false;
             utils.TruncateSelectedPathsIfNeeded();
-            
+
             explorer.MarkForDeletionCoro();
-            
+
             return selectedPaths;
+        }
+
+        array<ElementInfo@>@ GetSelectedElements() {
+            if (instConfig.returnType != "ElementInfo") { log("Return type is not 'ElementInfo'. Cannot get selected elements.", LogLevel::Warn, 1002, "GetSelectedElements"); return null; }
+            
+            selectionComplete = false;
+            utils.TruncateSelectedPathsIfNeeded();
+
+            explorer.MarkForDeletionCoro();
+
+            return selectedElements;
+        }
+
+        void SetSelectionComplete() {
+            selectionComplete = true;
         }
     }
     
@@ -2289,33 +2512,70 @@ namespace FileExplorer {
 
         void Render_ReturnBar() {
             if (instConfig.mustReturn) {
-                bool validReturnAmount = instConfig.selectedPaths.Length >= uint(instConfig.minMaxReturnAmount.x) &&
+                bool validReturnAmount;
+                if(instConfig.returnType == "path") {
+                    validReturnAmount = instConfig.selectedPaths.Length >= uint(instConfig.minMaxReturnAmount.x) &&
                                         (instConfig.selectedPaths.Length <= uint(instConfig.minMaxReturnAmount.y) || instConfig.minMaxReturnAmount.y == -1);
+                } else if(instConfig.returnType == "ElementInfo") {
+                    validReturnAmount = instConfig.selectedElements.Length >= uint(instConfig.minMaxReturnAmount.x) &&
+                                        (instConfig.selectedElements.Length <= uint(instConfig.minMaxReturnAmount.y) || instConfig.minMaxReturnAmount.y == -1);
+                } else {
+                    validReturnAmount = false;
+                }
 
                 if (validReturnAmount) {
-                    array<string> validSelections;
-                    for (uint i = 0; i < instConfig.selectedPaths.Length; i++) {
-                        ElementInfo@ element = explorer.GetElementInfo(instConfig.selectedPaths[i]);
-
-                        if (utils.IsValidReturnElement(element)) {
-                            validSelections.InsertLast(element.path);
+                    bool hasValidSelections = false;
+                    if(instConfig.returnType == "path") {
+                        for(uint i = 0; i < instConfig.selectedPaths.Length; i++) {
+                            ElementInfo@ element = explorer.GetElementInfo(instConfig.selectedPaths[i]);
+                            if(utils.IsValidReturnElement(element)) {
+                                hasValidSelections = true;
+                                break;
+                            }
+                        }
+                    } else if(instConfig.returnType == "ElementInfo") {
+                        for(uint i = 0; i < instConfig.selectedElements.Length; i++) {
+                            ElementInfo@ element = instConfig.selectedElements[i];
+                            if(utils.IsValidReturnElement(element)) {
+                                hasValidSelections = true;
+                                break;
+                            }
                         }
                     }
 
-                    if (validSelections.Length > 0) {
-                        if (UI::Button("Return Selected Paths")) {
-                            explorer.exports.SetSelectionComplete(validSelections);
+                    if(hasValidSelections) {
+                        string buttonText = instConfig.returnType == "path" ? "Return Selected Paths" : "Return Selected Elements";
+                        if (UI::Button(buttonText)) {
+                            if (instConfig.returnType == "path") {
+                                explorer.exports.SetSelectionComplete(instConfig.selectedPaths, null);
+                            } else if (instConfig.returnType == "ElementInfo") {
+                                explorer.exports.SetSelectionComplete(null, instConfig.selectedElements);
+                            }
                             explorer.Close();
                         }
                     } else {
-                        utils.DisabledButton("Return Selected Paths");
+                        if(instConfig.returnType == "path") {
+                            utils.DisabledButton("Return Selected Paths");
+                        } else if(instConfig.returnType == "ElementInfo") {
+                            utils.DisabledButton("Return Selected Elements");
+                        }
                     }
                 } else {
-                    utils.DisabledButton("Return Selected Paths");
+                    if(instConfig.returnType == "path") {
+                        utils.DisabledButton("Return Selected Paths");
+                    } else if(instConfig.returnType == "ElementInfo") {
+                        utils.DisabledButton("Return Selected Elements");
+                    }
                 }
 
                 UI::SameLine();
-                UI::Text("Selected element amount: " + instConfig.selectedPaths.Length);
+
+                if(instConfig.returnType == "path") {
+                    UI::Text("Selected element amount: " + instConfig.selectedPaths.Length);
+                } else if(instConfig.returnType == "ElementInfo") {
+                    UI::Text("Selected element amount: " + instConfig.selectedElements.Length);
+                }
+
                 UI::Separator();
             }
         }
@@ -2601,15 +2861,23 @@ namespace FileExplorer {
             if (UI::BeginPopup(popupName)) {
                 ElementInfo@ element = explorer.tab[0].GetSelectedElement();
                 if (element !is null) {
-                    bool canAddMore = instConfig.selectedPaths.Length < uint(instConfig.minMaxReturnAmount.y) || instConfig.minMaxReturnAmount.y == -1;
-                    
+                    bool canAddMore = instConfig.returnType == "path" ? instConfig.selectedPaths.Length < uint(instConfig.minMaxReturnAmount.y) || instConfig.minMaxReturnAmount.y == -1
+                                                                    : instConfig.selectedElements.Length < uint(instConfig.minMaxReturnAmount.y) || instConfig.minMaxReturnAmount.y == -1;
+
                     bool isValidElement = utils.IsValidReturnElement(element);
 
                     if (canAddMore && isValidElement) {
                         if (UI::MenuItem("Add to Selected Elements", "", false)) {
-                            if (instConfig.selectedPaths.Find(element.path) == -1) {
-                                instConfig.selectedPaths.InsertLast(element.path);
-                                utils.TruncateSelectedPathsIfNeeded();
+                            if (instConfig.returnType == "path") {
+                                if (instConfig.selectedPaths.Find(element.path) == -1) {
+                                    instConfig.selectedPaths.InsertLast(element.path);
+                                    utils.TruncateSelectedPathsIfNeeded();
+                                }
+                            } else if (instConfig.returnType == "ElementInfo") {
+                                if (instConfig.selectedElements.Find(element) == -1) {
+                                    instConfig.selectedElements.InsertLast(element);
+                                    utils.TruncateSelectedPathsIfNeeded();
+                                }
                             }
                         }
                     } else {
@@ -2618,8 +2886,13 @@ namespace FileExplorer {
 
                     if (canAddMore && isValidElement) {
                         if (UI::MenuItem("Quick return")) {
-                            explorer.exports.SetSelectionComplete({ element.path });
-                            explorer.exports.selectionComplete = true;
+                            if (instConfig.returnType == "path") {
+                                array<string> paths = { element.path };
+                                explorer.exports.SetSelectionComplete(paths, null);
+                            } else if (instConfig.returnType == "ElementInfo") {
+                                array<ElementInfo@> elements = { element };
+                                explorer.exports.SetSelectionComplete(null, elements);
+                            }
                             explorer.Close();
                         }
                     } else {
@@ -2706,17 +2979,29 @@ namespace FileExplorer {
             if (contextType == ContextType::pinnedElements || element.isSelected) {
                 if (currentTime - element.lastClickTime <= doubleClickThreshold) {
                     if (contextType == ContextType::pinnedElements) {
-                        if (canAddMore && instConfig.selectedPaths.Find(element.path) == -1) {
-                            instConfig.selectedPaths.InsertLast(element.path);
-                            utils.TruncateSelectedPathsIfNeeded();
+                        if (canAddMore && (instConfig.returnType == "path" ? instConfig.selectedPaths.Find(element.path) == -1 : instConfig.selectedElements.Find(element) == -1)) {
+                            if(instConfig.returnType == "path") {
+                                instConfig.selectedPaths.InsertLast(element.path);
+                                utils.TruncateSelectedPathsIfNeeded();
+                            } else if(instConfig.returnType == "ElementInfo") {
+                                instConfig.selectedElements.InsertLast(element);
+                                utils.TruncateSelectedPathsIfNeeded();
+                            }
                         }
                         @explorer.CurrentSelectedElement = element;
                     } else if (element.isFolder) {
                         explorer.tab[0].nav.MoveIntoSelectedDirectory();
                     } else if (canAddMore) {
-                        if (instConfig.selectedPaths.Find(element.path) == -1) {
-                            instConfig.selectedPaths.InsertLast(element.path);
-                            utils.TruncateSelectedPathsIfNeeded();
+                        if (instConfig.returnType == "path") {
+                            if (instConfig.selectedPaths.Find(element.path) == -1) {
+                                instConfig.selectedPaths.InsertLast(element.path);
+                                utils.TruncateSelectedPathsIfNeeded();
+                            }
+                        } else if (instConfig.returnType == "ElementInfo") {
+                            if (instConfig.selectedElements.Find(element) == -1) {
+                                instConfig.selectedElements.InsertLast(element);
+                                utils.TruncateSelectedPathsIfNeeded();
+                            }
                         }
                         @explorer.CurrentSelectedElement = element;
                     }
@@ -3153,16 +3438,30 @@ void FILE_EXPLORER_BASE_RENDERER() {
     FileExplorer::RenderFileExplorer();
 }
 
+void OpenFileExplorerWithPaths() {
+    FileExplorer::fe_Start(
+        "pathSession", // Unique session ID
+        true, // Must return selection
+        "path", // Return type
+        vec2(1, 10), // Min and max number of files to return
+        IO::FromUserGameFolder("Replays/"), // Initial path
+        "", // Search query
+        { "replay" }, // File type filters
+        { "replay" } // Can only return "replay" files
+    );
+}
+
+
 void OpenFileExplorerExample() {
     FileExplorer::fe_Start(
         "example", // id
         true, // _mustReturn
-        "path", // _returnType
+        "ElementInfo", // _returnType
         vec2(1, -1), // _minmaxReturnAmount
         IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
         "", // searchQuery
         { "replay", "ghost" }, // filters
-        { "", "ghost" } // canOnlyReturn
+        { "ghost" } // canOnlyReturn
     );
 }
 
@@ -3173,7 +3472,10 @@ void Render() {
 
     
     if (UI::Begin(Icons::UserPlus + " File Explorer", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
-        if (UI::Button("Open File Explorer")) {
+        if (UI::Button("Open File Explorer (paths)")) {
+            OpenFileExplorerWithPaths();
+        }
+        if (UI::Button("Open File Explorer (elementinfo)")) {
             OpenFileExplorerExample();
         }
         UI::Text("Control proper: " + tostring(UI::IsKeyDown(UI::Key::LeftCtrl)));
@@ -3181,6 +3483,7 @@ void Render() {
     }
     UI::End();
 }
+
 
 /* 
     ,---,.           ,--,                                                   

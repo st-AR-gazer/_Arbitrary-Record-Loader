@@ -79,10 +79,14 @@ void RenderTab_LocalFiles() {
             { "replay", "ghost" }
         );
     }
+
     auto explorer = FileExplorer::fe_GetExplorerById("Local Files");
     if (explorer !is null && explorer.exports.IsSelectionComplete()) {
-        array<string> paths = explorer.exports.GetSelectedPaths();
-        selectedFiles = paths;
+        auto paths = explorer.exports.GetSelectedPaths();
+        if (paths !is null) {
+            selectedFiles = paths;
+            explorer.exports.SetSelectionComplete();
+        }
     }
 
     UI::SameLine();
