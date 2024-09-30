@@ -786,6 +786,10 @@ namespace FileExplorer {
         void SetGbxMetadata(dictionary@ metadata) {
             gbxMetadata = metadata;
         }
+
+        bool opEquals(ElementInfo@ other) {
+            return path == other.path;
+        }
     }
 
     class Navigation {
