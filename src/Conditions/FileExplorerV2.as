@@ -3207,7 +3207,7 @@ namespace FileExplorer {
     }
 
 
-    void fe_ForceClose(string id = "*") {
+    void fe_ForceClose(const string &in id = "*") {
         string pluginName = Meta::ExecutingPlugin().Name;
         
         if (id == "*") {
