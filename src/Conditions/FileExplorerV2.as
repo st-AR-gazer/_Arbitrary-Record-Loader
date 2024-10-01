@@ -3516,6 +3516,7 @@ void OpenFileExplorerExample() {
 }
 
 array<FileExplorer::ElementInfo> selectedElements;
+array<string> selectedPaths;
 
 // Remove after testing
 void Render() {
@@ -3536,9 +3537,9 @@ void Render() {
     
         auto explorer = FileExplorer::fe_GetExplorerById("example");
         if (explorer !is null && explorer.exports.IsSelectionComplete()) {
-            auto paths = explorer.exports.GetSelectedElements();
+            auto paths = explorer.exports.GetSelectedPaths();
             if (paths !is null) {
-                @selectedElements = @paths;
+                @selectedPaths = @paths;
                 explorer.exports.SetSelectionComplete();
             }
         }
