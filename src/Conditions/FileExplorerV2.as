@@ -805,7 +805,7 @@ namespace FileExplorer {
             this.lastModifiedDate = 0;
             this.creationDate = 0;
             this.isFolder = false;
-            this.icon = _Icon();
+            this.icon = _Icon::file;
             this.isSelected = false;
             this.lastSelectedTime = 0;
             this.shouldShow = true;
@@ -3538,7 +3538,7 @@ void Render() {
         if (explorer !is null && explorer.exports.IsSelectionComplete()) {
             auto paths = explorer.exports.GetSelectedElements();
             if (paths !is null) {
-                selectedElements = paths;
+                @selectedElements = @paths;
                 explorer.exports.SetSelectionComplete();
             }
         }
@@ -3546,7 +3546,7 @@ void Render() {
         if (elementExplorer !is null && elementExplorer.exports.IsSelectionComplete()) {
             auto elements = elementExplorer.exports.GetSelectedElements();
             if (elements !is null) {
-                selectedElements = elements;
+                @selectedElements = @elements;
             }
             elementExplorer.exports.SetSelectionComplete();
         }
