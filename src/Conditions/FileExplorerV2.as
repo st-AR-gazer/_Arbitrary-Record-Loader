@@ -3539,7 +3539,7 @@ void Render() {
         if (explorer !is null && explorer.exports.IsSelectionComplete()) {
             auto paths = explorer.exports.GetSelectedPaths();
             if (paths !is null) {
-                @selectedPaths = @paths;
+                selectedPaths = paths;
                 explorer.exports.SetSelectionComplete();
             }
         }
@@ -3547,7 +3547,10 @@ void Render() {
         if (elementExplorer !is null && elementExplorer.exports.IsSelectionComplete()) {
             auto elements = elementExplorer.exports.GetSelectedElements();
             if (elements !is null) {
-                @selectedElements = @elements;
+                selectedElements.Resize(elements.Length);
+                for (uint i = 0; i < elements.Length; i++) {
+                    selectedElements[i] = elements[i];
+                }
             }
             elementExplorer.exports.SetSelectionComplete();
         }
