@@ -794,6 +794,24 @@ namespace FileExplorer {
             this.lastClickTime = 0;
         }
 
+        // Default factory constructor
+        ElementInfo() {
+            this.name = "";
+            this.path = "";
+            this.size = "";
+            this.sizeBytes = 0;
+            this.type = "";
+            this.gbxType = "";
+            this.lastModifiedDate = 0;
+            this.creationDate = 0;
+            this.isFolder = false;
+            this.icon = _Icon();
+            this.isSelected = false;
+            this.lastSelectedTime = 0;
+            this.shouldShow = true;
+            this.lastClickTime = 0;
+        }
+
         void SetGbxMetadata(dictionary@ metadata) {
             gbxMetadata = metadata;
         }
