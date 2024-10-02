@@ -3173,6 +3173,7 @@ namespace FileExplorer {
         enum GBX_CHUNK_IDS {
             Replay0     = 50933760,  // 0x3093000 // Example: Replays
             Replay1     = 50933761,  // 0x3093001 // Example: Replays alternate ID
+            Replay2     = 50933762,  // 0x3093002 // Example: Replays alternate ID
 
             Ghost0      = 0,         // 0x0       // Example: Ghosts
             Ghost11420  = 11420,     // 0x2C9C    // Example: Ghosts alternate ID
