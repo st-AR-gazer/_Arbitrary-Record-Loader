@@ -1927,7 +1927,7 @@ namespace FileExplorer {
             if (elementInfo is null) return;
 
             string path = elementInfo.path;
-            dictionary gbxMetadata = gbx::GbxParser(path);
+            dictionary gbxMetadata = gbx::ParseGbx(path);
             elementInfo.SetGbxMetadata(gbxMetadata);
         }
 
@@ -3276,6 +3276,11 @@ namespace FileExplorer {
                     folderIx = ReadUInt32();
                 }
             }
+        }
+
+        dictionary ParseGbx(const string &in filePath) {
+            GbxParser parser(filePath);
+            return parser.GetMetadata();
         }
 
         class GbxParser {
