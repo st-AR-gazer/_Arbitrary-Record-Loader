@@ -3159,207 +3159,224 @@ namespace FileExplorer {
     }
 /* ------------------------ End Handle Button Clicks ------------------------ */
 
-    namespace gbx {
+
+
         /* ------------------------ GBX Parsing ------------------------ */
         // Fixme:
         // - Currently only Replay type is accounted for, need to add Map (and more) types as well 
         // (but it's proving to be a bit tricky) (Reason: nothing is being added to the xmlString)
+    namespace gbx {
+        /* ------------------------ GBX Parsing ------------------------ */
+        // This namespace contains functionality to parse GBX files and extract metadata.
 
-        class GbxHeaderChunkInfo
-        {
+        class GbxHeaderChunkInfo {
             int ChunkId;
             int ChunkSize;
-        }
+        };
 
-        dictionary ReadGbxHeader(const string &in path) {
+        class GbxParser {
+            string filePath;
+            IO::File gbxFile;
             dictionary metadata;
+            string xmlContent;
+            GbxHeaderChunkInfo[] headerChunks;
 
-            string xmlString = "";
+            void ReadHeader() {
+                gbxFile.SetPos(17);
+                int chunkCount = gbxFile.Read(4).ReadInt32();
 
-            IO::File mapFile(path);
-            mapFile.Open(IO::FileMode::Read);
-
-            mapFile.SetPos(17);
-            int headerChunkCount = mapFile.Read(4).ReadInt32();
-
-            GbxHeaderChunkInfo[] chunks = {};
-            for (int i = 0; i < headerChunkCount; i++) {
-                GbxHeaderChunkInfo newChunk;
-                newChunk.ChunkId = mapFile.Read(4).ReadInt32();
-                newChunk.ChunkSize = mapFile.Read(4).ReadInt32() & 0x7FFFFFFF;
-                chunks.InsertLast(newChunk);
-            }
-
-            int64 startTime = Time::Now;
-
-            for (uint i = 0; i < chunks.Length; i++) {
-                MemoryBuffer chunkBuffer = mapFile.Read(chunks[i].ChunkSize);
-                if (   chunks[i].ChunkId == 50933761 // Maps /*50933761*/ (Sometimes "50606082"??)
-                    || chunks[i].ChunkId == 50606082 // Replays
-                    || chunks[i].ChunkId == 50606082 // Challenges
-                    ) {
-                    int stringLength = chunkBuffer.ReadInt32();
-                    xmlString = chunkBuffer.ReadString(stringLength);
-                    break;
-                }
-
-                if (Time::Now - startTime > 300) {
-                    log("Error: Timeout while reading GBX header for file: " + path, LogLevel::Error, 3285, "ReadGbxHeader");
-                    mapFile.Close();
-                    return metadata;
+                for (int i = 0; i < chunkCount; i++) {
+                    GbxHeaderChunkInfo chunk;
+                    chunk.ChunkId = gbxFile.Read(4).ReadInt32();
+                    chunk.ChunkSize = gbxFile.Read(4).ReadInt32() & 0x7FFFFFFF;
+                    headerChunks.InsertLast(chunk);
                 }
             }
 
-            mapFile.Close();
+            void ReadChunks() {
+                int64 startTime = Time::Now;
 
-            if (xmlString != "") {
-                XML::Document doc;
-                doc.LoadString(xmlString);
-                XML::Node headerNode = doc.Root().FirstChild();
+                for (uint i = 0; i < headerChunks.Length; i++) {
+                    MemoryBuffer chunkData = gbxFile.Read(headerChunks[i].ChunkSize);
 
-                if (headerNode) {
-                    string gbxType = headerNode.Attribute("type");
-                    metadata["type"] = gbxType;
-                    metadata["exever"] = headerNode.Attribute("exever");
-                    metadata["exebuild"] = headerNode.Attribute("exebuild");
-                    metadata["title"] = headerNode.Attribute("title");
+                    if (headerChunks[i].ChunkId == 50933761 ||  // Maps
+                        headerChunks[i].ChunkId == 50606082 ||  // Replays
+                        headerChunks[i].ChunkId == 50606082) {  // Challenges (Note: Duplicate ID?)
 
-                    if (gbxType == "map") {
-                        ParseMapMetadata(headerNode, metadata);
-                    } else if (gbxType == "replay") {
-                        ParseReplayMetadata(headerNode, metadata);
-                    } else if (gbxType == "challenge") {
-                        ParseChallengeMetadata(headerNode, metadata);
+                        int xmlLength = chunkData.ReadInt32();
+                        xmlContent = chunkData.ReadString(xmlLength);
+                        break;
                     }
 
-                    XML::Node playermodelNode = headerNode.Child("playermodel");
+                    if (Time::Now - startTime > 300) {
+                        log("Error: Timeout while reading GBX header for file: " + filePath, LogLevel::Error, 3212, "ReadChunks");
+                    }
+                }
+            }
+
+            void ParseXmlContent() {
+                if (xmlContent == "") {
+                    log("Warning: No XML content found in GBX file: " + filePath, LogLevel::Warn, 3219, "ParseXmlContent");
+                    return;
+                }
+
+                XML::Document doc;
+                if (!doc.LoadString(xmlContent)) {
+                    log("Error: Failed to parse XML content in GBX file: " + filePath, LogLevel::Error, 3225, "ParseXmlContent");
+                }
+
+                XML::Node rootNode = doc.Root().FirstChild();
+
+                if (rootNode) {
+                    string gbxType = rootNode.Attribute("type");
+                    metadata["type"] = gbxType;
+                    metadata["exever"] = rootNode.Attribute("exever");
+                    metadata["exebuild"] = rootNode.Attribute("exebuild");
+                    metadata["title"] = rootNode.Attribute("title");
+
+                    if (gbxType == "map") {
+                        ParseMapMetadata(rootNode);
+                    } else if (gbxType == "replay") {
+                        ParseReplayMetadata(rootNode);
+                    } else if (gbxType == "challenge") {
+                        ParseChallengeMetadata(rootNode);
+                    } else {
+                        log("Warning: Unknown GBX type '" + gbxType + "' in file: " + filePath, LogLevel::Warn, 3244, "ParseXmlContent");
+                    }
+
+                    XML::Node playermodelNode = rootNode.Child("playermodel");
                     if (playermodelNode) {
                         metadata["playermodel_id"] = playermodelNode.Attribute("id");
                     }
                 } else {
-                    log("Error: Missing header node in GBX file: " + path, LogLevel::Error, 3318, "ReadGbxHeader");
+                    log("Error: Missing root node in GBX file: " + filePath, LogLevel::Error, 3252, "ParseXmlContent");
                 }
             }
 
-            return metadata;
-        }
+            void ParseMapMetadata(XML::Node &in rootNode) {
+                XML::Node identNode = rootNode.Child("ident");
+                if (identNode) {
+                    metadata["map_uid"] = identNode.Attribute("uid");
+                    metadata["map_name"] = identNode.Attribute("name");
+                    metadata["map_author"] = identNode.Attribute("author");
+                    metadata["map_authorzone"] = identNode.Attribute("authorzone");
+                }
 
-        void ParseMapMetadata(XML::Node &in headerNode, dictionary &inout metadata) {
-            XML::Node identNode = headerNode.Child("ident");
-            if (identNode) {
-                metadata["map_uid"] = identNode.Attribute("uid");
-                metadata["map_name"] = identNode.Attribute("name");
-                metadata["map_author"] = identNode.Attribute("author");
-                metadata["map_authorzone"] = identNode.Attribute("authorzone");
+                ParseDescNode(rootNode);
+
+                XML::Node timesNode = rootNode.Child("times");
+                if (timesNode) {
+                    metadata["times_bronze"] = timesNode.Attribute("bronze");
+                    metadata["times_silver"] = timesNode.Attribute("silver");
+                    metadata["times_gold"] = timesNode.Attribute("gold");
+                    metadata["times_authortime"] = timesNode.Attribute("authortime");
+                    metadata["times_authorscore"] = timesNode.Attribute("authorscore");
+                }
+
+                ParseDependencies(rootNode);
             }
 
-            XML::Node descNode = headerNode.Child("desc");
-            if (descNode) {
-                metadata["desc_envir"] = descNode.Attribute("envir");
-                metadata["desc_mood"] = descNode.Attribute("mood");
-                metadata["desc_maptype"] = descNode.Attribute("type");
-                metadata["desc_mapstyle"] = descNode.Attribute("mapstyle");
-                metadata["desc_displaycost"] = descNode.Attribute("displaycost");
-                metadata["desc_mod"] = descNode.Attribute("mod");
-                metadata["desc_validated"] = descNode.Attribute("validated");
-                metadata["desc_nblaps"] = descNode.Attribute("nblaps");
-                metadata["desc_hasghostblocks"] = descNode.Attribute("hasghostblocks");
-            }
+            void ParseReplayMetadata(XML::Node &in rootNode) {
+                XML::Node mapNode = rootNode.Child("map");
+                if (mapNode) {
+                    metadata["map_uid"] = mapNode.Attribute("uid");
+                    metadata["map_name"] = mapNode.Attribute("name");
+                    metadata["map_author"] = mapNode.Attribute("author");
+                    metadata["map_authorzone"] = mapNode.Attribute("authorzone");
+                }
 
-            XML::Node timesNode = headerNode.Child("times");
-            if (timesNode) {
-                metadata["times_bronze"] = timesNode.Attribute("bronze");
-                metadata["times_silver"] = timesNode.Attribute("silver");
-                metadata["times_gold"] = timesNode.Attribute("gold");
-                metadata["times_authortime"] = timesNode.Attribute("authortime");
-                metadata["times_authorscore"] = timesNode.Attribute("authorscore");
-            }
+                ParseDescNode(rootNode);
 
-            XML::Node depsNode = headerNode.Child("deps");
-            if (depsNode) {
-                XML::Node depNode = depsNode.FirstChild();
-                int depIndex = 0;
-                while (depNode) {
-                    metadata["dep_file_" + tostring(depIndex)] = depNode.Attribute("file");
-                    depNode = depNode.NextSibling();
-                    depIndex++;
+                XML::Node timesNode = rootNode.Child("times");
+                if (timesNode) {
+                    metadata["replay_best"] = timesNode.Attribute("best");
+                    metadata["replay_respawns"] = timesNode.Attribute("respawns");
+                    metadata["replay_stuntscore"] = timesNode.Attribute("stuntscore");
+                    metadata["replay_validable"] = timesNode.Attribute("validable");
+                }
+
+                XML::Node checkpointsNode = rootNode.Child("checkpoints");
+                if (checkpointsNode) {
+                    metadata["replay_checkpoints"] = checkpointsNode.Attribute("cur");
                 }
             }
-        }
 
-        void ParseReplayMetadata(XML::Node &in headerNode, dictionary &inout metadata) {
-            XML::Node mapNode = headerNode.Child("map");
-            if (mapNode) {
-                metadata["map_uid"] = mapNode.Attribute("uid");
-                metadata["map_name"] = mapNode.Attribute("name");
-                metadata["map_author"] = mapNode.Attribute("author");
-                metadata["map_authorzone"] = mapNode.Attribute("authorzone");
+            void ParseChallengeMetadata(XML::Node &in rootNode) {
+                XML::Node identNode = rootNode.Child("ident");
+                if (identNode) {
+                    metadata["map_uid"] = identNode.Attribute("uid");
+                    metadata["map_name"] = identNode.Attribute("name");
+                    metadata["map_author"] = identNode.Attribute("author");
+                }
+
+                ParseDescNode(rootNode);
+
+                XML::Node timesNode = rootNode.Child("times");
+                if (timesNode) {
+                    metadata["times_bronze"] = timesNode.Attribute("bronze");
+                    metadata["times_silver"] = timesNode.Attribute("silver");
+                    metadata["times_gold"] = timesNode.Attribute("gold");
+                    metadata["times_authortime"] = timesNode.Attribute("authortime");
+                    metadata["times_authorscore"] = timesNode.Attribute("authorscore");
+                }
+
+                ParseDependencies(rootNode);
             }
 
-            XML::Node descNode = headerNode.Child("desc");
-            if (descNode) {
-                metadata["desc_envir"] = descNode.Attribute("envir");
-                metadata["desc_mood"] = descNode.Attribute("mood");
-                metadata["desc_maptype"] = descNode.Attribute("maptype");
-                metadata["desc_mapstyle"] = descNode.Attribute("mapstyle");
-                metadata["desc_displaycost"] = descNode.Attribute("displaycost");
-                metadata["desc_mod"] = descNode.Attribute("mod");
-            }
-
-            XML::Node timesNode = headerNode.Child("times");
-            if (timesNode) {
-                metadata["replay_best"] = timesNode.Attribute("best");
-                metadata["replay_respawns"] = timesNode.Attribute("respawns");
-                metadata["replay_stuntscore"] = timesNode.Attribute("stuntscore");
-                metadata["replay_validable"] = timesNode.Attribute("validable");
-            }
-
-            XML::Node checkpointsNode = headerNode.Child("checkpoints");
-            if (checkpointsNode) {
-                metadata["replay_checkpoints"] = checkpointsNode.Attribute("cur");
-            }
-        }
-
-        void ParseChallengeMetadata(XML::Node &in headerNode, dictionary &inout metadata) {
-            XML::Node identNode = headerNode.Child("ident");
-            if (identNode) {
-                metadata["map_uid"] = identNode.Attribute("uid");
-                metadata["map_name"] = identNode.Attribute("name");
-                metadata["map_author"] = identNode.Attribute("author");
-            }
-
-            XML::Node descNode = headerNode.Child("desc");
-            if (descNode) {
-                metadata["desc_envir"] = descNode.Attribute("envir");
-                metadata["desc_mood"] = descNode.Attribute("mood");
-                metadata["desc_maptype"] = descNode.Attribute("type");
-                metadata["desc_nblaps"] = descNode.Attribute("nblaps");
-                metadata["desc_price"] = descNode.Attribute("price");
-            }
-
-            XML::Node timesNode = headerNode.Child("times");
-            if (timesNode) {
-                metadata["times_bronze"] = timesNode.Attribute("bronze");
-                metadata["times_silver"] = timesNode.Attribute("silver");
-                metadata["times_gold"] = timesNode.Attribute("gold");
-                metadata["times_authortime"] = timesNode.Attribute("authortime");
-                metadata["times_authorscore"] = timesNode.Attribute("authorscore");
-            }
-
-            XML::Node depsNode = headerNode.Child("deps");
-            if (depsNode) {
-                XML::Node depNode = depsNode.FirstChild();
-                int depIndex = 0;
-                while (depNode) {
-                    metadata["dep_file_" + tostring(depIndex)] = depNode.Attribute("file");
-                    depNode = depNode.NextSibling();
-                    depIndex++;
+            void ParseDescNode(XML::Node &in rootNode) {
+                XML::Node descNode = rootNode.Child("desc");
+                if (descNode) {
+                    metadata["desc_envir"] = descNode.Attribute("envir");
+                    metadata["desc_mood"] = descNode.Attribute("mood");
+                    metadata["desc_maptype"] = descNode.Attribute("type");
+                    metadata["desc_mapstyle"] = descNode.Attribute("mapstyle");
+                    metadata["desc_displaycost"] = descNode.Attribute("displaycost");
+                    metadata["desc_mod"] = descNode.Attribute("mod");
+                    metadata["desc_validated"] = descNode.Attribute("validated");
+                    metadata["desc_nblaps"] = descNode.Attribute("nblaps");
+                    metadata["desc_hasghostblocks"] = descNode.Attribute("hasghostblocks");
                 }
             }
+
+            void ParseDependencies(XML::Node &in rootNode) {
+                XML::Node depsNode = rootNode.Child("deps");
+                if (depsNode) {
+                    XML::Node depNode = depsNode.FirstChild();
+                    int depIndex = 0;
+                    while (depNode) {
+                        metadata["dep_file_" + tostring(depIndex)] = depNode.Attribute("file");
+                        depNode = depNode.NextSibling();
+                        depIndex++;
+                    }
+                }
+            }
+
+            GbxParser(const string &in path) {
+                filePath = path;
+            }
+
+            dictionary Parse() {
+                try {
+                    gbxFile.Open(IO::FileMode::Read);
+                    ReadHeader();
+                    ReadChunks();
+                    ParseXmlContent();
+                    gbxFile.Close();
+                } catch {
+                    log("Exception in file: " + filePath, LogLevel::Error, 3366, "Parse");
+                }
+                return metadata;
+            }
+        };
+
+        dictionary ParseGbx(const string &in filePath) {
+            GbxParser parser(filePath);
+            return parser.Parse();
         }
 
         /* ------------------------ End GBX Parsing ------------------------ */
     }
+
 
     FileExplorer@ fe_GetExplorerById(const string &in id) {
         string pluginName = Meta::ExecutingPlugin().Name;
@@ -3452,7 +3469,7 @@ namespace FileExplorer {
                     }
                 }
             }
-            log("All file explorer instances for this plugin have been closed.", LogLevel::Error, 3224, "fe_ForceClose");
+            log("All file explorer instances for this plugin have been closed.", LogLevel::Error, 3473, "fe_ForceClose");
             return;
         }
 
@@ -3461,7 +3478,7 @@ namespace FileExplorer {
         if (explorersByPlugin.Get(sessionKey, @explorer)) {
             explorer.Close();
             explorersByPlugin.Delete(sessionKey);
-            log("File explorer instance '" + id + "' has been closed.", LogLevel::Info, 3233, "fe_ForceClose");
+            log("File explorer instance '" + id + "' has been closed.", LogLevel::Info, 3482, "fe_ForceClose");
         } else {
             NotifyError("Error", "Session ID '" + id + "' not found for this plugin.", 20000);
         }
