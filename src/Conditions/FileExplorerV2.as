@@ -3307,6 +3307,7 @@ namespace FileExplorer {
 
             dictionary GetMetadata() {
                 if (metadata.IsEmpty()) { Parse(); }
+                print(string(metadata["type"]));
                 return metadata;
             }
 
@@ -3331,7 +3332,7 @@ namespace FileExplorer {
                 return true;
             }
 
-            void ReadHeader() {
+            private void ReadHeader() {
                 buf.Seek(0);
 
                 string sig = buf.ReadString(3);
@@ -3355,7 +3356,7 @@ namespace FileExplorer {
                 log("Number of Nodes: " + tostring(nbNodes), LogLevel::Info, 3349, "ReadHeader");
             }
 
-            void ReadChunks() {
+            private void ReadChunks() {
                 int headerChunkCount = buf.ReadInt32();
                 log("Header Chunk Count: " + tostring(headerChunkCount), LogLevel::Info, 3354, "ReadChunks");
 
@@ -3419,7 +3420,7 @@ namespace FileExplorer {
                 }
             }
 
-            void ParseMapMetadata(XML::Node &in headerNode) {
+            private void ParseMapMetadata(XML::Node &in headerNode) {
                 XML::Node identNode = headerNode.Child("ident");
                 metadata["map_uid"] = identNode.Attribute("uid");
                 metadata["map_name"] = identNode.Attribute("name");
@@ -3456,7 +3457,7 @@ namespace FileExplorer {
                 }
             }
 
-            void ParseReplayMetadata(XML::Node &in headerNode) {
+            private void ParseReplayMetadata(XML::Node &in headerNode) {
                 XML::Node mapNode = headerNode.Child("map");
                 metadata["map_uid"] = mapNode.Attribute("uid");
                 metadata["map_name"] = mapNode.Attribute("name");
@@ -3483,7 +3484,7 @@ namespace FileExplorer {
                 }
             }
 
-            void ParseChallengeMetadata(XML::Node &in headerNode) {
+            private void ParseChallengeMetadata(XML::Node &in headerNode) {
                 XML::Node identNode = headerNode.Child("ident");
                 metadata["map_uid"] = identNode.Attribute("uid");
                 metadata["map_name"] = identNode.Attribute("name");
