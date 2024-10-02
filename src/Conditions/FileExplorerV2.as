@@ -3246,10 +3246,7 @@ namespace FileExplorer {
                 }
 
                 XML::Document doc;
-                if (!doc.LoadString(xmlContent)) {
-                    log("Error: Failed to parse XML content in GBX file: " + filePath, LogLevel::Error, 3250, "ParseXmlContent");
-                    throw("Failed to parse XML content.");
-                }
+                doc.LoadString(xmlContent);
 
                 XML::Node rootNode = doc.Root().FirstChild();
 
@@ -3275,7 +3272,7 @@ namespace FileExplorer {
                     XML::Node playermodelNode = rootNode.Child("playermodel");
                     if (playermodelNode) {
                         metadata["playermodel_id"] = playermodelNode.Attribute("id");
-                        log("Parsed playermodel_id: " + metadata["playermodel_id"], LogLevel::Info, 3278, "ParseXmlContent");
+                        log("Parsed playermodel_id: " + string(metadata["playermodel_id"]), LogLevel::Info, 3278, "ParseXmlContent");
                     }
                 } else {
                     log("Error: Missing root node in GBX file: " + filePath, LogLevel::Error, 3281, "ParseXmlContent");
