@@ -3199,6 +3199,8 @@ namespace FileExplorer {
                 for (uint i = 0; i < headerChunks.Length; i++) {
                     MemoryBuffer chunkData = gbxFile.Read(headerChunks[i].ChunkSize);
 
+                    if (string(metadata["type"]) == "map") print(tostring(headerChunks[i].ChunkId));
+
                     if (headerChunks[i].ChunkId == 50933761 ||  // Maps
                         headerChunks[i].ChunkId == 50606082 ||  // Replays
                         headerChunks[i].ChunkId == 50606082) {  // Challenges (Note: Duplicate ID?)
