@@ -3168,11 +3168,28 @@ namespace FileExplorer {
     /* ------------------------ GBX Parsing ------------------------ */
     namespace gbx {
 
-        shared enum GBX_CHUNK_IDS {
-            CHUNK_REPLAY      = 50933760,  // Example: Replays
-            CHUNK_REPLAY_ALT  = 50933761,  // Example: Replays alternate ID
-            CHUNK_MAP         = 50606082,  // Example: Maps
-            CHUNK_CHALLENGE   = 50606082,  // Example: Challenges (Maps douplicate ID)
+        enum GBX_CHUNK_IDS {
+            Replay0     = 50933760,  // 0x3093000 // Example: Replays
+            Replay1     = 50933761,  // 0x3093001 //  Example: Replays alternate ID
+
+            Ghost0      = 0,         // 0x0       // Example: Ghosts
+            Ghost11420  = 11420,     // 0x2C9C    // Example: Ghosts alternate ID
+            
+            Map2        = 50606082,  // 0x3043002 // Example: Maps
+            Map3        = 50606083,  // 0x3043003 // Example: Maps alternate ID
+            Map4        = 50606084,  // 0x3043004 // Example: Maps alternate ID
+            Map5        = 50606085,  // 0x3043005 // Example: Maps alternate ID
+         // Map6        = 50606086,  // 0x3043006 // Example: Maps alternate ID
+            Map7        = 50606087,  // 0x3043007 // Example: Maps alternate ID
+            Map8        = 50606088,  // 0x3043008 // Example: Maps alternate ID
+
+            Challenge2  = 50606082,  // 0x3043002 // Example: Challenges           (Maps douplicate ID)
+            Challenge3  = 50606083,  // 0x3043003 // Example: Challenges alternate (Maps douplicate ID)
+            Challenge4  = 50606084,  // 0x3043004 // Example: Challenges alternate (Maps douplicate ID)
+            Challenge5  = 50606085,  // 0x3043005 // Example: Challenges alternate (Maps douplicate ID)
+         // Challenge6  = 50606086,  // 0x3043006 // Example: Challenges alternate (Maps douplicate ID)
+            Challenge7  = 50606087   // 0x3043007 // Example: Challenges alternate (Maps douplicate ID)
+         // Challenge8  = 50606088,  // 0x3043008 // Challenge 8 does not seem to exist
         }
 
         class GbxHeaderChunkInfo {
@@ -3210,10 +3227,24 @@ namespace FileExplorer {
 
                     log("Processing ChunkId: " + tostring(headerChunks[i].ChunkId), LogLevel::Info, 3211, "ReadChunks");
 
-                    if (headerChunks[i].ChunkId == GBX_CHUNK_IDS::CHUNK_REPLAY ||      // Replays
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::CHUNK_REPLAY_ALT ||  // Replays alternate ID
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::CHUNK_MAP ||         // Maps
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::CHUNK_CHALLENGE      // Challenges
+                    if (headerChunks[i].ChunkId == GBX_CHUNK_IDS::Replay0 || 
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Replay1 ||
+
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Ghost0 ||
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Ghost11420 ||
+
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map2 ||
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map3 ||
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map4 ||
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map5 ||
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map7 ||
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map8 ||
+
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge2 ||
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge3 ||
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge4 ||
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge5 ||
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge7
                         ) {
                         
                         int xmlLength = chunkData.ReadInt32();
