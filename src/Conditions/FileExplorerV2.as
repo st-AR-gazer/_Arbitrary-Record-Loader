@@ -3292,6 +3292,10 @@ namespace FileExplorer {
                 filePath = path;
                 @buf = null;
                 metadata = dictionary();
+
+                if (!Parse()) {
+                    log("Failed to parse GBX file: " + filePath, LogLevel::Error, 100, "GbxParser");
+                }
             }
 
             bool Parse() {
@@ -3301,12 +3305,12 @@ namespace FileExplorer {
 
                 ReadHeader();
                 ReadChunks();
+                ReadNodes();
 
                 return true;
             }
  
             dictionary GetMetadata() {
-                if (metadata.IsEmpty()) { Parse(); }
                 return metadata;
             }
 
@@ -3318,78 +3322,102 @@ namespace FileExplorer {
                     @buf = file.Read(fileSize);
                     file.Close();
                 } catch {
-                    log("Failed to read GBX file: " + filePath, LogLevel::Error, 3315, "Initialize");
+                    log("Failed to read GBX file: " + filePath, LogLevel::Error, 100, "Initialize");
                     return false;
                 }
 
                 string signature = buf.ReadString(3);
                 if (signature != "GBX") {
-                    log("Error: Not a valid GBX file: " + filePath, LogLevel::Error, 3321, "Initialize");
+                    log("Error: Not a valid GBX file: " + filePath, LogLevel::Error, 101, "Initialize");
                     return false;
                 }
 
                 return true;
             }
 
-            void ReadHeader() {
-                buf.Seek(0);
-
-                string sig = buf.ReadString(3);
-                if (sig != "GBX") {
-                    log("Error: Invalid GBX signature in file: " + filePath, LogLevel::Error, 3333, "ReadHeader");
-                    return;
-                }
-
+            private void ReadHeader() {
                 uint16 hVersion = buf.ReadUInt16();
                 if (hVersion < 6) {
-                    log("Error: Unsupported GBX version: " + tostring(hVersion), LogLevel::Error, 3339, "ReadHeader");
+                    log("Error: Unsupported GBX version: " + tostring(hVersion), LogLevel::Error, 102, "ReadHeader");
                     return;
                 }
 
                 buf.Seek(4, 1);
 
                 uint32 hClassId = buf.ReadUInt32();
-                log("Class ID: " + Text::Format("%08x", hClassId), LogLevel::Info, 3346, "ReadHeader");
+                log("Class ID: " + Text::Format("0x%08x", hClassId), LogLevel::Info, 103, "ReadHeader");
 
-                int nbNodes = buf.ReadInt32();
-                log("Number of Nodes: " + tostring(nbNodes), LogLevel::Info, 3349, "ReadHeader");
+                string gbxType;
+                if (hClassId == GBX_CHUNK_IDS::Map) {
+                    gbxType = "map";
+                } else if (hClassId == GBX_CHUNK_IDS::Replay) {
+                    gbxType = "replay";
+                } else if (hClassId == GBX_CHUNK_IDS::Challenge) {
+                    gbxType = "challenge";
+                } else {
+                    log("Warning: Unknown Class ID: " + Text::Format("0x%08x", hClassId), LogLevel::Warn, 104, "ReadHeader");
+                    gbxType = "unknown";
+                }
+
+                metadata["type"] = gbxType;
             }
 
-            void ReadChunks() {
+            private void ReadChunks() {
+                if (buf.AtEnd()) {
+                    log("Error: Unexpected end of buffer while reading number of header chunks.", LogLevel::Error, 105, "ReadChunks");
+                    return;
+                }
                 int headerChunkCount = buf.ReadInt32();
-                log("Header Chunk Count: " + tostring(headerChunkCount), LogLevel::Info, 3354, "ReadChunks");
+                log("Header Chunk Count: " + tostring(headerChunkCount), LogLevel::Info, 106, "ReadChunks");
 
                 GbxHeaderChunkInfo[] chunks;
                 for (int i = 0; i < headerChunkCount; i++) {
+                    if (buf.GetSize() - buf.GetPosition() < 8) {
+                        log("Error: Not enough data to read ChunkId and ChunkSize for chunk " + tostring(i), LogLevel::Error, 107, "ReadChunks");
+                        return;
+                    }
+
                     GbxHeaderChunkInfo chunk;
                     chunk.ChunkId = buf.ReadInt32();
-                    chunk.ChunkSize = buf.ReadInt32() & 0x7FFFFFFF;
+                    chunk.ChunkSize = buf.ReadUInt32() & 0x7FFFFFFF;
                     chunks.InsertLast(chunk);
-                    log("Chunk " + tostring(i) + " ID: " + tostring(chunk.ChunkId) + ", Size: " + tostring(chunk.ChunkSize), LogLevel::Info, 3362, "ReadChunks");
+                    log("Chunk " + tostring(i) + " ID: " + Text::Format("0x%08x", chunk.ChunkId) + ", Size: " + tostring(chunk.ChunkSize), LogLevel::Info, 108, "ReadChunks");
                 }
 
                 for (uint i = 0; i < chunks.Length; i++) {
                     GbxHeaderChunkInfo chunk = chunks[i];
+
+                    uint64 remaining = buf.GetSize() - buf.GetPosition();
+                    if (remaining < chunk.ChunkSize) {
+                        log("Error: Not enough data left to read for chunk " + Text::Format("0x%08x", chunk.ChunkId), LogLevel::Error, 109, "ReadChunks");
+                        continue;
+                    }
+
                     MemoryBuffer@ chunkBuffer = buf.ReadBuffer(chunk.ChunkSize);
 
-                    if (   chunk.ChunkId == GBX_CHUNK_IDS::Replay
-                        || chunk.ChunkId == GBX_CHUNK_IDS::Map
-                        || chunk.ChunkId == GBX_CHUNK_IDS::Challenge) {
+                    if (chunk.ChunkId == GBX_CHUNK_IDS::Replay || chunk.ChunkId == GBX_CHUNK_IDS::Map || chunk.ChunkId == GBX_CHUNK_IDS::Challenge) {
 
                         if (chunkBuffer.AtEnd()) {
-                            log("Warning: Chunk " + tostring(chunk.ChunkId) + " is empty.", LogLevel::Warn, 3374, "ReadChunks");
+                            log("Warning: Chunk " + Text::Format("0x%08x", chunk.ChunkId) + " is empty.", LogLevel::Warn, 110, "ReadChunks");
                             continue;
                         }
 
+                        if (chunkBuffer.GetSize() < 4) {
+                            log("Error: Not enough data to read XML string length in chunk " + Text::Format("0x%08x", chunk.ChunkId), LogLevel::Error, 111, "ReadChunks");
+                            continue;
+                        }
                         int stringLength = chunkBuffer.ReadInt32();
+                        if (chunkBuffer.GetSize() < uint(stringLength)) {
+                            log("Error: Not enough data to read XML string of length " + tostring(stringLength) + " in chunk " + Text::Format("0x%08x", chunk.ChunkId), LogLevel::Error, 112, "ReadChunks");
+                            continue;
+                        }
                         string xmlString = chunkBuffer.ReadString(stringLength);
-                        log("XML String Length: " + tostring(stringLength), LogLevel::Info, 3380, "ReadChunks");
+                        log("XML String Length: " + tostring(stringLength), LogLevel::Info, 113, "ReadChunks");
 
                         XML::Document doc;
                         doc.LoadString(xmlString);
 
                         XML::Node rootNode = doc.Root();
-                        
                         XML::Node headerNode = rootNode.FirstChild();
                         if (headerNode) {
                             string gbxType = headerNode.Attribute("type");
@@ -3407,19 +3435,63 @@ namespace FileExplorer {
                             }
 
                             XML::Node playermodelNode = headerNode.Child("playermodel");
-                            if (playermodelNode) {
-                                metadata["playermodel_id"] = playermodelNode.Attribute("id");
-                            }
+                            metadata["playermodel_id"] = playermodelNode.Attribute("id");
                         } else {
-                            log("Error: Missing header node in GBX chunk " + tostring(chunk.ChunkId), LogLevel::Error, 3412, "ReadChunks");
+                            log("Error: Missing header node in GBX chunk " + Text::Format("0x%08x", chunk.ChunkId), LogLevel::Error, 115, "ReadChunks");
                         }
                     } else {
-                        log("Info: Skipping unhandled Chunk ID: " + tostring(chunk.ChunkId), LogLevel::Info, 3415, "ReadChunks");
+                        log("Info: Skipping unhandled Chunk ID: " + Text::Format("0x%08x", chunk.ChunkId), LogLevel::Info, 117, "ReadChunks");
                     }
                 }
             }
 
-            void ParseMapMetadata(XML::Node &in headerNode) {
+            private void ReadNodes() {
+                if (buf.AtEnd()) {
+                    log("Error: Unexpected end of buffer while reading number of nodes.", LogLevel::Error, 118, "ReadNodes");
+                    return;
+                }
+
+                int nbNodes = buf.ReadInt32();
+                log("Number of Nodes: " + tostring(nbNodes), LogLevel::Info, 119, "ReadNodes");
+
+                if (buf.AtEnd()) {
+                    log("Error: Unexpected end of buffer while reading number of external nodes.", LogLevel::Error, 120, "ReadNodes");
+                    return;
+                }
+
+                int nbExternalNodes = buf.ReadInt32();
+                log("Number of External Nodes: " + tostring(nbExternalNodes), LogLevel::Info, 121, "ReadNodes");
+
+                if (nbExternalNodes > 0) {
+                    if (buf.GetSize() - buf.GetPosition() < 4) {
+                        log("Error: Not enough data to read ancestor level.", LogLevel::Error, 122, "ReadNodes");
+                        return;
+                    }
+
+                    uint32 ancestorLevel = buf.ReadUInt32();
+                    log("Ancestor Level: " + tostring(ancestorLevel), LogLevel::Info, 123, "ReadNodes");
+
+                    if (buf.GetSize() - buf.GetPosition() < 4) {
+                        log("Error: Not enough data to read ExternalFolder.", LogLevel::Error, 124, "ReadNodes");
+                        return;
+                    }
+                    ExternalFolder@ rootSubFolder = ExternalFolder(buf.ReadBuffer(4));
+                    log("Read ExternalFolder", LogLevel::Info, 125, "ReadNodes");
+
+                    for (int i = 0; i < nbExternalNodes; i++) {
+                        if (buf.GetSize() - buf.GetPosition() < 4) {
+                            log("Error: Not enough data to read ExternalNode " + tostring(i), LogLevel::Error, 126, "ReadNodes");
+                            break;
+                        }
+                        ExternalNode@ extNode = ExternalNode(buf.ReadBuffer(4), 6, i);
+                        log("Read ExternalNode " + tostring(i), LogLevel::Info, 127, "ReadNodes");
+                        
+                        // TODO: Implement ExternalNode parsing
+                    }
+                }
+            }
+
+            private void ParseMapMetadata(XML::Node &in headerNode) {
                 XML::Node identNode = headerNode.Child("ident");
                 metadata["map_uid"] = identNode.Attribute("uid");
                 metadata["map_name"] = identNode.Attribute("name");
@@ -3456,7 +3528,7 @@ namespace FileExplorer {
                 }
             }
 
-            void ParseReplayMetadata(XML::Node &in headerNode) {
+            private void ParseReplayMetadata(XML::Node &in headerNode) {
                 XML::Node mapNode = headerNode.Child("map");
                 metadata["map_uid"] = mapNode.Attribute("uid");
                 metadata["map_name"] = mapNode.Attribute("name");
@@ -3483,7 +3555,7 @@ namespace FileExplorer {
                 }
             }
 
-            void ParseChallengeMetadata(XML::Node &in headerNode) {
+            private void ParseChallengeMetadata(XML::Node &in headerNode) {
                 XML::Node identNode = headerNode.Child("ident");
                 metadata["map_uid"] = identNode.Attribute("uid");
                 metadata["map_name"] = identNode.Attribute("name");
