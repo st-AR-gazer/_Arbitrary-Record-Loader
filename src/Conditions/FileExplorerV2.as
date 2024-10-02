@@ -3201,10 +3201,15 @@ namespace FileExplorer {
 
                     print(tostring(headerChunks[i].ChunkId));
 
-                    if (headerChunks[i].ChunkId == 50933761 ||  // Maps
-                        headerChunks[i].ChunkId == 50606082 ||  // Replays
-                        headerChunks[i].ChunkId == 50606082) {  // Challenges (Note: Duplicate ID?)
+                    if (headerChunks[i].ChunkId == 50933760 ||  // Replays
+                        headerChunks[i].ChunkId == 50933761 ||  // Replays
 
+                        headerChunks[i].ChunkId == 50606082 ||  // Maps
+
+                        // headerChunks[i].ChunkId == 50606082 ||  // Challenges (Same as Maps)
+
+                        // headerChunks[i].ChunkId == 11420 ||  // Ghosts (no header)
+                    ) {
                         int xmlLength = chunkData.ReadInt32();
                         xmlContent = chunkData.ReadString(xmlLength);
                         break;
