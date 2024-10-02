@@ -2158,7 +2158,7 @@ namespace FileExplorer {
 
             if (config.enableSearchBar) {
                 UI::SameLine();
-                UI::PushItemWidth(searchWidth - 110);
+                UI::PushItemWidth(searchWidth - 115);
 
                 UI::Text(Icons::Search + "");
                 UI::SameLine();
@@ -3168,9 +3168,11 @@ namespace FileExplorer {
     /* ------------------------ GBX Parsing ------------------------ */
     namespace gbx {
 
+        const bool VERBOSE_GBX = false;
+
         enum GBX_CHUNK_IDS {
             Replay0     = 50933760,  // 0x3093000 // Example: Replays
-            Replay1     = 50933761,  // 0x3093001 //  Example: Replays alternate ID
+            Replay1     = 50933761,  // 0x3093001 // Example: Replays alternate ID
 
             Ghost0      = 0,         // 0x0       // Example: Ghosts
             Ghost11420  = 11420,     // 0x2C9C    // Example: Ghosts alternate ID
@@ -3208,14 +3210,14 @@ namespace FileExplorer {
             void ReadHeader() {
                 gbxFile.SetPos(17);
                 int chunkCount = gbxFile.Read(4).ReadInt32();
-                log("Number of header chunks: " + tostring(chunkCount), LogLevel::Info, 3194, "ReadHeader");
+                if (VERBOSE_GBX) log("Number of header chunks: " + tostring(chunkCount), LogLevel::Info, 3194, "ReadHeader");
 
                 for (int i = 0; i < chunkCount; i++) {
                     GbxHeaderChunkInfo chunk;
                     chunk.ChunkId = gbxFile.Read(4).ReadInt32();
                     chunk.ChunkSize = gbxFile.Read(4).ReadInt32() & 0x7FFFFFFF;
                     headerChunks.InsertLast(chunk);
-                    log("Header Chunk " + tostring(i) + ": ID=" + tostring(chunk.ChunkId) + ", Size=" + tostring(chunk.ChunkSize), LogLevel::Info, 3201, "ReadHeader");
+                    if (VERBOSE_GBX) log("Header Chunk " + tostring(i) + ": ID=" + tostring(chunk.ChunkId) + ", Size=" + tostring(chunk.ChunkSize), LogLevel::Info, 3201, "ReadHeader");
                 }
             }
 
@@ -3225,54 +3227,59 @@ namespace FileExplorer {
                 for (uint i = 0; i < headerChunks.Length; i++) {
                     MemoryBuffer chunkData = gbxFile.Read(headerChunks[i].ChunkSize);
 
-                    log("Processing ChunkId: " + tostring(headerChunks[i].ChunkId), LogLevel::Info, 3211, "ReadChunks");
+                    if (VERBOSE_GBX) log("Processing ChunkId: " + tostring(headerChunks[i].ChunkId), LogLevel::Info, 3211, "ReadChunks");
 
-                    if (headerChunks[i].ChunkId == GBX_CHUNK_IDS::Replay0 || 
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Replay1 ||
+                    if (//headerChunks[i].ChunkId == GBX_CHUNK_IDS::Replay0 || 
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Replay1 || 
 
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Ghost0 ||
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Ghost11420 ||
+                        // headerChunks[i].ChunkId == GBX_CHUNK_IDS::Ghost0 ||
+                        // headerChunks[i].ChunkId == GBX_CHUNK_IDS::Ghost11420 ||
 
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map2 ||
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map3 ||
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map4 ||
+                        // headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map2
+                        // headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map3
+                        // headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map4
                         headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map5 ||
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map7 ||
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map8 ||
+                        // headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map7
+                        // headerChunks[i].ChunkId == GBX_CHUNK_IDS::Map8
 
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge2 ||
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge3 ||
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge4 ||
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge5 ||
-                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge7
+                        // headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge2 ||
+                        // headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge3 ||
+                        // headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge4 ||
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge5
+                        // headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge7
                         ) {
                         
-                        int xmlLength = chunkData.ReadInt32();
-                        log("ChunkId " + tostring(headerChunks[i].ChunkId) + " contains XML of length: " + tostring(xmlLength), LogLevel::Info, 3220, "ReadChunks");
-                        
-                        string currentXmlContent = chunkData.ReadString(xmlLength);
-                        log("Read XML content: " + currentXmlContent.SubStr(0, Math::Min(currentXmlContent.Length, 100)), LogLevel::Dark, 3223, "ReadChunks");
+                        try {
+                            int xmlLength = chunkData.ReadInt32();
+                            if (VERBOSE_GBX) log("ChunkId " + tostring(headerChunks[i].ChunkId) + " contains XML of length: " + tostring(xmlLength), LogLevel::Info, 1006, "GbxParser::ReadChunks");
 
-                        if (xmlContent != "") {
-                            xmlContent += currentXmlContent;
-                            log("Accumulated XML content from ChunkId: " + tostring(headerChunks[i].ChunkId), LogLevel::Info, 3227, "ReadChunks");
-                        } else {
-                            xmlContent = currentXmlContent;
-                            log("Extracted XML content from ChunkId: " + tostring(headerChunks[i].ChunkId), LogLevel::Info, 3230, "ReadChunks");
+                            string currentXmlContent = chunkData.ReadString(xmlLength);
+                            if (VERBOSE_GBX) log("Read XML content: " + currentXmlContent.SubStr(0, Math::Min(currentXmlContent.Length, 100)), LogLevel::Dark, 1007, "GbxParser::ReadChunks");
+
+                            if (xmlContent != "") {
+                                xmlContent += currentXmlContent;
+                                if (VERBOSE_GBX) log("Accumulated XML content from ChunkId: " + tostring(headerChunks[i].ChunkId), LogLevel::Info, 1008, "GbxParser::ReadChunks");
+                            } else {
+                                xmlContent = currentXmlContent;
+                                if (VERBOSE_GBX) log("Extracted XML content from ChunkId: " + tostring(headerChunks[i].ChunkId), LogLevel::Info, 1009, "GbxParser::ReadChunks");
+                            }
+                        } catch {
+                            if (VERBOSE_GBX) log("Error reading XML content from ChunkId: " + tostring(headerChunks[i].ChunkId), LogLevel::Error, 1010, "GbxParser::ReadChunks");
+                            continue;
                         }
                     }
 
                     if (Time::Now - startTime > 300) {
-                        log("Error: Timeout while reading GBX chunks for file: " + filePath, LogLevel::Error, 3235, "ReadChunks");
+                        if (VERBOSE_GBX) log("Error: Timeout while reading GBX chunks for file: " + filePath, LogLevel::Error, 3235, "ReadChunks");
                     }
                 }
 
-                log("Total XML Content Length: " + tostring(xmlContent.Length), LogLevel::Info, 3239, "ReadChunks");
+                if (VERBOSE_GBX) log("Total XML Content Length: " + tostring(xmlContent.Length), LogLevel::Info, 3239, "ReadChunks");
             }
 
             void ParseXmlContent() {
                 if (xmlContent == "") {
-                    log("Warning: No XML content found in GBX file: " + filePath, LogLevel::Warn, 3244, "ParseXmlContent");
+                    if (VERBOSE_GBX) log("Warning: No XML content found in GBX file: " + filePath, LogLevel::Warn, 3244, "ParseXmlContent");
                     return;
                 }
 
@@ -3288,7 +3295,7 @@ namespace FileExplorer {
                     metadata["exebuild"] = rootNode.Attribute("exebuild");
                     metadata["title"] = rootNode.Attribute("title");
 
-                    log("Parsed GBX Type: " + gbxType, LogLevel::Info, 3263, "ParseXmlContent");
+                    if (VERBOSE_GBX) log("Parsed GBX Type: " + gbxType, LogLevel::Info, 3263, "ParseXmlContent");
 
                     if (gbxType == "map") {
                         ParseMapMetadata(rootNode);
@@ -3297,28 +3304,28 @@ namespace FileExplorer {
                     } else if (gbxType == "challenge") {
                         ParseChallengeMetadata(rootNode);
                     } else {
-                        log("Warning: Unknown GBX type '" + gbxType + "' in file: " + filePath, LogLevel::Warn, 3272, "ParseXmlContent");
+                        if (VERBOSE_GBX) log("Warning: Unknown GBX type '" + gbxType + "' in file: " + filePath, LogLevel::Warn, 3272, "ParseXmlContent");
                     }
 
                     XML::Node playermodelNode = rootNode.Child("playermodel");
                     if (playermodelNode) {
                         metadata["playermodel_id"] = playermodelNode.Attribute("id");
-                        log("Parsed playermodel_id: " + string(metadata["playermodel_id"]), LogLevel::Info, 3278, "ParseXmlContent");
+                        if (VERBOSE_GBX) log("Parsed playermodel_id: " + string(metadata["playermodel_id"]), LogLevel::Info, 3278, "ParseXmlContent");
                     }
                 } else {
-                    log("Error: Missing root node in GBX file: " + filePath, LogLevel::Error, 3281, "ParseXmlContent");
+                    if (VERBOSE_GBX) log("Error: Missing root node in GBX file: " + filePath, LogLevel::Error, 3281, "ParseXmlContent");
                 }
             }
 
             void ParseMapMetadata(XML::Node &in rootNode) {
-                log("Parsing Map Metadata", LogLevel::Info, 3286, "ParseMapMetadata");
+                if (VERBOSE_GBX) log("Parsing Map Metadata", LogLevel::Info, 3286, "ParseMapMetadata");
                 XML::Node identNode = rootNode.Child("ident");
                 if (identNode) {
                     metadata["map_uid"] = identNode.Attribute("uid");
                     metadata["map_name"] = identNode.Attribute("name");
                     metadata["map_author"] = identNode.Attribute("author");
                     metadata["map_authorzone"] = identNode.Attribute("authorzone");
-                    log("Parsed ident node for Map", LogLevel::Info, 3293, "ParseMapMetadata");
+                    if (VERBOSE_GBX) log("Parsed ident node for Map", LogLevel::Info, 3293, "ParseMapMetadata");
                 }
 
                 ParseDescNode(rootNode);
@@ -3330,21 +3337,21 @@ namespace FileExplorer {
                     metadata["times_gold"] = timesNode.Attribute("gold");
                     metadata["times_authortime"] = timesNode.Attribute("authortime");
                     metadata["times_authorscore"] = timesNode.Attribute("authorscore");
-                    log("Parsed times node for Map", LogLevel::Info, 3305, "ParseMapMetadata");
+                    if (VERBOSE_GBX) log("Parsed times node for Map", LogLevel::Info, 3305, "ParseMapMetadata");
                 }
 
                 ParseDependencies(rootNode);
             }
 
             void ParseReplayMetadata(XML::Node &in rootNode) {
-                log("Parsing Replay Metadata", LogLevel::Info, 3312, "ParseReplayMetadata");
+                if (VERBOSE_GBX) log("Parsing Replay Metadata", LogLevel::Info, 3312, "ParseReplayMetadata");
                 XML::Node mapNode = rootNode.Child("map");
                 if (mapNode) {
                     metadata["map_uid"] = mapNode.Attribute("uid");
                     metadata["map_name"] = mapNode.Attribute("name");
                     metadata["map_author"] = mapNode.Attribute("author");
                     metadata["map_authorzone"] = mapNode.Attribute("authorzone");
-                    log("Parsed map node for Replay", LogLevel::Info, 3319, "ParseReplayMetadata");
+                    if (VERBOSE_GBX) log("Parsed map node for Replay", LogLevel::Info, 3319, "ParseReplayMetadata");
                 }
 
                 ParseDescNode(rootNode);
@@ -3355,24 +3362,24 @@ namespace FileExplorer {
                     metadata["replay_respawns"] = timesNode.Attribute("respawns");
                     metadata["replay_stuntscore"] = timesNode.Attribute("stuntscore");
                     metadata["replay_validable"] = timesNode.Attribute("validable");
-                    log("Parsed times node for Replay", LogLevel::Info, 3330, "ParseReplayMetadata");
+                    if (VERBOSE_GBX) log("Parsed times node for Replay", LogLevel::Info, 3330, "ParseReplayMetadata");
                 }
 
                 XML::Node checkpointsNode = rootNode.Child("checkpoints");
                 if (checkpointsNode) {
                     metadata["replay_checkpoints"] = checkpointsNode.Attribute("cur");
-                    log("Parsed checkpoints node for Replay", LogLevel::Info, 3336, "ParseReplayMetadata");
+                    if (VERBOSE_GBX) log("Parsed checkpoints node for Replay", LogLevel::Info, 3336, "ParseReplayMetadata");
                 }
             }
 
             void ParseChallengeMetadata(XML::Node &in rootNode) {
-                log("Parsing Challenge Metadata", LogLevel::Info, 3341, "ParseChallengeMetadata");
+                if (VERBOSE_GBX) log("Parsing Challenge Metadata", LogLevel::Info, 3341, "ParseChallengeMetadata");
                 XML::Node identNode = rootNode.Child("ident");
                 if (identNode) {
                     metadata["map_uid"] = identNode.Attribute("uid");
                     metadata["map_name"] = identNode.Attribute("name");
                     metadata["map_author"] = identNode.Attribute("author");
-                    log("Parsed ident node for Challenge", LogLevel::Info, 3347, "ParseChallengeMetadata");
+                    if (VERBOSE_GBX) log("Parsed ident node for Challenge", LogLevel::Info, 3347, "ParseChallengeMetadata");
                 }
 
                 ParseDescNode(rootNode);
@@ -3384,7 +3391,7 @@ namespace FileExplorer {
                     metadata["times_gold"] = timesNode.Attribute("gold");
                     metadata["times_authortime"] = timesNode.Attribute("authortime");
                     metadata["times_authorscore"] = timesNode.Attribute("authorscore");
-                    log("Parsed times node for Challenge", LogLevel::Info, 3359, "ParseChallengeMetadata");
+                    if (VERBOSE_GBX) log("Parsed times node for Challenge", LogLevel::Info, 3359, "ParseChallengeMetadata");
                 }
 
                 ParseDependencies(rootNode);
@@ -3402,7 +3409,7 @@ namespace FileExplorer {
                     metadata["desc_validated"] = descNode.Attribute("validated");
                     metadata["desc_nblaps"] = descNode.Attribute("nblaps");
                     metadata["desc_hasghostblocks"] = descNode.Attribute("hasghostblocks");
-                    log("Parsed desc node", LogLevel::Info, 3377, "ParseDescNode");
+                    if (VERBOSE_GBX) log("Parsed desc node", LogLevel::Info, 3377, "ParseDescNode");
                 }
             }
 
@@ -3416,14 +3423,14 @@ namespace FileExplorer {
                         depNode = depNode.NextSibling();
                         depIndex++;
                     }
-                    log("Parsed dependencies node with " + tostring(depIndex) + " dependencies", LogLevel::Info, 3391, "ParseDependencies");
+                    if (VERBOSE_GBX) log("Parsed dependencies node with " + tostring(depIndex) + " dependencies", LogLevel::Info, 3391, "ParseDependencies");
                 }
             }
 
             void ListAllChunkIds() {
-                log("Listing all ChunkIds for file: " + filePath, LogLevel::Info, 3396, "ListAllChunkIds");
+                if (VERBOSE_GBX) log("Listing all ChunkIds for file: " + filePath, LogLevel::Info, 3396, "ListAllChunkIds");
                 for (uint i = 0; i < headerChunks.Length; i++) {
-                    log("Chunk " + tostring(i) + " - ChunkId: " + tostring(headerChunks[i].ChunkId) + ", ChunkSize: " + tostring(headerChunks[i].ChunkSize), LogLevel::Info, 3398, "ListAllChunkIds");
+                    if (VERBOSE_GBX) log("Chunk " + tostring(i) + " - ChunkId: " + tostring(headerChunks[i].ChunkId) + ", ChunkSize: " + tostring(headerChunks[i].ChunkSize), LogLevel::Info, 3398, "ListAllChunkIds");
                 }
             }
 
@@ -3432,20 +3439,19 @@ namespace FileExplorer {
             }
 
             dictionary Parse() {
-                log("Parse started for file: " + filePath, LogLevel::Info, 3407, "Parse");
+                if (VERBOSE_GBX) log("Parse started for file: " + filePath, LogLevel::Info, 3407, "Parse");
                 try {
-                    log("Opening GBX file: " + filePath, LogLevel::Info, 3409, "Parse");
+                    if (VERBOSE_GBX) log("Opening GBX file: " + filePath, LogLevel::Info, 3409, "Parse");
                     gbxFile.Open(filePath, IO::FileMode::Read);
                     ReadHeader();
 
                     ListAllChunkIds();
-
                     ReadChunks();
                     ParseXmlContent();
                     gbxFile.Close();
-                    log("Closed GBX file: " + filePath, LogLevel::Info, 3418, "Parse");
+                    if (VERBOSE_GBX) log("Closed GBX file: " + filePath, LogLevel::Info, 3418, "Parse");
                 } catch {
-                    log("Exception in file: " + filePath, LogLevel::Error, 3420, "Parse");
+                    if (VERBOSE_GBX) log("Exception in file: " + filePath, LogLevel::Error, 3420, "Parse");
                     gbxFile.Close();
                 }
                 return metadata;
@@ -3523,7 +3529,7 @@ namespace FileExplorer {
         InstanceConfig instConfig;
         instConfig.id = _id;
         instConfig.mustReturn = _mustReturn;
-        instConfig.returnType = _returnType;
+        instConfig.returnType = _returnType.ToLower();
         instConfig.minMaxReturnAmount = _minmaxReturnAmount;
         instConfig.path = _path;
         instConfig.searchQuery = _searchQuery;
@@ -3608,10 +3614,10 @@ void OpenFileExplorerExample() {
         true, // _mustReturn
         "ElementInfo", // _returnType
         vec2(1, -1), // _minmaxReturnAmount
-        IO::FromUserGameFolder("Replays/"), // path // Change to Maps/ when done with general gbx detection is done
+        IO::FromUserGameFolder("Maps/"), // path // Change to Maps/ when done with general gbx detection is done
         "", // searchQuery
-        { "replay", "ghost" }, // filters
-        { "ghost" } // canOnlyReturn
+        {  }, // filters
+        {  } // canOnlyReturn
     );
 }
 
