@@ -3357,7 +3357,7 @@ namespace FileExplorer {
                 log("Parse started", LogLevel::Info, 3337, "Parse");
                 try {
                     log("Opening file: " + filePath, LogLevel::Info, 3339, "Parse");
-                    gbxFile.Open(IO::FileMode::Read);
+                    gbxFile.Open(filePath, IO::FileMode::Read);
                     log("Opened file: " + filePath, LogLevel::Info, 3341, "Parse");
                     ReadHeader();
                     log("Read header for file: " + filePath, LogLevel::Info, 3343, "Parse");
