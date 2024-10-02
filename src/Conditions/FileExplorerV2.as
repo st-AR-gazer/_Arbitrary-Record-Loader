@@ -3356,9 +3356,13 @@ namespace FileExplorer {
             dictionary Parse() {
                 try {
                     gbxFile.Open(IO::FileMode::Read);
+                    log("Opened file: " + filePath, LogLevel::Info, 3341, "Parse");
                     ReadHeader();
+                    log("Read header for file: " + filePath, LogLevel::Info, 3343, "Parse");
                     ReadChunks();
+                    log("Read chunks for file: " + filePath, LogLevel::Info, 3345, "Parse");
                     ParseXmlContent();
+                    log("Parsed XML content for file: " + filePath, LogLevel::Info, 3347, "Parse");
                     gbxFile.Close();
                 } catch {
                     log("Exception in file: " + filePath, LogLevel::Error, 3366, "Parse");
