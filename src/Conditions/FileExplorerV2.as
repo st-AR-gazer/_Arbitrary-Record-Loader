@@ -3149,7 +3149,7 @@ namespace FileExplorer {
         }
     }
 
-/* ------------------------ Handle Button Clicks ------------------------ */
+    /* ------------------------ Handle Button Clicks ------------------------ */
     enum EnterType {
         None,
         LeftClick,
@@ -3157,17 +3157,15 @@ namespace FileExplorer {
         DoubleClick,
         ControlClick
     }
-/* ------------------------ End Handle Button Clicks ------------------------ */
+    /* ------------------------ End Handle Button Clicks ------------------------ */
 
 
 
-        /* ------------------------ GBX Parsing ------------------------ */
-        // Fixme:
-        // - Currently only Replay type is accounted for, need to add Map (and more) types as well 
-        // (but it's proving to be a bit tricky) (Reason: nothing is being added to the xmlString)
+    /* ------------------------ GBX Parsing ------------------------ */
+    // Fixme:
+    // - Currently only Replay type is accounted for, need to add Map (and more) types as well 
+    // (but it's proving to be a bit tricky) (Reason: nothing is being added to the xmlString)
     namespace gbx {
-        /* ------------------------ GBX Parsing ------------------------ */
-        // This namespace contains functionality to parse GBX files and extract metadata.
 
         class GbxHeaderChunkInfo {
             int ChunkId;
@@ -3204,7 +3202,9 @@ namespace FileExplorer {
                     if (headerChunks[i].ChunkId == 50933760 ||  // Replays
                         headerChunks[i].ChunkId == 50933761 ||  // Replays
 
-                        headerChunks[i].ChunkId == 50606082 ||  // Maps
+                        headerChunks[i].ChunkId == 50606080 ||
+                        headerChunks[i].ChunkId == 50606081 ||
+                        headerChunks[i].ChunkId == 50606082// ||  // Maps
 
                         // headerChunks[i].ChunkId == 50606082 ||  // Challenges (Same as Maps)
 
@@ -3384,9 +3384,8 @@ namespace FileExplorer {
             GbxParser parser(filePath);
             return parser.Parse();
         }
-
-        /* ------------------------ End GBX Parsing ------------------------ */
     }
+    /* ------------------------ End GBX Parsing ------------------------ */
 
 
     FileExplorer@ fe_GetExplorerById(const string &in id) {
