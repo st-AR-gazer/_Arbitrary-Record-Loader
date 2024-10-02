@@ -3170,7 +3170,8 @@ namespace FileExplorer {
 
         enum GBX_CHUNK_IDS {
             Replay0     = 50933760,  // 0x3093000 // Example: Replays
-            Replay1     = 50933761,  // 0x3093001 //  Example: Replays alternate ID
+            Replay1     = 50933761,  // 0x3093001 // Example: Replays alternate ID
+            Replay2     = 50933762,  // 0x3093002 // Example: Replays alternate ID
 
             Ghost0      = 0,         // 0x0       // Example: Ghosts
             Ghost11420  = 11420,     // 0x2C9C    // Example: Ghosts alternate ID
@@ -3227,8 +3228,9 @@ namespace FileExplorer {
 
                     log("Processing ChunkId: " + tostring(headerChunks[i].ChunkId), LogLevel::Info, 3211, "ReadChunks");
 
-                    if (headerChunks[i].ChunkId == GBX_CHUNK_IDS::Replay0 || 
+                    if (headerChunks[i].ChunkId == GBX_CHUNK_IDS::Replay0 ||
                         headerChunks[i].ChunkId == GBX_CHUNK_IDS::Replay1 ||
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::Replay2 ||
 
                         headerChunks[i].ChunkId == GBX_CHUNK_IDS::Ghost0 ||
                         headerChunks[i].ChunkId == GBX_CHUNK_IDS::Ghost11420 ||
@@ -3245,7 +3247,7 @@ namespace FileExplorer {
                         headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge4 ||
                         headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge5 ||
                         headerChunks[i].ChunkId == GBX_CHUNK_IDS::Challenge7
-                        ) {
+                    ) {
                         
                         int xmlLength = chunkData.ReadInt32();
                         log("ChunkId " + tostring(headerChunks[i].ChunkId) + " contains XML of length: " + tostring(xmlLength), LogLevel::Info, 3220, "ReadChunks");
