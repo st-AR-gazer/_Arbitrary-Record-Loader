@@ -3165,7 +3165,15 @@ namespace FileExplorer {
     // Fixme:
     // - Currently only Replay type is accounted for, need to add Map (and more) types as well 
     // (but it's proving to be a bit tricky) (Reason: nothing is being added to the xmlString)
+    /* ------------------------ GBX Parsing ------------------------ */
     namespace gbx {
+
+        shared enum GBX_CHUNK_IDS {
+            CHUNK_REPLAY      = 50933760,  // Example: Replays
+            CHUNK_REPLAY_ALT  = 50933761,  // Example: Replays alternate ID
+            CHUNK_MAP         = 50606082,  // Example: Maps
+            CHUNK_CHALLENGE   = 50606082,  // Example: Challenges (Maps douplicate ID)
+        }
 
         class GbxHeaderChunkInfo {
             int ChunkId;
@@ -3179,15 +3187,18 @@ namespace FileExplorer {
             string xmlContent;
             GbxHeaderChunkInfo[] headerChunks;
 
+
             void ReadHeader() {
                 gbxFile.SetPos(17);
                 int chunkCount = gbxFile.Read(4).ReadInt32();
+                log("Number of header chunks: " + tostring(chunkCount), LogLevel::Info, 3194, "ReadHeader");
 
                 for (int i = 0; i < chunkCount; i++) {
                     GbxHeaderChunkInfo chunk;
                     chunk.ChunkId = gbxFile.Read(4).ReadInt32();
                     chunk.ChunkSize = gbxFile.Read(4).ReadInt32() & 0x7FFFFFFF;
                     headerChunks.InsertLast(chunk);
+                    log("Header Chunk " + tostring(i) + ": ID=" + tostring(chunk.ChunkId) + ", Size=" + tostring(chunk.ChunkSize), LogLevel::Info, 3201, "ReadHeader");
                 }
             }
 
@@ -3197,38 +3208,48 @@ namespace FileExplorer {
                 for (uint i = 0; i < headerChunks.Length; i++) {
                     MemoryBuffer chunkData = gbxFile.Read(headerChunks[i].ChunkSize);
 
-                    print(tostring(headerChunks[i].ChunkId));
+                    log("Processing ChunkId: " + tostring(headerChunks[i].ChunkId), LogLevel::Info, 3211, "ReadChunks");
 
-                    if (headerChunks[i].ChunkId == 50933760 ||  // Replays
-                        headerChunks[i].ChunkId == 50933761 ||  // Replays
-
-                        headerChunks[i].ChunkId == 50606080 ||
-                        headerChunks[i].ChunkId == 50606081 ||
-                        headerChunks[i].ChunkId == 50606082// ||  // Maps
-
-                        // headerChunks[i].ChunkId == 50606082 ||  // Challenges (Same as Maps)
-
-                        // headerChunks[i].ChunkId == 11420 ||  // Ghosts (no header)
-                    ) {
+                    if (headerChunks[i].ChunkId == GBX_CHUNK_IDS::CHUNK_REPLAY ||      // Replays
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::CHUNK_REPLAY_ALT ||  // Replays alternate ID
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::CHUNK_MAP ||         // Maps
+                        headerChunks[i].ChunkId == GBX_CHUNK_IDS::CHUNK_CHALLENGE      // Challenges
+                        ) {
+                        
                         int xmlLength = chunkData.ReadInt32();
-                        xmlContent = chunkData.ReadString(xmlLength);
-                        break;
+                        log("ChunkId " + tostring(headerChunks[i].ChunkId) + " contains XML of length: " + tostring(xmlLength), LogLevel::Info, 3220, "ReadChunks");
+                        
+                        string currentXmlContent = chunkData.ReadString(xmlLength);
+                        log("Read XML content: " + currentXmlContent.SubStr(0, Math::Min(currentXmlContent.Length, 100)), LogLevel::Dark, 3223, "ReadChunks");
+
+                        if (xmlContent != "") {
+                            xmlContent += currentXmlContent;
+                            log("Accumulated XML content from ChunkId: " + tostring(headerChunks[i].ChunkId), LogLevel::Info, 3227, "ReadChunks");
+                        } else {
+                            xmlContent = currentXmlContent;
+                            log("Extracted XML content from ChunkId: " + tostring(headerChunks[i].ChunkId), LogLevel::Info, 3230, "ReadChunks");
+                        }
                     }
 
                     if (Time::Now - startTime > 300) {
-                        log("Error: Timeout while reading GBX header for file: " + filePath, LogLevel::Error, 3212, "ReadChunks");
+                        log("Error: Timeout while reading GBX chunks for file: " + filePath, LogLevel::Error, 3235, "ReadChunks");
                     }
                 }
+
+                log("Total XML Content Length: " + tostring(xmlContent.Length), LogLevel::Info, 3239, "ReadChunks");
             }
 
             void ParseXmlContent() {
                 if (xmlContent == "") {
-                    log("Warning: No XML content found in GBX file: " + filePath, LogLevel::Warn, 3219, "ParseXmlContent");
+                    log("Warning: No XML content found in GBX file: " + filePath, LogLevel::Warn, 3244, "ParseXmlContent");
                     return;
                 }
 
                 XML::Document doc;
-                doc.LoadString(xmlContent);
+                if (!doc.LoadString(xmlContent)) {
+                    log("Error: Failed to parse XML content in GBX file: " + filePath, LogLevel::Error, 3250, "ParseXmlContent");
+                    throw("Failed to parse XML content.");
+                }
 
                 XML::Node rootNode = doc.Root().FirstChild();
 
@@ -3239,6 +3260,8 @@ namespace FileExplorer {
                     metadata["exebuild"] = rootNode.Attribute("exebuild");
                     metadata["title"] = rootNode.Attribute("title");
 
+                    log("Parsed GBX Type: " + gbxType, LogLevel::Info, 3263, "ParseXmlContent");
+
                     if (gbxType == "map") {
                         ParseMapMetadata(rootNode);
                     } else if (gbxType == "replay") {
@@ -3246,25 +3269,28 @@ namespace FileExplorer {
                     } else if (gbxType == "challenge") {
                         ParseChallengeMetadata(rootNode);
                     } else {
-                        log("Warning: Unknown GBX type '" + gbxType + "' in file: " + filePath, LogLevel::Warn, 3244, "ParseXmlContent");
+                        log("Warning: Unknown GBX type '" + gbxType + "' in file: " + filePath, LogLevel::Warn, 3272, "ParseXmlContent");
                     }
 
                     XML::Node playermodelNode = rootNode.Child("playermodel");
                     if (playermodelNode) {
                         metadata["playermodel_id"] = playermodelNode.Attribute("id");
+                        log("Parsed playermodel_id: " + metadata["playermodel_id"], LogLevel::Info, 3278, "ParseXmlContent");
                     }
                 } else {
-                    log("Error: Missing root node in GBX file: " + filePath, LogLevel::Error, 3252, "ParseXmlContent");
+                    log("Error: Missing root node in GBX file: " + filePath, LogLevel::Error, 3281, "ParseXmlContent");
                 }
             }
 
             void ParseMapMetadata(XML::Node &in rootNode) {
+                log("Parsing Map Metadata", LogLevel::Info, 3286, "ParseMapMetadata");
                 XML::Node identNode = rootNode.Child("ident");
                 if (identNode) {
                     metadata["map_uid"] = identNode.Attribute("uid");
                     metadata["map_name"] = identNode.Attribute("name");
                     metadata["map_author"] = identNode.Attribute("author");
                     metadata["map_authorzone"] = identNode.Attribute("authorzone");
+                    log("Parsed ident node for Map", LogLevel::Info, 3293, "ParseMapMetadata");
                 }
 
                 ParseDescNode(rootNode);
@@ -3276,18 +3302,21 @@ namespace FileExplorer {
                     metadata["times_gold"] = timesNode.Attribute("gold");
                     metadata["times_authortime"] = timesNode.Attribute("authortime");
                     metadata["times_authorscore"] = timesNode.Attribute("authorscore");
+                    log("Parsed times node for Map", LogLevel::Info, 3305, "ParseMapMetadata");
                 }
 
                 ParseDependencies(rootNode);
             }
 
             void ParseReplayMetadata(XML::Node &in rootNode) {
+                log("Parsing Replay Metadata", LogLevel::Info, 3312, "ParseReplayMetadata");
                 XML::Node mapNode = rootNode.Child("map");
                 if (mapNode) {
                     metadata["map_uid"] = mapNode.Attribute("uid");
                     metadata["map_name"] = mapNode.Attribute("name");
                     metadata["map_author"] = mapNode.Attribute("author");
                     metadata["map_authorzone"] = mapNode.Attribute("authorzone");
+                    log("Parsed map node for Replay", LogLevel::Info, 3319, "ParseReplayMetadata");
                 }
 
                 ParseDescNode(rootNode);
@@ -3298,20 +3327,24 @@ namespace FileExplorer {
                     metadata["replay_respawns"] = timesNode.Attribute("respawns");
                     metadata["replay_stuntscore"] = timesNode.Attribute("stuntscore");
                     metadata["replay_validable"] = timesNode.Attribute("validable");
+                    log("Parsed times node for Replay", LogLevel::Info, 3330, "ParseReplayMetadata");
                 }
 
                 XML::Node checkpointsNode = rootNode.Child("checkpoints");
                 if (checkpointsNode) {
                     metadata["replay_checkpoints"] = checkpointsNode.Attribute("cur");
+                    log("Parsed checkpoints node for Replay", LogLevel::Info, 3336, "ParseReplayMetadata");
                 }
             }
 
             void ParseChallengeMetadata(XML::Node &in rootNode) {
+                log("Parsing Challenge Metadata", LogLevel::Info, 3341, "ParseChallengeMetadata");
                 XML::Node identNode = rootNode.Child("ident");
                 if (identNode) {
                     metadata["map_uid"] = identNode.Attribute("uid");
                     metadata["map_name"] = identNode.Attribute("name");
                     metadata["map_author"] = identNode.Attribute("author");
+                    log("Parsed ident node for Challenge", LogLevel::Info, 3347, "ParseChallengeMetadata");
                 }
 
                 ParseDescNode(rootNode);
@@ -3323,6 +3356,7 @@ namespace FileExplorer {
                     metadata["times_gold"] = timesNode.Attribute("gold");
                     metadata["times_authortime"] = timesNode.Attribute("authortime");
                     metadata["times_authorscore"] = timesNode.Attribute("authorscore");
+                    log("Parsed times node for Challenge", LogLevel::Info, 3359, "ParseChallengeMetadata");
                 }
 
                 ParseDependencies(rootNode);
@@ -3340,6 +3374,7 @@ namespace FileExplorer {
                     metadata["desc_validated"] = descNode.Attribute("validated");
                     metadata["desc_nblaps"] = descNode.Attribute("nblaps");
                     metadata["desc_hasghostblocks"] = descNode.Attribute("hasghostblocks");
+                    log("Parsed desc node", LogLevel::Info, 3377, "ParseDescNode");
                 }
             }
 
@@ -3353,6 +3388,14 @@ namespace FileExplorer {
                         depNode = depNode.NextSibling();
                         depIndex++;
                     }
+                    log("Parsed dependencies node with " + tostring(depIndex) + " dependencies", LogLevel::Info, 3391, "ParseDependencies");
+                }
+            }
+
+            void ListAllChunkIds() {
+                log("Listing all ChunkIds for file: " + filePath, LogLevel::Info, 3396, "ListAllChunkIds");
+                for (uint i = 0; i < headerChunks.Length; i++) {
+                    log("Chunk " + tostring(i) + " - ChunkId: " + tostring(headerChunks[i].ChunkId) + ", ChunkSize: " + tostring(headerChunks[i].ChunkSize), LogLevel::Info, 3398, "ListAllChunkIds");
                 }
             }
 
@@ -3361,20 +3404,21 @@ namespace FileExplorer {
             }
 
             dictionary Parse() {
-                log("Parse started", LogLevel::Info, 3337, "Parse");
+                log("Parse started for file: " + filePath, LogLevel::Info, 3407, "Parse");
                 try {
-                    log("Opening file: " + filePath, LogLevel::Info, 3339, "Parse");
+                    log("Opening GBX file: " + filePath, LogLevel::Info, 3409, "Parse");
                     gbxFile.Open(filePath, IO::FileMode::Read);
-                    log("Opened file: " + filePath, LogLevel::Info, 3341, "Parse");
                     ReadHeader();
-                    log("Read header for file: " + filePath, LogLevel::Info, 3343, "Parse");
+
+                    ListAllChunkIds();
+
                     ReadChunks();
-                    log("Read chunks for file: " + filePath, LogLevel::Info, 3345, "Parse");
                     ParseXmlContent();
-                    log("Parsed XML content for file: " + filePath, LogLevel::Info, 3347, "Parse");
                     gbxFile.Close();
+                    log("Closed GBX file: " + filePath, LogLevel::Info, 3418, "Parse");
                 } catch {
-                    log("Exception in file: " + filePath, LogLevel::Error, 3366, "Parse");
+                    log("Exception in file: " + filePath, LogLevel::Error, 3420, "Parse");
+                    gbxFile.Close();
                 }
                 return metadata;
             }
@@ -3386,6 +3430,7 @@ namespace FileExplorer {
         }
     }
     /* ------------------------ End GBX Parsing ------------------------ */
+
 
 
     FileExplorer@ fe_GetExplorerById(const string &in id) {
@@ -3479,7 +3524,7 @@ namespace FileExplorer {
                     }
                 }
             }
-            log("All file explorer instances for this plugin have been closed.", LogLevel::Error, 3473, "fe_ForceClose");
+            log("All file explorer instances for this plugin have been closed.", LogLevel::Error, 3527, "fe_ForceClose");
             return;
         }
 
@@ -3488,7 +3533,7 @@ namespace FileExplorer {
         if (explorersByPlugin.Get(sessionKey, @explorer)) {
             explorer.Close();
             explorersByPlugin.Delete(sessionKey);
-            log("File explorer instance '" + id + "' has been closed.", LogLevel::Info, 3482, "fe_ForceClose");
+            log("File explorer instance '" + id + "' has been closed.", LogLevel::Info, 3536, "fe_ForceClose");
         } else {
             NotifyError("Error", "Session ID '" + id + "' not found for this plugin.", 20000);
         }
