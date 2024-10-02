@@ -3385,11 +3385,7 @@ namespace FileExplorer {
                         log("XML String Length: " + tostring(stringLength), LogLevel::Info, 3380, "ReadChunks");
 
                         XML::Document doc;
-                        bool loaded = doc.LoadString(xmlString);
-                        if (!loaded) {
-                            log("Error: Failed to parse XML in chunk " + tostring(chunk.ChunkId), LogLevel::Error, 3385, "ReadChunks");
-                            continue;
-                        }
+                        doc.LoadString(xmlString);
 
                         XML::Node rootNode = doc.Root();
                         
