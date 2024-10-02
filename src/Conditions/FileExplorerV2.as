@@ -3306,6 +3306,7 @@ namespace FileExplorer {
             }
 
             dictionary GetMetadata() {
+                if (metadata.IsEmpty()) { Parse(); }
                 return metadata;
             }
 
