@@ -3280,7 +3280,6 @@ namespace FileExplorer {
 
         dictionary ParseGbx(const string &in filePath) {
             GbxParser parser(filePath);
-            while (parser.metadata.IsEmpty()) print("Waiting for metadata...");
             return parser.GetMetadata();
         }
 
@@ -3293,6 +3292,10 @@ namespace FileExplorer {
                 filePath = path;
                 @buf = null;
                 metadata = dictionary();
+
+                if (!Parse()) {
+                    log("Failed to parse GBX file: " + filePath, LogLevel::Error, 100, "GbxParser");
+                }
             }
 
             bool Parse() {
