@@ -3280,6 +3280,7 @@ namespace FileExplorer {
 
         dictionary ParseGbx(const string &in filePath) {
             GbxParser parser(filePath);
+            while (parser.metadata.IsEmpty()) print("Waiting for metadata...");
             return parser.GetMetadata();
         }
 
