@@ -3221,9 +3221,7 @@ namespace FileExplorer {
                 }
 
                 XML::Document doc;
-                if (!doc.LoadString(xmlContent)) {
-                    log("Error: Failed to parse XML content in GBX file: " + filePath, LogLevel::Error, 3225, "ParseXmlContent");
-                }
+                doc.LoadString(xmlContent);
 
                 XML::Node rootNode = doc.Root().FirstChild();
 
