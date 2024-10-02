@@ -3371,7 +3371,15 @@ namespace FileExplorer {
 
                 for (uint i = 0; i < chunks.Length; i++) {
                     GbxHeaderChunkInfo chunk = chunks[i];
-                    MemoryBuffer@ chunkBuffer = buf.ReadBuffer(chunk.ChunkSize);
+                    
+                    MemoryBuffer@ chunkBuffer;
+
+                    if (chunk.ChunkSize <= buf.GetSize()) {
+                        chunkBuffer = buf.ReadBuffer(chunk.ChunkSize);
+                    } else {
+                        log("Error: Not enough data left to read for chunk size: " + tostring(chunk.ChunkSize), LogLevel::Error, 2684, "ReadChunks");
+                        continue;
+                    }
 
                     if (   chunk.ChunkId == GBX_CHUNK_IDS::Replay
                         || chunk.ChunkId == GBX_CHUNK_IDS::Map
