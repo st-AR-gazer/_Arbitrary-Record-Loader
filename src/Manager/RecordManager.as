@@ -1,10 +1,6 @@
 namespace RecordManager {
     array<CGameGhostScript@> ghosts;
 
-    void OpenGhostFileDialogWindow() {
-        _IO::FileExplorer::OpenFileExplorer(true, IO::FromUserGameFolder("Replays/"), "", { "replay", "ghost" });
-    }
-
     void RemoveAllRecords() {
         if (GetApp().PlaygroundScript is null) return;
         

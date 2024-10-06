@@ -27,7 +27,7 @@ void MapCoro() {
             AllowCheck::MapCommentCheck::OnMapLoad();
 
             if (!mapRecordsLoaded) {
-                ReplayLoader::LoadReplayAfterFileExplorer();
+                // ReplayLoader::LoadReplayAfterFileExplorer();
                 mapRecordsLoaded = true;
                 mapUID = s_currMap;
                 mapName = s_currMapName;

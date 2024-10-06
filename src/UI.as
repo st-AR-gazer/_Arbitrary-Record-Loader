@@ -8,9 +8,7 @@ void RenderMenu() {
 }
 
 void RenderInterface() {
-    FILE_EXPLORER_V1_BASE_RENDERER(); // Required for the file explorer to work.
-    // FILE_EXPLORER_BASE_RENDERER(); // Required for the file explorer to work.
-    // Temporaryly moved to the main Render script to avoid conflicts with the file explorer while develoption, this should be moved back to the main RenderInterface functions once the file explorer is fully implemented.
+    FILE_EXPLORER_BASE_RENDERER(); // Required for the file explorer to work.
 
     if (S_windowOpen) {
         // UI::SetNextWindowSize(670, 300, UI::Cond::FirstUseEver);
@@ -65,7 +63,7 @@ void RenderInterface() {
 array<string> selectedFiles;
 
 void RenderTab_LocalFiles() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
+
     UI::Separator();
 
     if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
@@ -124,7 +122,7 @@ MwId selectedRecordID;
 bool isDropdownOpen = false;
 
 void RenderTab_CurrentLoadedRecords() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
+
     UI::Separator();
 
     if (UI::Button("Remove All Records")) {
@@ -194,69 +192,99 @@ void RenderTab_CurrentLoadedRecords() {
 
 //////////////////// Render Saved Ghosts and Replays Tab /////////////////////
 
+array<string> savedGhostsSelectedFiles;
+
 void RenderTab_SavedGhostsAndReplays() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
+
     UI::Separator();
 
-    if (UI::Button(Icons::Folder + "Open Saved Folder")) {
-        _IO::FileExplorer::OpenFileExplorer(true, Server::savedFilesDirectory, "", { "replay", "ghost" });
+    if (UI::Button(Icons::FolderOpen + " Open File Explorer")) {
+        FileExplorer::fe_Start(
+            "Local Files",
+            true,
+            "path",
+            vec2(1, -1),
+            IO::FromUserGameFolder("Replays/"),
+            "",
+            { "replay", "ghost" }
+        );
     }
 
-    string filePath = _IO::FileExplorer::Exports::GetExportPath();
-    if (filePath != "") {
-        UI::Text("Selected File: " + filePath);
-
-        if (UI::Button("Load Selected Record")) {
-            ProcessSelectedFile(filePath);
+    auto explorer = FileExplorer::fe_GetExplorerById("Local Files");
+    if (explorer !is null && explorer.exports.IsSelectionComplete()) {
+        auto paths = explorer.exports.GetSelectedPaths();
+        if (paths !is null) {
+            savedGhostsSelectedFiles = paths;
+            explorer.exports.SetSelectionComplete();
         }
     }
 
-    UI::Text("Current selected file: ");
-    UI::InputText("File Path", _IO::FileExplorer::Exports::GetExportPath());
+    UI::SameLine();
+    UI::Text("Selected Files: " + savedGhostsSelectedFiles.Length);
+    for (uint i = 0; i < savedGhostsSelectedFiles.Length; i++) {
+        UI::PushItemWidth(1100);
+        savedGhostsSelectedFiles[i] = UI::InputText("File Path " + (i + 1), savedGhostsSelectedFiles[i]);
+        UI::PopItemWidth();
+    }
 
-    array<string>@ files = IO::IndexFolder(Server::savedJsonDirectory, true);
-    UI::Text("Saved Runs:");
-    UI::Separator();
-
-    for (uint i = 0; i < files.Length; i++) {
-        string fullFilePath = files[i];
-        string fileName = Path::GetFileName(fullFilePath);
-        if (fileName.EndsWith(".json")) {
-            string jsonContent = _IO::File::ReadFileToEnd(Server::savedJsonDirectory + fileName);
-            Json::Value json = Json::Parse(jsonContent);
-
-
-            if (json.GetType() == Json::Type::Object && json.HasKey("content")) {
-                Json::Value content = json["content"];
-
-                UI::Text("Nickname: " + string(content["Nickname"]));
-                UI::Text("FileName: " + string(content["FileName"]));
-                UI::Text("Trigram: " + string(content["Trigram"]));
-                UI::Text("Time: " + int(content["Time"]));
-                UI::Text("ReplayFilePath: " + string(content["ReplayFilePath"]));
-                UI::Text("FullFilePath: " + string(content["FullFilePath"]));
-                UI::Text("CountryPath: " + string(content["CountryPath"]));
-                if (!bool(content["FromLocalFile"])) UI::Text("FromLocalFile: " + bool(content["FromLocalFile"]));
-                UI::Text("StuntScore: " + int(content["StuntScore"]));
-                UI::Text("MwId: " + uint(content["MwId Value"]));
-
-                if (UI::Button("Load " + fileName)) {
-                    if (bool(content["FromLocalFile"])) {
-                        ProcessSelectedFile(string(content["FullFilePath"]));
-                    } else {
-                        NotifyWarn("You can only load local files...");
-                    }
+    if (savedGhostsSelectedFiles.Length > 0) {
+        if (UI::Button(Icons::Download + Icons::SnapchatGhost + " Save Record to Saved folder")) {
+            for (uint i = 0; i < savedGhostsSelectedFiles.Length; i++) {
+                if (savedGhostsSelectedFiles[i] != "") {
+                // Save some data about the ghost/replay instead of the whole file (this should also be saved, but to savedFilesDirectory and referenced in the json file in savedJsonDirectory)
+                    _IO::File::CopyFileTo(savedGhostsSelectedFiles[i], Server::savedFilesDirectory + Path::GetFileName(savedGhostsSelectedFiles[i]));
                 }
-                UI::SameLine();
-                if (UI::Button("Delete " + fileName)) {
-                    IO::Delete(Server::savedJsonDirectory + fileName);
-                    IO::Delete(Server::savedFilesDirectory + string(content["FileName"]) + ".Replay.Gbx");
-                }
-                UI::Separator();
-            } else {
-                UI::Text("Error reading " + fileName);
             }
         }
+    } else {
+        _UI::DisabledButton(Icons::Download + Icons::SnapchatGhost + " Save Record to Saved folder");
+    }
+
+    UI::Separator();
+
+    // array<string>@ files = IO::IndexFolder(Server::savedJsonDirectory, true);
+    // UI::Text("Saved Runs:");
+    // UI::Separator();
+
+    // for (uint i = 0; i < files.Length; i++) {
+    //     string fullFilePath = files[i];
+    //     string fileName = Path::GetFileName(fullFilePath);
+    //     if (fileName.EndsWith(".json")) {
+    //         string jsonContent = _IO::File::ReadFileToEnd(Server::savedJsonDirectory + fileName);
+    //         Json::Value json = Json::Parse(jsonContent);
+
+
+    //         if (json.GetType() == Json::Type::Object && json.HasKey("content")) {
+    //             Json::Value content = json["content"];
+
+    //             UI::Text("Nickname: " + string(content["Nickname"]));
+    //             UI::Text("FileName: " + string(content["FileName"]));
+    //             UI::Text("Trigram: " + string(content["Trigram"]));
+    //             UI::Text("Time: " + int(content["Time"]));
+    //             UI::Text("ReplayFilePath: " + string(content["ReplayFilePath"]));
+    //             UI::Text("FullFilePath: " + string(content["FullFilePath"]));
+    //             UI::Text("CountryPath: " + string(content["CountryPath"]));
+    //             if (!bool(content["FromLocalFile"])) UI::Text("FromLocalFile: " + bool(content["FromLocalFile"]));
+    //             UI::Text("StuntScore: " + int(content["StuntScore"]));
+    //             UI::Text("MwId: " + uint(content["MwId Value"]));
+
+    //             if (UI::Button("Load " + fileName)) {
+    //                 if (bool(content["FromLocalFile"])) {
+    //                     ProcessSelectedFile(string(content["FullFilePath"]));
+    //                 } else {
+    //                     NotifyWarn("You can only load local files...");
+    //                 }
+    //             }
+    //             UI::SameLine();
+    //             if (UI::Button("Delete " + fileName)) {
+    //                 IO::Delete(Server::savedJsonDirectory + fileName);
+    //                 IO::Delete(Server::savedFilesDirectory + string(content["FileName"]) + ".Replay.Gbx");
+    //             }
+    //             UI::Separator();
+    //         } else {
+    //             UI::Text("Error reading " + fileName);
+    //         }
+    //     }
     }
 }
 
@@ -266,7 +294,7 @@ void RenderTab_SavedGhostsAndReplays() {
 string link;
 
 void RenderTab_Link() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
+
     UI::Separator();
 
     link = UI::InputText("Link", link);
@@ -291,7 +319,7 @@ string newJsonName;
 int otherOffset = 0;
 
 void RenderTab_OtherSpecificUIDs() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
+
     UI::Separator();
 
     string downloadPath;
@@ -401,7 +429,7 @@ void RenderTab_OtherSpecificUIDs() {
 string ghostPosition;
 
 void RenderTab_LoadGhostFromMap() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
+
     UI::Separator();
 
     UI::Text("Build a request: ");
@@ -440,7 +468,7 @@ array<string> seasons;
 array<string> maps;
 
 void RenderTab_OfficialMaps() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
+
     UI::Separator();
 
     if (UI::Button("Reset Selections")) {
@@ -526,7 +554,7 @@ CurrentMapRecords::WarriorMedal warriorMedal;
 CurrentMapRecords::SBVilleMedal sbVilleMedal;
 
 void RenderTab_CurrentMapGhost() {
-    UI::Text("\\$f00" + "WARNING" + "\\$g " + "IF THERE ARE NO CARSWAP-GATES ON THE CURRENT MAP, AND YOU LOAD A REPLAY/GHOST THAT CHANGES CAR THE GAME WILL CRASH.");
+
     UI::Separator();
 
     UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles, this will not be possible for maps older than October 1st 2022");
@@ -833,14 +861,3 @@ namespace HotkeyManager {
 
 
 ////////////////////////////// End Tabs //////////////////////////////
-
-void CheckFileExplorerSelection() {
-    while (true) {
-        yield();
-        string filePath = _IO::FileExplorer::Exports::GetExportPath();
-        if (filePath != "") {
-            filePath = filePath;
-            break;
-        }
-    }
-}

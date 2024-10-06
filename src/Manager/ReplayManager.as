@@ -1,16 +1,4 @@
 namespace ReplayLoader {
-    void LoadReplayAfterFileExplorer() {
-        if (_Game::IsMapLoaded() && _IO::FileExplorer::Exports::GetExportPath() != "") {
-            string selectedFilePath = _IO::FileExplorer::Exports::GetExportPath();
-            string selectedFileExt = _IO::FileExplorer::Exports::GetExportPathFileExt();
-
-            if (selectedFileExt.ToLower() == "replay") {
-                startnew(LoadReplayFromPath, selectedFilePath);
-                _IO::FileExplorer::Exports::ClearExportPath();
-            }
-        }
-    }
-
     void LoadReplayFromPath(const string &in path) {
         if (!_Game::IsPlayingMap()) { NotifyWarn("You are currently not playing a map! Please load a map in a playing state first!"); return; }
 
