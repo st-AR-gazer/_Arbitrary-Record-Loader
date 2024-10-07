@@ -231,7 +231,7 @@ void RenderTab_SavedGhostsAndReplays() {
         if (UI::Button(Icons::Download + Icons::SnapchatGhost + " Save Record to Saved folder")) {
             for (uint i = 0; i < savedGhostsSelectedFiles.Length; i++) {
                 if (savedGhostsSelectedFiles[i] != "") {
-                // Save some data about the ghost/replay instead of the whole file (this should also be saved, but to savedFilesDirectory and referenced in the json file in savedJsonDirectory)
+                    // Save some data about the ghost/replay instead of the whole file (this should also be saved, but to savedFilesDirectory and referenced in the json file in savedJsonDirectory)
                     _IO::File::CopyFileTo(savedGhostsSelectedFiles[i], Server::savedFilesDirectory + Path::GetFileName(savedGhostsSelectedFiles[i]));
                 }
             }
@@ -285,7 +285,7 @@ void RenderTab_SavedGhostsAndReplays() {
     //             UI::Text("Error reading " + fileName);
     //         }
     //     }
-    }
+    // }
 }
 
 //////////////////// Render Link Tab /////////////////////

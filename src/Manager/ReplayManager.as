@@ -2,22 +2,23 @@ namespace ReplayLoader {
     void LoadReplayFromPath(const string &in path) {
         if (!_Game::IsPlayingMap()) { NotifyWarn("You are currently not playing a map! Please load a map in a playing state first!"); return; }
 
-        if (!path.Contains("Trackmania") && !path.Contains("Trackmania2020")) {
-            log("The replay file is not located in the Trackmania folder!", LogLevel::Warn, 18, "LoadReplayFromPath");
-            log("Attempting to move the target replay file to the Trackmania folder!", LogLevel::Warn, 19, "LoadReplayFromPath");
-            // NotifyWarn("The replay file is not located in the Trackmania folder! Attempting to move the target replay file to the Trackmania folder!");
-
+        if (!path.Contains("Trackmania") || !path.Contains("Trackmania2020")) {
+            log("The replay file is located in the Trackmania folder, moving to the replay folder to load it.", LogLevel::Warn, 12, "LoadReplayFromPath");
+            NotifyWarn("The replay file is located in the Trackmania folder, moving to the replay folder to load it.");
             _IO::File::CopyFileTo(path, Server::replayARLAutoMove + Path::GetFileName(path));
             if (!IO::FileExists(Server::replayARLAutoMove + Path::GetFileName(path))) {
                 NotifyError("Failed to move replay file to the target directory!");
-                log("Failed to move replay file to the target directory!", LogLevel::Error, 25, "LoadReplayFromPath");
+                log("Failed to move replay file to the target directory!", LogLevel::Error, 15, "LoadReplayFromPath");
                 return;
             }
-        // File is not properly moved to the target directory
+        } else {
+            log("Moving the replay file to the temp replay folder to load it.", LogLevel::Warn, 16, "LoadReplayFromPath");
+            _IO::File::CopyFileTo(path, Server::replayARLAutoMove + Path::GetFileName(path));
         }
 
-        auto task = GetApp().Network.ClientManiaAppPlayground.DataFileMgr.Replay_Load(Server::replayARLAutoMove + Path::GetFileName(path));
-        
+        auto task = GetApp().Network.ClientManiaAppPlayground.DataFileMgr.Replay_Load(Server::replayARLAutoMove + Path::GetFileName(path));        
+
+        IO::Delete(Server::replayARLAutoMove + Path::GetFileName(path));
 
         while (task.IsProcessing) { yield(); }
 
@@ -47,6 +48,5 @@ namespace ReplayLoader {
             log("No ghosts found in the replay file!", LogLevel::Warn, 59, "LoadReplayFromPath");
             return;
         }
-        log("Replay loaded successfully with " + task.Ghosts.Length + " ghosts!", LogLevel::Info, 62, "LoadReplayFromPath");
     }
 }

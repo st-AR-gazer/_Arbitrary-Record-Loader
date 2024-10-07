@@ -2,11 +2,25 @@ namespace RecordManager {
     array<CGameGhostScript@> ghosts;
 
     void RemoveAllRecords() {
+        // Does technically remove all the ghosts, but the instance isn't cleared...
+
+        // if (GetApp().PlaygroundScript is null) return;
+        // auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
+        // gm.Ghost_RemoveAll();
+        // log("All ghosts removed.", LogLevel::Info, 13, "RemoveAllRecords");
+        // GhostTracker::ClearTrackedGhosts();
+
+        // This removes the ghosts from the list, as well as the instance.
+
         if (GetApp().PlaygroundScript is null) return;
-        
-        auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
-        gm.Ghost_RemoveAll();
-        log("All ghosts removed.", LogLevel::Info, 13, "RemoveAllRecords");
+
+        auto dataFileMgr = GetApp().Network.ClientManiaAppPlayground.DataFileMgr;
+        auto newGhosts = dataFileMgr.Ghosts;
+
+        for (uint i = 0; i < newGhosts.Length; i++) {
+            CGameGhostScript@ ghost = cast<CGameGhostScript>(newGhosts[i]);
+            RemoveInstanceRecord(ghost.Id);
+        }
         GhostTracker::ClearTrackedGhosts();
     }
 
