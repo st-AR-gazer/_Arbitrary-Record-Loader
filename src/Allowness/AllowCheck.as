@@ -1,6 +1,6 @@
 namespace AllowCheck {
     interface IAllownessCheck {
-        void OnMapLoad();
+        void Initialize();
         bool IsConditionMet();
         string GetDisallowReason();
     }
@@ -11,11 +11,11 @@ namespace AllowCheck {
         allownessModules.InsertLast(GamemodeAllowness::CreateInstance());
         allownessModules.InsertLast(MapcommentAllowness::CreateInstance());
 
-        if (allownessModules.Length > 0) startnew(OnMapLoadWrapper0);
-        if (allownessModules.Length > 1) startnew(OnMapLoadWrapper1);
+        if (allownessModules.Length > 0) startnew(InitializeWrapper0);
+        if (allownessModules.Length > 1) startnew(InitializeWrapper1);
     }
-    void OnMapLoadWrapper0() { allownessModules[0].OnMapLoad(); }
-    void OnMapLoadWrapper1() { allownessModules[1].OnMapLoad(); }
+    void InitializeWrapper0() { allownessModules[0].Initialize(); }
+    void InitializeWrapper1() { allownessModules[1].Initialize(); }
 
 
     bool ConditionCheckMet() {
@@ -67,6 +67,10 @@ namespace GamemodeAllowness {
     class GamemodeAllownessCheck : AllowCheck::IAllownessCheck {
         bool isAllowed = false;
         
+        void Initialize() {
+            OnMapLoad();
+        }
+
         void OnMapLoad() {
             auto net = cast<CGameCtnNetwork>(GetApp().Network);
             if (net is null) return;
@@ -124,6 +128,10 @@ namespace MapcommentAllowness {
     class MapcommentAllownessCheck : AllowCheck::IAllownessCheck {
         bool isAllowed = false;
         string disallowReason = "";
+
+        void Initialize() {
+            OnMapLoad();
+        }
 
         void OnMapLoad() {
             auto app = cast<CGameManiaPlanet>(GetApp());
