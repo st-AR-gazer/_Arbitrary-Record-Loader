@@ -119,7 +119,7 @@ namespace CurrentMapRecords {
         void FetchSurroundingRecords() {
             if (!medalExists) return;
 
-            string url = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/" + get_CurrentMap() + "/surround/1/1?score=" + currentMapMedalTime;
+            string url = "https://live-services.trackmania.nadeo.live/api/token/leaderboard/group/Personal_Best/map/" + get_CurrentMapUID() + "/surround/1/1?score=" + currentMapMedalTime;
             auto req = NadeoServices::Get("NadeoLiveServices", url);
             req.Start();
 
@@ -184,7 +184,7 @@ namespace CurrentMapRecords {
                 medalHasExactMatch = exactMatchFound;
 
                 log("Closest record found: score = " + closestScore + ", accountId = " + closestAccountId + ", position = " + closestPosition + ", difference = " + timeDifference, LogLevel::Info, 186, "FetchSurroundingRecords");
-                LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), tostring(closestPosition - 1), "Medal", closestAccountId);
+                LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMapUID(), tostring(closestPosition - 1), "Medal", closestAccountId);
             }
 
             reqForCurrentMapFinished = true;

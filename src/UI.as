@@ -427,7 +427,7 @@ void RenderTab_OtherSpecificUIDs() {
 //////////////////// Render Load Ghost from Map Tab /////////////////////
 
 string ghostPosition;
-
+string mapUID;
 void RenderTab_LoadGhostFromMap() {
 
     UI::Separator();
@@ -436,7 +436,7 @@ void RenderTab_LoadGhostFromMap() {
     UI::Separator();
 
     if (UI::Button("Set MapUID to current map")) {
-        mapUID = get_CurrentMap();
+        mapUID = get_CurrentMapUID();
     }
     UI::SameLine();
     if (UI::Button("Set Ghost Position to top 1")) {

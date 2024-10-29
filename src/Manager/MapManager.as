@@ -1,44 +1,43 @@
-string s_currMap = "";
-bool mapRecordsLoaded = false;
-string mapUID = "";
+namespace MapTracker {
+    string oldMapUid = "";
 
-string s_currMapName = "";
-string mapName;
+    [Setting category="General" name="Enable Ghosts" hidden]
+    bool enableGhosts = true;
 
-[Setting category="General" name="Enable Ghosts" hidden]
-bool g_enableGhosts = true;
+    void MapMonitor() {
+        while (true) {    
+            sleep(273);
 
-void MapCoro() {
-    while(true) {    
-        sleep(273);
-        if (!g_enableGhosts) continue;
-        if (s_currMap != CurrentMap) {
-            s_currMap = CurrentMap;
-            s_currMapName = CurrentMapName;
-            mapRecordsLoaded = false;
+            if (!enableGhosts) continue;
 
-            CurrentMapRecords::ValidationReplay::OnMapLoad();
-            startnew(CoroutineFunc(champMedal.OnMapLoad));
-            startnew(CoroutineFunc(warriorMedal.OnMapLoad));
-            startnew(CoroutineFunc(sbVilleMedal.OnMapLoad));
-            // CurrentMapRecords::GPS::OnMapLoad();
+            if (HasMapChanged()) {
+                AllowCheck::InitializeAllowCheck();
 
-            AllowCheck::Chester::OnMapLoad();
-            AllowCheck::MapCommentCheck::OnMapLoad();
 
-            if (!mapRecordsLoaded) {
-                // ReplayLoader::LoadReplayAfterFileExplorer();
-                mapRecordsLoaded = true;
-                mapUID = s_currMap;
-                mapName = s_currMapName;
-            }
+                uint timeout = 10000;
+                uint startTime = Time::Now;
+                while (!AllowCheck::ConditionCheckMet()) {
+                    if (Time::Now - startTime > timeout) { NotifyWarn("Condition check timed out ("+timeout+" ms was given), assuming invalid state."); break; }
+                    yield();
+                }
 
-            RecordManager::GhostTracker::Init();
+                CurrentMapRecords::ValidationReplay::OnMapLoad();
+                    startnew(CoroutineFunc(champMedal.OnMapLoad));
+                    startnew(CoroutineFunc(warriorMedal.OnMapLoad));
+                    startnew(CoroutineFunc(sbVilleMedal.OnMapLoad));
+                    // CurrentMapRecords::GPS::OnMapLoad();
+                }
+
+            if (HasMapChanged()) oldMapUid = get_CurrentMapUID();
         }
+    }
+
+    bool HasMapChanged() {
+        return oldMapUid != get_CurrentMapUID();
     }
 }
 
-string get_CurrentMap() {
+string get_CurrentMapUID() {
     if (_Game::IsMapLoaded()) {
         CTrackMania@ app = cast<CTrackMania>(GetApp());
         if (app is null) return "";

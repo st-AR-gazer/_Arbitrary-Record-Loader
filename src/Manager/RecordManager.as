@@ -335,12 +335,12 @@ void Coro_ProcessSelectedFile(const string &in filePath) {
         fileExt = properFileExtension.ToLower();
     }
 
-    while (!AllowCheck::ConditionCheckMet()) { yield(); }
+    // while (!AllowCheck::ConditionCheckMet()) { yield(); }
 
-    if (!AllowCheck::AllowdToLoadRecords()) {
-        NotifyWarn("Error | Not allowed to load records due to either map comment, or current game mode.");
-        return;
-    }
+    // if (!AllowCheck::AllowdToLoadRecords()) {
+    //     NotifyWarn("Error | Not allowed to load records due to either map comment, or current game mode.");
+    //     return;
+    // }
 
     if (fileExt == "replay") {
         ReplayLoader::LoadReplayFromPath(filePath);

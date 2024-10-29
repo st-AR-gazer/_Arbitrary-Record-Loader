@@ -9,7 +9,7 @@ void Main() {
     OfficialManager::UI::Init();
     OtherManager::CDN::Init();
 
-    startnew(MapCoro);
+    startnew(MapTracker::MapMonitor);
 }
 
 void InitApi() {

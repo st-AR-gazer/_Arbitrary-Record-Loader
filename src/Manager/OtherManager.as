@@ -163,11 +163,11 @@ namespace OtherManager {
 
         void UpdateBlockedGamemodes(Json::Value &manifest) {
             if (manifest.HasKey("blockedGamemodeList")) {
-                GameModeBlackList.RemoveRange(0, GameModeBlackList.Length);
+                GamemodeAllowness::GameModeBlackList.RemoveRange(0, GamemodeAllowness::GameModeBlackList.Length);
 
                 Json::Value blockedList = manifest["blockedGamemodeList"];
                 for (uint i = 0; i < blockedList.Length; i++) {
-                    GameModeBlackList.InsertLast(blockedList[i]);
+                    GamemodeAllowness::GameModeBlackList.InsertLast(blockedList[i]);
                 }
 
                 log("Blocked gamemodes updated.", LogLevel::Info, 173, "UpdateBlockedGamemodes");

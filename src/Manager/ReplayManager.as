@@ -37,6 +37,12 @@ namespace ReplayLoader {
             log(tostring(task.Ghosts.Length), LogLevel::Info, 48, "LoadReplayFromPath");
         }
 
+        uint timeout = 15000;
+        uint startTime = Time::Now;
+        while (cast<CSmArenaRulesMode@>(GetApp().PlaygroundScript).GhostMgr is null) {
+            if (Time::Now - startTime > timeout) { return; }
+            yield();
+        }
 
         auto ghostMgr = cast<CSmArenaRulesMode@>(GetApp().PlaygroundScript).GhostMgr;
         for (uint i = 0; i < task.Ghosts.Length; i++) {

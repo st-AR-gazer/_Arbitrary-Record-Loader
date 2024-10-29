@@ -8,7 +8,7 @@ namespace GhostLoader {
             string destinationPath = _destonationPath + fileName;
             log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, 9, "LoadGhost");
             _IO::File::CopyFileTo(filePath, destinationPath);
-            LoadGhostFromUrl(Server::HTTP_BASE_URL + "get_ghost/" + Net::UrlEncode(fileName));
+            LoadGhostFromUrl(Server::HTTP_BASE_URL + "get_ghost/" + fileName);
         } else {
             NotifyError("Unsupported file type.");
         }
@@ -19,16 +19,22 @@ namespace GhostLoader {
         startnew(LoadGhostFromUrlAsync, url);
     }
 
+
+
+
+
+
     void LoadGhostFromUrlAsync(const string &in url) {
-        auto ps = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript);
-        if (ps is null) { log("PlaygroundScript is null, you might not be in a playground", LogLevel::Error, 24, "LoadGhostFromUrlAsync"); return; }
+
+        // string url = "http://127.0.0.1:29907/get_ghost/7fc3d8601cbea5eda5bd56da29db7cb1";
+        // string url = "https://trackmania.io/api/download/ghost/78b3aabf-0a2b-4b9f-b98d-9d748f0b2b5a";
 
 
 
 
         // Net::HttpRequest req;
         // req.Method = Net::HttpMethod::Get;
-        // req.Url = "http://127.0.0.1:29918/get_ghost/file.ghost.gbx";
+        // req.Url = url;
         // req.Start();
 
         // while (!req.Finished()) {
@@ -40,11 +46,13 @@ namespace GhostLoader {
         
         // return;
 
-        print(url);
+        // print(url);
 
 
+        auto ps = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript);
         CGameDataFileManagerScript@ dfm = ps.DataFileMgr;
-        CWebServicesTaskResult_GhostScript@ task = dfm.Ghost_Download("file.ghost.gbx", "http://127.0.0.1:29918/get_ghost/file.ghost.gbx");
+        CWebServicesTaskResult_GhostScript@ task = dfm.Ghost_Download("", url);
+        // CWebServicesTaskResult_GhostScript@ task = dfm.Ghost_Download("file.ghost.gbx", "http://127.0.0.1:29907/get_ghost/b78c5da5fe566324e9e60729380b9b8a.ghost.gbx");
 
         while (task.IsProcessing) {
             yield();

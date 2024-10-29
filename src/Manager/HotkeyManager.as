@@ -118,17 +118,17 @@ namespace HotkeyManager {
 
     void ExecuteHotkeyAction(Hotkey@ hotkey) {
         if (hotkey.action == "Load top 1 time") {
-            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), "0", "AnyMap");
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMapUID(), "0", "AnyMap");
         } else if (hotkey.action == "Load top 2 time") {
-            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), "1", "AnyMap");
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMapUID(), "1", "AnyMap");
         } else if (hotkey.action == "Load top 3 time") {
-            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), "2", "AnyMap");
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMapUID(), "2", "AnyMap");
         } else if (hotkey.action == "Load top 4 time") {
-            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), "3", "AnyMap");
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMapUID(), "3", "AnyMap");
         } else if (hotkey.action == "Load top 5 time") {
-            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), "4", "AnyMap");
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMapUID(), "4", "AnyMap");
         } else if (hotkey.action == "Load X time" && hotkey.extraValue > 0) {
-            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMap(), tostring(hotkey.extraValue - 1), "AnyMap");
+            LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMapUID(), tostring(hotkey.extraValue - 1), "AnyMap");
         } else if (hotkey.action == "Open/Close Interface") {
             S_windowOpen = !S_windowOpen;
         } else if (hotkey.action == "Open Interface") {
