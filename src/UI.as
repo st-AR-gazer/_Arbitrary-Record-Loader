@@ -557,6 +557,19 @@ void RenderTab_CurrentMapGhost() {
 
     UI::Separator();
 
+    UI::Text("\\$0cf" + "Load PB Ghost");
+#if ARCHIVIST
+    if (UI::Button(Icons::UserPlus + " Load PB Ghost")) {
+        // CurrentMapRecords::PersonalBest::LoadPB();
+    }
+#else
+    _UI::SimpleTooltip(Icons::UserPlus + " Archivist is required for this feature.");
+    _UI::DisabledButton(Icons::UserPlus + " Load PB Ghost");
+#endif
+
+
+    UI::Separator();
+
     UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles, this will not be possible for maps older than October 1st 2022");
 
 

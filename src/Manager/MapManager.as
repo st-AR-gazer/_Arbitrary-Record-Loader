@@ -23,7 +23,6 @@ namespace MapTracker {
                     conditionMet = AllowCheck::ConditionCheckMet();
                 }
                 if (AllowCheck::ConditionCheckMet()) {
-                    print("aaaaaaaaaaaaaaaaaa it worked");
                     // 
 
                     CurrentMapRecords::ValidationReplay::OnMapLoad();
