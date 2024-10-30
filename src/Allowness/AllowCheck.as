@@ -3,36 +3,38 @@ namespace AllowCheck {
         void Initialize();
         bool IsConditionMet();
         string GetDisallowReason();
+        bool IsInitialized();
     }
 
     array<IAllownessCheck@> allownessModules;
+    bool isInitializing = false;
 
     void InitializeAllowCheck() {
+        if (isInitializing) { return; }
+        isInitializing = true;
+
+        while (allownessModules.Length > 0) {allownessModules.RemoveLast();}
+
         allownessModules.InsertLast(GamemodeAllowness::CreateInstance());
         allownessModules.InsertLast(MapcommentAllowness::CreateInstance());
 
-        if (allownessModules.Length > 0) startnew(InitializeWrapper0);
-        if (allownessModules.Length > 1) startnew(InitializeWrapper1);
+        startnew(InitializeAllModules);
     }
-    void InitializeWrapper0() { allownessModules[0].Initialize(); }
-    void InitializeWrapper1() { allownessModules[1].Initialize(); }
 
+    void InitializeAllModules() {
+        for (uint i = 0; i < allownessModules.Length; i++) { allownessModules[i].Initialize(); }
+        isInitializing = false;
+    }
 
     bool ConditionCheckMet() {
+        bool allMet = true;
         for (uint i = 0; i < allownessModules.Length; i++) {
-            if (!allownessModules[i].IsConditionMet()) {
-                return false;
-            }
+            auto module = allownessModules[i];
+            bool initialized = module.IsInitialized();
+            bool condition = module.IsConditionMet();
+            if (!initialized || !condition) { allMet = false; }
         }
-        return true;
-    }
-
-    bool AllowedToLoadRecords() {
-        if (!ConditionCheckMet()) {
-            log("Not all conditions have been checked or passed, records cannot be loaded.", LogLevel::Warn, 20, "AllowedToLoadRecords");
-            return false;
-        }
-        return true;
+        return allMet;
     }
 
     string DissalowReason() {
@@ -66,10 +68,17 @@ namespace GamemodeAllowness {
 
     class GamemodeAllownessCheck : AllowCheck::IAllownessCheck {
         bool isAllowed = false;
+        bool initialized = false;
         
         void Initialize() {
             OnMapLoad();
+            initialized = true;
         }
+        bool IsInitialized() { return initialized; }
+        bool IsConditionMet() { return isAllowed; }
+        string GetDisallowReason() { return isAllowed ? "" : "You cannot load maps in the blacklisted game mode."; }
+
+        // 
 
         void OnMapLoad() {
             auto net = cast<CGameCtnNetwork>(GetApp().Network);
@@ -86,15 +95,9 @@ namespace GamemodeAllowness {
             }
         }
 
-        bool IsConditionMet() { return isAllowed; }
-
-        string GetDisallowReason() {
-            return isAllowed ? "" : "You cannot load maps in the blacklisted game mode.";
-        }
-
         bool IsBlacklisted(const string &in mode) {
             return GameModeBlackList.Find(mode) >= 0;
-        }
+        }        
     }
 
     AllowCheck::IAllownessCheck@ CreateInstance() {
@@ -128,91 +131,140 @@ namespace MapcommentAllowness {
     class MapcommentAllownessCheck : AllowCheck::IAllownessCheck {
         bool isAllowed = false;
         string disallowReason = "";
+        bool initialized = false;
 
         void Initialize() {
             OnMapLoad();
+            initialized = true;
         }
+        bool IsInitialized() { return initialized; }
+        bool IsConditionMet() { return isAllowed; }
+        string GetDisallowReason() { return isAllowed ? "" : disallowReason; }
+
+        // void OnMapLoad() {
+        //     isAllowed = true;
+        // }
+
+        // This doesn't properly check for anything Arena is always null 
 
         void OnMapLoad() {
             auto app = cast<CGameManiaPlanet>(GetApp());
             auto map = app.RootMap;
-            if (map is null) return;
-
-            MapperSetting setting = DetermineMapperSetting(map);
-
-            switch (setting) {
-                case MapperSetting::Hide:
-                    log("Map loading disabled due to ARL Hide setting.", LogLevel::Warn, 138, "OnMapLoad");
-                    isAllowed = false;
-                    disallowReason = "Map loading disabled due to ARL Hide setting.";
-                    break;
-
-                case MapperSetting::HideUCI:
-                    log("Map loading disabled due to UCI Hide setting.", LogLevel::Warn, 143, "OnMapLoad");
-                    isAllowed = false;
-                    disallowReason = "Map loading disabled due to UCI Hide setting.";
-                    break;
-
-                case MapperSetting::Order:
-                case MapperSetting::Xdd:
-                case MapperSetting::None:
-                default:
-                    isAllowed = true;
-                    disallowReason = "";
-                    break;
+            if (map is null) {
+                log("MapcommentAllownessCheck: Map is null in OnMapLoad.", LogLevel::Warn, 201, "OnMapLoad");
+                isAllowed = false;
+                disallowReason = "Map is null.";
+                return;
             }
+
+            return;
+
+            // MapperSetting setting = DetermineMapperSetting(map);
+            // log("MapcommentAllownessCheck: MapperSetting determined as " + EnumToString(setting), LogLevel::Info, 202, "OnMapLoad");
+
+            // switch (setting) {
+            //     case MapperSetting::Hide:
+            //         log("MapcommentAllownessCheck: Map loading disabled due to ARL Hide setting.", LogLevel::Warn, 203, "OnMapLoad");
+            //         isAllowed = false;
+            //         disallowReason = "Map loading disabled due to ARL Hide setting.";
+            //         break;
+
+            //     case MapperSetting::HideUCI:
+            //         log("MapcommentAllownessCheck: Map loading disabled due to UCI Hide setting.", LogLevel::Warn, 204, "OnMapLoad");
+            //         isAllowed = false;
+            //         disallowReason = "Map loading disabled due to UCI Hide setting.";
+            //         break;
+
+            //     case MapperSetting::Order:
+            //     case MapperSetting::Xdd:
+            //     case MapperSetting::None:
+            //         log("MapcommentAllownessCheck: Map loading allowed.", LogLevel::Info, 205, "OnMapLoad");
+            //         isAllowed = true;
+            //         disallowReason = "";
+            //         break;
+
+            //     default:
+            //         log("MapcommentAllownessCheck: Unknown MapperSetting. Defaulting to disallow.", LogLevel::Warn, 206, "OnMapLoad");
+            //         isAllowed = false;
+            //         disallowReason = "Unknown MapperSetting.";
+            //         break;
+            // }
+
+            // log("MapcommentAllownessCheck: isAllowed set to " + (isAllowed ? "true" : "false"), LogLevel::Info, 207, "OnMapLoad");
         }
 
-        bool IsConditionMet() {
-            return isAllowed;
-        }
+        // MapperSetting DetermineMapperSetting(CGameCtnChallenge@ map) {
+        //     string comment = string(map.Comments).ToLower();
 
-        string GetDisallowReason() {
-            return isAllowed ? "" : disallowReason;
-        }
+        //     if (comment.Contains("/arl hide")) {
+        //         return MapperSetting::Hide;
+        //     }
+        //     else if (comment.Contains("/uci hide")) {
+        //         return MapperSetting::HideUCI;
+        //     } 
+        //     else if (comment.Contains("/uci order")) {
+        //         return MapperSetting::Order;
+        //     } 
+        //     else if (comment.Contains("/uci xdd")) {
+        //         return MapperSetting::Xdd;
+        //     }
 
-        MapperSetting DetermineMapperSetting(CGameCtnChallenge@ map) {
-            if (map is null) return MapperSetting::None;
-            string comment = string(map.Comments).ToLower();
+        //     auto app = cast<CGameManiaPlanet>(GetApp());
+        //     auto arena = cast<CSmArena>(app.CurrentPlayground);
+        //     if (arena is null) {
+        //         log("MapcommentAllownessCheck: Arena is null. Returning MapperSetting::None.", LogLevel::Warn, 106, "DetermineMapperSetting");
+        //         return MapperSetting::None;
+        //     }
 
-            if (comment.Contains("/arl hide")) {
-                return MapperSetting::Hide;
-            }
-            else if (comment.Contains("/uci hide")) {
-                return MapperSetting::HideUCI;
-            } else if (comment.Contains("/uci order")) {
-                return MapperSetting::Order;
-            } else if (comment.Contains("/uci xdd")) {
-                return MapperSetting::Xdd;
-            }
+        //     uint startOrder = 0;
+        //     for (uint i = 0; i < arena.MapLandmarks.Length; i++) {
+        //         auto lm = arena.MapLandmarks[i];
+        //         if (lm.Waypoint is null && lm.Order > 65535) {
+        //             startOrder = lm.Order;
+        //             log("MapcommentAllownessCheck: Found landmark with Order > 65535 without Waypoint. Order: " + startOrder, LogLevel::Info, 107, "DetermineMapperSetting");
+        //             break;
+        //         }
+        //         if (lm.Waypoint is null) continue;
+        //         if (lm.Waypoint.IsMultiLap && lm.Order > 65535) {
+        //             startOrder = lm.Order;
+        //             log("MapcommentAllownessCheck: Found multi-lap landmark with Order > 65535. Order: " + startOrder, LogLevel::Info, 108, "DetermineMapperSetting");
+        //             continue;
+        //         }
+        //     }
 
-            auto app = cast<CGameManiaPlanet>(GetApp());
-            auto arena = cast<CSmArena>(app.CurrentPlayground);
-            if (arena is null) return MapperSetting::None;
+        //     if (startOrder > 65530) {
+        //         if (startOrder == 65531) {
+        //             log("MapcommentAllownessCheck: Determined setting = Hide based on startOrder.", LogLevel::Info, 109, "DetermineMapperSetting");
+        //             return MapperSetting::Hide;
+        //         }
+        //         if (startOrder == 65537) {
+        //             log("MapcommentAllownessCheck: Determined setting = HideUCI based on startOrder.", LogLevel::Info, 110, "DetermineMapperSetting");
+        //             return MapperSetting::HideUCI;
+        //         }
+        //         if (startOrder == 65536) {
+        //             log("MapcommentAllownessCheck: Determined setting = Order based on startOrder.", LogLevel::Info, 111, "DetermineMapperSetting");
+        //             return MapperSetting::Order;
+        //         }
+        //         if (startOrder == 65539) {
+        //             log("MapcommentAllownessCheck: Determined setting = Xdd based on startOrder.", LogLevel::Info, 112, "DetermineMapperSetting");
+        //             return MapperSetting::Xdd;
+        //         }
+        //     }
 
-            uint startOrder = 0;
-            for (uint i = 0; i < arena.MapLandmarks.Length; i++) {
-                auto lm = arena.MapLandmarks[i];
-                if (lm.Waypoint is null && lm.Order > 65535) {
-                    startOrder = lm.Order;
-                    break;
-                }
-                if (lm.Waypoint is null) continue;
-                if (lm.Waypoint.IsMultiLap && lm.Order > 65535) {
-                    startOrder = lm.Order;
-                    continue;
-                }
-            }
+        //     log("MapcommentAllownessCheck: Determined setting = None.", LogLevel::Info, 113, "DetermineMapperSetting");
+        //     return MapperSetting::None;
+        // }
 
-            if (startOrder > 65530) {
-                if (startOrder == 65531) return MapperSetting::Hide;
-                if (startOrder == 65537) return MapperSetting::HideUCI;
-                if (startOrder == 65536) return MapperSetting::Order;
-                if (startOrder == 65539) return MapperSetting::Xdd;
-            }
-
-            return MapperSetting::None;
-        }
+        // string EnumToString(MapperSetting setting) {
+        //     switch (setting) {
+        //         case MapperSetting::Hide: return "Hide";
+        //         case MapperSetting::HideUCI: return "HideUCI";
+        //         case MapperSetting::Order: return "Order";
+        //         case MapperSetting::Xdd: return "Xdd";
+        //         case MapperSetting::None: return "None";
+        //         default: return "Unknown";
+        //     }
+        // }
     }
 
     AllowCheck::IAllownessCheck@ CreateInstance() {

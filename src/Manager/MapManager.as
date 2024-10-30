@@ -11,22 +11,23 @@ namespace MapTracker {
             if (!enableGhosts) continue;
 
             if (HasMapChanged()) {
-                AllowCheck::InitializeAllowCheck();
-
-
-                uint timeout = 10000;
+                uint timeout = 500;
                 uint startTime = Time::Now;
-                while (!AllowCheck::ConditionCheckMet()) {
-                    if (Time::Now - startTime > timeout) { NotifyWarn("Condition check timed out ("+timeout+" ms was given), assuming invalid state."); break; }
-                    yield();
-                }
+                AllowCheck::InitializeAllowCheck();
+                bool conditionMet = AllowCheck::ConditionCheckMet();
+                while (!conditionMet) { if (Time::Now - startTime > timeout) { NotifyWarn("Condition check timed out ("+timeout+" ms was given), assuming invalid state."); break; } yield(); }
+                if (AllowCheck::ConditionCheckMet()) {
 
-                CurrentMapRecords::ValidationReplay::OnMapLoad();
+                    CurrentMapRecords::ValidationReplay::OnMapLoad();
                     startnew(CoroutineFunc(champMedal.OnMapLoad));
                     startnew(CoroutineFunc(warriorMedal.OnMapLoad));
                     startnew(CoroutineFunc(sbVilleMedal.OnMapLoad));
                     // CurrentMapRecords::GPS::OnMapLoad();
+                    
+                } else {
+                    NotifyWarn("Map is not allowed to load records: " + AllowCheck::DissalowReason());
                 }
+            }
 
             if (HasMapChanged()) oldMapUid = get_CurrentMapUID();
         }
