@@ -11,18 +11,28 @@ namespace MapTracker {
             if (!enableGhosts) continue;
 
             if (HasMapChanged()) {
-                uint timeout = 500;
+                while (!_Game::IsPlayingMap()) yield();
+
+                uint timeout = 10000;
                 uint startTime = Time::Now;
                 AllowCheck::InitializeAllowCheck();
-                bool conditionMet = AllowCheck::ConditionCheckMet();
-                while (!conditionMet) { if (Time::Now - startTime > timeout) { NotifyWarn("Condition check timed out ("+timeout+" ms was given), assuming invalid state."); break; } yield(); }
+                bool conditionMet = false;
+                while (!conditionMet) { 
+                    if (Time::Now - startTime > timeout) { NotifyWarn("Condition check timed out ("+timeout+" ms was given), assuming invalid state."); break; }
+                    yield(); 
+                    conditionMet = AllowCheck::ConditionCheckMet();
+                }
                 if (AllowCheck::ConditionCheckMet()) {
+                    print("aaaaaaaaaaaaaaaaaa it worked");
+                    // 
 
                     CurrentMapRecords::ValidationReplay::OnMapLoad();
                     startnew(CoroutineFunc(champMedal.OnMapLoad));
                     startnew(CoroutineFunc(warriorMedal.OnMapLoad));
                     startnew(CoroutineFunc(sbVilleMedal.OnMapLoad));
                     // CurrentMapRecords::GPS::OnMapLoad();
+                    
+                    // 
                     
                 } else {
                     NotifyWarn("Map is not allowed to load records: " + AllowCheck::DissalowReason());

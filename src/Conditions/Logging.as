@@ -107,3 +107,9 @@ void log(const string &in msg, LogLevel level = LogLevel::Info, int line = -1, s
         }
     }
 }
+
+#if DEV
+bool v_log = true;
+#else
+bool v_log = false;
+#endif
