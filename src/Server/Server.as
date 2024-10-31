@@ -5,31 +5,31 @@ namespace Server {
     const string HTTP_BASE_URL = "http://" + HOSTNAME + ":" + PORT + "/";
 
 
-    const string serverDirectory = IO::FromUserGameFolder("Server/");
+    const string serverDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/");
     
-    const string serverDirectoryAutoMove = IO::FromUserGameFolder("Server/AutoMove/");
+    const string serverDirectoryAutoMove = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/AutoMove/");
     
-    const string savedFilesDirectory = IO::FromUserGameFolder("Server/Saved/Files/");
-    const string savedJsonDirectory = IO::FromUserGameFolder("Server/Saved/JsonData/");
+    const string savedFilesDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Saved/Files/");
+    const string savedJsonDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Saved/JsonData/");
     
-    const string currentMapRecords = IO::FromUserGameFolder("Server/CurrentMapRecords/");
-    const string currentMapRecordsValidationReplay = IO::FromUserGameFolder("Server/CurrentMapRecords/ValidationReplay/");
-    const string currentMapRecordsGPS = IO::FromUserGameFolder("Server/CurrentMapRecords/GPS/");
-    const string currentMapRecordsChampionMedal = IO::FromUserGameFolder("Server/CurrentMapRecords/ChampionMedal/");
+    const string currentMapRecords = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/CurrentMapRecords/");
+    const string currentMapRecordsValidationReplay = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/CurrentMapRecords/ValidationReplay/");
+    const string currentMapRecordsGPS = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/CurrentMapRecords/GPS/");
+    const string currentMapRecordsChampionMedal = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/CurrentMapRecords/ChampionMedal/");
 
-    const string serverDirectoryMedal = IO::FromUserGameFolder("Server/Medal/");
+    const string serverDirectoryMedal = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Medal/");
 
-    const string specificDownloaded = IO::FromUserGameFolder("Server/Downloaded/");
-    const string specificDownloadedFilesDirectory = IO::FromUserGameFolder("Server/Downloaded/Files/");
-    const string specificDownloadedJsonFilesDirectory = IO::FromUserGameFolder("Server/Downloaded/JsonData/");
-    const string specificDownloadedCreatedProfilesDirectory = IO::FromUserGameFolder("Server/Downloaded/CreatedProfiles/");
+    const string specificDownloaded = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Downloaded/");
+    const string specificDownloadedFilesDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Downloaded/Files/");
+    const string specificDownloadedJsonFilesDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Downloaded/JsonData/");
+    const string specificDownloadedCreatedProfilesDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Downloaded/CreatedProfiles/");
 
-    const string linksDirectory = IO::FromUserGameFolder("Server/Links/");
-    const string linksFilesDirectory = IO::FromUserGameFolder("Server/Links/Files/");
+    const string linksDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Links/");
+    const string linksFilesDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Links/Files/");
 
-    const string officialFilesDirectory = IO::FromUserGameFolder("Server/Official/Files/");
-    const string officialInfoFilesDirectory = IO::FromUserGameFolder("Server/Official/Info/");
-    const string officialJsonFilesDirectory = IO::FromUserGameFolder("Server/Official/JsonData/");
+    const string officialFilesDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Official/Files/");
+    const string officialInfoFilesDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Official/Info/");
+    const string officialJsonFilesDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Official/JsonData/");
 
     const string replayARL = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/");
     const string replayARLTmp = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Tmp/");
@@ -67,7 +67,7 @@ namespace Server {
         try {
             auto key = Net::UrlDecode(route.Replace("/get_ghost/", ""));
             log('loading ghost: ' + key, LogLevel::Info, 69, "StartHttpServer");
-            string filePath = serverDirectory + key;
+            string filePath = serverDirectoryAutoMove + key;
             if (!IO::FileExists(filePath)) return _404_Response;
             auto buf = _IO::File::ReadFileToEnd(filePath);
             log('got buf: ' + buf.Length, LogLevel::Info, 73, "StartHttpServer");
@@ -160,7 +160,7 @@ namespace Server {
             try {
                 socket.Close();
             } catch {}
-            log("Server shut down.");
+            log("Server shut down.", LogLevel::Info, 163, "Shutdown");
         }
 
         void StartServer() {
@@ -171,18 +171,18 @@ namespace Server {
                 throw("Cannot start HTTP server twice.");
             }
             @socket = Net::Socket();
-            log("Starting server: " + host + ":" + port);
+            log("Starting server: " + host + ":" + port, LogLevel::Info, 174, "StartServer");
             if (!socket.Listen(host, port)) {
                 SetError("failed to start listening");
                 return;
             }
             state = ServerState::Running;
-            log("Server running.");
+            log("Server running.", LogLevel::Info, 180, "StartServer");
             startnew(CoroutineFunc(this.AcceptConnections));
         }
 
         protected void SetError(const string &in errMsg) {
-            log('HttpServer terminated with error: ' + errMsg, LogLevel::Error);
+            log('HttpServer terminated with error: ' + errMsg, LogLevel::Error, 185, "SetError");
             state = ServerState::Error;
             try {
                 socket.Close();
@@ -195,7 +195,7 @@ namespace Server {
                 yield();
                 auto client = socket.Accept();
                 if (client is null) continue;
-                log("Accepted new client // Remote: " + client.GetRemoteIP());
+                log("Accepted new client // Remote: " + client.GetRemoteIP(), LogLevel::Info, 198, "AcceptConnections");
                 startnew(CoroutineFuncUserdata(this.RunClient), client);
             }
         }
@@ -206,32 +206,32 @@ namespace Server {
             uint clientStarted = Time::Now;
             while (Time::Now - clientStarted < 10000 && client.Available() == 0) yield();
             if (client.Available() == 0) {
-                log("Timing out client: " + client.GetRemoteIP());
+                log("Timing out client: " + client.GetRemoteIP(), LogLevel::Info, 209, "RunClient");
                 client.Close();
                 return;
             }
             RunRequest(client);
-            log("Closing client.");
+            log("Closing client.", LogLevel::Info, 214, "RunClient");
             client.Close();
         }
 
         protected void RunRequest(Net::Socket@ client) {
             string reqLine;
             if (!client.ReadLine(reqLine)) {
-                log("RunRequest: could not read first line!", LogLevel::Warn);
+                log("RunRequest: could not read first line!", LogLevel::Warn, 221, "RunRequest");
                 return;
             }
             reqLine = reqLine.Trim();
             auto reqParts = reqLine.Split(" ", 3);
-            log("RunRequest got first line: " + reqLine + " (parts: " + reqParts.Length + ")");
+            log("RunRequest got first line: " + reqLine + " (parts: " + reqParts.Length + ")", LogLevel::Info, 226, "RunRequest");
             auto headers = ParseHeaders(client);
-            log("Got " + headers.GetSize() + " headers.");
+            log("Got " + headers.GetSize() + " headers.", LogLevel::Info, 228, "RunRequest");
             // auto headerKeys = headers.GetKeys();
             auto reqType = reqParts[0];
             auto reqRoute = reqParts[1];
             auto httpVersion = reqParts[2];
             if (!httpVersion.StartsWith("HTTP/1.")) {
-                log("Unsupported HTTP version: " + httpVersion, LogLevel::Warn);
+                log("Unsupported HTTP version: " + httpVersion, LogLevel::Warn, 234, "RunRequest");
                 return;
             }
             string data;
@@ -240,13 +240,13 @@ namespace Server {
                 data = client.ReadRaw(len);
             }
             if (client.Available() > 0) {
-                log("After reading headers and body there are " + client.Available() + " bytes remaining!", LogLevel::Warn);
+                log("After reading headers and body there are " + client.Available() + " bytes remaining!", LogLevel::Warn, 243, "RunRequest");
             }
             HttpResponse@ resp = HttpResponse();
             try {
                 @resp = RequestHandler(reqType, reqRoute, headers, data);
             } catch {
-                log("Exception in RequestHandler: " + getExceptionInfo(), LogLevel::Error);
+                log("Exception in RequestHandler: " + getExceptionInfo(), LogLevel::Error, 249, "RunRequest");
                 resp.status = 500;
                 resp.body = "Exception: " + getExceptionInfo();
             }
@@ -255,7 +255,7 @@ namespace Server {
             fullResponse += "\r\n\r\n" + resp.body;
             auto respBuf = MemoryBuffer();
             respBuf.Write(fullResponse);
-            log("Response: " + fullResponse, LogLevel::_);
+            log("Response: " + fullResponse, LogLevel::_, 258, "RunRequest");
             if (resp._buf !is null) {
                 resp._buf.Seek(0);
                 respBuf.WriteFromBuffer(resp._buf, resp._buf.GetSize());
@@ -264,8 +264,8 @@ namespace Server {
             // client.WriteRaw(fullResponse);
             respBuf.Seek(0);
             client.Write(respBuf, respBuf.GetSize());
-            log("["+Time::Stamp + " | " + client.GetRemoteIP()+"] " + reqType + " " + reqRoute + " " + resp.status);
-            log("Completed request.");
+            log("["+Time::Stamp + " | " + client.GetRemoteIP()+"] " + reqType + " " + reqRoute + " " + resp.status, LogLevel::Info, 267, "RunRequest");
+            log("Completed request.", LogLevel::Info, 268, "RunRequest");
         }
 
         protected dictionary@ ParseHeaders(Net::Socket@ client) {
@@ -285,13 +285,13 @@ namespace Server {
         protected void AddHeader(dictionary@ d, const string &in line) {
             auto parts = line.Split(":", 2);
             if (parts.Length < 2) {
-                log("Header line failed to parse: " + line + " // " + parts[0], LogLevel::Warn);
+                log("Header line failed to parse: " + line + " // " + parts[0], LogLevel::Warn, 288, "AddHeader");
             } else {
                 d[parts[0]] = parts[1];
                 if (parts[0].ToLower().Contains("authorization")) {
                     parts[1] = "<auth omitted>";
                 }
-                log("Parsed header line: " + parts[0] + ": " + parts[1]);
+                log("Parsed header line: " + parts[0] + ": " + parts[1], LogLevel::Info, 294, "AddHeader");
             }
         }
     }

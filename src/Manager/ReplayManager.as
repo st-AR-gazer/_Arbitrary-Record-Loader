@@ -3,16 +3,16 @@ namespace ReplayLoader {
         if (!_Game::IsPlayingMap()) { NotifyWarn("You are currently not playing a map! Please load a map in a playing state first!"); return; }
 
         if (!path.Contains("Trackmania") || !path.Contains("Trackmania2020")) {
-            log("The replay file is located in the Trackmania folder, moving to the replay folder to load it.", LogLevel::Warn, 12, "LoadReplayFromPath");
+            log("The replay file is located in the Trackmania folder, moving to the replay folder to load it.", LogLevel::Warn, 6, "LoadReplayFromPath");
             NotifyWarn("The replay file is located in the Trackmania folder, moving to the replay folder to load it.");
             _IO::File::CopyFileTo(path, Server::replayARLAutoMove + Path::GetFileName(path));
             if (!IO::FileExists(Server::replayARLAutoMove + Path::GetFileName(path))) {
                 NotifyError("Failed to move replay file to the target directory!");
-                log("Failed to move replay file to the target directory!", LogLevel::Error, 15, "LoadReplayFromPath");
+                log("Failed to move replay file to the target directory!", LogLevel::Error, 11, "LoadReplayFromPath");
                 return;
             }
         } else {
-            log("Moving the replay file to the temp replay folder to load it.", LogLevel::Warn, 16, "LoadReplayFromPath");
+            log("Moving the replay file to the temp replay folder to load it.", LogLevel::Warn, 15, "LoadReplayFromPath");
             _IO::File::CopyFileTo(path, Server::replayARLAutoMove + Path::GetFileName(path));
         }
 
@@ -24,17 +24,17 @@ namespace ReplayLoader {
 
         if (task.HasFailed || !task.HasSucceeded) {
             NotifyError("Failed to load replay file!");
-            log("Failed to load replay file!", LogLevel::Error, 38, "LoadReplayFromPath");
-            log(task.ErrorCode, LogLevel::Error, 39, "LoadReplayFromPath");
-            log(task.ErrorDescription, LogLevel::Error, 40, "LoadReplayFromPath");
-            log(task.ErrorType, LogLevel::Error, 41, "LoadReplayFromPath");
-            log(tostring(task.Ghosts.Length), LogLevel::Error, 42, "LoadReplayFromPath");
+            log("Failed to load replay file!", LogLevel::Error, 27, "LoadReplayFromPath");
+            log(task.ErrorCode, LogLevel::Error, 28, "LoadReplayFromPath");
+            log(task.ErrorDescription, LogLevel::Error, 29, "LoadReplayFromPath");
+            log(task.ErrorType, LogLevel::Error, 30, "LoadReplayFromPath");
+            log(tostring(task.Ghosts.Length), LogLevel::Error, 31, "LoadReplayFromPath");
             return;
         } else {
-            log(task.ErrorCode, LogLevel::Info, 45, "LoadReplayFromPath");
-            log(task.ErrorDescription, LogLevel::Info, 46, "LoadReplayFromPath");
-            log(task.ErrorType, LogLevel::Info, 47, "LoadReplayFromPath");
-            log(tostring(task.Ghosts.Length), LogLevel::Info, 48, "LoadReplayFromPath");
+            log(task.ErrorCode, LogLevel::Info, 34, "LoadReplayFromPath");
+            log(task.ErrorDescription, LogLevel::Info, 35, "LoadReplayFromPath");
+            log(task.ErrorType, LogLevel::Info, 36, "LoadReplayFromPath");
+            log(tostring(task.Ghosts.Length), LogLevel::Info, 37, "LoadReplayFromPath");
         }
 
         uint timeout = 15000;
@@ -51,7 +51,7 @@ namespace ReplayLoader {
 
         if (task.Ghosts.Length == 0) {
             NotifyWarn("No ghosts found in the replay file!");
-            log("No ghosts found in the replay file!", LogLevel::Warn, 59, "LoadReplayFromPath");
+            log("No ghosts found in the replay file!", LogLevel::Warn, 54, "LoadReplayFromPath");
             return;
         }
     }

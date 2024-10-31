@@ -59,13 +59,13 @@ namespace GhostLoader {
         }
 
         if (task.HasFailed || !task.HasSucceeded) {
-            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription + " Url used: " + url, LogLevel::Error, 54, "LoadGhostFromUrlAsync");
+            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription + " Url used: " + url, LogLevel::Error, 62, "LoadGhostFromUrlAsync");
             return;
         }
 
         CGameGhostMgrScript@ gm = ps.GhostMgr;
         MwId instId = gm.Ghost_Add(task.Ghost, S_UseGhostLayer);
-        log('Instance ID: ' + instId.GetName() + " / " + Text::Format("%08x", instId.Value), LogLevel::Info, 60, "LoadGhostFromUrlAsync");
+        log('Instance ID: ' + instId.GetName() + " / " + Text::Format("%08x", instId.Value), LogLevel::Info, 68, "LoadGhostFromUrlAsync");
 
         dfm.TaskResult_Release(task.Id);
     }

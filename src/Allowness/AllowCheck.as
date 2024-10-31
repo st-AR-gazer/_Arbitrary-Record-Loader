@@ -38,7 +38,7 @@ namespace AllowCheck {
             auto module = allownessModules[i];
             bool initialized = module.IsInitialized();
             bool condition = module.IsConditionMet();
-            // log("ConditionCheckMet: Module " + i + " initialized: " + (initialized ? "true" : "false") + ", condition met: " + (condition ? "true" : "false"), LogLevel::Info, 100, "ConditionCheckMet");
+            // log("ConditionCheckMet: Module " + i + " initialized: " + (initialized ? "true" : "false") + ", condition met: " + (condition ? "true" : "false"), LogLevel::Info, 41, "ConditionCheckMet");
             if (!initialized || !condition) { allMet = false; }
         }
         return allMet;
@@ -90,7 +90,7 @@ namespace GamemodeAllowness {
             if (mode.Length == 0 || !IsBlacklisted(mode)) {
                 isAllowed = true;
             } else {
-                // log("Map loading disabled due to blacklisted mode: " + mode, LogLevel::Warn, 59, "OnMapLoad");
+                // log("Map loading disabled due to blacklisted mode: " + mode, LogLevel::Warn, 93, "OnMapLoad");
                 isAllowed = false;
             }
         }
@@ -183,7 +183,7 @@ namespace MapcommentAllowness {
                     break;
             }
 
-            // log("MapcommentAllownessCheck: isAllowed set to " + (isAllowed ? "true" : "false"), LogLevel::Info, 210, "OnMapLoad");
+            // log("MapcommentAllownessCheck: isAllowed set to " + (isAllowed ? "true" : "false"), LogLevel::Info, 186, "OnMapLoad");
         }
 
         MapperSetting DetermineMapperSetting(CGameCtnChallenge@ map) {
@@ -241,7 +241,7 @@ namespace MapcommentAllowness {
                 setting = MapperSetting::Always;
             }
 
-            // log("MapcommentAllownessCheck: Final MapperSetting determined as " + EnumToString(setting), LogLevel::Info, 112, "DetermineMapperSetting");
+            // log("MapcommentAllownessCheck: Final MapperSetting determined as " + EnumToString(setting), LogLevel::Info, 244, "OnMapLoad");
             return setting;
         }
 
