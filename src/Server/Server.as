@@ -7,6 +7,8 @@ namespace Server {
 
     const string serverDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/");
     
+    const string serverPB = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/PB/");
+
     const string serverDirectoryAutoMove = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/AutoMove/");
     
     const string savedFilesDirectory = IO::FromUserGameFolder("Replays/ArbitraryRecordLoader/Server/Saved/Files/");

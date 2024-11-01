@@ -549,6 +549,7 @@ void RenderTab_OfficialMaps() {
 
 //////////////////// Render Current Map Ghost Tab /////////////////////
 
+
 CurrentMapRecords::ChampionMedal champMedal;
 CurrentMapRecords::WarriorMedal warriorMedal;
 CurrentMapRecords::SBVilleMedal sbVilleMedal;
@@ -558,17 +559,77 @@ void RenderTab_CurrentMapGhost() {
     UI::Separator();
 
     UI::Text("\\$0cf" + "Load PB Ghost");
-#if ARCHIVIST
+
+    // Autosaves Section
+    UI::Text("\\$0cf" + "Autosaves");
     if (UI::Button(Icons::UserPlus + " Load PB Ghost")) {
-        // CurrentMapRecords::PersonalBest::LoadPB();
+        CurrentMapRecords::PB::PBManager::LoadPB(); // Existing load function from Autosaves
     }
+
+    if (UI::Button(Icons::UserTimes + " Unload PB Ghost")) {
+        CurrentMapRecords::PB::PBManager::UnloadAllPBs(); // Existing unload function from Autosaves
+    }
+
+#if DEPENDENCY_ARCHIVIST
+    UI::Separator();
+    
+    // Archivist Section
+    UI::Text("\\$0cf" + "Archivist");
+
+    // Re-index PB Ghosts Button
+    if (UI::Button(Icons::Refresh + " Re-index PB Ghosts")) {
+        CurrentMapRecords::PB::IndexAndSaveToFile(); // Re-indexing function
+    }
+
+    // Load Complete PB Ghost Button
+    if (UI::Button(Icons::UserPlus + " Load Complete PB Ghost")) {
+        // CurrentMapRecords::PB::LoadCompletePB();
+    }
+
+    // Load Segmented PB Ghost Button
+    if (UI::Button(Icons::UserPlus + " Load Segmented PB Ghost")) {
+        CurrentMapRecords::PB::PBManager::LoadSegmentedPB();
+    }
+
+    // Load Partial PB Ghost Button
+    if (UI::Button(Icons::UserPlus + " Load Partial PB Ghost")) {
+        CurrentMapRecords::PB::PBManager::LoadPartialPB();
+    }
+
 #else
+    // Display tooltip and disable Archivist-related buttons if Archivist is not available
     _UI::SimpleTooltip(Icons::UserPlus + " Archivist is required for this feature.");
-    _UI::DisabledButton(Icons::UserPlus + " Load PB Ghost");
+    _UI::DisabledButton(Icons::Refresh + " Re-index PB Ghosts");
+    _UI::DisabledButton(Icons::UserPlus + " Load Complete PB Ghost");
+    _UI::DisabledButton(Icons::UserPlus + " Load Segmented PB Ghost");
+    _UI::DisabledButton(Icons::UserPlus + " Load Partial PB Ghost");
 #endif
+
+    UI::Separator();
+
+    UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles, this will not be possible for maps older than October 1st 2022");
+
+    if (!CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
+        UI::Text("\\$f00" + "WARNING" + "\\$g " + "No validation replay found for current map.");
+    } else {
+        UI::Text("\\$0f0" + "Validation Replay found for current map.");
+    }
+    if (!CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
+        _UI::DisabledButton(Icons::UserPlus + " Add validation replay to current run");
+    } else {
+        if (UI::Button(Icons::UserPlus + " Add validation replay to current run")) {
+            CurrentMapRecords::ValidationReplay::AddValidationReplay();
+        }
+    }
+    if (CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
+        if (UI::Button(Icons::UserTimes + " Validation replay time")) {
+            CurrentMapRecords::ValidationReplay::GetValidationReplayTime();
+        }
+    }
 
 
     UI::Separator();
+
 
     UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles, this will not be possible for maps older than October 1st 2022");
 
