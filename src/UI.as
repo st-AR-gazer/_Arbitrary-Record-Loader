@@ -550,9 +550,9 @@ void RenderTab_OfficialMaps() {
 //////////////////// Render Current Map Ghost Tab /////////////////////
 
 
-CurrentMapRecords::ChampionMedal champMedal;
-CurrentMapRecords::WarriorMedal warriorMedal;
-CurrentMapRecords::SBVilleMedal sbVilleMedal;
+CurrentMapRecords::Medals::ChampionMedal champMedal;
+CurrentMapRecords::Medals::WarriorMedal warriorMedal;
+CurrentMapRecords::Medals::SBVilleMedal sbVilleMedal;
 
 void RenderTab_CurrentMapGhost() {
 
@@ -560,44 +560,40 @@ void RenderTab_CurrentMapGhost() {
 
     UI::Text("\\$0cf" + "Load PB Ghost");
 
-    // Autosaves Section
     UI::Text("\\$0cf" + "Autosaves");
     if (UI::Button(Icons::UserPlus + " Load PB Ghost")) {
-        CurrentMapRecords::PB::PBManager::LoadPB(); // Existing load function from Autosaves
+        CurrentMapRecords::PB::PBManager::LoadPB();
     }
 
+    
+
     if (UI::Button(Icons::UserTimes + " Unload PB Ghost")) {
-        CurrentMapRecords::PB::PBManager::UnloadAllPBs(); // Existing unload function from Autosaves
+        CurrentMapRecords::PB::PBManager::UnloadAllPBs();
     }
 
 #if DEPENDENCY_ARCHIVIST
     UI::Separator();
     
-    // Archivist Section
     UI::Text("\\$0cf" + "Archivist");
 
     // Re-index PB Ghosts Button
     if (UI::Button(Icons::Refresh + " Re-index PB Ghosts")) {
-        CurrentMapRecords::PB::IndexAndSaveToFile(); // Re-indexing function
+        CurrentMapRecords::PB::IndexAndSaveToFile();
     }
 
-    // Load Complete PB Ghost Button
     if (UI::Button(Icons::UserPlus + " Load Complete PB Ghost")) {
         // CurrentMapRecords::PB::LoadCompletePB();
     }
 
-    // Load Segmented PB Ghost Button
     if (UI::Button(Icons::UserPlus + " Load Segmented PB Ghost")) {
         CurrentMapRecords::PB::PBManager::LoadSegmentedPB();
     }
 
-    // Load Partial PB Ghost Button
     if (UI::Button(Icons::UserPlus + " Load Partial PB Ghost")) {
         CurrentMapRecords::PB::PBManager::LoadPartialPB();
     }
 
 #else
-    // Display tooltip and disable Archivist-related buttons if Archivist is not available
     _UI::SimpleTooltip(Icons::UserPlus + " Archivist is required for this feature.");
     _UI::DisabledButton(Icons::Refresh + " Re-index PB Ghosts");
     _UI::DisabledButton(Icons::UserPlus + " Load Complete PB Ghost");
