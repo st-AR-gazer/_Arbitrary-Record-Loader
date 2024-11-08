@@ -1,5 +1,5 @@
-namespace HotkeyManager {
-
+namespace Features {
+namespace Hotkeys{
     bool showAddHotkeyUI = false;
     bool showEditHotkeyUI = false;
     string selectedAction = "";
@@ -199,10 +199,12 @@ namespace HotkeyManager {
         }
         return UI::InputBlocking::DoNothing;
     }
+
+}
 }
 
 UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
-    HotkeyManager::OnKeyPress(down, key);
+    Features::Hotkeys::OnKeyPress(down, key);
 
     return UI::InputBlocking::DoNothing;
 }
