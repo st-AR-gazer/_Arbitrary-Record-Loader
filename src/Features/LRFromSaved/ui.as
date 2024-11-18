@@ -1,5 +1,6 @@
 namespace Features {
 namespace LRFromSaved {
+    
     array<string> savedGhostsSelectedFiles;
 
     void RT_LRFromSaved() {

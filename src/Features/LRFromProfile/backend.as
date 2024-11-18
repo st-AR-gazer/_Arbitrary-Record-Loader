@@ -1,4 +1,5 @@
-namespace OtherManager {
+namespace Features {
+namespace LRFromProfile {
     array<string> jsonFiles;
     bool IsDownloading = false;
     bool IsCreatingProfile = false;
@@ -195,5 +196,5 @@ namespace OtherManager {
             StartManifestDownload();
         }
     }
-
+}
 }

@@ -13,15 +13,7 @@ namespace MapTracker {
             if (HasMapChanged()) {
                 while (!_Game::IsPlayingMap()) yield();
 
-                uint timeout = 10000;
-                uint startTime = Time::Now;
-                AllowCheck::InitializeAllowCheck();
-                bool conditionMet = false;
-                while (!conditionMet) { 
-                    if (Time::Now - startTime > timeout) { NotifyWarn("Condition check timed out ("+timeout+" ms was given), assuming invalid state."); break; }
-                    yield(); 
-                    conditionMet = AllowCheck::ConditionCheckMet();
-                }
+                AllowCheck::InitializeAllowCheckWithTimeout(2000);
                 if (AllowCheck::ConditionCheckMet()) {
                     // 
 

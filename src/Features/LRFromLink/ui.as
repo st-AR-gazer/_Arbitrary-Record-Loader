@@ -1,4 +1,4 @@
-namespace Features {
+namespace Feature {
 namespace LRFromDirectLink {
     string link;
 

@@ -1,121 +1,134 @@
 namespace Features {
 namespace LRBasedOnCurrentMap {
-    CurrentMapRecords::Medals::ChampionMedal champMedal;
-    CurrentMapRecords::Medals::WarriorMedal warriorMedal;
-    CurrentMapRecords::Medals::SBVilleMedal sbVilleMedal;
 
     void RT_LRBasedOnCurrentMap() {
-
+        RTPart_PB();
         UI::Separator();
-
-        UI::Text("\\$0cf" + "Load PB Ghost");
-
-        UI::Text("\\$0cf" + "Autosaves");
-        if (UI::Button(Icons::UserPlus + " Load PB Ghost")) {
-            CurrentMapRecords::PB::PBManager::LoadPB();
-        }
-
-        if (UI::Button(Icons::UserTimes + " Unload PB Ghost")) {
-            CurrentMapRecords::PB::PBManager::UnloadAllPBs();
-        }
-
-#if DEPENDENCY_ARCHIVIST
+        RTPart_ValidationReplay();
         UI::Separator();
-        
-        UI::Text("\\$0cf" + "Archivist");
-
-        // Re-index PB Ghosts Button
-        if (UI::Button(Icons::Refresh + " Re-index PB Ghosts")) {
-            CurrentMapRecords::PB::IndexAndSaveToFile();
-        }
-
-        if (UI::Button(Icons::UserPlus + " Load Complete PB Ghost")) {
-            // CurrentMapRecords::PB::LoadCompletePB();
-        }
-
-        if (UI::Button(Icons::UserPlus + " Load Segmented PB Ghost")) {
-            CurrentMapRecords::PB::PBManager::LoadSegmentedPB();
-        }
-
-        if (UI::Button(Icons::UserPlus + " Load Partial PB Ghost")) {
-            CurrentMapRecords::PB::PBManager::LoadPartialPB();
-        }
-
-#else
-        _UI::SimpleTooltip(Icons::UserPlus + " Archivist is required for this feature.");
-        _UI::DisabledButton(Icons::Refresh + " Re-index PB Ghosts");
-        _UI::DisabledButton(Icons::UserPlus + " Load Complete PB Ghost");
-        _UI::DisabledButton(Icons::UserPlus + " Load Segmented PB Ghost");
-        _UI::DisabledButton(Icons::UserPlus + " Load Partial PB Ghost");
-#endif
-
+        RTPart_GPS();
         UI::Separator();
+        RTPart_Medals();
+    }
 
+
+    ////////////////////////// PB //////////////////////////
+
+
+    void RTPart_PB() {
+//        UI::Text("\\$0cf" + "Load PB Ghost");
+//
+//        UI::Text("\\$0cf" + "Autosaves");
+//        if (UI::Button(Icons::UserPlus + " Load PB Ghost")) {
+//            PB::PBManager::LoadPB();
+//        }
+//
+//        if (UI::Button(Icons::UserTimes + " Unload PB Ghost")) {
+//            PB::PBManager::UnloadAllPBs();
+//        }
+//
+//#if DEPENDENCY_ARCHIVIST
+//        UI::Separator();
+//        
+//        UI::Text("\\$0cf" + "Archivist");
+//
+//        if (UI::Button(Icons::Refresh + " Re-index PB Ghosts")) {
+//            PB::IndexAndSaveToFile();
+//        }
+//
+//        if (UI::Button(Icons::UserPlus + " Load Complete PB Ghost")) {
+//            // PB::LoadCompletePB();
+//        }
+//
+//        if (UI::Button(Icons::UserPlus + " Load Segmented PB Ghost")) {
+//            PB::PBManager::LoadSegmentedPB();
+//        }
+//
+//        if (UI::Button(Icons::UserPlus + " Load Partial PB Ghost")) {
+//            PB::PBManager::LoadPartialPB();
+//        }
+//#else
+//        _UI::SimpleTooltip(Icons::UserPlus + " Archivist is required for this feature.");
+//        _UI::DisabledButton(Icons::Refresh + " Re-index PB Ghosts");
+//        _UI::DisabledButton(Icons::UserPlus + " Load Complete PB Ghost");
+//        _UI::DisabledButton(Icons::UserPlus + " Load Segmented PB Ghost");
+//        _UI::DisabledButton(Icons::UserPlus + " Load Partial PB Ghost");
+//#endif
+//
+//        UI::Separator();
+//
+//        UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles, this will not be possible for maps older than October 1st 2022");
+//
+//        if (!ValidationReplay::ValidationReplayExists()) {
+//            UI::Text("\\$f00" + "WARNING" + "\\$g " + "No validation replay found for current map.");
+//        } else {
+//            UI::Text("\\$0f0" + "Validation Replay found for current map.");
+//        }
+//        if (!ValidationReplay::ValidationReplayExists()) {
+//            _UI::DisabledButton(Icons::UserPlus + " Add validation replay to current run");
+//        } else {
+//            if (UI::Button(Icons::UserPlus + " Add validation replay to current run")) {
+//                ValidationReplay::AddValidationReplay();
+//            }
+//        }
+//        if (ValidationReplay::ValidationReplayExists()) {
+//            if (UI::Button(Icons::UserTimes + " Validation replay time")) {
+//                ValidationReplay::GetValidationReplayTime();
+//            }
+//        }
+    }
+
+
+    ////////////////////////// Validation Replay //////////////////////////
+
+
+    void RTPart_ValidationReplay() {
         UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles, this will not be possible for maps older than October 1st 2022");
 
-        if (!CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
+        if (!ValidationReplay::ValidationReplayExists()) {
             UI::Text("\\$f00" + "WARNING" + "\\$g " + "No validation replay found for current map.");
         } else {
             UI::Text("\\$0f0" + "Validation Replay found for current map.");
         }
-        if (!CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
+        if (!ValidationReplay::ValidationReplayExists()) {
             _UI::DisabledButton(Icons::UserPlus + " Add validation replay to current run");
         } else {
             if (UI::Button(Icons::UserPlus + " Add validation replay to current run")) {
-                CurrentMapRecords::ValidationReplay::AddValidationReplay();
+                ValidationReplay::AddValidationReplay();
             }
         }
-        if (CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
+        if (ValidationReplay::ValidationReplayExists()) {
             if (UI::Button(Icons::UserTimes + " Validation replay time")) {
-                CurrentMapRecords::ValidationReplay::GetValidationReplayTime();
+                ValidationReplay::GetValidationReplayTime();
             }
         }
+    }
 
 
-        UI::Separator();
+    ////////////////////////// GPS //////////////////////////
 
 
-        UI::Text("\\$0ff" + "WARNING\\$g " + "This uses the old 'Extract Validation Replay' method. Since ghosts were removed from map \nfiles, this will not be possible for maps older than October 1st 2022");
-
-
-        if (!CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
-            UI::Text("\\$f00" + "WARNING" + "\\$g " + "No validation replay found for current map.");
-        } else {
-            UI::Text("\\$0f0" + "Validation Replay found for current map.");
-        }
-        if (!CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
-            _UI::DisabledButton(Icons::UserPlus + " Add validation replay to current run");
-        } else {
-            if (UI::Button(Icons::UserPlus + " Add validation replay to current run")) {
-                CurrentMapRecords::ValidationReplay::AddValidationReplay();
-            }
-        }
-        if (CurrentMapRecords::ValidationReplay::ValidationReplayExists()) {
-            if (UI::Button(Icons::UserTimes + " Validation replay time")) {
-                CurrentMapRecords::ValidationReplay::GetValidationReplayTime();
-            }
-        }
-
+    void RTPart_GPS() {
         // GPS extraction/loading is something I've canned for now, due to lack of knowledge on my part...
 
         // UI::Separator();
-        // if (!CurrentMapRecords::GPS::gpsReplayCanBeLoaded) {
+        // if (!GPS::gpsReplayCanBeLoaded) {
         //     UI::Text("No GPS replays available for the current map.");
         // }
 
         // UI::Text("GPS Replays:");
 
-        // if (CurrentMapRecords::GPS::ghosts.Length == 1) {
-        //     UI::Text(CurrentMapRecords::GPS::ghosts[0].name);
+        // if (GPS::ghosts.Length == 1) {
+        //     UI::Text(GPS::ghosts[0].name);
         //     UI::Text("Only one GPS replay found.");
-        //     CurrentMapRecords::GPS::selectedGhostIndex = 0;
+        //     GPS::selectedGhostIndex = 0;
         // }
-        // if (CurrentMapRecords::GPS::selectedGhostIndex > 0) {
-        //     if (UI::BeginCombo("Select GPS Replay", CurrentMapRecords::GPS::ghosts[CurrentMapRecords::GPS::selectedGhostIndex].name)) {
-        //         for (uint i = 0; i < CurrentMapRecords::GPS::ghosts.Length; i++) {
-        //             bool isSelected = (CurrentMapRecords::GPS::selectedGhostIndex == int(i));
-        //             if (UI::Selectable(CurrentMapRecords::GPS::ghosts[i].name, isSelected)) {
-        //                 CurrentMapRecords::GPS::selectedGhostIndex = i;
+        // if (GPS::selectedGhostIndex > 0) {
+        //     if (UI::BeginCombo("Select GPS Replay", GPS::ghosts[GPS::selectedGhostIndex].name)) {
+        //         for (uint i = 0; i < GPS::ghosts.Length; i++) {
+        //             bool isSelected = (GPS::selectedGhostIndex == int(i));
+        //             if (UI::Selectable(GPS::ghosts[i].name, isSelected)) {
+        //                 GPS::selectedGhostIndex = i;
         //             }
         //             if (isSelected) {
         //                 UI::SetItemDefaultFocus();
@@ -124,13 +137,24 @@ namespace LRBasedOnCurrentMap {
         //         UI::EndCombo();
         //     }
         // }
-        // if (!CurrentMapRecords::GPS::gpsReplayCanBeLoaded) {
+        // if (!GPS::gpsReplayCanBeLoaded) {
         //     _UI::DisabledButton(Icons::UserPlus + " Load GPS Replay");
         // } else {
         //     if (UI::Button(Icons::UserPlus + " Load GPS Replay")) {
-        //         CurrentMapRecords::GPS::LoadReplay();
+        //         GPS::LoadReplay();
         //     }
         // }
+    }
+
+
+    ////////////////////////// MEDALS //////////////////////////
+
+
+    Medals::ChampionMedal champMedal;
+    Medals::WarriorMedal warriorMedal;
+    Medals::SBVilleMedal sbVilleMedal;
+
+    void RTPart_Medals() {
 #if DEPENDENCY_CHAMPIONMEDALS
         UI::Separator();
 

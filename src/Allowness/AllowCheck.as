@@ -27,6 +27,20 @@ namespace AllowCheck {
         startnew(InitializeAllModules);
     }
 
+    void InitializeAllowCheckWithTimeout(uint timeout) {
+        uint startTime = Time::Now;
+        AllowCheck::InitializeAllowCheck();
+        bool conditionMet = false;
+        while (!conditionMet) { 
+            if (Time::Now - startTime > timeout) { 
+                NotifyWarn("Condition check timed out ("+timeout+" ms was given), assuming invalid state."); 
+                break; 
+            }
+            yield(); 
+            conditionMet = AllowCheck::ConditionCheckMet();
+        }
+    }
+
     void InitializeAllModules() {
         for (uint i = 0; i < allownessModules.Length; i++) { allownessModules[i].Initialize(); }
         isInitializing = false;

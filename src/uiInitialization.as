@@ -15,7 +15,7 @@ void RenderInterface() {
         if (UI::Begin(Icons::UserPlus + " Load arbitrary Records", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
             UI::BeginTabBar("Tabs");
             if (UI::BeginTabItem(Icons::Users + " " + Icons::Folder + " Local Files")) {
-                RenderTab_LocalFiles();
+                Features::LRFromLocalFile::RT_LocalFiles();
                 UI::EndTabItem();
             }
             if (UI::BeginTabItem(Icons::Users + Icons::Info + " Loaded")) {
@@ -60,48 +60,20 @@ void RenderInterface() {
 
 //////////////////// Render Loacal Files Tab /////////////////////
 
-
-
 //////////////////// Render Current Loaded Records Tab /////////////////////
-
-
-
-
 
 //////////////////// Render Saved Ghosts and Replays Tab /////////////////////
 
-
-
 //////////////////// Render Link Tab /////////////////////
-
-
-
-
-
 
 //////////////////// Render Other Specific UIDs Tab /////////////////////
 
-
-
-
-
 //////////////////// Render Load Ghost from Map Tab /////////////////////
-
-
 
 //////////////////// Render Official Maps Tab /////////////////////
 
-
-
-
 //////////////////// Render Current Map Ghost Tab /////////////////////
 
-
-
-
-
 //////////////////// Render Hotkey Tab /////////////////////
-
-
 
 ////////////////////////////// End Tabs //////////////////////////////

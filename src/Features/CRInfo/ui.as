@@ -2,6 +2,7 @@
 
 namespace Features {
 namespace CRInfo {
+
     MwId selectedRecordID;
     bool isDropdownOpen = false;
 

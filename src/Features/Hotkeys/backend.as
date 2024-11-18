@@ -1,5 +1,5 @@
 namespace Features {
-namespace Hotkeys{
+namespace Hotkeys {
     bool showAddHotkeyUI = false;
     bool showEditHotkeyUI = false;
     string selectedAction = "";

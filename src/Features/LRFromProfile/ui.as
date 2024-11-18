@@ -1,5 +1,5 @@
 namespace Features {
-namespace LRFromSet {
+namespace LRFromProfile {
     string selectedJsonFile;
     array<string> jsonFiles = OtherManager::GetAvailableJsonFiles();
     int selectedIndex = 0;
