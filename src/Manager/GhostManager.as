@@ -20,8 +20,12 @@ namespace GhostLoader {
     }
 
     void LoadGhostFromUrlAsync(const string &in url) {
+        
         auto ps = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript);
+        if (ps is null) { log("PlaygroundScript is null", LogLevel::Error, 39, "LoadGhostFromUrlAsync"); return; }
         CGameDataFileManagerScript@ dfm = ps.DataFileMgr;
+        if (dfm is null) { log("DataFileMgr is null", LogLevel::Error, 44, "LoadGhostFromUrlAsync"); return; }
+
         CWebServicesTaskResult_GhostScript@ task = dfm.Ghost_Download("", url);
 
         while (task.IsProcessing) { yield(); }
@@ -38,3 +42,5 @@ namespace GhostLoader {
         dfm.TaskResult_Release(task.Id);
     }
 }
+
+// LOADING DOESN*T WORK ON SERVERS WHERE PLAYGROUND IS NULL; THIS DOES WORK WITH AUTO ENABLE SPECIFIC GHOST; LOOK AT WHATTHAT PLUTIN DOES
