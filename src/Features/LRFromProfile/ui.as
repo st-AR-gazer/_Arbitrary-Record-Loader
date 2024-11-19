@@ -1,3 +1,5 @@
+// src/Features/LoadRecordFromProfile/ui.as
+
 namespace Features {
 namespace LRFromProfile {
     string selectedJsonFile;

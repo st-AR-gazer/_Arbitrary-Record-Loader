@@ -1,3 +1,5 @@
+// src/Features/LoadRecordFromOfficialMaps/official.as
+
 namespace Features {
 namespace LRFromOfficialMaps {
     int64 endTimestamp = 0;

@@ -1,3 +1,5 @@
+// src/Features/LoadRecordFromMapUid/backend.as
+
 namespace Features {
 namespace LRFromMapIdentifier {
     string accountId;
@@ -13,6 +15,9 @@ namespace LRFromMapIdentifier {
     bool accountIdFetched = false;
 
     void LoadSelectedRecord(const string &in mapUid, const string &in offset, const string &in _specialSaveLocation, const string &in _accountId = "", const string &in _mapId = "") {
+
+        // FIXME: _accountId and _mapId do not work, they are still fetched, when an override is provided it should be used xdd
+
         // if (_accountId.Length != 0) { accountId = _accountId; }
         // if (_mapId.Length != 0) { mapId = _mapId; }
         

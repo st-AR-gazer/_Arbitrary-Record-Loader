@@ -1,3 +1,5 @@
+// src/Features/Hotkeys/backend.as
+
 namespace Features {
 namespace Hotkeys {
     bool showAddHotkeyUI = false;

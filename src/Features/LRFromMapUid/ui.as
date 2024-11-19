@@ -1,3 +1,5 @@
+// src/Features/LoadRecordFromMapUid/ui.as
+
 namespace Features {
 namespace LRFromMapIdentifier {
     string ghostPosition;
@@ -23,7 +25,7 @@ namespace LRFromMapIdentifier {
 
         if (UI::Button("Fetch Ghost")) {
 
-            LoadRecordFromArbitraryMap::LoadSelectedRecord(mapUID, ghostPosition, "AnyMap");
+            loadRecord.LoadRecordFromMapUid(mapUID, ghostPosition, "AnyMap");
         }
 
         UI::Separator();

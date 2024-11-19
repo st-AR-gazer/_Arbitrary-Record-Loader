@@ -1,6 +1,8 @@
+// src/Features/LoadRecordFromSaved/ui.as
+
 namespace Features {
 namespace LRFromSaved {
-    
+
     array<string> savedGhostsSelectedFiles;
 
     void RT_LRFromSaved() {
