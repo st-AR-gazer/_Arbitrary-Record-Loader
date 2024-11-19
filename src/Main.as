@@ -1,19 +1,19 @@
 void Main() {
-    HotkeyManager::InitHotkeys();
+    Features::Hotkeys::InitHotkeys();
 
     startnew(Server::StartHttpServer);
-    InitApi();
+    InitClasses();
     InitFolders();
     // InitMoveDummy();
-    OfficialManager::DownloadingFiles::Init();
-    OfficialManager::UI::Init();
+    Features::LRFromOfficialMaps::Init();
     OtherManager::CDN::Init();
 
     startnew(MapTracker::MapMonitor);
 }
 
-void InitApi() {
+void InitClasses() {
     @api = NadeoApi();
+    @loadRecord = LoadRecord();
 }
 
 void InitFolders() {

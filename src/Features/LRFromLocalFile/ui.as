@@ -45,7 +45,7 @@ namespace LRFromFile {
             if (UI::Button(Icons::Download + Icons::SnapchatGhost + " Load Ghost or Replay")) {
                 for (uint i = 0; i < selectedFiles.Length; i++) {
                     if (selectedFiles[i] != "") {
-                        Backend::LoadRecord(selectedFiles[i]);
+                        loadRecord.LoadRecordFromLocalFile(selectedFiles[i]);
                     }
                 }
             }

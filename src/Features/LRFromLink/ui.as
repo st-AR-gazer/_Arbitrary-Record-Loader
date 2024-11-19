@@ -1,15 +1,14 @@
-namespace Feature {
+namespace Features {
 namespace LRFromDirectLink {
-    string link;
+    string url;
 
     void RenderTab_Link() {
-
         UI::Separator();
 
-        link = UI::InputText("Link", link);
+        url = UI::InputText("Url", url);
 
         if (UI::Button("Load Record")) {
-            ProcessSelectedFile(link);
+            loadRecord.LoadRecordFromUrl(url);
         }
     }
 }

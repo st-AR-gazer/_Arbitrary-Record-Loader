@@ -123,7 +123,7 @@ namespace LRBasedOnCurrentMap {
                     medalHasExactMatch = exactMatchFound;
 
                     log("Closest record found: score = " + closestScore + ", accountId = " + closestAccountId + ", position = " + closestPosition + ", difference = " + timeDifference, LogLevel::Info, 186, "FetchSurroundingRecords");
-                    LoadRecordFromArbitraryMap::LoadSelectedRecord(get_CurrentMapUID(), tostring(closestPosition - 1), "Medal", closestAccountId);
+                    loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), tostring(closestPosition - 1), "Medal", closestAccountId);
                 }
 
                 reqForCurrentMapFinished = true;

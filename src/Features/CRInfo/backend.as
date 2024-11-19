@@ -1,7 +1,5 @@
 namespace Features {
 namespace CRInfo {
 
-    
-
 }
 }
