@@ -192,8 +192,8 @@ namespace MapcommentAllowness {
                     break;
 
                 default:
-                    isAllowed = false;
-                    disallowReason = "Unknown MapperSetting.";
+                    isAllowed = true;
+                    disallowReason = "";
                     break;
             }
 
