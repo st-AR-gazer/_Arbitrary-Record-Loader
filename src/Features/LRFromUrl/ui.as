@@ -1,7 +1,7 @@
 // src/Features/LoadRecordFromUrl/ui.as
 
 namespace Features {
-namespace LRFromDirectLink {
+namespace LRFromUrl {
     string url;
 
     void RenderTab_Link() {

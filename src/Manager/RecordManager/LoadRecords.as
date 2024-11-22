@@ -4,13 +4,14 @@ class LoadRecord {
     void LoadRecordFromLocalFile(const string &in filePath) {
         startnew(CoroutineFuncUserdataString(Coro_LoadRecordFromFile), filePath);
     }
+
     void LoadRecordFromLocalFile(string[] filePaths) {
         for (uint i = 0; i < filePaths.Length; i++) {
             LoadRecordFromLocalFile(filePaths[i]);
         }
     }
 
-    void Coro_LoadRecordFromFile(const string &in filePath) {
+    private void Coro_LoadRecordFromFile(const string &in filePath) {
         if (!IO::FileExists(filePath)) {
             NotifyError("File does not exist.");
             return;
@@ -55,7 +56,7 @@ class LoadRecord {
         startnew(CoroutineFuncUserdataString(Coro_LoadRecordFromUrl), url);
     }
 
-    void Coro_LoadRecordFromUrl(const string &in url) {
+    private void Coro_LoadRecordFromUrl(const string &in url) {
         if (url.StartsWith("https://") || url.StartsWith("http://") || url.Contains("trackmania.io") || url.Contains("trackmania.exchange") || url.Contains("www.")) {
             _Net::DownloadFileToDestination(url, Server::linksFilesDirectory + Path::GetFileName(url), "Link");
             startnew(CoroutineFuncUserdataString(ProcessDownloadedFile), "Link");
@@ -78,5 +79,12 @@ class LoadRecord {
 
     void LoadRecordFromMapUid(const string &in mapUid, const string &in offset, const string &in _specialSaveLocation, const string &in _accountId = "", const string &in _mapId = "") {
         Features::LRFromMapIdentifier::LoadSelectedRecord(mapUid, offset, _specialSaveLocation, _accountId, _mapId);
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+
+    // Uses MLHook to "Toggle" records
+    void LoadRecordFromPlayerId(const string &in playerId) {
+        
     }
 }
