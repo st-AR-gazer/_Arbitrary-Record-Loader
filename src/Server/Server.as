@@ -56,10 +56,10 @@ namespace Server {
     }
 
     HttpResponse@ RouteRequests(const string &in type, const string &in route, dictionary@ headers, const string &in data) {
-        log("Route: " + route, LogLevel::Info, 57, "StartHttpServer");
-        log("Data length: " + data.Length, LogLevel::Info, 58, "StartHttpServer");
+        log("Route: " + route, LogLevel::Info, 59, "StartHttpServer");
+        log("Data length: " + data.Length, LogLevel::Info, 60, "StartHttpServer");
         if (route.StartsWith('/get_ghost/')) return HandleGetGhost(type, route, headers, data);
-        log("Did not find route.", LogLevel::Warn, 60, "StartHttpServer");
+        log("Did not find route.", LogLevel::Warn, 62, "StartHttpServer");
         return _404_Response;
     }
 
@@ -68,14 +68,14 @@ namespace Server {
         if (!route.StartsWith("/get_ghost/")) return _404_Response;
         try {
             auto key = Net::UrlDecode(route.Replace("/get_ghost/", ""));
-            log('loading ghost: ' + key, LogLevel::Info, 69, "StartHttpServer");
+            log('loading ghost: ' + key, LogLevel::Info, 71, "StartHttpServer");
             string filePath = serverDirectoryAutoMove + key;
             if (!IO::FileExists(filePath)) return _404_Response;
             auto buf = _IO::File::ReadFileToEnd(filePath);
-            log('got buf: ' + buf.Length, LogLevel::Info, 73, "StartHttpServer");
+            log('got buf: ' + buf.Length, LogLevel::Info, 75, "StartHttpServer");
             return HttpResponse(200, buf);
         } catch {
-            log("Exception in HandleGetGhost: " + getExceptionInfo(), LogLevel::Error, 76, "StartHttpServer");
+            log("Exception in HandleGetGhost: " + getExceptionInfo(), LogLevel::Error, 78, "StartHttpServer");
         }
         return HttpResponse(500, "Internal Server Error");
     }
@@ -162,7 +162,7 @@ namespace Server {
             try {
                 socket.Close();
             } catch {}
-            log("Server shut down.", LogLevel::Info, 163, "Shutdown");
+            log("Server shut down.", LogLevel::Info, 165, "Shutdown");
         }
 
         void StartServer() {
@@ -173,18 +173,18 @@ namespace Server {
                 throw("Cannot start HTTP server twice.");
             }
             @socket = Net::Socket();
-            log("Starting server: " + host + ":" + port, LogLevel::Info, 174, "StartServer");
+            log("Starting server: " + host + ":" + port, LogLevel::Info, 176, "StartServer");
             if (!socket.Listen(host, port)) {
                 SetError("failed to start listening");
                 return;
             }
             state = ServerState::Running;
-            log("Server running.", LogLevel::Info, 180, "StartServer");
+            log("Server running.", LogLevel::Info, 182, "StartServer");
             startnew(CoroutineFunc(this.AcceptConnections));
         }
 
         protected void SetError(const string &in errMsg) {
-            log('HttpServer terminated with error: ' + errMsg, LogLevel::Error, 185, "SetError");
+            log('HttpServer terminated with error: ' + errMsg, LogLevel::Error, 187, "SetError");
             state = ServerState::Error;
             try {
                 socket.Close();
@@ -197,7 +197,7 @@ namespace Server {
                 yield();
                 auto client = socket.Accept();
                 if (client is null) continue;
-                log("Accepted new client // Remote: " + client.GetRemoteIP(), LogLevel::Info, 198, "AcceptConnections");
+                log("Accepted new client // Remote: " + client.GetRemoteIP(), LogLevel::Info, 200, "AcceptConnections");
                 startnew(CoroutineFuncUserdata(this.RunClient), client);
             }
         }
@@ -208,32 +208,32 @@ namespace Server {
             uint clientStarted = Time::Now;
             while (Time::Now - clientStarted < 10000 && client.Available() == 0) yield();
             if (client.Available() == 0) {
-                log("Timing out client: " + client.GetRemoteIP(), LogLevel::Info, 209, "RunClient");
+                log("Timing out client: " + client.GetRemoteIP(), LogLevel::Info, 211, "RunClient");
                 client.Close();
                 return;
             }
             RunRequest(client);
-            log("Closing client.", LogLevel::Info, 214, "RunClient");
+            log("Closing client.", LogLevel::Info, 216, "RunClient");
             client.Close();
         }
 
         protected void RunRequest(Net::Socket@ client) {
             string reqLine;
             if (!client.ReadLine(reqLine)) {
-                log("RunRequest: could not read first line!", LogLevel::Warn, 221, "RunRequest");
+                log("RunRequest: could not read first line!", LogLevel::Warn, 223, "RunRequest");
                 return;
             }
             reqLine = reqLine.Trim();
             auto reqParts = reqLine.Split(" ", 3);
-            log("RunRequest got first line: " + reqLine + " (parts: " + reqParts.Length + ")", LogLevel::Info, 226, "RunRequest");
+            log("RunRequest got first line: " + reqLine + " (parts: " + reqParts.Length + ")", LogLevel::Info, 228, "RunRequest");
             auto headers = ParseHeaders(client);
-            log("Got " + headers.GetSize() + " headers.", LogLevel::Info, 228, "RunRequest");
+            log("Got " + headers.GetSize() + " headers.", LogLevel::Info, 230, "RunRequest");
             // auto headerKeys = headers.GetKeys();
             auto reqType = reqParts[0];
             auto reqRoute = reqParts[1];
             auto httpVersion = reqParts[2];
             if (!httpVersion.StartsWith("HTTP/1.")) {
-                log("Unsupported HTTP version: " + httpVersion, LogLevel::Warn, 234, "RunRequest");
+                log("Unsupported HTTP version: " + httpVersion, LogLevel::Warn, 236, "RunRequest");
                 return;
             }
             string data;
@@ -242,13 +242,13 @@ namespace Server {
                 data = client.ReadRaw(len);
             }
             if (client.Available() > 0) {
-                log("After reading headers and body there are " + client.Available() + " bytes remaining!", LogLevel::Warn, 243, "RunRequest");
+                log("After reading headers and body there are " + client.Available() + " bytes remaining!", LogLevel::Warn, 245, "RunRequest");
             }
             HttpResponse@ resp = HttpResponse();
             try {
                 @resp = RequestHandler(reqType, reqRoute, headers, data);
             } catch {
-                log("Exception in RequestHandler: " + getExceptionInfo(), LogLevel::Error, 249, "RunRequest");
+                log("Exception in RequestHandler: " + getExceptionInfo(), LogLevel::Error, 251, "RunRequest");
                 resp.status = 500;
                 resp.body = "Exception: " + getExceptionInfo();
             }
@@ -257,7 +257,7 @@ namespace Server {
             fullResponse += "\r\n\r\n" + resp.body;
             auto respBuf = MemoryBuffer();
             respBuf.Write(fullResponse);
-            log("Response: " + fullResponse, LogLevel::_, 258, "RunRequest");
+            log("Response: " + fullResponse, LogLevel::_, 260, "RunRequest");
             if (resp._buf !is null) {
                 resp._buf.Seek(0);
                 respBuf.WriteFromBuffer(resp._buf, resp._buf.GetSize());
@@ -266,8 +266,8 @@ namespace Server {
             // client.WriteRaw(fullResponse);
             respBuf.Seek(0);
             client.Write(respBuf, respBuf.GetSize());
-            log("["+Time::Stamp + " | " + client.GetRemoteIP()+"] " + reqType + " " + reqRoute + " " + resp.status, LogLevel::Info, 267, "RunRequest");
-            log("Completed request.", LogLevel::Info, 268, "RunRequest");
+            log("["+Time::Stamp + " | " + client.GetRemoteIP()+"] " + reqType + " " + reqRoute + " " + resp.status, LogLevel::Info, 269, "RunRequest");
+            log("Completed request.", LogLevel::Info, 270, "RunRequest");
         }
 
         protected dictionary@ ParseHeaders(Net::Socket@ client) {
@@ -287,13 +287,13 @@ namespace Server {
         protected void AddHeader(dictionary@ d, const string &in line) {
             auto parts = line.Split(":", 2);
             if (parts.Length < 2) {
-                log("Header line failed to parse: " + line + " // " + parts[0], LogLevel::Warn, 288, "AddHeader");
+                log("Header line failed to parse: " + line + " // " + parts[0], LogLevel::Warn, 290, "AddHeader");
             } else {
                 d[parts[0]] = parts[1];
                 if (parts[0].ToLower().Contains("authorization")) {
                     parts[1] = "<auth omitted>";
                 }
-                log("Parsed header line: " + parts[0] + ": " + parts[1], LogLevel::Info, 294, "AddHeader");
+                log("Parsed header line: " + parts[0] + ": " + parts[1], LogLevel::Info, 296, "AddHeader");
             }
         }
     }

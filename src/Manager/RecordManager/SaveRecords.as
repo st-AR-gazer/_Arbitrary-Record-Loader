@@ -35,7 +35,7 @@ namespace RecordManager {
             string replayFilePath = Server::savedFilesDirectory;
             string jsonFilePath = Server::savedJsonDirectory + fileName + ".json";
 
-            log("Saving ghost to file: " + replayFilePath, LogLevel::Info, 234, "SaveRecord");
+            log("Saving ghost to file: " + replayFilePath, LogLevel::Info, 38, "SaveRecord");
 
             auto app = GetApp();
             if (app is null || app.Network is null || app.Network.ClientManiaAppPlayground is null) { NotifyError("App or network components not ready."); return; }
@@ -44,7 +44,7 @@ namespace RecordManager {
 
             CWebServicesTaskResult@ saveResult = app.Network.ClientManiaAppPlayground.DataFileMgr.Replay_Save(tmpFilePath, rootMap, ghost);
             if (saveResult.HasSucceeded && !saveResult.HasFailed) {
-                log("Replay save successful", LogLevel::Info, 243, "SaveRecord");
+                log("Replay save successful", LogLevel::Info, 47, "SaveRecord");
 
                 string _uuid = CreateRandomUuid();
                 Json::Value json = Json::Object();
@@ -69,7 +69,7 @@ namespace RecordManager {
 
                 NotifyInfo("Ghost saved successfully.");
             } else {
-                log("Replay save failed: " + saveResult.ErrorDescription, LogLevel::Error, 268, "SaveRecord");
+                log("Replay save failed: " + saveResult.ErrorDescription, LogLevel::Error, 72, "SaveRecord");
                 NotifyError("Failed to save ghost replay.");
             }
         }

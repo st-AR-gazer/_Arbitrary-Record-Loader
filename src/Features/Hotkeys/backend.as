@@ -142,7 +142,7 @@ namespace Hotkeys {
         } else if (hotkey.action == "Remove PB Ghost") {
             RecordManager::RemovePBRecord();
         } else {
-            log("Action not implemented: " + hotkey.action, LogLevel::Warn, 143, "ExecuteHotkeyAction");
+            log("Action not implemented: " + hotkey.action, LogLevel::Warn, 145, "ExecuteHotkeyAction");
         }
     }
 

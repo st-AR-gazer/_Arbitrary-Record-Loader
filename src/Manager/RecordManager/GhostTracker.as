@@ -5,13 +5,13 @@ namespace RecordManager {
         array<MwId> removedGhosts;
 
         void Init() {
-            log("Initializing GhostTracker", LogLevel::Info, 105, "Init");
+            log("Initializing GhostTracker", LogLevel::Info, 8, "Init");
             UpdateGhosts();
         }
 
         void UpdateGhosts() {
             auto app = GetApp();
-            if (app is null || app.Network is null || app.Network.ClientManiaAppPlayground is null) { log("App or network components not ready", LogLevel::Warn, 112, "UpdateGhosts"); return; }
+            if (app is null || app.Network is null || app.Network.ClientManiaAppPlayground is null) { log("App or network components not ready", LogLevel::Warn, 14, "UpdateGhosts"); return; }
 
             auto dataFileMgr = app.Network.ClientManiaAppPlayground.DataFileMgr;
             auto newGhosts = dataFileMgr.Ghosts;
@@ -37,7 +37,7 @@ namespace RecordManager {
                 }
             }
 
-            log("Ghosts updated, count: " + ghosts.Length + " Normal Ghosts: " + ghostsWithoutNickname + " VTable Ghosts: " + ghostsWithNickname, LogLevel::Info, 140, "UpdateGhosts");
+            log("Ghosts updated, count: " + ghosts.Length + " Normal Ghosts: " + ghostsWithoutNickname + " VTable Ghosts: " + ghostsWithNickname, LogLevel::Info, 40, "UpdateGhosts");
         }
 
         void AddTrackedGhost(CGameGhostScript@ ghost) {
@@ -45,14 +45,14 @@ namespace RecordManager {
                 trackedGhosts.InsertLast(ghost);
 
                 if (ghost.Nickname == "cfa844b7-6b53-4663-ac0d-9bdd3ad1af22") return;
-                log("Tracked ghost added: " + ghost.Nickname, LogLevel::Info, 148, "AddTrackedGhost");
+                log("Tracked ghost added: " + ghost.Nickname, LogLevel::Info, 48, "AddTrackedGhost");
             }
         }
 
         void RemoveTrackedGhost(MwId instanceId) {
             for (uint i = 0; i < trackedGhosts.Length; i++) {
                 if (trackedGhosts[i].Id.Value == instanceId.Value) {
-                    log("Tracked ghost removed: " + trackedGhosts[i].Nickname, LogLevel::Info, 155, "RemoveTrackedGhost");
+                    log("Tracked ghost removed: " + trackedGhosts[i].Nickname, LogLevel::Info, 55, "RemoveTrackedGhost");
                     trackedGhosts.RemoveAt(i);
                     removedGhosts.InsertLast(instanceId);
                     return;
@@ -65,7 +65,7 @@ namespace RecordManager {
                 
             }
             trackedGhosts.RemoveRange(0, trackedGhosts.Length);
-            log("Cleared all tracked ghosts.", LogLevel::Info, 168, "ClearTrackedGhosts");
+            log("Cleared all tracked ghosts.", LogLevel::Info, 68, "ClearTrackedGhosts");
         }
 
         bool IsGhostRemoved(MwId id) {

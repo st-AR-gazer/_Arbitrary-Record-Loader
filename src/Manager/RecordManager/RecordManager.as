@@ -6,7 +6,7 @@ namespace RecordManager {
         // if (GetApp().PlaygroundScript is null) return;
         // auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         // gm.Ghost_RemoveAll();
-        // log("All ghosts removed.", LogLevel::Info, 10, "RemoveAllRecords");
+        // log("All ghosts removed.", LogLevel::Info, 9, "RemoveAllRecords");
         // GhostTracker::ClearTrackedGhosts();
 
         // This removes the ghosts from the list, as well as the instance.
@@ -28,7 +28,7 @@ namespace RecordManager {
 
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_Remove(instanceId);
-        log("Record with the MwID of: " + instanceId.GetName() + " removed.", LogLevel::Info, 32, "RemoveInstanceRecord");
+        log("Record with the MwID of: " + instanceId.GetName() + " removed.", LogLevel::Info, 31, "RemoveInstanceRecord");
         GhostTracker().RemoveTrackedGhost(instanceId);
     }
 
@@ -50,7 +50,7 @@ namespace RecordManager {
     void SetRecordDossard(MwId instanceId, const string &in dossard, vec3 color = vec3()) {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_SetDossard(instanceId, dossard, color);
-        log("Record dossard set.", LogLevel::Info, 54, "RemovePBRecord");
+        log("Record dossard set.", LogLevel::Info, 53, "RemovePBRecord");
     }
 
     bool IsRecordVisible(MwId instanceId) {
@@ -68,7 +68,7 @@ namespace RecordManager {
     void AddRecordWithOffset(CGameGhostScript@ ghost, const int &in offset) {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_Add(ghost, true, offset);
-        log("Ghost added with offset.", LogLevel::Info, 72, "AddGhostWithOffset");
+        log("Ghost added with offset.", LogLevel::Info, 71, "AddRecordWithOffset");
         GhostTracker().AddTrackedGhost(ghost);
     }
 

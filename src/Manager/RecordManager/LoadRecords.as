@@ -41,7 +41,7 @@ class LoadRecord {
             } else if (fileExt == "ghost") {
                 GhostLoader::LoadGhostFromLocalFile(filePath);
             } else {
-                log("Unsupported file type: " + fileExt + " " + "Full path: " + filePath, LogLevel::Error, 350, "Coro_ProcessSelectedFile");
+                log("Unsupported file type: " + fileExt + " " + "Full path: " + filePath, LogLevel::Error, 44, "Coro_LoadRecordFromFile");
                 NotifyWarn("Error | Unsupported file type.");
             }
 
@@ -63,7 +63,7 @@ class LoadRecord {
             
             LoadRecordFromLocalFile(Server::linksFilesDirectory + Path::GetFileName(url));
         } else {
-            log("Invalid URL.", LogLevel::Error, 370, "Coro_LoadRecordFromUrl");
+            log("Invalid URL.", LogLevel::Error, 66, "Coro_LoadRecordFromUrl");
         }
     }
 

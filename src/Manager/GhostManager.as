@@ -6,7 +6,7 @@ namespace GhostLoader {
         if (filePath.ToLower().EndsWith(".gbx")) {
             string fileName = Path::GetFileName(filePath);
             string destinationPath = _destonationPath + fileName;
-            log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, 9, "LoadGhost");
+            log("Moving file from " + filePath + " to " + destinationPath, LogLevel::Info, 9, "LoadGhostFromLocalFile");
             _IO::File::CopyFileTo(filePath, destinationPath);
             LoadGhostFromUrl(Server::HTTP_BASE_URL + "get_ghost/" + fileName);
         } else {
@@ -22,22 +22,22 @@ namespace GhostLoader {
     void LoadGhostFromUrlAsync(const string &in url) {
         
         auto ps = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript);
-        if (ps is null) { log("PlaygroundScript is null", LogLevel::Error, 39, "LoadGhostFromUrlAsync"); return; }
+        if (ps is null) { log("PlaygroundScript is null", LogLevel::Error, 25, "LoadGhostFromUrlAsync"); return; }
         CGameDataFileManagerScript@ dfm = ps.DataFileMgr;
-        if (dfm is null) { log("DataFileMgr is null", LogLevel::Error, 44, "LoadGhostFromUrlAsync"); return; }
+        if (dfm is null) { log("DataFileMgr is null", LogLevel::Error, 27, "LoadGhostFromUrlAsync"); return; }
 
         CWebServicesTaskResult_GhostScript@ task = dfm.Ghost_Download("", url);
 
         while (task.IsProcessing) { yield(); }
 
         if (task.HasFailed || !task.HasSucceeded) {
-            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription + " Url used: " + url, LogLevel::Error, 62, "LoadGhostFromUrlAsync");
+            log('Ghost_Download failed: ' + task.ErrorCode + ", " + task.ErrorType + ", " + task.ErrorDescription + " Url used: " + url, LogLevel::Error, 34, "LoadGhostFromUrlAsync");
             return;
         }
 
         CGameGhostMgrScript@ gm = ps.GhostMgr;
         MwId instId = gm.Ghost_Add(task.Ghost, S_UseGhostLayer);
-        log('Instance ID: ' + instId.GetName() + " / " + Text::Format("%08x", instId.Value), LogLevel::Info, 68, "LoadGhostFromUrlAsync");
+        log('Instance ID: ' + instId.GetName() + " / " + Text::Format("%08x", instId.Value), LogLevel::Info, 40, "LoadGhostFromUrlAsync");
 
         dfm.TaskResult_Release(task.Id);
     }

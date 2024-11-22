@@ -5,27 +5,27 @@ namespace LRFromOfficialMaps {
     int64 endTimestamp = 0;
 
     void Init() {
-        log("Initializing OfficialManager::DownloadingFiles", LogLevel::Info, 6, "Init");
+        log("Initializing OfficialManager::DownloadingFiles", LogLevel::Info, 8, "Init");
         LoadEndTimestamp();
         CheckForNewCampaignIfNeeded();
     }
 
     void LoadEndTimestamp() {
-        log("Loading end timestamp", LogLevel::Info, 12, "LoadEndTimestamp");
+        log("Loading end timestamp", LogLevel::Info, 14, "LoadEndTimestamp");
 
         string endTimestampFilePath = Server::officialInfoFilesDirectory + "/end_timestamp.txt";
         if (IO::FileExists(endTimestampFilePath)) {
             endTimestamp = Text::ParseInt64(_IO::File::ReadFileToEnd(endTimestampFilePath));
 
-            log("Loaded endTimestamp: " + endTimestamp, LogLevel::Info, 18, "LoadEndTimestamp");
+            log("Loaded endTimestamp: " + endTimestamp, LogLevel::Info, 20, "LoadEndTimestamp");
         } else {
             endTimestamp = 0;
-            log("End timestamp file not found, setting endTimestamp to 0", LogLevel::Warn, 21, "LoadEndTimestamp");
+            log("End timestamp file not found, setting endTimestamp to 0", LogLevel::Warn, 23, "LoadEndTimestamp");
         }
     }
 
     void SaveEndTimestamp() {
-        log("Saving end timestamp", LogLevel::Info, 26, "SaveEndTimestamp");
+        log("Saving end timestamp", LogLevel::Info, 28, "SaveEndTimestamp");
 
         string endTimestampFilePath = Server::officialInfoFilesDirectory + "/end_timestamp.txt";
         string endTimestampContent = ("" + endTimestamp);
@@ -33,20 +33,20 @@ namespace LRFromOfficialMaps {
         IO::File endTimestampFile(endTimestampFilePath, IO::FileMode::Write);
         endTimestampFile.Write(endTimestampContent);
         endTimestampFile.Close();
-        log("Saved endTimestamp: " + endTimestamp, LogLevel::Info, 34, "SaveEndTimestamp");
+        log("Saved endTimestamp: " + endTimestamp, LogLevel::Info, 36, "SaveEndTimestamp");
     }
 
     void CheckForNewCampaignIfNeeded(bool bypassCheck = false) {
-        log("Checking if we need to check for new campaign", LogLevel::Info, 38, "CheckForNewCampaignIfNeeded");
+        log("Checking if we need to check for new campaign", LogLevel::Info, 40, "CheckForNewCampaignIfNeeded");
 
         int64 currentTime = Time::Stamp;
 
         if (bypassCheck) { endTimestamp = 0; }
         if (currentTime >= endTimestamp) {
-            log("Current time is greater than end timestamp, starting new campaign check", LogLevel::Info, 44, "CheckForNewCampaignIfNeeded");
+            log("Current time is greater than end timestamp, starting new campaign check", LogLevel::Info, 46, "CheckForNewCampaignIfNeeded");
             startnew(Coro_CheckForNewCampaign);
         } else {
-            log("Current time is less than end timestamp, no need to check for new campaign", LogLevel::Info, 47, "CheckForNewCampaignIfNeeded");
+            log("Current time is less than end timestamp, no need to check for new campaign", LogLevel::Info, 49, "CheckForNewCampaignIfNeeded");
         }
     }
 
@@ -81,7 +81,7 @@ namespace LRFromOfficialMaps {
                     campaignName = campaignName.Replace(" ", "_");
 
                     if (localCampaigns.Find(campaignName) == -1) {
-                        log("Downloading missing campaign: " + campaignName, LogLevel::Info, 82, "CheckForNewCampaign");
+                        log("Downloading missing campaign: " + campaignName, LogLevel::Info, 84, "CheckForNewCampaign");
                         SaveCampaignData(campaign);
                     }
 
@@ -92,7 +92,7 @@ namespace LRFromOfficialMaps {
                 }
                 offset++;
             } else {
-                log("No more campaigns found at offset: " + tostring(offset), LogLevel::Info, 93, "CheckForNewCampaign");
+                log("No more campaigns found at offset: " + tostring(offset), LogLevel::Info, 95, "CheckForNewCampaign");
                 continueChecking = false;
             }
         }
@@ -102,14 +102,14 @@ namespace LRFromOfficialMaps {
 
     void SaveCampaignData(const Json::Value &in campaign) {
         string campaignName = campaign["name"];
-        log("Saving campaign data: " + campaignName, LogLevel::Info, 103, "SaveCampaignData");
+        log("Saving campaign data: " + campaignName, LogLevel::Info, 105, "SaveCampaignData");
 
         string specificSeason = campaign["name"];
         specificSeason = specificSeason.Replace(" ", "_");
         string fullFileName = Server::officialJsonFilesDirectory + "/" + specificSeason + ".json";
 
         _IO::File::WriteFile(fullFileName, Json::Write(campaign));
-        log("Campaign data saved to: " + fullFileName, LogLevel::Info, 110, "SaveCampaignData");
+        log("Campaign data saved to: " + fullFileName, LogLevel::Info, 112, "SaveCampaignData");
     }
 
     void Init() {

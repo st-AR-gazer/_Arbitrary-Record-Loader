@@ -119,14 +119,14 @@ namespace LRFromProfile {
             if (req.ResponseCode() == 200) {
                 ParseManifest(req.String());
             } else {
-                log("Error fetching manifest: " + req.ResponseCode(), LogLevel::Error, 119, "Coro_FetchManifest");
+                log("Error fetching manifest: " + req.ResponseCode(), LogLevel::Error, 122, "Coro_FetchManifest");
             }
         }
 
         void ParseManifest(const string &in reqBody) {
             Json::Value manifest = Json::Parse(reqBody);
             if (manifest.GetType() != Json::Type::Object) {
-                log("Failed to parse JSON.", LogLevel::Error, 126, "ParseManifest");
+                log("Failed to parse JSON.", LogLevel::Error, 129, "ParseManifest");
                 return;
             }
 
@@ -135,12 +135,12 @@ namespace LRFromProfile {
 
             int version = manifest["version"];
             if (version > get_StoredVersion()) {
-                log("New version available: " + version, LogLevel::Info, 135, "ParseManifest");
+                log("New version available: " + version, LogLevel::Info, 138, "ParseManifest");
                 DownloadFiles(manifest);
                 UpdateBlockedGamemodes(manifest);
                 SetStoredVersion(version);
             } else {
-                log("No new version available.", LogLevel::Info, 140, "ParseManifest");
+                log("No new version available.", LogLevel::Info, 143, "ParseManifest");
             }
         }
 
@@ -157,7 +157,7 @@ namespace LRFromProfile {
                 string path = Server::specificDownloadedJsonFilesDirectory + filename;
 
                 if (shouldDownloadFilesIfTheyAreAleadyDownloaded || !IO::FileExists(path)) {
-                    log("Downloading: " + filename, LogLevel::Info, 157, "DownloadFiles");
+                    log("Downloading: " + filename, LogLevel::Info, 160, "DownloadFiles");
 
                     _Net::DownloadFileToDestination(url, path, "other", Path::GetFileName(filename));
                 }
@@ -173,9 +173,9 @@ namespace LRFromProfile {
                     GamemodeAllowness::GameModeBlackList.InsertLast(blockedList[i]);
                 }
 
-                log("Blocked gamemodes updated.", LogLevel::Info, 173, "UpdateBlockedGamemodes");
+                log("Blocked gamemodes updated.", LogLevel::Info, 176, "UpdateBlockedGamemodes");
             } else {
-                log("No blocked gamemodes in manifest.", LogLevel::Info, 175, "UpdateBlockedGamemodes");
+                log("No blocked gamemodes in manifest.", LogLevel::Info, 178, "UpdateBlockedGamemodes");
             }
         }
 

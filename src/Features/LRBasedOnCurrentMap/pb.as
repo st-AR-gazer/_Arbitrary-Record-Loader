@@ -25,7 +25,7 @@ namespace LRBasedOnCurrentMap {
                 string subfolder_path = map_folder + "/" + subfolders[i];
                 
                 if (!IO::FolderExists(subfolder_path)) {
-                    log("PBManager: Subfolder does not exist: " + subfolder_path, LogLevel::Warn, 30, "IndexAndSaveToArchivist");
+                    log("PBManager: Subfolder does not exist: " + subfolder_path, LogLevel::Warn, 28, "IndexAndSaveToArchivist");
                     continue;
                 }
 
@@ -78,7 +78,7 @@ namespace LRBasedOnCurrentMap {
 
 
             SavePBRecordsToFile();
-            log("PBManager: Successfully indexed Archivist folder for map: " + currentMapName, LogLevel::Info, 80, "IndexAndSaveToArchivist");
+            log("PBManager: Successfully indexed Archivist folder for map: " + currentMapName, LogLevel::Info, 81, "IndexAndSaveToArchivist");
         }
 
         string GetCurrentMapName() {
@@ -149,7 +149,7 @@ namespace LRBasedOnCurrentMap {
                             while (task.IsProcessing) { yield(); }
 
                             if (task.HasFailed || !task.HasSucceeded) {
-                                log("Failed to load replay file from " + filePath, LogLevel::Error, 89, "LoadPBFromSubfolder");
+                                log("Failed to load replay file from " + filePath, LogLevel::Error, 152, "LoadPBFromSubfolder");
                                 continue;
                             }
 
@@ -161,7 +161,7 @@ namespace LRBasedOnCurrentMap {
                                 ghostMgr.Ghost_Add(ghost);
                             }
                             
-                            log("Loaded " + subfolder + " PB ghost from " + filePath, LogLevel::Info, 101, "LoadPBFromSubfolder");
+                            log("Loaded " + subfolder + " PB ghost from " + filePath, LogLevel::Info, 164, "LoadPBFromSubfolder");
                         }
                     }
                 }
@@ -256,7 +256,7 @@ namespace LRBasedOnCurrentMap {
         void LoadPBRecordsFromFile() {
             string loadPath = autosaves_index;
             if (!IO::FileExists(loadPath)) {
-                log("PBManager: Autosaves index file does not exist. Indexing will be performed on map load.", LogLevel::Info, 46, "LoadPBRecordsFromFile");
+                log("PBManager: Autosaves index file does not exist. Indexing will be performed on map load.", LogLevel::Info, 259, "LoadPBRecordsFromFile");
                 return;
             }
 
@@ -275,7 +275,7 @@ namespace LRBasedOnCurrentMap {
                 pbRecords.InsertLast(pbRecord);
             }
 
-            log("PBManager: Successfully loaded autosaves index from " + loadPath, LogLevel::Info, 65, "LoadPBRecordsFromFile");
+            log("PBManager: Successfully loaded autosaves index from " + loadPath, LogLevel::Info, 278, "LoadPBRecordsFromFile");
         }
 
         // src/Main.as
@@ -342,7 +342,7 @@ namespace LRBasedOnCurrentMap {
                 @updateVisibilityHook = PBVisibilityUpdateHook("TMGame_Record_UpdatePBGhostVisibility");
                 MLHook::RegisterMLHook(updateVisibilityHook, "TMGame_Record_UpdatePBGhostVisibility", true);
 
-                log("PBVisibilityHook: Hooks registered for TogglePB and UpdatePBGhostVisibility.", LogLevel::Info, 41, "InitializeHook");
+                log("PBVisibilityHook: Hooks registered for TogglePB and UpdatePBGhostVisibility.", LogLevel::Info, 345, "InitializeHook");
             }
 
             void UninitializeHook() {
@@ -354,7 +354,7 @@ namespace LRBasedOnCurrentMap {
                     MLHook::UnregisterMLHookFromAll(updateVisibilityHook);
                     @updateVisibilityHook = null;
                 }
-                log("PBVisibilityHook: Hooks unregistered for TogglePB and UpdatePBGhostVisibility.", LogLevel::Info, 53, "UninitializeHook");
+                log("PBVisibilityHook: Hooks unregistered for TogglePB and UpdatePBGhostVisibility.", LogLevel::Info, 357, "UninitializeHook");
             }
         }
 
@@ -431,7 +431,7 @@ namespace LRBasedOnCurrentMap {
                     string fullFilePath = j["FullFilePath"];
                     PBRecord@ pbRecord = PBRecord(mapUid, fileName, fullFilePath);
                     pbRecords.InsertLast(pbRecord);
-                    // log("LoadPBFromIndex: Loaded PBRecord for MapUid: " + mapUid + ", FileName: " + fileName, LogLevel::Dark, 73, "LoadPBFromIndex");
+                    // log("LoadPBFromIndex: Loaded PBRecord for MapUid: " + mapUid + ", FileName: " + fileName, LogLevel::Dark, 434, "LoadPBFromIndex");
                 }
 
                 currentMapPBRecords = GetPBRecordsForCurrentMap();
@@ -447,7 +447,7 @@ namespace LRBasedOnCurrentMap {
                         while (task.IsProcessing) { yield(); }
 
                         if (task.HasFailed || !task.HasSucceeded) {
-                            log("Failed to load replay file from cache: " + currentMapPBRecords[i].FullFilePath, LogLevel::Error, 89, "LoadPBFromCache");
+                            log("Failed to load replay file from cache: " + currentMapPBRecords[i].FullFilePath, LogLevel::Error, 450, "LoadPBFromCache");
                             continue;
                         }
 
@@ -459,7 +459,7 @@ namespace LRBasedOnCurrentMap {
                             ghostMgr.Ghost_Add(ghost);
                         }
                         
-                        log("Loaded PB ghost from " + currentMapPBRecords[i].FullFilePath, LogLevel::Info, 101, "LoadPBFromCache");
+                        log("Loaded PB ghost from " + currentMapPBRecords[i].FullFilePath, LogLevel::Info, 462, "LoadPBFromCache");
                     }
                 }
             }
@@ -475,7 +475,7 @@ namespace LRBasedOnCurrentMap {
                     try {
                         ghostNickname = mgr.Ghosts[i].GhostModel.GhostNickname;
                     } catch {
-                        log("UnloadAllPBs: Failed to access GhostNickname for ghost at index " + i, LogLevel::Warn, 117, "UnloadAllPBs");
+                        log("UnloadAllPBs: Failed to access GhostNickname for ghost at index " + i, LogLevel::Warn, 478, "UnloadAllPBs");
                         continue;
                     }
 
