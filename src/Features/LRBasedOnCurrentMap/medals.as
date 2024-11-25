@@ -4,6 +4,13 @@ namespace Features {
 namespace LRBasedOnCurrentMap {
 
     namespace Medals {
+
+        void OnMapLoad() {
+            startnew(CoroutineFunc(champMedal.OnMapLoad));
+            startnew(CoroutineFunc(warriorMedal.OnMapLoad));
+            startnew(CoroutineFunc(sbVilleMedal.OnMapLoad));
+        }
+
         class Medal {
             bool medalExists = false;
             uint currentMapMedalTime = 0;
@@ -47,7 +54,7 @@ namespace LRBasedOnCurrentMap {
             bool MedalExists() {
                 int startTime = Time::Now;
                 while (Time::Now - startTime < 2000 || GetMedalTime() == 0) { yield(); }
-                log("Medal time is: " + GetMedalTime(), LogLevel::Info, 50, "MedalExists");
+                log("Medal time is: " + GetMedalTime(), LogLevel::Info, 57, "MedalExists");
                 return GetMedalTime() > 0;
             }
 
@@ -67,25 +74,25 @@ namespace LRBasedOnCurrentMap {
                 while (!req.Finished()) { yield(); }
 
                 if (req.ResponseCode() != 200) {
-                    log("Failed to fetch surrounding records, response code: " + req.ResponseCode(), LogLevel::Error, 70, "FetchSurroundingRecords");
+                    log("Failed to fetch surrounding records, response code: " + req.ResponseCode(), LogLevel::Error, 77, "FetchSurroundingRecords");
                     return;
                 }
 
                 Json::Value data = Json::Parse(req.String());
                 if (data.GetType() == Json::Type::Null) {
-                    log("Failed to parse response for surrounding records.", LogLevel::Error, 76, "FetchSurroundingRecords");
+                    log("Failed to parse response for surrounding records.", LogLevel::Error, 83, "FetchSurroundingRecords");
                     return;
                 }
 
                 Json::Value tops = data["tops"];
                 if (tops.GetType() != Json::Type::Array || tops.Length == 0) {
-                    log("Invalid tops data in response.", LogLevel::Error, 82, "FetchSurroundingRecords");
+                    log("Invalid tops data in response.", LogLevel::Error, 89, "FetchSurroundingRecords");
                     return;
                 }
 
                 Json::Value top = tops[0]["top"];
                 if (top.GetType() != Json::Type::Array || top.Length == 0) {
-                    log("Invalid top data in response.", LogLevel::Error, 88, "FetchSurroundingRecords");
+                    log("Invalid top data in response.", LogLevel::Error, 95, "FetchSurroundingRecords");
                     return;
                 }
 
@@ -103,7 +110,7 @@ namespace LRBasedOnCurrentMap {
                     int position = top[i]["position"];
                     int difference = int(currentMapMedalTime) - int(score);
 
-                    log("Found surrounding record: score = " + score + ", accountId = " + accountId + ", position = " + position + ", difference = " + difference, LogLevel::Info, 106, "FetchSurroundingRecords");
+                    log("Found surrounding record: score = " + score + ", accountId = " + accountId + ", position = " + position + ", difference = " + difference, LogLevel::Info, 113, "FetchSurroundingRecords");
 
                     if (difference == 0) {
                         closestScore = score;
@@ -124,7 +131,7 @@ namespace LRBasedOnCurrentMap {
                     timeDifference = smallestDifference;
                     medalHasExactMatch = exactMatchFound;
 
-                    log("Closest record found: score = " + closestScore + ", accountId = " + closestAccountId + ", position = " + closestPosition + ", difference = " + timeDifference, LogLevel::Info, 127, "FetchSurroundingRecords");
+                    log("Closest record found: score = " + closestScore + ", accountId = " + closestAccountId + ", position = " + closestPosition + ", difference = " + timeDifference, LogLevel::Info, 134, "FetchSurroundingRecords");
                     loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), tostring(closestPosition - 1), "Medal", closestAccountId);
                 }
 

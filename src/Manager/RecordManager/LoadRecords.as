@@ -58,27 +58,30 @@ class LoadRecord {
 
     private void Coro_LoadRecordFromUrl(const string &in url) {
         if (url.StartsWith("https://") || url.StartsWith("http://") || url.Contains("trackmania.io") || url.Contains("trackmania.exchange") || url.Contains("www.")) {
-            _Net::DownloadFileToDestination(url, Server::linksFilesDirectory + Path::GetFileName(url), "Link");
-            startnew(CoroutineFuncUserdataString(ProcessDownloadedFile), "Link");
             
-            LoadRecordFromLocalFile(Server::linksFilesDirectory + Path::GetFileName(url));
+            // 
+            _Net::DownloadFileToDestination(url, Server::linksFilesDirectory + Path::GetFileName(url), "Link");
+            while (!_Net::downloadedData.Exists("Link")) { yield(); }
+            string finalFilePath = string(_Net::downloadedData["Link"]);
+            _Net::downloadedData.Delete("Link");
+            while (!IO::FileExists(finalFilePath)) { yield(); }
+            // 
+
+            LoadRecordFromLocalFile(finalFilePath);
         } else {
             log("Invalid URL.", LogLevel::Error, 66, "Coro_LoadRecordFromUrl");
         }
     }
 
-    void ProcessDownloadedFile(const string &in key) {
-        while (!_Net::downloadedFilePaths.Exists(key)) { yield(); }
-
-        string finalFilePath = string(_Net::downloadedFilePaths[key]);
-        _Net::downloadedFilePaths.Delete(key);
-        while (!IO::FileExists(finalFilePath)) { yield(); }
-    }
-
     //////////////////////////////////////////////////////////////////////////
 
+    // Automatically uses MLHook if the PlaygroundScript is not available
     void LoadRecordFromMapUid(const string &in mapUid, const string &in offset, const string &in _specialSaveLocation, const string &in _accountId = "", const string &in _mapId = "") {
-        Features::LRFromMapIdentifier::LoadSelectedRecord(mapUid, offset, _specialSaveLocation, _accountId, _mapId);
+        if (GetApp().PlaygroundScript !is null) {        
+            Features::LRFromMapIdentifier::LoadSelectedRecord(mapUid, offset, _specialSaveLocation, _accountId, _mapId);
+        } else {
+            loadRecord.LoadRecordWithMLHook(mapUid, offset)
+        }
     }
 
     //////////////////////////////////////////////////////////////////////////
@@ -86,5 +89,13 @@ class LoadRecord {
     // Uses MLHook to "Toggle" records
     void LoadRecordFromPlayerId(const string &in playerId) {
         
+    }
+
+    void LoadRecordWithMLHook(const string &in mapUid, const string &in offset) {
+        if (GetApp().PlaygroundScript !is null) {
+            Features::LRFromMapIdentifier::LoadSelectedRecord(mapUid, offset, "AnyMap");
+        } else {
+            
+        }
     }
 }

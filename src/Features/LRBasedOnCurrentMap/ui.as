@@ -174,11 +174,11 @@ namespace LRBasedOnCurrentMap {
 
 
     Medals::ChampionMedal champMedal;
-    Medals::WarriorMedal warriorMedal;
-    Medals::SBVilleMedal sbVilleMedal;
+    Medals::WarriorMedal  warriorMedal;
+    Medals::SBVilleMedal  sbVilleMedal;
 
     Medals::AuthorMedal authorMedal;
-    Medals::GoldMedal goldMedal;
+    Medals::GoldMedal   goldMedal;
     Medals::SilverMedal silverMedal;
     Medals::BronzeMedal bronzeMedal;
 

@@ -17,11 +17,9 @@ namespace MapTracker {
                 if (AllowCheck::ConditionCheckMet()) {
                     // 
 
-                    CurrentMapRecords::ValidationReplay::OnMapLoad();
-                    startnew(CoroutineFunc(champMedal.OnMapLoad));
-                    startnew(CoroutineFunc(warriorMedal.OnMapLoad));
-                    startnew(CoroutineFunc(sbVilleMedal.OnMapLoad));
-                    // CurrentMapRecords::GPS::OnMapLoad();
+                    Features::LRBasedOnCurrentMap::ValidationReplay::OnMapLoad();
+                    Features::LRBasedOnCurrentMap::Medals::OnMapLoad();
+                    // Features::LRBasedOnCurrentMap::GPS::OnMapLoad();
                     
                     // 
                     

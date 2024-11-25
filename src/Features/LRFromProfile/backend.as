@@ -3,33 +3,33 @@
 namespace Features {
 namespace LRFromProfile {
     array<string> jsonFiles;
-    bool IsDownloading = false;
-    bool IsCreatingProfile = false;
+    bool isDownloading = false;
+    bool isCreatingProfile = false;
 
     class MapEntry {
         string mapName;
         string mapUid;
     }
 
-    array<MapEntry> NewProfileMaps;
+    array<MapEntry> newProfileMaps;
 
     void StartDownload(const string &in downloadPath) {
         startnew(Coro_DownloadAndRefreshJsonFiles, downloadPath);
     }
 
     void Coro_DownloadAndRefreshJsonFiles(const string &in downloadPath) {
-        IsDownloading = true;
+        isDownloading = true;
         if (Path::GetExtension(downloadPath).ToLower() != "json" && Path::GetExtension(downloadPath).ToLower() != ".json") {
             NotifyWarn("Error | Invalid file extension.");
-            IsDownloading = false;
+            isDownloading = false;
         } else if (downloadPath != "") {
             string destinationPath = Server::specificDownloadedJsonFilesDirectory + Path::GetFileName(downloadPath);
             DownloadFileToDestination(downloadPath, destinationPath);
             jsonFiles = GetAvailableJsonFiles();
-            IsDownloading = false;
+            isDownloading = false;
         } else {
             NotifyWarn("Error | No Json Download provided.");
-            IsDownloading = false;
+            isDownloading = false;
         }
     }
 
@@ -85,17 +85,17 @@ namespace LRFromProfile {
         newProfile["jsonName"] = jsonName;
         newProfile["maps"] = Json::Array();
         
-        for (uint i = 0; i < NewProfileMaps.Length; i++) {
+        for (uint i = 0; i < newProfileMaps.Length; i++) {
             Json::Value newMap = Json::Object();
-            newMap["mapName"] = NewProfileMaps[i].mapName;
-            newMap["mapUid"] = NewProfileMaps[i].mapUid;
+            newMap["mapName"] = newProfileMaps[i].mapName;
+            newMap["mapUid"] = newProfileMaps[i].mapUid;
             newProfile["maps"].Add(newMap);
         }
 
         string filePath = Server::specificDownloadedCreatedProfilesDirectory + jsonName + ".json";
         _IO::File::WriteFile(filePath, Json::Write(newProfile));
         
-        NewProfileMaps.RemoveRange(0, NewProfileMaps.Length);
+        newProfileMaps.RemoveRange(0, newProfileMaps.Length);
     }
 
     namespace CDN {

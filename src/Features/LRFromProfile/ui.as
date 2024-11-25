@@ -3,7 +3,7 @@
 namespace Features {
 namespace LRFromProfile {
     string selectedJsonFile;
-    array<string> jsonFiles = OtherManager::GetAvailableJsonFiles();
+    array<string> jsonFiles = GetAvailableJsonFiles();
     int selectedIndex = 0;
     string downloadedContent;
     array<Json::Value> mapList;
@@ -12,7 +12,7 @@ namespace LRFromProfile {
 
     int otherOffset = 0;
 
-    void RenderTab_OtherSpecificUIDs() {
+    void RT_LRFromProfile() {
 
         UI::Separator();
 
@@ -20,7 +20,7 @@ namespace LRFromProfile {
         UI::InputText("Download URL", downloadPath);
         UI::SameLine();
         if (UI::Button("Create New Download Profile")) {
-            OtherManager::IsCreatingProfile = true;
+            isCreatingProfile = true;
         }
         UI::SameLine();
         if (UI::Button(Icons::Folder + " Profiles Folder")) {
@@ -32,7 +32,7 @@ namespace LRFromProfile {
         }
         UI::SameLine();
         if (UI::Button(Icons::Refresh + " Refresh")) {
-            jsonFiles = OtherManager::GetAvailableJsonFiles();
+            jsonFiles = GetAvailableJsonFiles();
         }
 
         otherOffset = UI::InputInt("Offset", otherOffset);
@@ -44,8 +44,8 @@ namespace LRFromProfile {
                 if (UI::Selectable(jsonFiles[i], isSelected)) {
                     selectedIndex = i;
                     selectedJsonFile = jsonFiles[i];
-                    downloadedContent = OtherManager::LoadJsonContent(selectedJsonFile);
-                    mapList = OtherManager::GetMapListFromJson(downloadedContent);
+                    downloadedContent = LoadJsonContent(selectedJsonFile);
+                    mapList = GetMapListFromJson(downloadedContent);
                 }
                 if (isSelected) {
                     UI::SetItemDefaultFocus();
@@ -62,53 +62,53 @@ namespace LRFromProfile {
                     UI::Text("Map Name: " + string(map["mapName"]));
                     UI::SameLine();
                     if (UI::Button("Load Records##" + i)) {
-                        LoadRecordFromArbitraryMap::LoadSelectedRecord(map["mapUid"], tostring(otherOffset), "OtherMaps");
+                        loadRecord.LoadRecordFromMapUid(map["mapUid"], tostring(otherOffset), "OtherMaps");
                     }
                     UI::Separator();
                 }
             }
         }
 
-        if (OtherManager::IsDownloading) {
+        if (IsDownloading) {
             UI::OpenPopup("Downloading");
         }
 
-        if (UI::BeginPopupModal("Downloading", OtherManager::IsDownloading, UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
+        if (UI::BeginPopupModal("Downloading", IsDownloading, UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
             UI::Text("Downloading, please wait...");
             UI::EndPopup();
         }
 
-        if (OtherManager::IsCreatingProfile) {
+        if (isCreatingProfile) {
             UI::OpenPopup("Create New Download Profile");
         }
 
-        if (UI::BeginPopupModal("Create New Download Profile", OtherManager::IsCreatingProfile, UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
+        if (UI::BeginPopupModal("Create New Download Profile", isCreatingProfile, UI::WindowFlags::NoResize | UI::WindowFlags::AlwaysAutoResize)) {
             newJsonName = UI::InputText("JSON Name", newJsonName);
 
-            for (uint i = 0; i < OtherManager::NewProfileMaps.Length; i++) {
-                OtherManager::NewProfileMaps[i].mapName = UI::InputText("Map Name##" + i, OtherManager::NewProfileMaps[i].mapName);
+            for (uint i = 0; i < NewProfileMaps.Length; i++) {
+                NewProfileMaps[i].mapName = UI::InputText("Map Name##" + i, NewProfileMaps[i].mapName);
                 UI::SameLine();
-                OtherManager::NewProfileMaps[i].mapUid = UI::InputText("Map UID##" + i, OtherManager::NewProfileMaps[i].mapUid);
+                NewProfileMaps[i].mapUid = UI::InputText("Map UID##" + i, NewProfileMaps[i].mapUid);
                 UI::SameLine();
                 if (UI::Button("Remove##" + i)) {
-                    OtherManager::NewProfileMaps.RemoveAt(i);
+                    NewProfileMaps.RemoveAt(i);
                     i--;
                 }
                 UI::Separator();
             }
 
             if (UI::Button("Add Map")) {
-                OtherManager::NewProfileMaps.InsertLast(OtherManager::MapEntry());
+                NewProfileMaps.InsertLast(MapEntry());
             }
             UI::SameLine();
             if (UI::Button("Save Profile")) {
-                OtherManager::SaveNewProfile(newJsonName);
-                OtherManager::IsCreatingProfile = false;
+                SaveNewProfile(newJsonName);
+                isCreatingProfile = false;
                 UI::CloseCurrentPopup();
             }
             UI::SameLine();
             if (UI::Button("Cancel")) {
-                OtherManager::IsCreatingProfile = false;
+                isCreatingProfile = false;
                 UI::CloseCurrentPopup();
             }
 

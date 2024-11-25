@@ -4,7 +4,7 @@ namespace Features {
 namespace LRFromFile {
     array<string> selectedFiles;
 
-    void RT_LocalFiles() {
+    void RT_LRFromLocalFiles() {
 
         UI::Separator();
 

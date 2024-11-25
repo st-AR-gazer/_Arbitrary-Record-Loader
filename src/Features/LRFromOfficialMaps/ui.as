@@ -13,7 +13,7 @@ namespace LRFromOfficialMaps {
     array<string> seasons;
     array<string> maps;
 
-    void RenderTab_OfficialMaps() {
+    void RT_LRFromOfficialMaps() {
 
         UI::Separator();
 
@@ -81,12 +81,12 @@ namespace LRFromOfficialMaps {
 
         UI::Separator();
 
-        Official_MapUID = OfficialManager::UI::FetchOfficialMapUID();
+        Official_MapUID = FetchOfficialMapUID();
 
         UI::Text(Official_MapUID);
 
         if (UI::Button("Load Record")) {
-            LoadRecordFromArbitraryMap::LoadSelectedRecord(Official_MapUID, tostring(selectedOffset), "Official");
+            loadRecord.LoadRecordFromMapUid(Official_MapUID, tostring(selectedOffset), "Official");
         }
     }
 }

@@ -5,7 +5,7 @@ namespace LRFromMapIdentifier {
     string ghostPosition;
     string mapUID;
 
-    void RenderTab_LoadGhostFromMap() {
+    void RT_LRFromMapUid() {
 
         UI::Separator();
 

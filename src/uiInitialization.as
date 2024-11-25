@@ -20,7 +20,7 @@ void RenderInterface() {
             if (UI::Begin(Icons::UserPlus + " Load arbitrary Records", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
                 UI::BeginTabBar("Tabs");
                 if (UI::BeginTabItem(Icons::Users + " " + Icons::Folder + " Local Files")) {
-                    Features::LRFromFile::RT_LocalFiles();
+                    Features::LRFromFile::RT_LRFromLocalFiles();
                     UI::EndTabItem();
                 }
                 if (UI::BeginTabItem(Icons::Users + Icons::Info + " Loaded")) {
@@ -41,6 +41,10 @@ void RenderInterface() {
                 }
                 if (UI::BeginTabItem(Icons::Map + " " + Icons::Download + " Any Map")) {
                     Features::LRFromMapIdentifier::RT_LRFromMapUid();
+                    UI::EndTabItem();
+                }
+                if (UI::BeginTabItem(Icons::Users + " " + Icons::IdCard + " Player Id")) {
+                    Features::LRFromPlayerId::RT_LRFromPlayerID();
                     UI::EndTabItem();
                 }
                 if (UI::BeginTabItem(Icons::Map + " " + Icons::Globe + " Official")) {
@@ -66,20 +70,20 @@ void RenderInterface() {
             // UI::SetNextWindowSize(670, 300, UI::Cond::FirstUseEver);
             if (UI::Begin(Icons::UserPlus + " Load arbitrary Records", S_windowOpen, UI::WindowFlags::AlwaysAutoResize)) {
                 UI::BeginTabBar("Tabs");
-                if (UI::BeginTabItem(Icons::Users + " Player ID")) {
-                    Features::LRFromPlayerId::RT_LocalFiles();
+                if (UI::BeginTabItem(Icons::Users + " " + Icons::IdCard + " Player Id")) {
+                    Features::LRFromPlayerId::RT_LRFromPlayerID();
                     UI::EndTabItem();
                 }
-
-
-
-
-                if (UI::BeginTabItem(Icons::Users + " " + Icons::Folder + " Local Files")) {
-                    Features::LRFromFile::RT_LocalFiles();
+                if (UI::BeginTabItem(Icons::Map + " " + Icons::Download + " This Map")) {
+                    Features::LRFromThisMap::RT_LRFromThisMap();
                     UI::EndTabItem();
                 }
                 if (UI::BeginTabItem(Icons::Users + Icons::Info + " Loaded")) {
                     Features::CRInfo::RT_CRInfo();
+                    UI::EndTabItem();
+                }
+                if (UI::BeginTabItem(Icons::KeyboardO + " Hotkeys")) {
+                    Features::Hotkeys::RT_Hotkeys();
                     UI::EndTabItem();
                 }
                 UI::EndTabBar();

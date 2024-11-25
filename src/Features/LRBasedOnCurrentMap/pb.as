@@ -99,27 +99,27 @@ namespace LRBasedOnCurrentMap {
 
         void IndexAndSaveToFile() {
 #if DEPENDENCY_ARCHIVIST
-                IndexAndSaveToArchivist();
+            IndexAndSaveToArchivist();
 #else
-                pbRecords.RemoveRange(0, pbRecords.Length);
+            pbRecords.RemoveRange(0, pbRecords.Length);
 
-                for (uint i = 0; i < GetApp().ReplayRecordInfos.Length; i++) {
-                    auto record = GetApp().ReplayRecordInfos[i];
-                    string path = record.Path;
+            for (uint i = 0; i < GetApp().ReplayRecordInfos.Length; i++) {
+                auto record = GetApp().ReplayRecordInfos[i];
+                string path = record.Path;
 
-                    if (path.StartsWith("Autosaves\\")) {
-                        string mapUid = record.MapUid;
-                        string fileName = record.FileName;
+                if (path.StartsWith("Autosaves\\")) {
+                    string mapUid = record.MapUid;
+                    string fileName = record.FileName;
 
-                        string relativePath = "Replays/" + fileName;
-                        string fullFilePath = IO::FromUserGameFolder(relativePath);
+                    string relativePath = "Replays/" + fileName;
+                    string fullFilePath = IO::FromUserGameFolder(relativePath);
 
-                        PBRecord@ pbRecord = PBRecord(mapUid, fileName, fullFilePath);
-                        pbRecords.InsertLast(pbRecord);
-                    }
+                    PBRecord@ pbRecord = PBRecord(mapUid, fileName, fullFilePath);
+                    pbRecords.InsertLast(pbRecord);
                 }
+            }
 
-                SavePBRecordsToFile();
+            SavePBRecordsToFile();
 #endif
         }
 

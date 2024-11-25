@@ -4,7 +4,7 @@ namespace Features {
 namespace LRFromUrl {
     string url;
 
-    void RenderTab_Link() {
+    void RT_LRFromUrl() {
         UI::Separator();
 
         url = UI::InputText("Url", url);
