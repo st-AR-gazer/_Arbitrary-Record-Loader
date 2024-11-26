@@ -18,21 +18,21 @@ namespace LRFromOfficialMaps {
         UI::Separator();
 
         if (UI::Button("Reset Selections")) {
-            UpdateYears();
-            UpdateSeasons();
-            UpdateMaps();
+            Official::UpdateYears();
+            Official::UpdateSeasons();
+            Official::UpdateMaps();
         }
         UI::SameLine();
         if (UI::Button("Run check for New Campaigns again")) {
-            CheckForNewCampaign();
+            Campaign::CheckForNewCampaign();
         }
         UI::SameLine();
         if (UI::Button("Set season year to current")) {
-            SetSeasonYearToCurrent();
+            Official::SetSeasonYearToCurrent();
         }
         UI::SameLine();
         if (UI::Button("Try to set current map based on name")) {
-            SetCurrentMapBasedOnName();
+            Official::SetCurrentMapBasedOnName();
         }
 
         // Year Dropdown
@@ -81,7 +81,7 @@ namespace LRFromOfficialMaps {
 
         UI::Separator();
 
-        Official_MapUID = FetchOfficialMapUID();
+        Official_MapUID = Official::FetchOfficialMapUID();
 
         UI::Text(Official_MapUID);
 

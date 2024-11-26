@@ -1,18 +1,16 @@
 void Initializations() {
     CreateFolders();
-
-    PBVisibilityHook::InitializeHook();
-    Features::Hotkeys::InitHotkeys();
-
+    InitClasses();
     startnew(Server::StartHttpServer);
 
-    InitClasses();
+    PBVisibilityHook::InitializeHook();
 
-    // Gotta check how this has changed
-    Features::LRFromOfficialMaps::Init();
+    Features::Hotkeys::InitHotkeys();
 
-    // Old and outdated, refs are wrong
-    OtherManager::CDN::Init();
+    Features::LRFromOfficialMaps::Official::Init();
+    Features::LRFromOfficialMaps::Campaign::Init();
+
+    
 
     startnew(MapTracker::MapMonitor);
 

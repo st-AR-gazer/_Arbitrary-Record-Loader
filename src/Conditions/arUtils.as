@@ -238,6 +238,12 @@ namespace _Net {
         }
     }
 
+    void GetRequestToEndpoint(const string &in url, const string &in key) {
+        auto data = UserData(key, {url});
+        userData.InsertLast(data);
+        startnew(Hidden::Coro_GetRequestToEndpoint, @data);
+    }
+
     void PostJsonToEndpoint(const string &in url, const string &in payload, const string &in key) {
         auto data = UserData(key, {url, payload});
         userData.InsertLast(data);
@@ -251,11 +257,30 @@ namespace _Net {
     }
 
     namespace Hidden {
-        void Coro_PostJsonToEndpoint(UserData@ data) {
-            if (data.values.Length < 1) {
-                log("Insufficient data in UserData for PostJsonToEndpoint", LogLevel::Error, 256, "Coro_PostJsonToEndpoint");
-                return;
+        void Coro_GetRequestToEndpoint(UserData@ data) {
+            if (data.values.Length < 1) { log("Insufficient data in UserData for GetRequestToEndpoint", LogLevel::Error, 238, "Coro_GetRequestToEndpoint"); return; }
+
+            string url = data.values[0];
+            string key = data.key;
+
+            Net::HttpRequest@ request = Net::HttpRequest();
+            request.Url = url;
+            request.Method = Net::HttpMethod::Get;
+            request.Start();
+
+            while (!request.Finished()) { yield(); }
+
+            if (request.ResponseCode() == 200) {
+                downloadedData[key] = request.String();
+                log("Successfully stored raw response for key: " + key, LogLevel::Info, 251, "Coro_GetRequestToEndpoint");
+            } else {
+                log("Failed to fetch data from endpoint: " + url + ". Response code: " + request.ResponseCode(), LogLevel::Error, 253, "Coro_GetRequestToEndpoint");
+                downloadedData[key] = "{\"error\": \"Failed to fetch data\", \"code\": " + request.ResponseCode() + "}";
             }
+        }
+
+        void Coro_PostJsonToEndpoint(UserData@ data) {
+            if (data.values.Length < 1) { log("Insufficient data in UserData for PostJsonToEndpoint", LogLevel::Error, 256, "Coro_PostJsonToEndpoint"); return; }
 
             string url = data.values[0];
             string payload = data.values[1];
@@ -267,9 +292,7 @@ namespace _Net {
             request.Body = payload;
             request.Start();
 
-            while (!request.Finished()) {
-                yield();
-            }
+            while (!request.Finished()) { yield(); }
 
             if (request.ResponseCode() == 200) {
                 downloadedData[key] = request.String();
@@ -281,10 +304,7 @@ namespace _Net {
         }
 
         void Coro_DownloadFileToDestination(UserData@ data) {
-            if (data.values.Length < 4) {
-                log("Insufficient data in UserData for DownloadFileToDestination", LogLevel::Error, 282, "Coro_DownloadFileToDestination");
-                return;
-            }
+            if (data.values.Length < 4) { log("Insufficient data in UserData for DownloadFileToDestination", LogLevel::Error, 282, "Coro_DownloadFileToDestination"); return; }
 
             string url = data.values[0];
             string destination = data.values[1];

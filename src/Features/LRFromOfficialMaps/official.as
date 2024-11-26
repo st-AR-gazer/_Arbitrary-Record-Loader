@@ -1,127 +1,14 @@
-// src/Features/LoadRecordFromOfficialMaps/official.as
-
 namespace Features {
 namespace LRFromOfficialMaps {
-    int64 endTimestamp = 0;
+namespace Official {
+    int selectedYear = -1;
+    int selectedSeason = -1;
+    int selectedMap = -1;
+    array<int> years;
+    array<string> seasons;
+    array<string> maps;
 
     void Init() {
-        log("Initializing OfficialManager", LogLevel::Info, 8, "Init");
-        
-        LoadEndTimestamp();
-        CheckForNewCampaign();
-    }
-
-    void LoadEndTimestamp() {
-        log("Loading end timestamp", LogLevel::Info, 14, "LoadEndTimestamp");
-
-        string endTimestampFilePath = Server::officialInfoFilesDirectory + "/end_timestamp.txt";
-        if (IO::FileExists(endTimestampFilePath)) {
-            endTimestamp = Text::ParseInt64(_IO::File::ReadFileToEnd(endTimestampFilePath));
-
-            log("Loaded endTimestamp: " + endTimestamp, LogLevel::Info, 20, "LoadEndTimestamp");
-        } else {
-            endTimestamp = 0;
-            log("End timestamp file not found, setting endTimestamp to 0", LogLevel::Warn, 23, "LoadEndTimestamp");
-        }
-    }
-
-
-
-
-    void CheckForNewCampaign() {
-        if (Time::Stamp >= endTimestamp) {
-            log("New campaign check needed", LogLevel::Info, 29, "CheckForNewCampaign");
-            startnew(Coro_CheckForNewCampaign);
-        } else {
-            log("No new campaign check needed", LogLevel::Info, 32, "CheckForNewCampaign");
-        }
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-    void Coro_CheckForNewCampaign() {
-        IndexLocalFiles();
-
-        uint offset = 0;
-        bool continueChecking = true;
-        while (continueChecking) {
-            Json::Value data = api.GetOfficialCampaign(offset);
-            if (data.HasKey("campaignList") && data["campaignList"].Length > 0) {
-                for (uint j = 0; j < data["campaignList"].Length; j++) {
-                    Json::Value campaign = data["campaignList"][j];
-                    string campaignName = campaign["name"];
-                    campaignName = campaignName.Replace(" ", "_");
-
-                    if (localCampaigns.Find(campaignName) == -1) {
-                        log("Downloading missing campaign: " + campaignName, LogLevel::Info, 84, "CheckForNewCampaign");
-                        SaveCampaignData(campaign);
-                    }
-
-                    int64 newEndTimestamp = campaign["endTimestamp"];
-                    if (newEndTimestamp > endTimestamp) {
-                        endTimestamp = newEndTimestamp;
-                    }
-                }
-                offset++;
-            } else {
-                log("No more campaigns found at offset: " + tostring(offset), LogLevel::Info, 95, "CheckForNewCampaign");
-                continueChecking = false;
-            }
-        }
-
-        SaveEndTimestamp();
-    }
-
-    array<string> localCampaigns;
-    void IndexLocalFiles() {
-        localCampaigns.Resize(0);
-        bool recursive = false;
-        array<string>@ files = IO::IndexFolder(Server::officialJsonFilesDirectory, recursive);
-
-        for (uint i = 0; i < files.Length; ++i) {
-            string fileName = Path::GetFileNameWithoutExtension(files[i]);
-            localCampaigns.InsertLast(fileName);
-        }
-    }
-
-    void SaveCampaignData(const Json::Value &in campaign) {
-        string campaignName = campaign["name"];
-        log("Saving campaign data: " + campaignName, LogLevel::Info, 105, "SaveCampaignData");
-
-        string specificSeason = campaign["name"];
-        specificSeason = specificSeason.Replace(" ", "_");
-        string fullFileName = Server::officialJsonFilesDirectory + "/" + specificSeason + ".json";
-
-        _IO::File::WriteFile(fullFileName, Json::Write(campaign));
-        log("Campaign data saved to: " + fullFileName, LogLevel::Info, 112, "SaveCampaignData");
-    }
-
-    void SaveEndTimestamp() {
-        log("Saving end timestamp", LogLevel::Info, 28, "SaveEndTimestamp");
-
-        string endTimestampFilePath = Server::officialInfoFilesDirectory + "/end_timestamp.txt";
-        string endTimestampContent = ("" + endTimestamp);
-
-        IO::File endTimestampFile(endTimestampFilePath, IO::FileMode::Write);
-        endTimestampFile.Write(endTimestampContent);
-        endTimestampFile.Close();
-        log("Saved endTimestamp: " + endTimestamp, LogLevel::Info, 36, "SaveEndTimestamp");
-    }
-
-
-
-
-    void Updating() {
         log("Initializing OfficialManager::UI", LogLevel::Info, 116, "Init");
         UpdateYears();
         UpdateSeasons();
@@ -158,8 +45,7 @@ namespace LRFromOfficialMaps {
             for (uint j = 0; j < playlist.Length; j++) {
                 auto map = playlist[j];
                 if (map["position"] == mapPosition) {
-                    string mapUid = map["mapUid"];
-                    return mapUid;
+                    return map["mapUid"];
                 }
             }
         }
@@ -169,19 +55,12 @@ namespace LRFromOfficialMaps {
     }
 
     void UpdateSeasons() {
-        seasons.RemoveRange(0, seasons.Length);
-        selectedSeason = -1;
-        selectedMap = -1;
-        maps.RemoveRange(0, maps.Length);
-
         seasons = {"Spring", "Summer", "Fall", "Winter"};
         log("Seasons updated: " + seasons.Length + " seasons", LogLevel::Info, 169, "UpdateSeasons");
     }
 
     void UpdateMaps() {
-        maps.RemoveRange(0, maps.Length);
-        selectedMap = -1;
-
+        maps.Resize(0);
         for (int i = 1; i <= 25; i++) {
             maps.InsertLast("Map " + tostring(i));
         }
@@ -189,17 +68,9 @@ namespace LRFromOfficialMaps {
     }
 
     void UpdateYears() {
-        years.RemoveRange(0, years.Length);
-        selectedYear = -1;
-        selectedSeason = -1;
-        selectedMap = -1;
-        maps.RemoveRange(0, maps.Length);
-        seasons.RemoveRange(0, seasons.Length);
-
+        years.Resize(0);
         Time::Info info = Time::Parse();
-        int currentYear = info.Year;
-
-        for (int y = 2020; y <= currentYear; y++) {
+        for (int y = 2020; y <= info.Year; y++) {
             years.InsertLast(y);
         }
         log("Years populated: " + years.Length + " years", LogLevel::Info, 196, "UpdateYears");
@@ -287,6 +158,6 @@ namespace LRFromOfficialMaps {
             }
         }
     }
-
+}
 }
 }

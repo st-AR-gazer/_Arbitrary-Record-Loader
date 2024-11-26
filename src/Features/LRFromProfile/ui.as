@@ -69,7 +69,7 @@ namespace LRFromProfile {
             }
         }
 
-        if (IsDownloading) {
+        if (isDownloading) {
             UI::OpenPopup("Downloading");
         }
 
