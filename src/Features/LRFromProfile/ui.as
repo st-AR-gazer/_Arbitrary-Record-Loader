@@ -3,7 +3,7 @@
 namespace Features {
 namespace LRFromProfile {
     string selectedJsonFile;
-    array<string> jsonFiles = GetAvailableJsonFiles();
+    // array<string> jsonFiles = GetAvailableJsonFiles();
     int selectedIndex = 0;
     string downloadedContent;
     array<Json::Value> mapList;

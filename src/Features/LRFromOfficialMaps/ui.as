@@ -24,7 +24,7 @@ namespace LRFromOfficialMaps {
         }
         UI::SameLine();
         if (UI::Button("Run check for New Campaigns again")) {
-            CheckForNewCampaignIfNeeded();
+            CheckForNewCampaign();
         }
         UI::SameLine();
         if (UI::Button("Set season year to current")) {

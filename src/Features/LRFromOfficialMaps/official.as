@@ -5,9 +5,10 @@ namespace LRFromOfficialMaps {
     int64 endTimestamp = 0;
 
     void Init() {
-        log("Initializing OfficialManager::DownloadingFiles", LogLevel::Info, 8, "Init");
+        log("Initializing OfficialManager", LogLevel::Info, 8, "Init");
+        
         LoadEndTimestamp();
-        CheckForNewCampaignIfNeeded();
+        CheckForNewCampaign();
     }
 
     void LoadEndTimestamp() {
@@ -24,50 +25,31 @@ namespace LRFromOfficialMaps {
         }
     }
 
-    void SaveEndTimestamp() {
-        log("Saving end timestamp", LogLevel::Info, 28, "SaveEndTimestamp");
 
-        string endTimestampFilePath = Server::officialInfoFilesDirectory + "/end_timestamp.txt";
-        string endTimestampContent = ("" + endTimestamp);
 
-        IO::File endTimestampFile(endTimestampFilePath, IO::FileMode::Write);
-        endTimestampFile.Write(endTimestampContent);
-        endTimestampFile.Close();
-        log("Saved endTimestamp: " + endTimestamp, LogLevel::Info, 36, "SaveEndTimestamp");
-    }
-
-    void CheckForNewCampaignIfNeeded(bool bypassCheck = false) {
-        log("Checking if we need to check for new campaign", LogLevel::Info, 40, "CheckForNewCampaignIfNeeded");
-
-        int64 currentTime = Time::Stamp;
-
-        if (bypassCheck) { endTimestamp = 0; }
-        if (currentTime >= endTimestamp) {
-            log("Current time is greater than end timestamp, starting new campaign check", LogLevel::Info, 46, "CheckForNewCampaignIfNeeded");
-            startnew(Coro_CheckForNewCampaign);
-        } else {
-            log("Current time is less than end timestamp, no need to check for new campaign", LogLevel::Info, 49, "CheckForNewCampaignIfNeeded");
-        }
-    }
-
-    void Coro_CheckForNewCampaign() {
-        CheckForNewCampaign();
-    }
-
-    array<string> localCampaigns;
-
-    void IndexLocalFiles() {
-        localCampaigns.Resize(0);
-        bool recursive = false;
-        array<string>@ files = IO::IndexFolder(Server::officialJsonFilesDirectory, recursive);
-
-        for (uint i = 0; i < files.Length; ++i) {
-            string fileName = Path::GetFileNameWithoutExtension(files[i]);
-            localCampaigns.InsertLast(fileName);
-        }
-    }
 
     void CheckForNewCampaign() {
+        if (Time::Stamp >= endTimestamp) {
+            log("New campaign check needed", LogLevel::Info, 29, "CheckForNewCampaign");
+            startnew(Coro_CheckForNewCampaign);
+        } else {
+            log("No new campaign check needed", LogLevel::Info, 32, "CheckForNewCampaign");
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+    void Coro_CheckForNewCampaign() {
         IndexLocalFiles();
 
         uint offset = 0;
@@ -100,6 +82,18 @@ namespace LRFromOfficialMaps {
         SaveEndTimestamp();
     }
 
+    array<string> localCampaigns;
+    void IndexLocalFiles() {
+        localCampaigns.Resize(0);
+        bool recursive = false;
+        array<string>@ files = IO::IndexFolder(Server::officialJsonFilesDirectory, recursive);
+
+        for (uint i = 0; i < files.Length; ++i) {
+            string fileName = Path::GetFileNameWithoutExtension(files[i]);
+            localCampaigns.InsertLast(fileName);
+        }
+    }
+
     void SaveCampaignData(const Json::Value &in campaign) {
         string campaignName = campaign["name"];
         log("Saving campaign data: " + campaignName, LogLevel::Info, 105, "SaveCampaignData");
@@ -112,7 +106,22 @@ namespace LRFromOfficialMaps {
         log("Campaign data saved to: " + fullFileName, LogLevel::Info, 112, "SaveCampaignData");
     }
 
-    void Init() {
+    void SaveEndTimestamp() {
+        log("Saving end timestamp", LogLevel::Info, 28, "SaveEndTimestamp");
+
+        string endTimestampFilePath = Server::officialInfoFilesDirectory + "/end_timestamp.txt";
+        string endTimestampContent = ("" + endTimestamp);
+
+        IO::File endTimestampFile(endTimestampFilePath, IO::FileMode::Write);
+        endTimestampFile.Write(endTimestampContent);
+        endTimestampFile.Close();
+        log("Saved endTimestamp: " + endTimestamp, LogLevel::Info, 36, "SaveEndTimestamp");
+    }
+
+
+
+
+    void Updating() {
         log("Initializing OfficialManager::UI", LogLevel::Info, 116, "Init");
         UpdateYears();
         UpdateSeasons();
