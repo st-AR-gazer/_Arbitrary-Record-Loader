@@ -24,10 +24,10 @@ namespace GamemodeAllowness {
         string reqBody = string(_Net::downloadedData["gamemodeAllowness"]);
         _Net::downloadedData.Delete("gamemodeAllowness");
         
-        if (Json::Parse(reqBody).GetType() != Json::Type::Object) { log("Failed to parse JSON.", LogLevel::Error, 129, "FetchManifest"); mainRequestFailed = true; return; }
+        if (Json::Parse(reqBody).GetType() != Json::Type::Object) { log("Failed to parse JSON.", LogLevel::Error, 27, "Coro_FetchAllowedGamemodesFromNet"); mainRequestFailed = true; return; }
 
         Json::Value manifest = Json::Parse(reqBody);
-        if (manifest.HasKey("error") && manifest["code"] != 200) { log("Failed to fetch data", LogLevel::Error, 133, "FetchManifest"); mainRequestFailed = true; return; }
+        if (manifest.HasKey("error") && manifest["code"] != 200) { log("Failed to fetch data", LogLevel::Error, 30, "Coro_FetchAllowedGamemodesFromNet"); mainRequestFailed = true; return; }
 
         for (uint i = 0; i < manifest["blockedGamemodeList"].Length; i++) {
             GamemodeAllowness::gameModeBlackList.InsertLast(manifest["blockedGamemodeList"][i]);

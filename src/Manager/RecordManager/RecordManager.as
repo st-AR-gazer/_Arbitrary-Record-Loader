@@ -4,7 +4,7 @@ namespace RecordManager {
         if (GetApp().PlaygroundScript is null) return;
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_RemoveAll();
-        log("All ghosts removed.", LogLevel::Info, 9, "RemoveAllRecords");
+        log("All ghosts removed.", LogLevel::Info, 7, "RemoveAllRecords_KeepReferences");
     }
 
     void RemoveAllRecords() {
@@ -24,7 +24,7 @@ namespace RecordManager {
 
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_Remove(instanceId);
-        log("Record with the MwID of: " + instanceId.GetName() + " removed.", LogLevel::Info, 31, "RemoveInstanceRecord");
+        log("Record with the MwID of: " + instanceId.GetName() + " removed.", LogLevel::Info, 27, "RemoveInstanceRecord");
     }
 
     void RemovePBRecord() {
@@ -47,7 +47,7 @@ namespace RecordManager {
     void set_RecordDossard(MwId instanceId, const string &in dossard, vec3 color = vec3()) {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_SetDossard(instanceId, dossard, color);
-        log("Record dossard set.", LogLevel::Info, 53, "RemovePBRecord");
+        log("Record dossard set.", LogLevel::Info, 50, "RemovePBRecord");
     }
 
     bool IsRecordVisible(MwId instanceId) {
@@ -65,7 +65,7 @@ namespace RecordManager {
     void AddRecordWithOffset(CGameGhostScript@ ghost, const int &in offset) {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_Add(ghost, true, offset);
-        log("Ghost added with offset.", LogLevel::Info, 71, "AddRecordWithOffset");
+        log("Ghost added with offset.", LogLevel::Info, 68, "AddRecordWithOffset");
     }
 
     string get_RecordNameFromId(MwId id) {
@@ -132,7 +132,7 @@ namespace RecordManager {
 
         for (uint i = 0; i < ghosts.Length; i++) {
             if (ghosts[i].Nickname == "cfa844b7-6b53-4663-ac0d-9bdd3ad1af22") {
-                log("VTable ghost already exists.", LogLevel::Info, 9, "AddVTableGhost");
+                log("VTable ghost already exists.", LogLevel::Info, 135, "AddVTableGhost");
                 return;
             } else {
                 loadRecord.LoadVTableRecord();

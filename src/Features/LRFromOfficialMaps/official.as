@@ -9,7 +9,7 @@ namespace Official {
     array<string> maps;
 
     void Init() {
-        log("Initializing OfficialManager::UI", LogLevel::Info, 116, "Init");
+        log("Initializing OfficialManager::UI", LogLevel::Info, 12, "Init");
         UpdateYears();
         UpdateSeasons();
         UpdateMaps();
@@ -26,13 +26,13 @@ namespace Official {
 
         string filePath = Server::officialJsonFilesDirectory + "/" + season + "_" + tostring(year) + ".json";
         if (!IO::FileExists(filePath)) {
-            log("File not found: " + filePath, LogLevel::Error, 133, "FetchOfficialMapUID");
+            log("File not found: " + filePath, LogLevel::Error, 29, "FetchOfficialMapUID");
             return "";
         }
 
         Json::Value root = Json::Parse(_IO::File::ReadFileToEnd(filePath));
         if (root.GetType() == Json::Type::Null) {
-            log("Failed to parse JSON file: " + filePath, LogLevel::Error, 139, "FetchOfficialMapUID");
+            log("Failed to parse JSON file: " + filePath, LogLevel::Error, 35, "FetchOfficialMapUID");
             return "";
         }
 
@@ -50,13 +50,13 @@ namespace Official {
             }
         }
 
-        log("Map UID not found for position: " + tostring(mapPosition), LogLevel::Error, 158, "FetchOfficialMapUID");
+        log("Map UID not found for position: " + tostring(mapPosition), LogLevel::Error, 53, "FetchOfficialMapUID");
         return "";
     }
 
     void UpdateSeasons() {
         seasons = {"Spring", "Summer", "Fall", "Winter"};
-        log("Seasons updated: " + seasons.Length + " seasons", LogLevel::Info, 169, "UpdateSeasons");
+        log("Seasons updated: " + seasons.Length + " seasons", LogLevel::Info, 59, "UpdateSeasons");
     }
 
     void UpdateMaps() {
@@ -64,7 +64,7 @@ namespace Official {
         for (int i = 1; i <= 25; i++) {
             maps.InsertLast("Map " + tostring(i));
         }
-        log("Maps updated: " + maps.Length + " maps", LogLevel::Info, 179, "UpdateMaps");
+        log("Maps updated: " + maps.Length + " maps", LogLevel::Info, 67, "UpdateMaps");
     }
 
     void UpdateYears() {
@@ -73,7 +73,7 @@ namespace Official {
         for (int y = 2020; y <= info.Year; y++) {
             years.InsertLast(y);
         }
-        log("Years populated: " + years.Length + " years", LogLevel::Info, 196, "UpdateYears");
+        log("Years populated: " + years.Length + " years", LogLevel::Info, 76, "UpdateYears");
     }
 
     void SetSeasonYearToCurrent() {

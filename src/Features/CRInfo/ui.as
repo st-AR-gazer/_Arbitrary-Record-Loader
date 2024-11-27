@@ -17,7 +17,7 @@ namespace CRInfo {
         UI::Separator();
 
         if (UI::Button("Remove All Records")) {
-            log("Remove All Records button clicked", LogLevel::Info, 14, "RT_CRInfo");
+            log("Remove All Records button clicked", LogLevel::Info, 20, "RT_CRInfo");
             RecordManager::RemoveAllRecords();
         }
 
@@ -58,13 +58,13 @@ namespace CRInfo {
         }
 
         if (UI::Button(Icons::UserTimes + " Remove Specific Record")) {
-            log("Remove Specific Record button clicked", LogLevel::Info, 56, "RT_CRInfo");
+            log("Remove Specific Record button clicked", LogLevel::Info, 61, "RT_CRInfo");
             RecordManager::RemoveInstanceRecord(selectedRecordID);
             selectedRecordID = MwId();
         }
 
         if (UI::Button(Icons::Kenney::Save + " Save Ghost/Replay")) {
-            log("Save Ghost button clicked", LogLevel::Info, 63, "RT_CRInfo");
+            log("Save Ghost button clicked", LogLevel::Info, 67, "RT_CRInfo");
             RecordManager::Save::SaveRecord();
         }
         

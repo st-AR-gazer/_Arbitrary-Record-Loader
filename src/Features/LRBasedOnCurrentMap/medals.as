@@ -83,7 +83,7 @@ namespace Medals {
         bool MedalExists() {
             int startTime = Time::Now;
             while (Time::Now - startTime < 2000 || GetMedalTime() == 0) { yield(); }
-            log("Medal time is: " + GetMedalTime(), LogLevel::Info, 57, "MedalExists");
+            log("Medal time is: " + GetMedalTime(), LogLevel::Info, 86, "MedalExists");
             return GetMedalTime() > 0;
         }
 
@@ -103,25 +103,25 @@ namespace Medals {
             while (!req.Finished()) { yield(); }
 
             if (req.ResponseCode() != 200) {
-                log("Failed to fetch surrounding records, response code: " + req.ResponseCode(), LogLevel::Error, 77, "FetchSurroundingRecords");
+                log("Failed to fetch surrounding records, response code: " + req.ResponseCode(), LogLevel::Error, 106, "FetchSurroundingRecords");
                 return;
             }
 
             Json::Value data = Json::Parse(req.String());
             if (data.GetType() == Json::Type::Null) {
-                log("Failed to parse response for surrounding records.", LogLevel::Error, 83, "FetchSurroundingRecords");
+                log("Failed to parse response for surrounding records.", LogLevel::Error, 112, "FetchSurroundingRecords");
                 return;
             }
 
             Json::Value tops = data["tops"];
             if (tops.GetType() != Json::Type::Array || tops.Length == 0) {
-                log("Invalid tops data in response.", LogLevel::Error, 89, "FetchSurroundingRecords");
+                log("Invalid tops data in response.", LogLevel::Error, 118, "FetchSurroundingRecords");
                 return;
             }
 
             Json::Value top = tops[0]["top"];
             if (top.GetType() != Json::Type::Array || top.Length == 0) {
-                log("Invalid top data in response.", LogLevel::Error, 95, "FetchSurroundingRecords");
+                log("Invalid top data in response.", LogLevel::Error, 124, "FetchSurroundingRecords");
                 return;
             }
 
@@ -139,7 +139,7 @@ namespace Medals {
                 int position = top[i]["position"];
                 int difference = int(currentMapMedalTime) - int(score);
 
-                log("Found surrounding record: score = " + score + ", accountId = " + accountId + ", position = " + position + ", difference = " + difference, LogLevel::Info, 113, "FetchSurroundingRecords");
+                log("Found surrounding record: score = " + score + ", accountId = " + accountId + ", position = " + position + ", difference = " + difference, LogLevel::Info, 142, "FetchSurroundingRecords");
 
                 if (difference == 0) {
                     closestScore = score;
@@ -160,7 +160,7 @@ namespace Medals {
                 timeDifference = smallestDifference;
                 medalHasExactMatch = exactMatchFound;
 
-                log("Closest record found: score = " + closestScore + ", accountId = " + closestAccountId + ", position = " + closestPosition + ", difference = " + timeDifference, LogLevel::Info, 134, "FetchSurroundingRecords");
+                log("Closest record found: score = " + closestScore + ", accountId = " + closestAccountId + ", position = " + closestPosition + ", difference = " + timeDifference, LogLevel::Info, 163, "FetchSurroundingRecords");
                 loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), tostring(closestPosition - 1), "Medal", closestAccountId);
             }
 

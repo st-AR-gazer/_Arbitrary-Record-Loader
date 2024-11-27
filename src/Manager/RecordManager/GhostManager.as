@@ -64,7 +64,7 @@ namespace GhostTracker {
             for (uint i = 0; i < trackedGhosts.Length; i++) {
                 trackedGhosts.RemoveRange(0, trackedGhosts.Length);
             }
-            log("Cleared all tracked ghosts.", LogLevel::Info, 68, "ClearTrackedGhosts");
+            log("Cleared all tracked ghosts.", LogLevel::Info, 67, "ClearTrackedGhosts");
         }
 
         bool IsGhostRemoved(MwId id) {

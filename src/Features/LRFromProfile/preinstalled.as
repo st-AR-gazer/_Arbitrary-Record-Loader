@@ -17,10 +17,10 @@
         string reqBody = string(_Net::downloadedData["gamemodeAllowness"]);
         _Net::downloadedData.Delete("gamemodeAllowness");
         
-        if (Json::Parse(reqBody).GetType() != Json::Type::Object) { log("Failed to parse JSON.", LogLevel::Error, 129, "FetchManifest"); mainRequestFailed = true; return; }
+        if (Json::Parse(reqBody).GetType() != Json::Type::Object) { log("Failed to parse JSON.", LogLevel::Error, 20, "Coro_FetchAllowedGamemodesFromNet"); mainRequestFailed = true; return; }
 
         Json::Value manifest = Json::Parse(reqBody);
-        if (manifest.HasKey("error") && manifest["code"] != 200) { log("Failed to fetch data", LogLevel::Error, 133, "FetchManifest"); mainRequestFailed = true; return; }
+        if (manifest.HasKey("error") && manifest["code"] != 200) { log("Failed to fetch data", LogLevel::Error, 23, "Coro_FetchAllowedGamemodesFromNet"); mainRequestFailed = true; return; }
 
         for (uint i = 0; i < manifest["blockedGamemodeList"].Length; i++) {
             GamemodeAllowness::gameModeBlackList.InsertLast(manifest["blockedGamemodeList"][i]);
@@ -56,25 +56,25 @@ namespace Preinstalled {
         string reqBody = string(_Net::downloadedData["preinstalledManifest"]);
         _Net::downloadedData.Delete("preinstalledManifest");
 
-        if (Json::Parse(reqBody).GetType() != Json::Type::Object) { log("Failed to parse JSON.", LogLevel::Error, 129, "FetchManifest"); return; }
+        if (Json::Parse(reqBody).GetType() != Json::Type::Object) { log("Failed to parse JSON.", LogLevel::Error, 59, "Coro_FetchPreinstalledManifest"); return; }
 
         ParseManifest(reqBody);
     }
 
     void ParseManifest(const string &in reqBody) {
         Json::Value manifest = Json::Parse(reqBody);
-        if (manifest.GetType() != Json::Type::Object) { log("Failed to parse JSON.", LogLevel::Error, 129, "ParseManifest"); return; }
+        if (manifest.GetType() != Json::Type::Object) { log("Failed to parse JSON.", LogLevel::Error, 66, "ParseManifest"); return; }
 
         bool shouldUpdate = manifest["shouldUpdate"];
         if (!shouldUpdate) return;
 
         int version = manifest["version"];
         if (version > get_StoredVersion()) {
-            log("New version available: " + version, LogLevel::Info, 138, "ParseManifest");
+            log("New version available: " + version, LogLevel::Info, 73, "ParseManifest");
             DownloadFiles(manifest);
             set_StoredVersion(version);
         } else {
-            log("No new version available.", LogLevel::Info, 143, "ParseManifest");
+            log("No new version available.", LogLevel::Info, 77, "ParseManifest");
         }
     }
 
@@ -91,7 +91,7 @@ namespace Preinstalled {
             string path = Server::specificDownloadedJsonFilesDirectory + filename;
 
             if (shouldDownloadFilesIfTheyAreAleadyDownloaded || !IO::FileExists(path)) {
-                log("Downloading: " + filename, LogLevel::Info, 160, "DownloadFiles");
+                log("Downloading: " + filename, LogLevel::Info, 94, "DownloadFiles");
 
                 _Net::DownloadFileToDestination(url, path, "other", Path::GetFileName(filename));
             }

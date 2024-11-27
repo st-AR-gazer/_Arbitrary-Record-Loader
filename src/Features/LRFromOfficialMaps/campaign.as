@@ -16,19 +16,19 @@ int64 endTimestamp = 0;
 
         if (IO::FileExists(endTimestampFilePath)) {
             endTimestamp = Text::ParseInt64(_IO::File::ReadFileToEnd(endTimestampFilePath));
-            log("Loaded endTimestamp: " + endTimestamp, LogLevel::Info, 20, "LoadEndTimestamp");
+            log("Loaded endTimestamp: " + endTimestamp, LogLevel::Info, 19, "LoadEndTimestamp");
         } else {
             endTimestamp = 0;
-            log("End timestamp file not found, setting endTimestamp to 0", LogLevel::Warn, 23, "LoadEndTimestamp");
+            log("End timestamp file not found, setting endTimestamp to 0", LogLevel::Warn, 22, "LoadEndTimestamp");
         }
     }
 
     void CheckForNewCampaign() {
         if (Time::Stamp >= endTimestamp) {
-            log("New campaign check needed", LogLevel::Info, 29, "CheckForNewCampaign");
+            log("New campaign check needed", LogLevel::Info, 28, "CheckForNewCampaign");
             startnew(Coro_CheckForNewCampaign);
         } else {
-            log("No new campaign check needed", LogLevel::Info, 32, "CheckForNewCampaign");
+            log("No new campaign check needed", LogLevel::Info, 31, "CheckForNewCampaign");
         }
     }
 
@@ -45,7 +45,7 @@ int64 endTimestamp = 0;
                     string campaignName = string(campaign["name"]).Replace(" ", "_");
 
                     if (localCampaigns.Find(campaignName) == -1) {
-                        log("Downloading missing campaign: " + campaignName, LogLevel::Info, 84, "Coro_CheckForNewCampaign");
+                        log("Downloading missing campaign: " + campaignName, LogLevel::Info, 48, "Coro_CheckForNewCampaign");
                         SaveCampaignData(campaign);
                     }
 
@@ -56,7 +56,7 @@ int64 endTimestamp = 0;
                 }
                 offset++;
             } else {
-                log("No more campaigns found at offset: " + tostring(offset), LogLevel::Info, 95, "Coro_CheckForNewCampaign");
+                log("No more campaigns found at offset: " + tostring(offset), LogLevel::Info, 59, "Coro_CheckForNewCampaign");
                 continueChecking = false;
             }
         }
@@ -77,24 +77,24 @@ int64 endTimestamp = 0;
 
     void SaveCampaignData(const Json::Value &in campaign) {
         string campaignName = campaign["name"];
-        log("Saving campaign data: " + campaignName, LogLevel::Info, 105, "SaveCampaignData");
+        log("Saving campaign data: " + campaignName, LogLevel::Info, 80, "SaveCampaignData");
 
         string specificSeason = campaignName.Replace(" ", "_");
         string fullFileName = Server::officialJsonFilesDirectory + "/" + specificSeason + ".json";
 
         _IO::File::WriteFile(fullFileName, Json::Write(campaign));
-        log("Campaign data saved to: " + fullFileName, LogLevel::Info, 112, "SaveCampaignData");
+        log("Campaign data saved to: " + fullFileName, LogLevel::Info, 86, "SaveCampaignData");
     }
 
     void SaveEndTimestamp() {
-        log("Saving end timestamp", LogLevel::Info, 28, "SaveEndTimestamp");
+        log("Saving end timestamp", LogLevel::Info, 90, "SaveEndTimestamp");
 
         string endTimestampFilePath = Server::officialInfoFilesDirectory + "/end_timestamp.txt";
         IO::File endTimestampFile(endTimestampFilePath, IO::FileMode::Write);
         endTimestampFile.Write("" + endTimestamp);
         endTimestampFile.Close();
 
-        log("Saved endTimestamp: " + endTimestamp, LogLevel::Info, 36, "SaveEndTimestamp");
+        log("Saved endTimestamp: " + endTimestamp, LogLevel::Info, 97, "SaveEndTimestamp");
     }
 
 }

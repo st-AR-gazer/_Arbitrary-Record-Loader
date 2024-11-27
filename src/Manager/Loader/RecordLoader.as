@@ -69,7 +69,7 @@ class LoadRecord {
 
             LoadRecordFromLocalFile(finalFilePath);
         } else {
-            log("Invalid URL.", LogLevel::Error, 66, "Coro_LoadRecordFromUrl");
+            log("Invalid URL.", LogLevel::Error, 72, "Coro_LoadRecordFromUrl");
         }
     }
 
