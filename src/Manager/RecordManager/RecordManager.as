@@ -1,16 +1,13 @@
 namespace RecordManager {
-    array<CGameGhostScript@> ghosts;
+
+    void RemoveAllRecords_KeepReferences() {
+        if (GetApp().PlaygroundScript is null) return;
+        auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
+        gm.Ghost_RemoveAll();
+        log("All ghosts removed.", LogLevel::Info, 9, "RemoveAllRecords");
+    }
 
     void RemoveAllRecords() {
-        // Does technically remove all the ghosts, but the instance isn't cleared...
-        // if (GetApp().PlaygroundScript is null) return;
-        // auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
-        // gm.Ghost_RemoveAll();
-        // log("All ghosts removed.", LogLevel::Info, 9, "RemoveAllRecords");
-        // GhostTracker::ClearTrackedGhosts();
-
-        // This removes the ghosts from the list, as well as the instance.
-
         if (GetApp().PlaygroundScript is null) return;
 
         auto dataFileMgr = GetApp().Network.ClientManiaAppPlayground.DataFileMgr;
@@ -20,7 +17,6 @@ namespace RecordManager {
             CGameGhostScript@ ghost = cast<CGameGhostScript>(newGhosts[i]);
             RemoveInstanceRecord(ghost.Id);
         }
-        GhostTracker().ClearTrackedGhosts();
     }
 
     void RemoveInstanceRecord(MwId instanceId) {
@@ -29,7 +25,6 @@ namespace RecordManager {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_Remove(instanceId);
         log("Record with the MwID of: " + instanceId.GetName() + " removed.", LogLevel::Info, 31, "RemoveInstanceRecord");
-        GhostTracker().RemoveTrackedGhost(instanceId);
     }
 
     void RemovePBRecord() {
@@ -38,16 +33,18 @@ namespace RecordManager {
         auto dataFileMgr = GetApp().Network.ClientManiaAppPlayground.DataFileMgr;
         auto newGhosts = dataFileMgr.Ghosts;
 
+        // More to "Features::LRBasedOnCurrentMap::PB::PBManager::RemovePBRecord"
+
         for (uint i = 0; i < newGhosts.Length; i++) {
             CGameGhostScript@ ghost = cast<CGameGhostScript>(newGhosts[i]);
             if (ghost.Nickname == "PB") {
                 RemoveInstanceRecord(ghost.Id);
                 return;
             }
-        }
+        } 
     }
 
-    void SetRecordDossard(MwId instanceId, const string &in dossard, vec3 color = vec3()) {
+    void set_RecordDossard(MwId instanceId, const string &in dossard, vec3 color = vec3()) {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_SetDossard(instanceId, dossard, color);
         log("Record dossard set.", LogLevel::Info, 53, "RemovePBRecord");
@@ -69,10 +66,14 @@ namespace RecordManager {
         auto gm = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript).GhostMgr;
         gm.Ghost_Add(ghost, true, offset);
         log("Ghost added with offset.", LogLevel::Info, 71, "AddRecordWithOffset");
-        GhostTracker().AddTrackedGhost(ghost);
     }
 
-    string GetRecordNameFromId(MwId id) {
+    string get_RecordNameFromId(MwId id) {
+        auto dfm = GetApp().Network.ClientManiaAppPlayground.DataFileMgr;
+        if (dfm is null) return "";
+        auto ghosts = dfm.Ghosts;
+        if (ghosts.Length == 0) return "";
+
         for (uint i = 0; i < ghosts.Length; i++) {
             if (ghosts[i].Id.Value == id.Value) {
                 return ghosts[i].Nickname;
@@ -81,8 +82,14 @@ namespace RecordManager {
         return "";
     }
 
-    MwId[] GetRecordIdFromName(const string &in name) {
+    MwId[] get_RecordIdFromName(const string &in name) {
         array<MwId> ids;
+
+        auto dfm = GetApp().Network.ClientManiaAppPlayground.DataFileMgr;
+        if (dfm is null) return "";
+        auto ghosts = dfm.Ghosts;
+        if (ghosts.Length == 0) return "";
+
         for (uint i = 0; i < ghosts.Length; i++) {
             if (ghosts[i].Nickname == name) {
                 ids.InsertLast(ghosts[i].Id);
@@ -91,18 +98,45 @@ namespace RecordManager {
         return ids;
     }
 
-    string GetGhostInfo(MwId id) {
+    string get_GhostInfo(MwId id) {
+        auto dfm = GetApp().Network.ClientManiaAppPlayground.DataFileMgr;
+        if (dfm is null) return "";
+        auto ghosts = dfm.Ghosts;
+        if (ghosts.Length == 0) return "";
+
         for (uint i = 0; i < ghosts.Length; i++) {
             if (ghosts[i].Id.Value == id.Value) {
                 auto ghost = ghosts[i];
-                return "Nickname: " + ghost.Nickname + "\n"
-                       + "Trigram: " + ghost.Trigram + "\n"
-                       + "Country Path: " + ghost.CountryPath + "\n"
-                       + "Time: " + ghost.Result.Time + "\n"
-                       + "Stunt Score: " + ghost.Result.Score + "\n"
-                       + "MwId: " + ghost.Id.Value + "\n";
+                
+                dictionary ghostInfo;
+
+                ghostInfo["Nickname"] = ghost.Nickname;
+                ghostInfo["Trigram"] = ghost.Trigram;
+                ghostInfo["CountryPath"] = ghost.CountryPath;
+                ghostInfo["Time"] = ghost.Result.Time;
+                ghostInfo["StuntScore"] = ghost.Result.Score;
+                ghostInfo["MwId"] = ghost.Id.Value;
+
+                return ghostInfo;
             }
         }
         return "No ghost selected.";
+    }
+
+    // Not used for now, as this was mostly needed for "GPS" research, I've decided to keep the ghost and function around just in case I work on it more in the future tho :xdd:.
+    void AddVTableGhost() {
+        auto dfm = GetApp().Network.ClientManiaAppPlayground.DataFileMgr;
+        if (dfm is null) return;
+        auto ghosts = dfm.Ghosts;
+        if (ghosts.Length == 0) return;
+
+        for (uint i = 0; i < ghosts.Length; i++) {
+            if (ghosts[i].Nickname == "cfa844b7-6b53-4663-ac0d-9bdd3ad1af22") {
+                log("VTable ghost already exists.", LogLevel::Info, 9, "AddVTableGhost");
+                return;
+            } else {
+                loadRecord.LoadVTableRecord();
+            }
+        }
     }
 }

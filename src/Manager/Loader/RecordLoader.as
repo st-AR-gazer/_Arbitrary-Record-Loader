@@ -98,4 +98,12 @@ class LoadRecord {
             
         }
     }
+
+    //////////////////////////////////////////////////////////////////////////
+
+    // Loads the VTable record stored in `src/Dummy/CTmRaceResult_VTable_Ptr.Replay.Gbx`
+    void LoadVTableRecord() {
+        _IO::File::CopySourceFileToNonSource("src/Dummy/CTmRaceResult_VTable_Ptr.Replay.Gbx", Server::replayARLDummy + "CTmRaceResult_VTable_Ptr.Replay.Gbx");
+        loadRecord.LoadRecordFromLocalFile(Server::replayARLDummy + "CTmRaceResult_VTable_Ptr.Replay.Gbx");
+    }
 }

@@ -1,19 +1,19 @@
-namespace RecordManager {
+// Uppon thinking about it for a bit I've decided to remove the GhsotTracker since it wasn't really doing anything, and the data can be gotten from the RecordManager and the game directly instead.
+
+namespace GhostTracker {
+/*
+    
+    // array<CGameGhostScript@> ghosts;
+    GhostTracker@ ghostTracker;
 
     class GhostTracker {
         array<CGameGhostScript@> trackedGhosts;
         array<MwId> removedGhosts;
 
-        void Init() {
-            log("Initializing GhostTracker", LogLevel::Info, 8, "Init");
-            UpdateGhosts();
-        }
-
         void UpdateGhosts() {
-            auto app = GetApp();
-            if (app is null || app.Network is null || app.Network.ClientManiaAppPlayground is null) { log("App or network components not ready", LogLevel::Warn, 14, "UpdateGhosts"); return; }
+            if (GetApp().Network.ClientManiaAppPlayground is null) { log("App or network components not ready", LogLevel::Warn, 14, "UpdateGhosts"); return; }
 
-            auto dataFileMgr = app.Network.ClientManiaAppPlayground.DataFileMgr;
+            auto dataFileMgr = GetApp().Network.ClientManiaAppPlayground.DataFileMgr;
             auto newGhosts = dataFileMgr.Ghosts;
             ghosts.RemoveRange(0, ghosts.Length);
 
@@ -62,9 +62,8 @@ namespace RecordManager {
 
         void ClearTrackedGhosts() {
             for (uint i = 0; i < trackedGhosts.Length; i++) {
-                
+                trackedGhosts.RemoveRange(0, trackedGhosts.Length);
             }
-            trackedGhosts.RemoveRange(0, trackedGhosts.Length);
             log("Cleared all tracked ghosts.", LogLevel::Info, 68, "ClearTrackedGhosts");
         }
 
@@ -86,7 +85,7 @@ namespace RecordManager {
             return false;
         }
 
-        string GetTrackedGhostNameById(MwId id) {
+        string get_TrackedGhostNameById(MwId id) {
             for (uint i = 0; i < trackedGhosts.Length; i++) {
                 if (trackedGhosts[i].Id.Value == id.Value) {
                     return trackedGhosts[i].Nickname;
@@ -95,7 +94,7 @@ namespace RecordManager {
             return "";
         }
 
-        string GetTrackedGhostInfo(MwId id) {
+        string get_TrackedGhostInfo(MwId id) {
             for (uint i = 0; i < trackedGhosts.Length; i++) {
                 if (trackedGhosts[i].Id.Value == id.Value) {
                     auto ghost = trackedGhosts[i];
@@ -116,4 +115,5 @@ namespace RecordManager {
         }
     }
     
+*/
 }

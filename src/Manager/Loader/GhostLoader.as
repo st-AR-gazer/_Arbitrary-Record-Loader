@@ -20,7 +20,7 @@ namespace GhostLoader {
     }
 
     void LoadGhostFromUrlAsync(const string &in url) {
-        
+
         auto ps = cast<CSmArenaRulesMode>(GetApp().PlaygroundScript);
         if (ps is null) { log("PlaygroundScript is null", LogLevel::Error, 25, "LoadGhostFromUrlAsync"); return; }
         CGameDataFileManagerScript@ dfm = ps.DataFileMgr;
