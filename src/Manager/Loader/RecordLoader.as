@@ -80,23 +80,19 @@ class LoadRecord {
         if (GetApp().PlaygroundScript !is null) {        
             Features::LRFromMapIdentifier::LoadSelectedRecord(mapUid, offset, _specialSaveLocation, _accountId, _mapId);
         } else {
-            loadRecord.LoadRecordWithMLHook(mapUid, offset)
+            loadRecord.LoadRecordWithMLHook(mapUid, offset, _accountId, _mapId);
         }
     }
 
     //////////////////////////////////////////////////////////////////////////
 
     // Uses MLHook to "Toggle" records
-    void LoadRecordFromPlayerId(const string &in playerId) {
-        
+    void LoadRecordFromPlayerId(const string &in _accountId) {
+        loadRecord.LoadRecordWithMLHook("", "", _accountId);
     }
 
-    void LoadRecordWithMLHook(const string &in mapUid, const string &in offset) {
-        if (GetApp().PlaygroundScript !is null) {
-            Features::LRFromMapIdentifier::LoadSelectedRecord(mapUid, offset, "AnyMap");
-        } else {
-            
-        }
+    void LoadRecordWithMLHook(const string &in mapUid, const string &in offset, const string &in _accountId = "", const string &in _mapId = "") {
+        
     }
 
     //////////////////////////////////////////////////////////////////////////
