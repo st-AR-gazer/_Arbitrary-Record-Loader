@@ -1,45 +1,55 @@
 // src/Features/Hotkeys/backend.as
 
 namespace Features {
+// FIXME: Note that if a hotkey, when held can be used in later hotkeys after executing it's own hotkey, so if I press "P" 
+// to open say, the interface, if I then continue to hold it I cannot press "T" to then like a map, the 'like' will then be 
+// ignored and the interface will be the only thing to change... So yeah, not exactly ideal and needs a fix :xdd:¨
+// Note that this is also dependent on the order at which the hotkey was added, if I add X then Y then Z "Z" will not override
+// "X" and "Y", but "Y" will override "Z" and "X" will override "Y" and "Z"... So yeah, it's a bit of a mess :xdd:
+
+// FIXME: A hotkey can sometimes be triggered twice from one button press, I need to look into this at some point :xdd:
+
 namespace Hotkeys {
-    bool showAddHotkeyUI = false;
-    bool showEditHotkeyUI = false;
-    string selectedAction = "";
-    string actionToEdit = "";
-    array<string> newKeyCombination;
-    array<string> editKeyCombination;
-    int loadXPosition = 1;
-    string configFilePath = IO::FromStorageFolder("hotkeys_config.ini");
+
+    interface IHotkeyModule {
+        void Initialize();
+        array<string> GetAvailableActions();
+        bool ExecuteAction(const string &in action, Hotkey@ hotkey);
+    }
 
     class Hotkey {
-        array<string> keyCombination;
         string action;
         int extraValue = -1;
 
-        Hotkey(array<string> keyCombination, const string &in action, int extraValue = -1) {
-            this.keyCombination = keyCombination;
+        bool isOrdered = false;       
+        string comboString = "";      
+        array<ComboStep@> steps;      
+
+        Hotkey(const string &in action, const string &in comboString, bool isOrdered, int extraValue = -1) {
             this.action = action;
+            this.isOrdered = isOrdered;
+            this.comboString = comboString;
             this.extraValue = extraValue;
         }
 
         string get_description() const {
-            string keys = "";
-            for (uint i = 0; i < keyCombination.Length; i++) {
-                if (i > 0) keys += " + ";
-                keys += keyCombination[i];
-            }
-            return keys + " : " + action;
+            return comboString + " : " + action;
         }
     }
 
+    class ComboStep {
+        array<ComboCondition@> conditions;
+    }
+
+    class ComboCondition {
+        array<string> orKeys;
+    }
+
+    string configFilePath = IO::FromStorageFolder("hotkeys_config.ini");
+    array<IHotkeyModule@> hotkeyModules;
     dictionary hotkeyMappings;
 
-    array<string> availableActions = {
-        "Load top 1 time", "Load top 2 time", "Load top 3 time",
-        "Load top 4 time", "Load top 5 time", "Load X time",
-        "Remove all ghosts from current map", "Remove PB Ghost", 
-        "Open/Close Interface", "Open Interface", "Close Interface"
-    };
+    dictionary currentlyPressedKeys;
 
     array<string> GenerateKeyList() {
         array<string> keys;
@@ -53,22 +63,11 @@ namespace Hotkeys {
         return keys;
     }
 
-    bool CompareKeyCombinations(array<string>@ combo1, array<string>@ combo2) {
-        if (combo1.Length != combo2.Length) return false;
-        for (uint i = 0; i < combo1.Length; i++) {
-            if (combo1[i] != combo2[i]) return false;
-        }
-        return true;
-    }
+    void RegisterHotkey(const string &in action, const string &in comboString, bool isOrdered, int extraValue = -1) {
+        Hotkey@ hotkey = Hotkey(action, comboString, isOrdered, extraValue);
+        ParseComboString(hotkey, comboString, isOrdered);
 
-    string JoinKeyCombination(array<string>@ keys) {
-        return string::Join(keys, "+");
-    }
-
-    void RegisterHotkey(array<string> keyCombination, const string &in action, int extraValue = -1) {
-        Hotkey@ hotkey = Hotkey(keyCombination, action, extraValue);
         array<Hotkey@>@ hotkeysList;
-        
         if (hotkeyMappings.Exists(action)) {
             @hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[action]);
         } else {
@@ -80,13 +79,16 @@ namespace Hotkeys {
         SaveHotkeysToFile();
     }
 
-    void UpdateHotkey(const string &in action, int hotkeyIndex, array<string> newKeyCombination, int extraValue = -1) {
+    void UpdateHotkey(const string &in action, int hotkeyIndex, const string &in comboString, bool isOrdered, int extraValue = -1) {
         if (hotkeyMappings.Exists(action)) {
             array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[action]);
             if (hotkeyIndex >= 0 && hotkeyIndex < int(hotkeysList.Length)) {
                 Hotkey@ hotkey = hotkeysList[hotkeyIndex];
-                hotkey.keyCombination = newKeyCombination;
+                hotkey.isOrdered = isOrdered;
+                hotkey.comboString = comboString;
                 hotkey.extraValue = extraValue;
+                hotkey.steps.RemoveRange(0, hotkey.steps.Length);
+                ParseComboString(hotkey, comboString, isOrdered);
                 SaveHotkeysToFile();
             }
         }
@@ -105,44 +107,22 @@ namespace Hotkeys {
         }
     }
 
-    Hotkey@ GetHotkeyFromCombination(array<string>@ pressedKeys) {
-        array<string> keys = hotkeyMappings.GetKeys();
-        for (uint i = 0; i < keys.Length; i++) {
-            array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[keys[i]]);
-            for (uint j = 0; j < hotkeysList.Length; j++) {
-                if (CompareKeyCombinations(hotkeysList[j].keyCombination, pressedKeys)) {
-                    return hotkeysList[j];
+    void ParseComboString(Hotkey@ hotkey, const string &in comboString, bool isOrdered) {
+        array<string> stepStrings = comboString.Split(">");
+        for (uint i = 0; i < stepStrings.Length; i++) {
+            string stepStr = stepStrings[i].Trim();
+            ComboStep step;
+            array<string> parts = stepStr.Split("+");
+            for (uint p = 0; p < parts.Length; p++) {
+                string part = parts[p].Trim();
+                ComboCondition cond;
+                array<string> ors = part.Split("|");
+                for (uint o = 0; o < ors.Length; o++) {
+                    cond.orKeys.InsertLast(ors[o].Trim());
                 }
+                step.conditions.InsertLast(cond);
             }
-        }
-        return null;
-    }
-
-    void ExecuteHotkeyAction(Hotkey@ hotkey) {
-        if (hotkey.action == "Load top 1 time") {
-            loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), "0", "AnyMap");
-        } else if (hotkey.action == "Load top 2 time") {
-            loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), "1", "AnyMap");
-        } else if (hotkey.action == "Load top 3 time") {
-            loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), "2", "AnyMap");
-        } else if (hotkey.action == "Load top 4 time") {
-            loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), "3", "AnyMap");
-        } else if (hotkey.action == "Load top 5 time") {
-            loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), "4", "AnyMap");
-        } else if (hotkey.action == "Load X time" && hotkey.extraValue > 0) {
-            loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), tostring(hotkey.extraValue - 1), "AnyMap");
-        } else if (hotkey.action == "Open/Close Interface") {
-            S_windowOpen = !S_windowOpen;
-        } else if (hotkey.action == "Open Interface") {
-            S_windowOpen = true;
-        } else if (hotkey.action == "Close Interface") {
-            S_windowOpen = false;
-        } else if (hotkey.action == "Remove all ghosts from current map") {
-            RecordManager::RemoveAllRecords();
-        } else if (hotkey.action == "Remove PB Ghost") {
-            RecordManager::RemovePBRecord();
-        } else {
-            log("Action not implemented: " + hotkey.action, LogLevel::Warn, 145, "ExecuteHotkeyAction");
+            hotkey.steps.InsertLast(step);
         }
     }
 
@@ -152,26 +132,33 @@ namespace Hotkeys {
         string configContent = _IO::File::ReadFileToEnd(configFilePath);
         array<string> lines = configContent.Split("\n");
         for (uint i = 0; i < lines.Length; i++) {
-            if (lines[i].Trim().Length == 0) continue;
+            string line = lines[i].Trim();
+            if (line.Length == 0) continue;
 
-            array<string> parts = lines[i].Split("=");
+            array<string> parts = line.Split("=");
             if (parts.Length == 2) {
-                string action = parts[0];
-                array<string> keyCombo = parts[1].Split("+");
-                RegisterHotkey(keyCombo, action);
+                string action = parts[0].Trim();
+                string right = parts[1].Trim();
+                array<string> comboParts = right.Split(";");
+                if (comboParts.Length == 2) {
+                    bool isOrdered = comboParts[0].ToLower() == "true";
+                    string comboStr = comboParts[1].Trim();
+                    RegisterHotkey(action, comboStr, isOrdered);
+                }
             }
         }
     }
 
     void SaveHotkeysToFile() {
-        array<string> keys = hotkeyMappings.GetKeys();
+        array<string> actions = hotkeyMappings.GetKeys();
         string content = "";
 
-        for (uint i = 0; i < keys.Length; i++) {
-            array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[keys[i]]);
+        for (uint i = 0; i < actions.Length; i++) {
+            array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[actions[i]]);
             for (uint j = 0; j < hotkeysList.Length; j++) {
                 Hotkey@ hotkey = hotkeysList[j];
-                content += hotkey.action + "=" + JoinKeyCombination(hotkey.keyCombination) + "\n";
+                string isOrderedStr = hotkey.isOrdered ? "true" : "false";
+                content += hotkey.action + "=" + isOrderedStr + ";" + hotkey.comboString + "\n";
             }
         }
 
@@ -180,28 +167,125 @@ namespace Hotkeys {
         configFile.Close();
     }
 
-    void InitHotkeys() {
-        LoadHotkeysFromFile();
+    bool ConditionIsMet(ComboCondition@ cond) {
+        for (uint i = 0; i < cond.orKeys.Length; i++) {
+            if (currentlyPressedKeys.Exists(cond.orKeys[i])) return true;
+        }
+        return false;
+    }
+
+    bool StepIsSatisfied(ComboStep@ step) {
+        for (uint c = 0; c < step.conditions.Length; c++) {
+            if (!ConditionIsMet(step.conditions[c])) return false;
+        }
+        return true;
+    }
+
+    bool CheckUnorderedCombo(Hotkey@ hotkey) {
+        if (hotkey.steps.Length == 0) return false;
+        for (uint s = 0; s < hotkey.steps.Length; s++) {
+            if (!StepIsSatisfied(hotkey.steps[s])) return false;
+        }
+        return true;
+    }
+
+    bool CheckOrderedCombo(Hotkey@ hotkey) {
+        for (uint s = 0; s < hotkey.steps.Length; s++) {
+            if (!StepIsSatisfied(hotkey.steps[s])) return false;
+        }
+        return true;
+    }
+
+    bool CheckHotkey(Hotkey@ hotkey) {
+        if (hotkey.isOrdered) {
+            return CheckOrderedCombo(hotkey);
+        } else {
+            return CheckUnorderedCombo(hotkey);
+        }
+    }
+
+    Hotkey@ GetHotkeyMatch() {
+        array<string> actions = hotkeyMappings.GetKeys();
+        for (uint i = 0; i < actions.Length; i++) {
+            array<Hotkey@>@ hotkeysList = cast<array<Hotkey@>@>(hotkeyMappings[actions[i]]);
+            for (uint j = 0; j < hotkeysList.Length; j++) {
+                if (CheckHotkey(hotkeysList[j])) {
+                    return hotkeysList[j];
+                }
+            }
+        }
+        return null;
+    }
+
+    void UpdatePressedKeys(bool down, const string &in key) {
+        if (down) {
+            currentlyPressedKeys[key] = true;
+        } else {
+            if (currentlyPressedKeys.Exists(key)) currentlyPressedKeys.Delete(key);
+        }
+    }
+
+    array<string> GetAllAvailableActions() {
+        array<string> allActions;
+        for (uint i = 0; i < hotkeyModules.Length; i++) {
+            auto actions = hotkeyModules[i].GetAvailableActions();
+            for (uint j = 0; j < actions.Length; j++) {
+                allActions.InsertLast(actions[j]);
+            }
+        }
+        return allActions;
     }
 
     UI::InputBlocking OnKeyPress(bool down, VirtualKey key) {
-        array<string> pressedKeys;
+        UI::InputBlocking uiRes = Hotkeys::HandleCapturingKeyPress(down, key);
+        if (uiRes == UI::InputBlocking::Block) {
+            return uiRes;
+        }
+
+        string k = tostring(key);
+        UpdatePressedKeys(down, k);
 
         if (down) {
-            pressedKeys.InsertLast(tostring(key));
-            Hotkey@ hotkey = GetHotkeyFromCombination(pressedKeys);
+            Hotkey@ hotkey = GetHotkeyMatch();
             if (hotkey !is null) {
                 ExecuteHotkeyAction(hotkey);
-            }
-        } else {
-            int index = pressedKeys.FindByRef(tostring(key));
-            if (index >= 0) {
-                pressedKeys.RemoveAt(index);
             }
         }
         return UI::InputBlocking::DoNothing;
     }
 
+    void ExecuteHotkeyAction(Hotkey@ hotkey) {
+        for (uint i = 0; i < hotkeyModules.Length; i++) {
+            if (hotkeyModules[i].ExecuteAction(hotkey.action, hotkey)) {
+                return;
+            }
+        }
+        log("No module handled the action: " + hotkey.action, LogLevel::Warn, 260, "ExecuteHotkeyAction");
+    }
+
+    void InitializeHotkeyModules() {
+        while (hotkeyModules.Length > 0) hotkeyModules.RemoveLast();
+        
+        // 
+
+        hotkeyModules.InsertLast(InterfaceModule::CreateInstance());
+        hotkeyModules.InsertLast(LikeDislikeModule::CreateInstance());
+
+        // 
+
+        InitializeAllModules();
+    }
+
+    void InitializeAllModules() {
+        for (uint i = 0; i < hotkeyModules.Length; i++) {
+            hotkeyModules[i].Initialize();
+        }
+    }
+
+    void InitHotkeys() {
+        InitializeHotkeyModules();
+        LoadHotkeysFromFile();
+    }
 }
 }
 

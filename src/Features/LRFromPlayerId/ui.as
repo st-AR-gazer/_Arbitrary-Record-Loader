@@ -1,10 +1,10 @@
 // src/Features/LoadRecordFromUrl/ui.as
 
 namespace Features {
-namespace LRFromDirectLink {
+namespace LRFromPlayerId {
     string pid;
 
-    void RenderTab_Link() {
+    void RT_LRFromPlayerID() {
         UI::Separator();
 
         pid = UI::InputText("Player Id", pid);

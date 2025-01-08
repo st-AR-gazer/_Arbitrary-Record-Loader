@@ -9,10 +9,13 @@ void RenderMenu() {
 
 void RenderInterface() {
     FILE_EXPLORER_BASE_RENDERER(); // Required for the file explorer to work.
+    Features::Hotkeys::HKInterfaceModule::RenderInterface(); // Required for the hotkeys popup to work.
 
 
-    // If playground script is null we cannot load records with .Replay_Add (which allows for loading records from other maps, and from local files, so we can only load records from the current map and if we know the playerID of the person we want to get the replay for if playground script is null)
-    // and we have to use MLHook, so we want to show a limited UI. 
+    // If PlaygroundScript is null, it means that we are on a server, and not in a local playground. This means that loading records through ".Replay_Add" is not possible,
+    // and we then have to use MLHooks "MLHook::Queue_SH_SendCustomEvent("TMGame_Record_ToggleGhost", {pid})" to laod a record. There are still a couple of ways to get the 
+    // pid, even without a local playground script, but it is not as easy as just using ".Replay_Add", since we can do less overall we also want to restrict the UI
+
     if (GetApp().PlaygroundScript !is null) {
 
         if (S_windowOpen) {
