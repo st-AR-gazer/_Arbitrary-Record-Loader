@@ -3,7 +3,11 @@ namespace Hotkeys {
 
     namespace HKRecordManagment {
         class RecordManagmentHotkeyModule : Features::Hotkeys::IHotkeyModule {
+
             array<string> actions = {
+                "Load top 1 time", "Load top 2 time", "Load top 3 time",
+                "Load top 4 time", "Load top 5 time", "Load X time",
+                "Remove all ghosts from current map", "Remove PB Ghost", 
                 "Open/Close Interface", "Open Interface", "Close Interface"
             };
 
@@ -14,7 +18,25 @@ namespace Hotkeys {
             }
 
             bool ExecuteAction(const string &in action, Features::Hotkeys::Hotkey@ hotkey) {
-                if (action == "Open/Close Interface") {
+                if (action == "Load top 1 time") {
+                    loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), "0", "AnyMap");
+                    return true;
+                } else if (action == "Load top 2 time") {
+                    loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), "1", "AnyMap");
+                    return true;
+                } else if (action == "Load top 3 time") {
+                    loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), "2", "AnyMap");
+                    return true;
+                } else if (action == "Load top 4 time") {
+                    loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), "3", "AnyMap");
+                    return true;
+                } else if (action == "Load top 5 time") {
+                    loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), "4", "AnyMap");
+                    return true;
+                } else if (action == "Load X time" && extraValue > 0) {
+                    loadRecord.LoadRecordFromMapUid(get_CurrentMapUID(), tostring(extraValue - 1), "AnyMap");
+                    return true;
+                } else if (action == "Open/Close Interface") {
                     S_windowOpen = !S_windowOpen;
                     return true;
                 } else if (action == "Open Interface") {
@@ -23,19 +45,23 @@ namespace Hotkeys {
                 } else if (action == "Close Interface") {
                     S_windowOpen = false;
                     return true;
+                } else if (action == "Remove all ghosts from current map") {
+                    RecordManager::RemoveAllRecords();
+                    return true;
+                } else if (action == "Remove PB Ghost") {
+                    RecordManager::RemovePBRecord();
+                    return true;
+                } else {
+                    log("Action not implemented: " + action, LogLevel::Warn, 145, "ExecuteHotkeyAction");
+                    return false;
                 }
+
                 return false;
             }
         }
 
         Features::Hotkeys::IHotkeyModule@ CreateInstance() {
             return RecordManagmentHotkeyModule();
-        }
-    }
-
-    void RenderInterface() {
-        if (S_windowOpen) {
-            Features::Hotkeys::RT_Hotkeys_Popout();
         }
     }
 
